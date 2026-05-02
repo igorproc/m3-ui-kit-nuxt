@@ -1,0 +1,66 @@
+/* mixins */
+@use 'sass:map';
+@use 'variables' as *;
+
+@mixin theme-definition($definition, $pallet, $contrast: null) {
+  @if not $contrast {
+    [data-definition="#{$definition}"][data-pallet="#{$pallet}"] {
+      @content;
+    }
+  } @else {
+    [data-definition="#{$definition}"][data-pallet="#{$pallet}"][data-contrast="#{$contrast}"] {
+      @content;
+    }
+  }
+}
+
+@mixin media-max($mediaWidth) {
+  @media only screen and (max-width: $mediaWidth) {
+    @content;
+  }
+}
+
+@mixin media-min($mediaWidth) {
+  @media only screen and (min-width: $mediaWidth) {
+    @content;
+  }
+}
+
+@mixin media-distance($mediaWidthMin, $mediaWidthMax) {
+  @media only screen and (min-width: $mediaWidthMin) and (max-width: $mediaWidthMax - 1) {
+    @content;
+  }
+}
+
+@mixin bp-tablet {
+  @media only screen and (min-width: map.get($breakpoints, 'tablet')) {
+    @content;
+  }
+}
+
+@mixin bp-desktop {
+  @media only screen and (min-width: map.get($breakpoints, 'desktop')) {
+    @content;
+  }
+}
+
+@mixin use-scrollbar($width) {
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    border-radius: 4px;
+  }
+}
+
+@mixin typescale($token) {
+  font-family: var(--md-sys-typescale-#{$token}-font);
+  font-size: var(--md-sys-typescale-#{$token}-size);
+  line-height: var(--md-sys-typescale-#{$token}-line-height);
+  font-weight: var(--md-sys-typescale-#{$token}-weight);
+}

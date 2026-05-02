@@ -1,5 +1,42 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+import { createResolver } from '@nuxt/kit'
+
+const { resolve } = createResolver(import.meta.url)
+
+const VITE_CONFIG = {
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `
+          @use "${resolve('./assets/stylesheet/additional.scss').replace(/\\/g, '/')}" as *;
+        `,
+      },
+    },
+  },
+}
+
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true }
+  modules: [
+    // https://github.com/nuxt/icon
+    '@nuxt/icon',
+  ],
+
+  components: {
+    dirs: [
+      {
+        path: './components',
+        pathPrefix: true,
+      },
+    ],
+  },
+
+  imports: {
+    dirs: [
+      './composables/**',
+      './utils/**',
+      './shared/**',
+    ],
+  },
+
+  css: [resolve('./assets/stylesheet/main.scss')],
+  vite: VITE_CONFIG,
 })

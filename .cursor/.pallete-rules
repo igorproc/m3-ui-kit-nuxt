@@ -1,0 +1,90 @@
+Material 3 palettes & usage
+============================
+
+- Палитры генерируются через [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/) и следуют системе цветов Material 3: см. раздел «Color system» в [документации](https://m3.material.io/styles/color/system/overview).
+- В приложении используются **только классические (standard) контрастные палитры**:
+  - `assets/styles/themes/base/_light.scss` → классическая светлая тема.
+  - `assets/styles/themes/base/_dark.scss` → классическая тёмная тема.
+- Внутри этих файлов объявлены токены `--md-sys-color-*` (system roles) и плоские алиасы `--color-*` для UI kit.
+
+Базовые системные роли (Material 3)
+-----------------------------------
+
+- `--md-sys-color-primary` / `--md-sys-color-on-primary`
+  - Основной брендовый цвет и контрастный текст/иконка поверх сплошной primary-поверхности (filled-кнопки, FAB, активные элементы).
+- `--md-sys-color-primary-container` / `--md-sys-color-on-primary-container`
+  - Мягкая акцентная поверхность (chips, tonal buttons, selection backgrounds).
+- `--md-sys-color-secondary` / `--md-sys-color-on-secondary`
+  - Вспомогательный цвет для менее акцентных элементов (фильтрующие/secondary-кнопки, иконки).
+- `--md-sys-color-tertiary` / `--md-sys-color-on-tertiary`
+  - Дополнительный акцент (например, success/info) – пока может не использоваться.
+- `--md-sys-color-error` / `--md-sys-color-on-error`
+  - Ошибки, destructive actions, critical chips.
+- `--md-sys-color-surface` / `--md-sys-color-on-surface`
+  - Основные поверхности приложения (cards, sheets, app background surfaces).
+- `--md-sys-color-background` / `--md-sys-color-on-background`
+  - Фон приложения под поверхностями (html/body) и базовый цвет текста.
+- `--md-sys-color-surface-variant` / `--md-sys-color-on-surface-variant`
+  - Поверхности и бордеры второстепенной важности (dividers, outline).
+- `--md-sys-color-outline` / `--md-sys-color-outline-variant`
+  - Границы и обводки (outlined-кнопки, текстовые поля).
+
+Алиасы для UI kit (`--color-*`)
+-------------------------------
+
+Все UI‑компоненты под `components/ui` должны работать **только** с алиасами `--color-*`, а не напрямую с `--md-sys-color-*`. Карта соответствий:
+
+- Primary:
+  - `--color-primary` → `var(--md-sys-color-primary)`
+  - `--color-primary-contrast` → `var(--md-sys-color-on-primary)`
+  - `--color-primary-container` → `var(--md-sys-color-primary-container)`
+  - `--color-primary-container-contrast` → `var(--md-sys-color-on-primary-container)`
+- Accent (Material secondary):
+  - `--color-accent` → `var(--md-sys-color-secondary)`
+  - `--color-accent-contrast` → `var(--md-sys-color-on-secondary)`
+  - `--color-accent-container` → `var(--md-sys-color-secondary-container)`
+  - `--color-accent-container-contrast` → `var(--md-sys-color-on-secondary-container)`
+- Warn (Material error):
+  - `--color-warn` → `var(--md-sys-color-error)`
+  - `--color-warn-contrast` → `var(--md-sys-color-on-error)`
+  - `--color-warn-container` → `var(--md-sys-color-error-container)`
+  - `--color-warn-container-contrast` → `var(--md-sys-color-on-error-container)`
+- Surfaces & background:
+  - `--color-surface` → `var(--md-sys-color-surface)`
+  - `--color-surface-contrast` → `var(--md-sys-color-on-surface)`
+  - `--color-surface-variant` → `var(--md-sys-color-surface-variant)`
+  - `--color-surface-variant-contrast` → `var(--md-sys-color-on-surface-variant)`
+  - `--color-background` → `var(--md-sys-color-background)`
+  - `--color-background-contrast` → `var(--md-sys-color-on-background)`
+- Outline:
+  - `--color-outline` → `var(--md-sys-color-outline)`
+  - `--color-outline-variant` → `var(--md-sys-color-outline-variant)`
+
+Правила для UI‑компонентов
+--------------------------
+
+- **Кнопки (`ui-button`)**:
+  - Filled:
+    - `background-color: var(--color-primary);`
+    - `color: var(--color-primary-contrast);`
+  - Outlined:
+    - `color: var(--color-primary);`
+    - `border-color: color-mix(in srgb, var(--color-primary) 50%, transparent 50%);`
+    - hover/active state-layer через `color-mix` с `--color-primary`.
+  - Text:
+    - `color: var(--color-primary);`
+    - hover/active – state-layer на `--color-primary` аналогично Material 3.
+- **Поверхности (карточки, панели, модалки)**:
+  - `background-color: var(--color-surface);`
+  - `color: var(--color-surface-contrast);`
+  - Бордеры/разделители: `border-color: var(--color-outline)` или `var(--color-outline-variant)`.
+- **Фон приложения**:
+  - `html, body`:
+    - `background-color: var(--color-background);`
+    - `color: var(--color-background-contrast);`
+
+Контраст
+--------
+
+- В приложении используются только **standard** контрастные палитры (`_light.scss`, `_dark.scss`).
+- Палитры `*-medium-contrast` и `*-high-contrast` из `.cursor/pallete/*.css` служат лишь справочными/вспомогательными и в UI‑токены не проброшены.

@@ -1,0 +1,27 @@
+/* 1. abstracts */
+@use 'abstracts/forward' as *;
+
+/* 2. vendors */
+@use 'vendors/base' as *;
+
+/* 3. base */
+@use 'base/animations' as *;
+@use 'base/reset' as *;
+@use 'base/base' as *;
+@use 'base/fonts' as *;
+@use 'base/typography' as *;
+@use 'base/shapes' as *;
+@use 'base/adaptive' as *;
+
+/* 4. partials - layout */
+@use 'partials/layout' as *;
+
+/* 5. modules - components */
+
+/* 6. pages */
+
+/* 7. themes */
+@use 'themes' as *;
+
+/* 8. shame */
+@use 'shame' as *;

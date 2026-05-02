@@ -1,0 +1,94 @@
+# Nuxt 3, Vue 3 & SCSS Best Practices for Cursor
+
+You are an expert Full Stack Developer. Follow these rules strictly for this Nuxt 3 project.
+
+## 1. Component File Structure
+Every `.vue` file must follow this exact order and format:
+1. `<template>` block at the top.
+2. `<script setup lang="ts">` block in the middle.
+3. `<style lang="scss">` block at the bottom.
+
+Example:
+```vue
+<template>
+  <div class="base-container">
+    <user-profile-card />
+  </div>
+</template>
+
+<script setup lang="ts">
+// Logic here
+</script>
+
+<style lang="scss">
+.base-container {
+  // SCSS logic here
+}
+</style>
+```
+
+## 2. Project Structure & Architecture
+- Use **Standard Directory Structure**: `components/`, `composables/`, `layouts/`, `pages/`, `server/`, `middleware/`, `assets/`.
+- Use **Auto-imports**: Do not manually import Vue APIs (ref, computed) or Nuxt composables (useFetch, useRuntimeConfig) unless necessary.
+- **Component Naming**: Use PascalCase for component files and templates (e.g., `BaseButton.vue`).
+- **Logic Separation**: Keep templates thin. Move complex logic into `composables/`.
+
+## 3. Coding Standards (Vue 3 & TS)
+- Use `<script setup lang="ts">` exclusively.
+- Do **not** use `scoped` styles or CSS Modules. Styles must be global and organized with BEM naming.
+- **Props & Emits**: Use `defineProps<{...}>()` and `defineEmits<{...}>()` for type-safe components.
+- **Reactivity**: Prefer `ref()` for primitives and `reactive()` for complex objects. Use `computed()` for derived state.
+
+## 4. Data Fetching (Server-Side Ready)
+- Use Nuxt composables: `useFetch` or `useAsyncData` for data fetching. Avoid `onMounted` for initial data.
+- **Global Fetch**: Use `$fetch` for client-side interactions (like form submissions).
+- Always handle `pending` and `error` states in the UI.
+
+## 5. Nuxt 3 Specifics
+- **Server Routes**: Use `server/api/` for API endpoints and `server/middleware/` for server-side logic.
+- **Runtime Config**: Access environment variables via `useRuntimeConfig()`. Use `.env` for secrets.
+- **SEO**: Use `useHead()` or `useSeoMeta()` for metadata.
+- **State Management**: Use `useState()` for simple shared state or **Pinia** for complex stores.
+
+## 6. TypeScript Rules
+- Avoid `any`. Define interfaces for all API responses and complex objects.
+- Use `PropType` or generic `defineProps` for strict component typing.
+- Leverage Nuxt's generated types in `.nuxt/types`.
+
+## 7. Performance & Optimization
+- Use `<NuxtImg>` for images if `nuxt/image` is available.
+- Use `Lazy` prefix for components that aren't needed on initial load (e.g., `<LazyMyComponent />`).
+- Utilize `useHydration` for client-only logic where needed.
+
+## 8. Formatting & Output
+- Use clean, readable code with comments only for complex logic.
+- Follow the **Composition API** pattern (keep related logic together).
+- Output should be a complete, copy-pasteable code block.
+
+## 9. UI Kit & BEM Rules
+- All UI components under `components/ui` must use classic BEM naming:
+  - Block: `ui-button`
+  - Element: `ui-button__content`
+  - Modifier: `ui-button--block` / `ui-button--something`.
+- Do not use `scoped` or `module` styles in UI components – rely on BEM + global styles instead.
+
+## 10. Lint & Stylelint Conventions
+- **General**:
+  - All code must pass `npm run lint` and `npm run lint:style` with **0 errors** before merge.
+- **TypeScript / Vue (ESLint)**:
+  - Use **1TBS brace style** (`} else {`) as enforced by `@stylistic/brace-style`.
+  - No semicolons (`@stylistic/semi: "never"`).
+  - No extra пустых строк в конце файла (`@stylistic/no-multiple-empty-lines`, `@stylistic/eol-last`).
+  - Для стрелочных функций:
+    - **Без фигурных скобок** → без круглых скобок вокруг единственного аргумента: `args => doSomething(args)`.
+    - **С фигурными скобками** → аргумент всегда в круглых скобках: `(args) => { doSomething(args) }`.
+- **SCSS / Vue (Stylelint)**:
+  - Конфиг: `stylelint-config-standard-scss` + `stylelint-config-standard-vue/scss` + `stylelint-scss`.
+  - Именование классов: только **BEM в kebab-case**, разрешённое регуляркой `selector-class-pattern`:
+    - Блок: `ui-button`
+    - Элемент: `ui-button__icon`
+    - Модификатор: `ui-button--filled`.
+  - Цвета и тени:
+    - Используем современный синтаксис цветовых функций:
+      - Для теней: `rgb(0 0 0 / 16%)` вместо `rgba(0, 0, 0, 0.16)`.
+      - Для state-слоёв и микширования – `color-mix(in srgb, ...)` как в Material 3.

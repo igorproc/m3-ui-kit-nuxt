@@ -1,0 +1,49 @@
+@use 'sass:map';
+@use '../abstracts/forward' as *;
+
+html {
+  // Default desktop scaling
+  $factor: root-scale(desktop);
+
+  font-size: calc(1vw / #{$factor});
+}
+
+@media (max-width: map.get($breakpoints, desktop-xs)) {
+  html {
+    $factor: root-scale(desktop-xs);
+
+    font-size: calc(1vw / #{$factor});
+  }
+}
+
+@media (max-width: map.get($breakpoints, tablet)) {
+  html {
+    $factor: root-scale(tablet);
+
+    font-size: calc(1vw / #{$factor});
+  }
+}
+
+@media (max-width: map.get($breakpoints, tablet-xs)) {
+  html {
+    $factor: root-scale(tablet-xs);
+
+    font-size: calc(1vw / #{$factor});
+  }
+}
+
+@media (max-width: map.get($breakpoints, mobile)) {
+  html {
+    $factor: root-scale(mobile);
+
+    font-size: calc(1vw / #{$factor});
+  }
+}
+
+@media (max-width: map.get($breakpoints, mobile-xs)) {
+  html {
+    $factor: root-scale(mobile-xs);
+
+    font-size: calc(1vw / #{$factor});
+  }
+}

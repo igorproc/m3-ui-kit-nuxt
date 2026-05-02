@@ -1,0 +1,35 @@
+/* functions */
+@use 'sass:map';
+@use 'sass:math';
+@use 'variables' as *;
+
+@function z($key) {
+  @if map.has-key($z-indexes, $key) {
+    @return map.get($z-indexes, $key);
+  }
+
+  @warn "Unknown `#{$key}` in $z-indexes.";
+  @return 0;
+}
+
+@function spacing($value) {
+  @return $spacing-base * $value
+}
+
+@function strip-unit($value) {
+  @if math.is-unitless($value) {
+    @return $value;
+  }
+
+  @return math.div($value, $value * 0 + 1);
+}
+
+@function root-scale($breakpoint-key) {
+  $bp: map.get($breakpoints, $breakpoint-key);
+
+  @if not $bp {
+    @error 'Unknown breakpoint `#{$breakpoint-key}` in $breakpoints map.';
+  }
+
+  @return math.div(strip-unit($bp), 100);
+}

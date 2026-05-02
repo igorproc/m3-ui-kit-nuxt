@@ -1,0 +1,15 @@
+:root {
+  /* Corner radius scale (in rem, matching dp scale) */
+  --sys-shape-corner-none: 0rem;
+  --sys-shape-corner-extra-small: 4rem;
+  --sys-shape-corner-small: 8rem;
+  --sys-shape-corner-medium: 12rem;
+  --sys-shape-corner-large: 16rem;
+  --sys-shape-corner-extra-large: 28rem;
+
+  /* Top-only extra-large corners (e.g. bottom sheet) */
+  --sys-shape-corner-extra-large-top: 28rem 28rem 0 0;
+
+  /* Full pill shape for components like buttons */
+  --sys-shape-corner-full: 999rem;
+}
