@@ -14,9 +14,16 @@
     "lint:style": "stylelint **/*.{vue,css,scss}"
   },
   "dependencies": {
+    "@vee-validate/nuxt": "^4.15.1",
+    "@vee-validate/yup": "^4.15.1",
+    "@vueuse/core": "^14.3.0",
+    "@vueuse/nuxt": "^14.3.0",
+    "dayjs": "^1.11.20",
     "nuxt": "^4.4.4",
     "vue": "^3.5.33",
-    "vue-router": "^5.0.6"
+    "vue-final-modal": "^4.5.5",
+    "vue-router": "^5.0.6",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",

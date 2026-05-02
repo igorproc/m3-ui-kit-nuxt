@@ -1,5 +1,5 @@
-import { THEME_DEFINITIONS, THEME_PALLETS, THEME_CONTRASTS } from '~~/layers/shared/constants/theme'
-import { COOKIE_THEME_KEYS } from '~~/layers/shared/constants/cookie'
+import { THEME_DEFINITIONS, THEME_PALLETS, THEME_CONTRASTS } from '~~/shared/constants/theme'
+import { COOKIE_THEME_KEYS } from '~~/shared/constants/cookie'
 
 export function useThemeChanger() {
   const definitionCookie = useCookie(COOKIE_THEME_KEYS.DEFINITION, { default: () => THEME_DEFINITIONS.LIGHT })

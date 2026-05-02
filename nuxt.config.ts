@@ -18,6 +18,8 @@ export default defineNuxtConfig({
   modules: [
     // https://github.com/nuxt/icon
     '@nuxt/icon',
+    '@vee-validate/nuxt',
+    '@vueuse/nuxt',
   ],
 
   components: {
@@ -33,10 +35,15 @@ export default defineNuxtConfig({
     dirs: [
       './composables/**',
       './utils/**',
-      './shared/**',
+      '../shared/**',
     ],
   },
 
-  css: [resolve('./assets/stylesheet/main.scss')],
+  css: ['~~/assets/stylesheet/main.scss'],
+
+  features: {
+    inlineStyles: false,
+  },
+
   vite: VITE_CONFIG,
 })
