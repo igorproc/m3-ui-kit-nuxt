@@ -28,6 +28,11 @@ export default defineNuxtConfig({
         path: './components',
         pathPrefix: true,
       },
+      {
+        path: './components/ui',
+        pathPrefix: false,
+        prefix: 'm',
+      },
     ],
   },
 
@@ -40,6 +45,7 @@ export default defineNuxtConfig({
   },
 
   css: [resolve('./app/assets/stylesheet/main.scss').replace(/\\/g, '/')],
+  appDir: './app',
 
   features: { inlineStyles: false },
 

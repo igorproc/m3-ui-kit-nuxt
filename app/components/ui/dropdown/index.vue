@@ -97,7 +97,10 @@ const selectedLabel = computed(() => {
 })
 
 function toggle() {
-  if (props.disabled) return
+  if (props.disabled) {
+    return
+  }
+
   isOpen.value = !isOpen.value
 }
 
