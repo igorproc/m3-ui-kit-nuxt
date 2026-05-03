@@ -84,25 +84,23 @@ const dashOffset = computed(
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/progress' as v;
+
 .ui-progress {
   &--linear {
     position: relative;
     width: 100%;
-    height: 4rem;
+    height: v.$linear-height;
     border-radius: 999rem;
     overflow: hidden;
-    background-color: color-mix(
-      in srgb,
-      var(--color-on-surface) 8%,
-      transparent
-    );
+    background-color: v.$linear-track-bg;
   }
 
   &__bar {
     position: absolute;
     inset-block: 0;
     left: 0;
-    background-color: var(--color-primary);
+    background-color: v.$linear-bar-bg;
     transition: width var(--sys-motion-duration-medium-2)
       var(--sys-motion-easing-standard);
 
@@ -118,8 +116,8 @@ const dashOffset = computed(
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40rem;
-    height: 40rem;
+    width: v.$circular-size;
+    height: v.$circular-size;
   }
 
   &__spinner {
@@ -128,10 +126,10 @@ const dashOffset = computed(
 
     &--indeterminate {
       border-radius: var(--sys-shape-corner-full);
-      border-width: 3rem;
+      border-width: v.$circular-spinner-border-width;
       border-style: solid;
-      border-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
-      border-top-color: var(--color-primary);
+      border-color: v.$circular-track-bg;
+      border-top-color: v.$circular-spinner-bg;
       animation:
         ui-progress-circular-indeterminate
         var(--sys-motion-duration-medium-2)
@@ -141,20 +139,16 @@ const dashOffset = computed(
 
   &__circle {
     fill: none;
-    stroke-width: 4;
+    stroke-width: v.$circular-svg-stroke-width;
     transform-origin: center;
     transform: rotate(-90deg);
 
     &--track {
-      stroke: color-mix(
-        in srgb,
-        var(--color-on-surface) 12%,
-        transparent
-      );
+      stroke: v.$circular-svg-track-bg;
     }
 
     &--value {
-      stroke: var(--color-primary);
+      stroke: v.$circular-spinner-bg;
       transition: stroke-dashoffset var(--sys-motion-duration-medium-2)
         var(--sys-motion-easing-standard);
     }

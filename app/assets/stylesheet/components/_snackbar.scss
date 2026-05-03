@@ -1,0 +1,28 @@
+// ==========================================
+// SNACKBAR LOCAL TOKENS
+// Extracted from app/components/ui/snackbar/index.vue
+// ==========================================
+
+// --- Base ---
+$bottom-offset: 16rem !default;
+$z-index: 60 !default;
+
+// --- Surface ---
+$surface-max-width: 560rem !default;
+$surface-margin-inline: 16rem !default;
+$surface-padding: 12rem 16rem !default;
+$surface-border-radius: var(--sys-shape-corner-large) !default;
+$surface-bg-color: var(--color-surface) !default;
+$surface-color: var(--color-on-surface) !default;
+$surface-shadow: 0 2rem 4rem rgb(0 0 0 / 16%), 0 6rem 12rem rgb(0 0 0 / 12%) !default;
+$surface-gap: 16rem !default;
+
+// --- Typography ---
+$label-text-type: 'body-medium' !default;
+$action-text-type: 'label-large' !default;
+
+// --- Action ---
+$action-padding: 8rem 12rem !default;
+$action-border-radius: var(--sys-shape-corner-small) !default;
+$action-color: var(--color-primary) !default;
+$action-hover-bg: color-mix(in srgb, var(--color-primary) 8%, transparent) !default;

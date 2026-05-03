@@ -129,12 +129,14 @@ function toggleAll(value: boolean) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/table' as v;
+
 .ui-table-container {
   width: 100%;
   overflow-x: auto;
-  background-color: var(--color-surface);
-  border-radius: var(--sys-shape-corner-medium);
-  border: 1rem solid var(--color-outline-variant);
+  background-color: v.$container-bg;
+  border-radius: v.$container-border-radius;
+  border: 1rem solid v.$container-border-color;
 }
 
 .ui-table {
@@ -143,27 +145,27 @@ function toggleAll(value: boolean) {
   text-align: left;
 
   &__row {
-    border-bottom: 1rem solid var(--color-outline-variant);
+    border-bottom: 1rem solid v.$row-border-color;
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
     &:hover:not(.ui-table__row--header) {
-      background-color: color-mix(in srgb, var(--color-on-surface) 4%, transparent);
+      background-color: v.$row-hover-bg;
     }
 
     &--selected {
-      background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      background-color: v.$row-selected-bg;
     }
   }
 
   &__cell {
-    padding: 12rem 16rem;
-    color: var(--color-on-surface);
+    padding: v.$cell-padding;
+    color: v.$cell-color;
 
-    @include typescale('body-medium');
+    @include typescale(v.$cell-text-type);
 
     &--checkbox {
-      width: 48rem;
-      padding-inline: 12rem;
+      width: v.$cell-checkbox-width;
+      padding-inline: v.$cell-checkbox-padding-inline;
     }
   }
 }

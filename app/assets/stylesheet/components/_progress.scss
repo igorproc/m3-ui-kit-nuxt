@@ -1,0 +1,19 @@
+// ==========================================
+// PROGRESS LOCAL TOKENS
+// Extracted from app/components/ui/progress/index.vue
+// ==========================================
+
+// --- Linear ---
+$linear-height: 4rem !default;
+$linear-track-bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent) !default;
+$linear-bar-bg: var(--color-primary) !default;
+
+// --- Circular ---
+$circular-size: 40rem !default;
+$circular-spinner-border-width: 3rem !default;
+$circular-track-bg: color-mix(in srgb, var(--color-primary) 16%, transparent) !default;
+$circular-spinner-bg: var(--color-primary) !default;
+
+// --- SVG Circular ---
+$circular-svg-track-bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent) !default;
+$circular-svg-stroke-width: 4 !default;

@@ -52,18 +52,18 @@ function onSelect(id: string) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/navigation-bar' as v;
+
 .ui-navigation-bar {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-inline: 12rem;
-  padding-block: 8rem;
-  border-radius: var(--sys-shape-corner-large);
-  background-color: var(--color-surface);
-  box-shadow:
-    0 -2rem 4rem rgb(0 0 0 / 8%),
-    0 -4rem 8rem rgb(0 0 0 / 10%);
-  color: var(--color-surface-variant-contrast);
+  padding-inline: v.$padding-inline;
+  padding-block: v.$padding-block;
+  border-radius: v.$border-radius;
+  background-color: v.$bg-color;
+  box-shadow: v.$shadow;
+  color: v.$text-color;
 
   &__item {
     position: relative;
@@ -72,14 +72,14 @@ function onSelect(id: string) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4rem;
-    padding-block: 4rem;
+    gap: v.$item-gap;
+    padding-block: v.$item-padding-block;
     border: none;
     background: transparent;
     cursor: pointer;
-    color: var(--color-on-surface-variant);
+    color: v.$item-color;
 
-    @include typescale('label-medium');
+    @include typescale(v.$item-text-type);
   }
 
   &__icon-wrapper {
@@ -90,24 +90,24 @@ function onSelect(id: string) {
   }
 
   &__icon {
-    font-size: 24rem;
+    font-size: v.$icon-size;
   }
 
   &__badge {
     position: absolute;
-    top: -12rem;
-    right: -24rem;
+    top: v.$badge-top;
+    right: v.$badge-right;
   }
 
   &__label {
-    max-width: 72rem;
+    max-width: v.$label-max-width;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   &__item--active {
-    color: var(--color-primary);
+    color: v.$item-active-color;
   }
 }
 </style>

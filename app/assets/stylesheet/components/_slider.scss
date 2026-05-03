@@ -1,0 +1,27 @@
+// ==========================================
+// SLIDER LOCAL TOKENS
+// Extracted from app/components/ui/slider/index.vue
+// ==========================================
+
+// --- Base ---
+$gap: 4rem !default;
+$padding-block: 8rem !default;
+
+// --- Typography ---
+$label-text-type: 'body-medium' !default;
+$value-text-type: 'body-small' !default;
+
+// --- Colors ---
+$label-color: var(--color-on-surface) !default;
+$value-color: var(--color-surface-variant-contrast) !default;
+
+// --- Thumb ---
+$thumb-size: 20rem !default;
+$thumb-color: var(--color-primary) !default;
+$thumb-halo-color: color-mix(in srgb, var(--color-primary) 24%, transparent) !default;
+$thumb-halo-size: 4rem !default;
+
+// --- Track ---
+$track-height: 4rem !default;
+$track-bg-color: color-mix(in srgb, var(--color-on-surface) 16%, transparent) !default;
+$track-fill-color: var(--color-primary) !default;

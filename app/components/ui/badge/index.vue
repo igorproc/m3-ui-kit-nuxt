@@ -66,27 +66,25 @@ const badgeClasses = computed(() => [
 </script>
 
 <style lang="scss">
-.ui-badge {
-  --ui-badge-size: 16rem;
-  --ui-badge-padding-inline: 4rem;
+@use '~/assets/stylesheet/components/badge' as v;
 
+.ui-badge {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: var(--ui-badge-size);
-  min-height: var(--ui-badge-size);
-  padding-inline: var(--ui-badge-padding-inline);
-  border-radius: var(--sys-shape-corner-full);
-  background-color: var(--color-warn);
-  color: var(--color-warn-contrast);
+  min-width: v.$size;
+  min-height: v.$size;
+  padding-inline: v.$padding-inline;
+  border-radius: v.$shape;
+  background-color: v.$bg-color;
+  color: v.$text-color;
   z-index: 1;
 
-  // Typography: Label Small (M3 numeric badge uses 11px font)
-  @include typescale('label-small');
+  @include typescale(v.$label-text-type);
 
-  font-size: 11rem;
-  line-height: 16rem;
+  font-size: v.$font-size;
+  line-height: v.$line-height;
 
   &__label {
     display: inline-flex;
@@ -95,11 +93,9 @@ const badgeClasses = computed(() => [
   }
 
   &--dot {
-    --ui-badge-size: 6rem;
-
-    padding-inline: 0;
-    min-width: var(--ui-badge-size);
-    min-height: var(--ui-badge-size);
+    padding-inline: v.$dot-padding-inline;
+    min-width: v.$dot-size;
+    min-height: v.$dot-size;
   }
 }
 </style>

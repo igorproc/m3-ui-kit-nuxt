@@ -69,42 +69,43 @@ const emit = defineEmits<{
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/dialog' as v;
+
 .ui-dialog {
   display: flex;
   flex-direction: column;
-  max-width: 560rem;
-  min-width: 280rem;
+  max-width: v.$max-width;
+  min-width: v.$min-width;
   width: fit-content;
-  border-radius: 28rem;
-  background-color: var(--color-surface);
-  color: var(--color-on-surface);
-  box-shadow: 0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%); // Elevation 3
-  padding: 24rem;
-  margin: 16rem; // Margin from screen edges
+  border-radius: v.$border-radius;
+  background-color: v.$bg-color;
+  color: v.$text-color;
+  box-shadow: v.$shadow;
+  padding: v.$padding;
+  margin: v.$margin;
   position: relative;
   overflow: hidden;
 
   &__container {
     display: flex;
     flex-direction: column;
-    gap: 16rem;
+    gap: v.$container-gap;
   }
 
   &__icon {
     display: flex;
     justify-content: center;
-    margin-bottom: 16rem;
-    color: var(--color-secondary, #625b71);
-    font-size: 24rem;
+    margin-bottom: v.$icon-margin-bottom;
+    color: v.$icon-color;
+    font-size: v.$icon-size;
   }
 
   &__headline {
     margin: 0;
-    color: var(--color-on-surface, #1d1b20);
-    text-align: center; // Default center, but can be left aligned based on content
+    color: v.$headline-color;
+    text-align: center;
 
-    // Typography: Headline Small
-    @include typescale('headline-small');
+    @include typescale(v.$headline-text-type);
   }
 
   &__icon + &__headline {
@@ -112,17 +113,16 @@ const emit = defineEmits<{
   }
 
   &__content {
-    color: var(--color-on-surface-variant, #49454f);
+    color: v.$content-color;
 
-    // Typography: Body Medium
-    @include typescale('body-medium');
+    @include typescale(v.$content-text-type);
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8rem;
-    margin-top: 24rem;
+    gap: v.$actions-gap;
+    margin-top: v.$actions-margin-top;
   }
 }
 </style>

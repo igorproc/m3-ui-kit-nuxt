@@ -1,0 +1,20 @@
+// ==========================================
+// BADGE LOCAL TOKENS
+// Extracted from app/components/ui/badge/index.vue
+// ==========================================
+
+// --- Base ---
+$size: 16rem !default;
+$padding-inline: 4rem !default;
+$shape: var(--sys-shape-corner-full) !default;
+$bg-color: var(--color-warn) !default;
+$text-color: var(--color-warn-contrast) !default;
+
+// --- Typography ---
+$label-text-type: 'label-small' !default;
+$font-size: 11rem !default;
+$line-height: 16rem !default;
+
+// --- Dot Variant ---
+$dot-size: 6rem !default;
+$dot-padding-inline: 0 !default;

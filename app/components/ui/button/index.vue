@@ -96,18 +96,16 @@ const linkBindings = computed(() => {
 </script>
 
 <style lang="scss">
-.ui-button {
-  --ui-button-height: 40rem;
-  --ui-button-padding-inline: 24rem;
-  --ui-button-radius: 20rem;
+@use '~/assets/stylesheet/components/button' as v;
 
+.ui-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8rem;
-  min-height: var(--ui-button-height);
-  padding-inline: var(--ui-button-padding-inline);
-  border-radius: var(--ui-button-radius);
+  gap: v.$gap;
+  min-height: v.$height;
+  padding-inline: v.$padding-inline;
+  border-radius: v.$radius;
   border-width: 0;
   border-style: solid;
   cursor: pointer;
@@ -121,7 +119,7 @@ const linkBindings = computed(() => {
   transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
   // Typography: Label Large
-  @include typescale('label-large');
+  @include typescale(v.$label-text-type);
 
   &__label {
     display: inline-flex;
@@ -133,188 +131,188 @@ const linkBindings = computed(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 18rem; // Icon size typically 18dp inside buttons
+    font-size: v.$icon-size;
     line-height: 0;
   }
 
   &--has-prepend {
-    padding-left: 16rem;
+    padding-left: v.$padding-has-icon;
   }
 
   &--has-append {
-    padding-right: 16rem;
+    padding-right: v.$padding-has-icon;
   }
 
   &--icon-only {
-    padding-inline: 8rem;
-    width: var(--ui-button-height);
+    padding-inline: v.$padding-icon-only;
+    width: v.$height;
     border-radius: var(--sys-shape-corner-full);
   }
 
   // VARIANTS
 
   &--elevated {
-    background-color: var(--color-surface-container-low, var(--color-surface));
-    color: var(--color-primary);
+    background-color: v.$elevated-bg;
+    color: v.$elevated-color;
     border-color: transparent;
-    box-shadow: 0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 1
+    box-shadow: v.$elevated-shadow;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-container-low, var(--color-surface)));
-      box-shadow: 0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 2
+      background-color: color-mix(in srgb, v.$elevated-color v.$hover-opacity, v.$elevated-bg);
+      box-shadow: v.$elevated-hover-shadow;
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface-container-low, var(--color-surface)));
-      box-shadow: 0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 1
-      transform: translateY(1rem);
+      background-color: color-mix(in srgb, v.$elevated-color v.$active-opacity, v.$elevated-bg);
+      box-shadow: v.$elevated-active-shadow;
+      transform: v.$elevated-active-transform;
     }
   }
 
   &--filled {
-    background-color: var(--color-primary);
-    color: var(--color-primary-contrast);
+    background-color: v.$filled-bg;
+    color: v.$filled-color;
     border-color: transparent;
-    box-shadow: none;
+    box-shadow: v.$filled-shadow;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary-contrast) 8%, var(--color-primary));
-      box-shadow: 0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 1
+      background-color: color-mix(in srgb, v.$filled-color v.$hover-opacity, v.$filled-bg);
+      box-shadow: v.$filled-hover-shadow;
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-primary-contrast) 12%, var(--color-primary));
+      background-color: color-mix(in srgb, v.$filled-color v.$active-opacity, v.$filled-bg);
       box-shadow: none;
-      box-shadow: 0 1rem 3rem rgb(0 0 0 / 24%);
-      transform: translateY(1rem);
+      box-shadow: v.$filled-active-shadow;
+      transform: v.$filled-active-transform;
     }
   }
 
   &--outlined {
-    background-color: transparent;
-    color: var(--color-primary);
-    border-width: 1rem;
-    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent 50%);
+    background-color: v.$outlined-bg;
+    color: v.$outlined-color;
+    border-width: v.$outlined-border-width;
+    border-color: v.$outlined-border-color;
     box-shadow: none;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary) 8%, transparent 92%);
+      background-color: color-mix(in srgb, v.$outlined-color v.$hover-opacity, v.$outlined-bg);
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      background-color: color-mix(in srgb, v.$outlined-color v.$active-opacity, transparent);
     }
   }
 
   &--text {
-    background-color: transparent;
-    color: var(--color-primary);
+    background-color: v.$text-bg;
+    color: v.$text-color;
     border-color: transparent;
     box-shadow: none;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary) 8%, transparent 92%);
+      background-color: color-mix(in srgb, v.$text-color v.$hover-opacity, transparent 92%);
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      background-color: color-mix(in srgb, v.$text-color v.$active-opacity, transparent);
     }
   }
 
   &--tonal {
-    background-color: var(--color-primary-container);
-    color: var(--color-primary-container-contrast);
+    background-color: v.$tonal-bg;
+    color: v.$tonal-color;
     border-color: transparent;
     box-shadow: none;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary-container-contrast) 8%, var(--color-primary-container));
+      background-color: color-mix(in srgb, v.$tonal-color v.$hover-opacity, v.$tonal-bg);
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-primary-container-contrast) 12%, var(--color-primary-container));
+      background-color: color-mix(in srgb, v.$tonal-color v.$active-opacity, v.$tonal-bg);
     }
   }
 
   // COLORS
   &--accent {
     &.ui-button--elevated {
-      color: var(--color-accent);
+      color: v.$accent-color;
 
       &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface-container-low, var(--color-surface)));
+        background-color: color-mix(in srgb, v.$accent-color v.$hover-opacity, v.$elevated-bg);
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface-container-low, var(--color-surface)));
+        background-color: color-mix(in srgb, v.$accent-color v.$active-opacity, v.$elevated-bg);
       }
     }
 
     &.ui-button--filled {
-      background-color: var(--color-accent);
-      color: var(--color-accent-contrast);
+      background-color: v.$accent-color;
+      color: v.$accent-contrast-color;
 
       &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-accent-contrast) 8%, var(--color-accent));
+        background-color: color-mix(in srgb, v.$accent-contrast-color v.$hover-opacity, v.$accent-color);
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-accent-contrast) 12%, var(--color-accent));
+        background-color: color-mix(in srgb, v.$accent-contrast-color v.$active-opacity, v.$accent-color);
       }
     }
 
     &.ui-button--outlined,
     &.ui-button--text {
-      color: var(--color-accent);
-      border-color: color-mix(in srgb, var(--color-accent) 50%, transparent 50%);
+      color: v.$accent-color;
+      border-color: color-mix(in srgb, v.$accent-color 50%, transparent 50%);
 
       &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+        background-color: color-mix(in srgb, v.$accent-color v.$hover-opacity, transparent);
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+        background-color: color-mix(in srgb, v.$accent-color v.$active-opacity, transparent);
       }
     }
   }
 
   &--warn {
     &.ui-button--elevated {
-      color: var(--color-warn);
+      color: v.$warn-color;
 
       &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-warn) 8%, var(--color-surface-container-low, var(--color-surface)));
+        background-color: color-mix(in srgb, v.$warn-color v.$hover-opacity, v.$elevated-bg);
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-warn) 12%, var(--color-surface-container-low, var(--color-surface)));
+        background-color: color-mix(in srgb, v.$warn-color v.$active-opacity, v.$elevated-bg);
       }
     }
 
     &.ui-button--filled {
-      background-color: var(--color-warn);
-      color: var(--color-warn-contrast);
+      background-color: v.$warn-color;
+      color: v.$warn-contrast-color;
 
       &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-warn-contrast) 8%, var(--color-warn));
+        background-color: color-mix(in srgb, v.$warn-contrast-color v.$hover-opacity, v.$warn-color);
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-warn-contrast) 12%, var(--color-warn));
+        background-color: color-mix(in srgb, v.$warn-contrast-color v.$active-opacity, v.$warn-color);
       }
     }
 
     &.ui-button--outlined,
     &.ui-button--text {
-      color: var(--color-warn);
-      border-color: color-mix(in srgb, var(--color-warn) 50%, transparent 50%);
+      color: v.$warn-color;
+      border-color: color-mix(in srgb, v.$warn-color 50%, transparent 50%);
 
       &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-warn) 8%, transparent);
+        background-color: color-mix(in srgb, v.$warn-color v.$hover-opacity, transparent);
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, var(--color-warn) 12%, transparent);
+        background-color: color-mix(in srgb, v.$warn-color v.$active-opacity, transparent);
       }
     }
   }
@@ -326,8 +324,8 @@ const linkBindings = computed(() => {
     box-shadow: none;
 
     // By default, text and outlined use transparent background, others use surface-variant
-    background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
-    color: color-mix(in srgb, var(--color-on-surface) 38%, transparent);
+    background-color: color-mix(in srgb, v.$disabled-base-color v.$disabled-bg-mix, transparent);
+    color: color-mix(in srgb, v.$disabled-base-color v.$disabled-color-mix, transparent);
   }
 
   &--outlined#{&}--disabled,
@@ -336,7 +334,7 @@ const linkBindings = computed(() => {
   }
 
   &--outlined#{&}--disabled {
-    border-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+    border-color: color-mix(in srgb, v.$disabled-base-color v.$disabled-bg-mix, transparent);
   }
 }
 </style>

@@ -22,12 +22,14 @@ defineProps<Props>()
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/list' as v;
+
 .ui-list {
   display: flex;
   flex-direction: column;
-  padding-block: 8rem;
-  padding-inline: 0;
-  border-radius: var(--sys-shape-corner-medium);
-  background-color: var(--color-surface);
+  padding-block: v.$padding-block;
+  padding-inline: v.$padding-inline;
+  border-radius: v.$border-radius;
+  background-color: v.$bg-color;
 }
 </style>

@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import { onClickOutside } from '@vueuse/core'
-import type { UiMenuOrigin } from '~/components/ui/menu/index.vue'
+import type { UiMenuOrigin } from '~/components/ui/menu/index'
 
 interface Option {
   label: string
@@ -112,6 +112,8 @@ function isSelected(option: Option) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/dropdown' as v;
+
 .ui-dropdown {
   position: relative;
   width: 100%;
@@ -126,8 +128,8 @@ function isSelected(option: Option) {
 
   &__arrow {
     transition: transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    font-size: 24rem;
-    color: var(--color-on-surface-variant);
+    font-size: v.$arrow-size;
+    color: v.$arrow-color;
   }
 
   &--open &__arrow {
@@ -144,7 +146,7 @@ function isSelected(option: Option) {
       min-width: unset;
       top: 0;
       right: 0;
-      margin-top: 4rem;
+      margin-top: v.$menu-margin-top;
     }
   }
 }
@@ -153,31 +155,26 @@ function isSelected(option: Option) {
   display: flex;
   align-items: center;
   width: 100%;
-  height: 48rem;
-  padding: 0 12rem;
+  height: v.$list-item-height;
+  padding: v.$list-item-padding;
   background-color: transparent;
-  color: var(--color-on-surface);
+  color: v.$list-item-color;
   border: none;
   cursor: pointer;
-  font-family: var(--sys-typescale-label-large-font-family-name);
-  font-weight: var(--sys-typescale-label-large-font-weight);
-  font-size: var(--sys-typescale-label-large-font-size);
-  line-height: var(--sys-typescale-label-large-line-height);
-  letter-spacing: var(--sys-typescale-label-large-letter-spacing);
   transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
+  @include typescale(v.$list-item-text-type);
+
   &:hover {
-    background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+    background-color: v.$list-item-hover-bg;
   }
 
   &--selected {
-    // According to M3, selected items might use primary container, but hover should be based on on-surface or on-primary-container
-    // Let's use primary container if it was here, but with proper hover
-    background-color: var(--color-primary-container);
-    color: var(--color-on-primary-container);
+    background-color: v.$list-item-selected-bg;
+    color: v.$list-item-selected-color;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-primary-container) 92%, var(--color-on-primary-container) 8%);
+      background-color: color-mix(in srgb, v.$list-item-selected-bg 92%, v.$list-item-selected-color 8%);
     }
   }
 }
@@ -186,12 +183,12 @@ function isSelected(option: Option) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24rem;
-  height: 24rem;
-  margin-right: 12rem;
+  width: v.$list-leading-size;
+  height: v.$list-leading-size;
+  margin-right: v.$list-leading-margin-right;
 
   .ui-icon {
-    font-size: 24rem;
+    font-size: v.$list-leading-size;
   }
 }
 

@@ -7,7 +7,7 @@ const VITE_CONFIG = {
     preprocessorOptions: {
       scss: {
         additionalData: `
-          @use "${resolve('./assets/stylesheet/additional.scss').replace(/\\/g, '/')}" as *;
+          @use "${resolve('./app/assets/stylesheet/additional.scss').replace(/\\/g, '/')}" as *;
         `,
       },
     },
@@ -39,11 +39,9 @@ export default defineNuxtConfig({
     ],
   },
 
-  css: ['~~/assets/stylesheet/main.scss'],
+  css: [resolve('./app/assets/stylesheet/main.scss').replace(/\\/g, '/')],
 
-  features: {
-    inlineStyles: false,
-  },
+  features: { inlineStyles: false },
 
   vite: VITE_CONFIG,
 })

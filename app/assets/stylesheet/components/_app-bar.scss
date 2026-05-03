@@ -1,0 +1,29 @@
+// ==========================================
+// APP BAR LOCAL TOKENS
+// Extracted from app/components/ui/app-bar/index.vue
+// ==========================================
+
+// --- Base ---
+$gap: 8rem !default;
+$padding-inline: 16rem !default;
+$padding-block: 8rem !default;
+$border-radius: 0 0 var(--sys-shape-corner-large) var(--sys-shape-corner-large) !default;
+$bg-color: var(--color-surface) !default;
+$text-color: var(--color-surface-contrast) !default;
+$shadow: 0 1rem 2rem rgb(0 0 0 / 8%), 0 2rem 4rem rgb(0 0 0 / 8%) !default;
+
+// --- Variants ---
+$center-aligned-height: 80rem !default;
+$small-height: 64rem !default;
+
+// --- Elements ---
+$nav-min-width: 48rem !default;
+$nav-min-height: 48rem !default;
+
+$title-gap: 2rem !default;
+$title-text-type: 'title-large' !default;
+
+$subtitle-color: var(--color-surface-variant-contrast) !default;
+$subtitle-text-type: 'body-medium' !default;
+
+$actions-gap: 4rem !default;

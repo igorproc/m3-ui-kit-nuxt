@@ -127,44 +127,46 @@ function onBlur() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/time-picker' as v;
+
 .ui-time-picker {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: v.$gap;
 
   &__label {
-    @include typescale('body-medium');
+    @include typescale(v.$label-text-type);
 
-    color: var(--color-on-surface);
+    color: v.$label-color;
   }
 
   &__field {
     display: inline-flex;
     align-items: center;
-    gap: 8rem;
-    padding-inline: 12rem;
-    padding-block: 8rem;
-    min-height: 48rem;
-    border-radius: var(--sys-shape-corner-small);
-    border: 1rem solid var(--color-outline);
-    background-color: var(--color-surface);
-    color: var(--color-on-surface);
+    gap: v.$field-gap;
+    padding-inline: v.$field-padding-inline;
+    padding-block: v.$field-padding-block;
+    min-height: v.$field-min-height;
+    border-radius: v.$field-border-radius;
+    border: 1rem solid v.$field-border-color;
+    background-color: v.$field-bg-color;
+    color: v.$field-text-color;
   }
 
   &__icon {
-    color: var(--color-on-surface-variant);
-    font-size: 20rem;
+    color: v.$icon-color;
+    font-size: v.$icon-size;
   }
 
   &__input {
-    width: 32rem;
+    width: v.$input-width;
     border: none;
     outline: none;
     background: transparent;
     text-align: center;
-    color: var(--color-on-surface);
+    color: v.$input-text-color;
 
-    @include typescale('body-large');
+    @include typescale(v.$input-text-type);
 
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
@@ -178,17 +180,17 @@ function onBlur() {
   }
 
   &__separator {
-    @include typescale('body-large');
+    @include typescale(v.$separator-text-type);
 
-    color: var(--color-on-surface-variant);
+    color: v.$separator-color;
   }
 
   &__helper {
     margin: 0;
 
-    @include typescale('body-small');
+    @include typescale(v.$helper-text-type);
 
-    color: var(--color-surface-variant-contrast);
+    color: v.$helper-color;
   }
 }
 </style>

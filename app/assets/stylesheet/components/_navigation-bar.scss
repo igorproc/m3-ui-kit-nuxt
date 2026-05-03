@@ -1,0 +1,29 @@
+// ==========================================
+// NAVIGATION BAR LOCAL TOKENS
+// Extracted from app/components/ui/navigation-bar/index.vue
+// ==========================================
+
+// --- Base ---
+$padding-inline: 12rem !default;
+$padding-block: 8rem !default;
+$border-radius: var(--sys-shape-corner-large) !default;
+$bg-color: var(--color-surface) !default;
+$shadow: 0 -2rem 4rem rgb(0 0 0 / 8%), 0 -4rem 8rem rgb(0 0 0 / 10%) !default;
+$text-color: var(--color-surface-variant-contrast) !default;
+
+// --- Item ---
+$item-gap: 4rem !default;
+$item-padding-block: 4rem !default;
+$item-color: var(--color-on-surface-variant) !default;
+$item-active-color: var(--color-primary) !default;
+
+// --- Typography ---
+$item-text-type: 'label-medium' !default;
+$label-max-width: 72rem !default;
+
+// --- Icon ---
+$icon-size: 24rem !default;
+
+// --- Badge ---
+$badge-top: -12rem !default;
+$badge-right: -24rem !default;

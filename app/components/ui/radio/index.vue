@@ -105,14 +105,14 @@ if (props.path) {
 </script>
 
 <style lang="scss">
-.ui-radio {
-  --ui-radio-size: 20rem;
+@use '~/assets/stylesheet/components/radio' as v;
 
+.ui-radio {
   display: inline-flex;
   align-items: center;
-  gap: 12rem;
+  gap: v.$gap;
   cursor: pointer;
-  color: var(--color-on-surface);
+  color: v.$text-color;
 
   &__input {
     position: absolute;
@@ -125,15 +125,15 @@ if (props.path) {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 40rem;
-    height: 40rem;
+    width: v.$container-size;
+    height: v.$container-size;
     flex-shrink: 0;
   }
 
   &__control {
     position: relative;
-    width: var(--ui-radio-size);
-    height: var(--ui-radio-size);
+    width: v.$size;
+    height: v.$size;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -144,11 +144,11 @@ if (props.path) {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 40rem;
-    height: 40rem;
+    width: v.$container-size;
+    height: v.$container-size;
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: v.$text-color;
     opacity: 0;
     pointer-events: none;
     transition:
@@ -158,27 +158,27 @@ if (props.path) {
   }
 
   &--checked &__state-layer {
-    background-color: var(--color-primary);
+    background-color: v.$checked-color;
   }
 
   &--error &__state-layer {
-    background-color: var(--color-warn);
+    background-color: v.$error-color;
   }
 
   &:hover &__state-layer {
-    opacity: 0.08;
+    opacity: v.$state-layer-opacity-hover;
     transform: translate(-50%, -50%) scale(1);
   }
 
   &:active &__state-layer {
-    opacity: 0.12;
+    opacity: v.$state-layer-opacity-active;
   }
 
   &__outer {
     position: absolute;
     inset: 0;
     border-radius: var(--sys-shape-corner-full);
-    border: 2rem solid var(--color-outline);
+    border: v.$outer-border-width solid v.$outer-border-color;
     box-sizing: border-box;
     transition:
       border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -186,10 +186,10 @@ if (props.path) {
   }
 
   &__inner {
-    width: 10rem;
-    height: 10rem;
+    width: v.$inner-size;
+    height: v.$inner-size;
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-primary);
+    background-color: v.$inner-bg-color;
     transform: scale(0);
     transition:
       transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -199,11 +199,11 @@ if (props.path) {
   &__label {
     padding-top: 1rem;
 
-    @include typescale('body-medium');
+    @include typescale(v.$label-text-type);
   }
 
   &--checked &__outer {
-    border-color: var(--color-primary);
+    border-color: v.$checked-color;
   }
 
   &--checked &__inner {
@@ -212,7 +212,7 @@ if (props.path) {
 
   &--disabled {
     cursor: default;
-    opacity: 0.38;
+    opacity: v.$disabled-opacity;
 
     & &__state-layer {
       display: none;
@@ -220,7 +220,7 @@ if (props.path) {
   }
 
   &--error &__outer {
-    border-color: var(--color-warn);
+    border-color: v.$error-color;
   }
 }
 </style>

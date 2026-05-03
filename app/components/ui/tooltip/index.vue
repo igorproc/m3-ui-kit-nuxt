@@ -43,6 +43,8 @@ function onLeave() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/tooltip' as v;
+
 .ui-tooltip {
   position: relative;
   display: inline-flex;
@@ -54,18 +56,18 @@ function onLeave() {
   &__content {
     position: absolute;
     left: 50%;
-    bottom: calc(100% + 8rem);
+    bottom: calc(100% + v.$content-offset);
     transform: translateX(-50%);
-    padding: 4rem 8rem;
-    border-radius: var(--sys-shape-corner-small);
-    background-color: var(--color-on-surface);
-    color: var(--color-surface-variant);
+    padding: v.$content-padding;
+    border-radius: v.$content-border-radius;
+    background-color: v.$content-bg-color;
+    color: v.$content-color;
     white-space: nowrap;
     pointer-events: none;
-    box-shadow: 0 2rem 4rem rgb(0 0 0 / 15%);
-    z-index: 10;
+    box-shadow: v.$content-shadow;
+    z-index: v.$z-index;
 
-    @include typescale('body-small');
+    @include typescale(v.$content-text-type);
   }
 }
 </style>

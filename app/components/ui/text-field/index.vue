@@ -142,18 +142,20 @@ function onBlur() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/text-field' as v;
+
 .ui-text-field {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: v.$gap;
 
   &__control {
     position: relative;
     display: flex;
     align-items: center;
-    min-height: 56rem;
-    padding-inline: 16rem;
-    border-width: 1rem;
+    min-height: v.$control-min-height;
+    padding-inline: v.$control-padding-inline;
+    border-width: v.$control-border-width;
     border-style: solid;
     transition:
       border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -162,7 +164,7 @@ function onBlur() {
 
     .ui-text-field__label {
       position: absolute;
-      left: 16rem;
+      left: v.$label-left;
       top: 50%;
       transform: translateY(-50%);
       transform-origin: left top;
@@ -172,15 +174,14 @@ function onBlur() {
         font-size var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
         color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
       pointer-events: none;
-      color: var(--color-surface-variant-contrast);
+      color: v.$label-color;
       z-index: 1;
       max-width: calc(100% - 32rem);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
 
-      // Typography: Body Large
-      @include typescale('body-large');
+      @include typescale(v.$label-text-type);
     }
 
     .ui-text-field__input {
@@ -190,10 +191,9 @@ function onBlur() {
       border: none;
       outline: none;
       background-color: transparent;
-      color: var(--color-surface-contrast);
+      color: v.$input-color;
 
-      // Typography: Body Large
-      @include typescale('body-large');
+      @include typescale(v.$input-text-type);
 
       padding: 0;
 
@@ -207,43 +207,43 @@ function onBlur() {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--color-on-surface-variant);
-      min-width: 24rem;
-      font-size: 24rem;
+      color: v.$icon-color;
+      min-width: v.$icon-min-width;
+      font-size: v.$icon-font-size;
 
       &--prepend {
-        margin-right: 16rem;
+        margin-right: v.$icon-prepend-margin-right;
       }
 
       &--append {
-        margin-left: 16rem;
+        margin-left: v.$icon-append-margin-left;
       }
     }
 
     &.ui-text-field__control {
       &--has-prepend {
-        padding-left: 12rem;
+        padding-left: v.$control-has-prepend-padding-left;
 
         .ui-text-field__label {
-          left: 52rem;
+          left: v.$label-has-prepend-left;
         }
       }
 
       &--has-append {
-        padding-right: 12rem;
+        padding-right: v.$control-has-append-padding-right;
       }
     }
 
     &.ui-text-field__control--filled {
       border-color: transparent;
-      border-bottom: 1rem solid var(--color-on-surface-variant);
-      background-color: var(--color-surface-container-highest);
-      border-radius: 4rem 4rem 0 0;
+      border-bottom: 1rem solid v.$filled-border-bottom-color;
+      background-color: v.$filled-bg-color;
+      border-radius: v.$filled-border-radius;
       align-items: center;
 
       .ui-text-field__input {
-        padding-top: 24rem;
-        padding-bottom: 8rem;
+        padding-top: v.$filled-input-padding-top;
+        padding-bottom: v.$filled-input-padding-bottom;
       }
 
       .ui-text-field__label {
@@ -251,60 +251,59 @@ function onBlur() {
       }
 
       &:hover {
-        background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-surface-container-highest));
-        border-bottom-color: var(--color-on-surface);
+        background-color: v.$hover-filled-bg-color;
+        border-bottom-color: v.$hover-filled-border-bottom-color;
       }
     }
 
     &.ui-text-field__control--outlined {
-      border-color: var(--color-outline);
+      border-color: v.$outlined-border-color;
       background-color: transparent;
-      border-radius: 4rem;
+      border-radius: v.$outlined-border-radius;
 
       .ui-text-field__label {
-        padding-inline: 4rem;
-        margin-left: -4rem;
+        padding-inline: v.$outlined-label-padding-inline;
+        margin-left: v.$outlined-label-margin-left;
       }
 
       &:hover {
-        border-color: var(--color-on-surface);
+        border-color: v.$hover-outlined-border-color;
       }
     }
 
     &.ui-text-field__control--error {
-      border-color: var(--color-warn) !important;
+      border-color: v.$error-color !important;
 
       .ui-text-field__label {
-        color: var(--color-warn) !important;
+        color: v.$error-color !important;
       }
 
       &.ui-text-field__control--filled {
-        border-bottom-color: var(--color-warn);
+        border-bottom-color: v.$error-color;
       }
     }
 
     &.ui-text-field__control--disabled {
-      opacity: 0.38;
+      opacity: v.$disabled-opacity;
       cursor: default;
       background-color: transparent;
-      border-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+      border-color: v.$disabled-border-color;
 
       .ui-text-field__label {
-        color: var(--color-on-surface);
+        color: v.$disabled-label-color;
       }
 
       &.ui-text-field__control--filled {
-        background-color: color-mix(in srgb, var(--color-on-surface) 4%, transparent);
+        background-color: v.$disabled-filled-bg-color;
       }
     }
 
-    // Focused & Populated states (High specificity)
     &.ui-text-field__control--focused,
     &.ui-text-field__control--populated {
       &.ui-text-field__control--filled {
         .ui-text-field__label {
-          top: 8rem;
-          transform: translateY(0) scale(0.75);
+          top: v.$filled-active-label-top;
+          transform: translateY(0) scale(v.$label-active-scale);
         }
 
         .ui-text-field__input::placeholder {
@@ -315,8 +314,8 @@ function onBlur() {
       &.ui-text-field__control--outlined {
         .ui-text-field__label {
           top: 0;
-          transform: translateY(-50%) scale(0.75);
-          background-color: var(--color-surface);
+          transform: translateY(-50%) scale(v.$label-active-scale);
+          background-color: v.$outlined-active-label-bg;
         }
 
         .ui-text-field__input::placeholder {
@@ -327,18 +326,18 @@ function onBlur() {
 
     &.ui-text-field__control--focused {
       &.ui-text-field__control--filled {
-        background-color: var(--color-surface-container-highest);
-        border-bottom-color: var(--color-primary);
-        border-bottom-width: 2rem;
+        background-color: v.$filled-bg-color;
+        border-bottom-color: v.$focused-color;
+        border-bottom-width: v.$focused-border-width;
       }
 
       &.ui-text-field__control--outlined {
-        border-color: var(--color-primary);
-        border-width: 2rem;
-        padding-inline: 15rem; // Compensate for 2px border
+        border-color: v.$focused-color;
+        border-width: v.$focused-border-width;
+        padding-inline: v.$focused-outlined-padding-inline;
 
         .ui-text-field__label {
-          color: var(--color-primary);
+          color: v.$focused-outlined-label-color;
         }
       }
     }
@@ -346,18 +345,18 @@ function onBlur() {
 
   &__helper,
   &__error {
-    padding-inline: 16rem;
-    margin-top: 4rem;
+    padding-inline: v.$helper-padding-inline;
+    margin-top: v.$helper-margin-top;
 
-    @include typescale('body-small');
+    @include typescale(v.$helper-text-type);
   }
 
   &__helper {
-    color: var(--color-surface-variant-contrast);
+    color: v.$helper-color;
   }
 
   &__error {
-    color: var(--color-warn);
+    color: v.$error-color;
   }
 }
 </style>

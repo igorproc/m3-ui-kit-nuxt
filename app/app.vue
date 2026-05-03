@@ -21,6 +21,8 @@ useHead({ htmlAttrs: themeAttrs.value })
 
     <NuxtPage />
 
-    <ModalsContainer />
+    <client-only>
+      <core-scope />
+    </client-only>
   </div>
 </template>

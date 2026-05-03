@@ -28,6 +28,8 @@ const resolvedName = computed(() => {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/icon' as v;
+
 .ui-icon {
   display: inline-flex;
   align-items: center;
@@ -41,7 +43,7 @@ const resolvedName = computed(() => {
   :deep(svg) {
     width: 1em;
     height: 1em;
-    fill: currentcolor;
+    fill: v.$fill;
   }
 }
 </style>

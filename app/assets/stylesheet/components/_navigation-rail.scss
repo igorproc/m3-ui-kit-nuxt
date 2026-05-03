@@ -1,0 +1,30 @@
+// ==========================================
+// NAVIGATION RAIL LOCAL TOKENS
+// Extracted from app/components/ui/navigation-rail/index.vue
+// ==========================================
+
+// --- Base ---
+$width: 80rem !default;
+$padding-block: 12rem !default;
+$padding-inline: 8rem !default;
+$border-radius: var(--sys-shape-corner-large) !default;
+$bg-color: var(--color-surface) !default;
+$shadow: 0 0 0 1rem color-mix(in srgb, var(--color-outline-variant) 40%, transparent) !default;
+$gap: 8rem !default;
+$text-color: var(--color-surface-variant-contrast) !default;
+
+// --- Item ---
+$item-gap: 4rem !default;
+$item-padding: 4rem 0 !default;
+$item-color: var(--color-on-surface-variant) !default;
+$item-active-color: var(--color-primary) !default;
+
+// --- Typography ---
+$item-text-type: 'label-small' !default;
+
+// --- Icon ---
+$icon-size: 24rem !default;
+
+// --- Badge ---
+$badge-top: -12rem !default;
+$badge-right: -24rem !default;

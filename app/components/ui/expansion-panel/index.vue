@@ -63,11 +63,13 @@ function toggle() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/expansion-panel' as v;
+
 .ui-expansion-panel {
   display: flex;
   flex-direction: column;
-  background-color: var(--color-surface);
-  border-radius: var(--sys-shape-corner-medium);
+  background-color: v.$bg-color-default;
+  border-radius: v.$border-radius;
   transition:
     background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     margin var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -79,57 +81,57 @@ function toggle() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16rem;
+    gap: v.$header-gap;
     width: 100%;
-    min-height: 56rem;
-    padding: 12rem 24rem;
+    min-height: v.$header-min-height;
+    padding: v.$header-padding;
     background: transparent;
     border: none;
     cursor: pointer;
     text-align: left;
-    color: var(--color-on-surface);
+    color: v.$header-text-color;
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
     &:disabled {
       cursor: default;
-      opacity: 0.38;
+      opacity: v.$disabled-opacity;
     }
 
     &:hover:not(:disabled) {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+      background-color: v.$header-hover-bg;
     }
 
     &:active:not(:disabled) {
-      background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+      background-color: v.$header-active-bg;
     }
   }
 
   &__header-content {
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: v.$header-content-gap;
     flex: 1;
   }
 
   &__title {
-    color: var(--color-on-surface);
+    color: v.$header-text-color;
 
-    @include typescale('body-large');
+    @include typescale(v.$title-text-type);
   }
 
   &__description {
-    color: var(--color-on-surface-variant);
+    color: v.$description-text-color;
 
-    @include typescale('body-medium');
+    @include typescale(v.$description-text-type);
   }
 
   &__trailing {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-on-surface-variant);
+    color: v.$trailing-color-default;
     transition: transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    font-size: 24rem;
+    font-size: v.$trailing-icon-size;
   }
 
   // Content Animation using Grid Trick
@@ -141,28 +143,28 @@ function toggle() {
 
   &__content {
     overflow: hidden;
-    color: var(--color-on-surface-variant);
-    padding: 0 24rem;
+    color: v.$content-text-color;
+    padding: 0 v.$content-padding-inline;
     opacity: 0;
     transition:
       opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
       padding-bottom var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
 
-    @include typescale('body-medium');
+    @include typescale(v.$content-text-type);
   }
 
   &--expanded {
-    background-color: var(--color-surface-container-low);
-    box-shadow: 0 1rem 3rem rgb(0 0 0 / 8%);
+    background-color: v.$bg-color-expanded;
+    box-shadow: v.$expanded-shadow;
 
     .ui-expansion-panel__trailing {
       transform: rotate(180deg);
-      color: var(--color-primary);
+      color: v.$trailing-color-active;
     }
 
     .ui-expansion-panel__content {
       opacity: 1;
-      padding-bottom: 24rem;
+      padding-bottom: v.$content-padding-bottom;
 
       &-wrapper {
         grid-template-rows: 1fr;

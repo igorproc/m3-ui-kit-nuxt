@@ -6,7 +6,7 @@ const { progress } = useLoadingIndicator({ throttle: 0, duration: 5e100 })
   <section class="app-common-scope">
     <core-global-container />
 
-    <
+    <ui-progress
       :value="progress"
       class="app-common-scope__indicator"
     />

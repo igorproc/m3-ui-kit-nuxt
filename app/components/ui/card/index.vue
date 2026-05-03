@@ -61,13 +61,15 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/card' as v;
+
 .ui-card {
   display: flex;
   flex-direction: column;
-  gap: 12rem;
-  padding: 16rem;
-  border-radius: var(--sys-shape-corner-medium);
-  border-width: 1rem;
+  gap: v.$gap;
+  padding: v.$padding;
+  border-radius: v.$border-radius;
+  border-width: v.$border-width;
   border-style: solid;
   border-color: transparent;
   background-color: var(--color-surface);
@@ -80,42 +82,42 @@ withDefaults(defineProps<Props>(), {
     transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
   &--elevated {
-    background-color: var(--color-surface-container-low, var(--color-surface));
+    background-color: v.$elevated-bg;
     border-color: transparent;
-    box-shadow: 0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 1
+    box-shadow: v.$elevated-shadow;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-surface-container-low, var(--color-surface)));
-      box-shadow: 0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 2
+      background-color: color-mix(in srgb, v.$state-layer-color v.$hover-opacity, v.$elevated-bg);
+      box-shadow: v.$elevated-hover-shadow;
     }
   }
 
   &--filled {
-    background-color: var(--color-surface-container-highest, var(--color-surface-variant));
+    background-color: v.$filled-bg;
     border-color: transparent;
-    box-shadow: none;
+    box-shadow: v.$filled-shadow;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-surface-container-highest, var(--color-surface-variant)));
-      box-shadow: 0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 1
+      background-color: color-mix(in srgb, v.$state-layer-color v.$hover-opacity, v.$filled-bg);
+      box-shadow: v.$filled-hover-shadow;
     }
   }
 
   &--outlined {
-    background-color: var(--color-surface);
-    border-color: var(--color-outline-variant);
-    box-shadow: none;
+    background-color: v.$outlined-bg;
+    border-color: v.$outlined-border-color;
+    box-shadow: v.$outlined-shadow;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-surface));
-      box-shadow: 0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%); // Elevation 1
+      background-color: color-mix(in srgb, v.$state-layer-color v.$hover-opacity, v.$outlined-bg);
+      box-shadow: v.$outlined-hover-shadow;
     }
   }
 
   &__media {
     overflow: hidden;
-    margin: -16rem -16rem 0; // Full width media
-    border-radius: var(--sys-shape-corner-medium) var(--sys-shape-corner-medium) 0 0;
+    margin: calc(v.$padding * -1) calc(v.$padding * -1) 0; // Full width media
+    border-radius: v.$border-radius v.$border-radius 0 0;
 
     img {
       display: block;
@@ -128,33 +130,30 @@ withDefaults(defineProps<Props>(), {
   &__header {
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: 4rem; // Keeping this small gap internal
   }
 
   &__title {
     margin: 0;
 
-    // Typography: Title Medium
-    @include typescale('title-medium');
+    @include typescale(v.$title-text-type);
   }
 
   &__subtitle {
     margin: 0;
-    color: var(--color-surface-variant-contrast);
+    color: v.$subtitle-color;
 
-    // Typography: Body Medium
-    @include typescale('body-medium');
+    @include typescale(v.$subtitle-text-type);
   }
 
   &__content {
     flex: 1 1 auto;
 
-    // Typography: Body Medium
-    @include typescale('body-medium');
+    @include typescale(v.$content-text-type);
   }
 
   &__actions {
-    margin-top: 8rem;
+    margin-top: 8rem; // Keeping this internal
     display: flex;
     justify-content: flex-end;
     gap: 8rem;

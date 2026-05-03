@@ -1,0 +1,36 @@
+// ==========================================
+// CHECKBOX LOCAL TOKENS
+// Extracted from app/components/ui/checkbox/index.vue
+// ==========================================
+
+// --- Base ---
+$size: 18rem !default;
+$gap: 12rem !default;
+$text-color: var(--color-on-surface) !default;
+
+// --- Container (State Layer) ---
+$container-size: 40rem !default;
+$state-layer-opacity-hover: 0.08 !default;
+$state-layer-opacity-active: 0.12 !default;
+
+// --- Control (Box) ---
+$control-border-width: 2rem !default;
+$control-border-radius: 2rem !default;
+$control-border-color: var(--color-outline) !default;
+$control-bg-color: transparent !default;
+
+// --- Checked State ---
+$checked-color: var(--color-primary) !default;
+$checked-icon-color: var(--color-primary-contrast) !default;
+
+// --- Icon ---
+$icon-size: 16rem !default;
+
+// --- Typography ---
+$label-text-type: 'body-medium' !default;
+
+// --- Error State ---
+$error-color: var(--color-warn) !default;
+
+// --- Disabled State ---
+$disabled-opacity: 0.38 !default;

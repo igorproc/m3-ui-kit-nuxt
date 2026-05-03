@@ -33,28 +33,26 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style lang="scss">
-.ui-loading {
-  --ui-loading-size-small: 16rem;
-  --ui-loading-size-medium: 24rem;
-  --ui-loading-size-large: 32rem;
+@use '~/assets/stylesheet/components/loading' as v;
 
+.ui-loading {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
   &--small {
-    width: var(--ui-loading-size-small);
-    height: var(--ui-loading-size-small);
+    width: v.$size-small;
+    height: v.$size-small;
   }
 
   &--medium {
-    width: var(--ui-loading-size-medium);
-    height: var(--ui-loading-size-medium);
+    width: v.$size-medium;
+    height: v.$size-medium;
   }
 
   &--large {
-    width: var(--ui-loading-size-large);
-    height: var(--ui-loading-size-large);
+    width: v.$size-large;
+    height: v.$size-large;
   }
 
   &--inline {
@@ -65,12 +63,12 @@ withDefaults(defineProps<Props>(), {
     width: 100%;
     height: 100%;
     border-radius: var(--sys-shape-corner-full);
-    border-width: 2rem;
+    border-width: v.$border-width;
     border-style: solid;
-    border-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
-    border-top-color: var(--color-primary);
+    border-color: v.$track-color;
+    border-top-color: v.$spinner-color;
     animation:
-      ui-loading-spin var(--sys-motion-duration-medium-2)
+      ui-loading-spin v.$animation-duration
       var(--sys-motion-easing-standard) infinite;
   }
 }

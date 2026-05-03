@@ -58,10 +58,12 @@ const switchClasses = computed(() => [
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/switch' as v;
+
 .ui-switch {
   display: inline-flex;
   align-items: center;
-  gap: 12rem;
+  gap: v.$gap;
   cursor: pointer;
 
   &__input {
@@ -72,11 +74,11 @@ const switchClasses = computed(() => [
 
   &__track {
     position: relative;
-    width: 52rem;
-    height: 32rem;
+    width: v.$track-width;
+    height: v.$track-height;
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-surface-container-highest);
-    border: 2rem solid var(--color-outline);
+    background-color: v.$track-bg-color;
+    border: v.$track-border-width solid v.$track-border-color;
     box-sizing: border-box;
     transition:
       background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -86,9 +88,9 @@ const switchClasses = computed(() => [
   &__thumb-container {
     position: absolute;
     top: 50%;
-    left: 2rem;
-    width: 24rem;
-    height: 24rem;
+    left: v.$track-border-width;
+    width: v.$thumb-size-on;
+    height: v.$thumb-size-on;
     transform: translateY(-50%);
     display: flex;
     justify-content: center;
@@ -97,10 +99,10 @@ const switchClasses = computed(() => [
   }
 
   &__thumb {
-    width: 16rem;
-    height: 16rem;
+    width: v.$thumb-size-off;
+    height: v.$thumb-size-off;
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-outline);
+    background-color: v.$thumb-color-off;
     transition:
       width var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
       height var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -112,8 +114,8 @@ const switchClasses = computed(() => [
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 40rem;
-    height: 40rem;
+    width: v.$state-layer-size;
+    height: v.$state-layer-size;
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
     background-color: var(--color-on-surface);
@@ -125,50 +127,50 @@ const switchClasses = computed(() => [
   }
 
   &--checked &__track {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+    background-color: v.$checked-track-bg-color;
+    border-color: v.$checked-track-border-color;
   }
 
   &--checked &__thumb-container {
-    transform: translate(20rem, -50%);
+    transform: translate(v.$checked-thumb-container-translate, -50%);
   }
 
   &--checked &__thumb {
-    width: 24rem;
-    height: 24rem;
-    background-color: var(--color-primary-contrast);
+    width: v.$thumb-size-on;
+    height: v.$thumb-size-on;
+    background-color: v.$thumb-color-on;
   }
 
   &--checked &__state-layer {
-    background-color: var(--color-primary);
+    background-color: v.$checked-track-bg-color;
   }
 
   &:hover &__state-layer {
-    opacity: 0.08;
+    opacity: v.$state-layer-opacity-hover;
     transform: translate(-50%, -50%) scale(1);
   }
 
   &:hover &__thumb {
-    background-color: var(--color-on-surface-variant);
+    background-color: v.$thumb-color-hover-off;
   }
 
   &:active &__thumb {
-    width: 28rem;
-    height: 28rem;
+    width: v.$thumb-size-active;
+    height: v.$thumb-size-active;
   }
 
   &:active &__state-layer {
-    opacity: 0.1;
+    opacity: v.$state-layer-opacity-active;
   }
 
   &--checked:hover &__thumb {
-    background-color: var(--color-primary-container);
+    background-color: v.$thumb-color-hover-on;
   }
 
   &__label {
-    color: var(--color-on-surface);
+    color: v.$label-color;
 
-    @include typescale('body-medium');
+    @include typescale(v.$label-text-type);
   }
 
   /* stylelint-disable no-descending-specificity, selector-class-pattern */
@@ -180,27 +182,27 @@ const switchClasses = computed(() => [
     }
 
     .ui-switch__track {
-      background-color: color-mix(in srgb, var(--color-surface-variant) 12%, transparent);
-      border-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+      background-color: v.$disabled-track-bg-color;
+      border-color: v.$disabled-track-border-color;
     }
 
     .ui-switch__thumb {
-      background-color: var(--color-on-surface);
-      opacity: 0.38;
+      background-color: v.$disabled-thumb-color;
+      opacity: v.$disabled-opacity;
     }
 
     .ui-switch__label {
-      opacity: 0.38;
+      opacity: v.$disabled-opacity;
     }
   }
 
   &--checked.ui-switch--disabled .ui-switch__track {
-    background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+    background-color: v.$disabled-checked-track-bg-color;
     border-color: transparent;
   }
 
   &--checked.ui-switch--disabled .ui-switch__thumb {
-    background-color: var(--color-surface);
+    background-color: v.$disabled-checked-thumb-color;
     opacity: 1;
   }
   /* stylelint-enable no-descending-specificity, selector-class-pattern */

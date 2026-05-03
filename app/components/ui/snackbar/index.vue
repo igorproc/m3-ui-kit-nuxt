@@ -53,54 +53,50 @@ function onAction() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/snackbar' as v;
+
 .ui-snackbar {
   position: fixed;
   inset-inline: 0;
-  bottom: 16rem;
+  bottom: v.$bottom-offset;
   display: flex;
   justify-content: center;
   pointer-events: none;
-  z-index: 60;
+  z-index: v.$z-index;
 
   &__surface {
     pointer-events: auto;
-    max-width: 560rem;
-    margin-inline: 16rem;
-    padding: 12rem 16rem;
-    border-radius: var(--sys-shape-corner-large);
-    background-color: var(--color-surface);
-    color: var(--color-on-surface);
-    box-shadow:
-      0 2rem 4rem rgb(0 0 0 / 16%),
-      0 6rem 12rem rgb(0 0 0 / 12%);
+    max-width: v.$surface-max-width;
+    margin-inline: v.$surface-margin-inline;
+    padding: v.$surface-padding;
+    border-radius: v.$surface-border-radius;
+    background-color: v.$surface-bg-color;
+    color: v.$surface-color;
+    box-shadow: v.$surface-shadow;
     display: flex;
     align-items: center;
-    gap: 16rem;
+    gap: v.$surface-gap;
   }
 
   &__label {
     margin: 0;
 
-    @include typescale('body-medium');
+    @include typescale(v.$label-text-type);
   }
 
   &__action {
     border: none;
     background: transparent;
-    padding: 8rem 12rem;
-    border-radius: var(--sys-shape-corner-small);
+    padding: v.$action-padding;
+    border-radius: v.$action-border-radius;
     cursor: pointer;
 
-    @include typescale('label-large');
+    @include typescale(v.$action-text-type);
 
-    color: var(--color-primary);
+    color: v.$action-color;
 
     &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-primary) 8%,
-        transparent
-      );
+      background-color: v.$action-hover-bg;
     }
   }
 }

@@ -145,14 +145,16 @@ function goTo(nextIndex: number) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/carousel' as v;
+
 .ui-carousel {
   display: flex;
   flex-direction: column;
-  gap: 8rem;
+  gap: v.$gap;
 
   &__viewport {
     overflow: hidden;
-    border-radius: var(--sys-shape-corner-large);
+    border-radius: v.$viewport-border-radius;
   }
 
   &__track {
@@ -170,24 +172,20 @@ function goTo(nextIndex: number) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8rem;
+    gap: v.$control-gap;
   }
 
   &__control {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40rem;
-    height: 40rem;
+    width: v.$control-size;
+    height: v.$control-size;
     border-radius: var(--sys-shape-corner-full);
     border: none;
     padding: 0;
-    background-color: color-mix(
-      in srgb,
-      var(--color-on-surface) 8%,
-      transparent
-    );
-    color: var(--color-on-surface);
+    background-color: v.$control-bg;
+    color: v.$control-color;
     cursor: pointer;
     transition:
       background-color var(--sys-motion-duration-short-3)
@@ -196,20 +194,12 @@ function goTo(nextIndex: number) {
         var(--sys-motion-easing-standard);
 
     &:hover {
-      background-color: color-mix(
-        in srgb,
-        var(--color-on-surface) 12%,
-        transparent
-      );
+      background-color: v.$control-hover-bg;
       transform: translateY(-1rem);
     }
 
     &:active {
-      background-color: color-mix(
-        in srgb,
-        var(--color-on-surface) 16%,
-        transparent
-      );
+      background-color: v.$control-active-bg;
       transform: translateY(0);
     }
   }
@@ -218,20 +208,16 @@ function goTo(nextIndex: number) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6rem;
+    gap: v.$indicator-gap;
   }
 
   &__indicator {
-    width: 6rem;
-    height: 6rem;
+    width: v.$indicator-size;
+    height: v.$indicator-size;
     border-radius: var(--sys-shape-corner-full);
     border: none;
     padding: 0;
-    background-color: color-mix(
-      in srgb,
-      var(--color-on-surface) 16%,
-      transparent
-    );
+    background-color: v.$indicator-bg;
     cursor: pointer;
     transition:
       background-color var(--sys-motion-duration-short-3)
@@ -240,8 +226,8 @@ function goTo(nextIndex: number) {
         var(--sys-motion-easing-standard);
 
     &--active {
-      width: 18rem;
-      background-color: var(--color-primary);
+      width: v.$indicator-active-width;
+      background-color: v.$indicator-active-bg;
     }
   }
 }

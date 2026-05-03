@@ -77,15 +77,17 @@ function onSelect(item: TabItem) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/tabs' as v;
+
 .ui-tabs {
   display: flex;
   flex-direction: column;
-  gap: 8rem;
+  gap: v.$list-gap;
 
   &__list {
     display: flex;
     align-items: stretch;
-    border-bottom: 1rem solid var(--color-outline-variant);
+    border-bottom: 1rem solid v.$list-border-color;
     width: 100%;
   }
 
@@ -95,25 +97,25 @@ function onSelect(item: TabItem) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4rem;
-    padding-inline: 16rem;
-    min-height: 48rem;
+    gap: v.$tab-gap;
+    padding-inline: v.$tab-padding-inline;
+    min-height: v.$tab-min-height;
     flex: 1;
     border: none;
     background-color: transparent;
-    color: var(--color-on-surface-variant);
+    color: v.$tab-text-color;
     cursor: pointer;
     outline: none;
     transition:
       color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-    @include typescale('label-large');
+    @include typescale(v.$tab-text-type);
 
     &-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 24rem;
+      font-size: v.$tab-icon-size;
     }
 
     &-label {
@@ -124,13 +126,13 @@ function onSelect(item: TabItem) {
       content: '';
       position: absolute;
       inset: 0;
-      background-color: var(--color-on-surface);
+      background-color: v.$tab-state-layer-bg;
       opacity: 0;
       transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
     }
 
     &:hover::before {
-      opacity: 0.08;
+      opacity: v.$state-layer-opacity-hover;
     }
 
     &::after {
@@ -139,34 +141,34 @@ function onSelect(item: TabItem) {
       bottom: 0;
       left: 50%;
       width: 0;
-      height: 3rem;
-      background-color: var(--color-primary);
+      height: v.$tab-indicator-height;
+      background-color: v.$tab-indicator-color;
       border-radius: 3rem 3rem 0 0;
       transform: translateX(-50%);
       transition: width var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
     }
 
     &--active {
-      color: var(--color-primary);
+      color: v.$tab-active-color;
 
       &::after {
-        width: 40rem; // M3 content-aligned indicator
+        width: v.$tab-active-indicator-width;
       }
 
       &::before {
-        background-color: var(--color-primary);
+        background-color: v.$tab-active-state-layer-bg;
       }
     }
 
     &--disabled {
       cursor: default;
-      opacity: 0.38;
+      opacity: v.$tab-disabled-opacity;
       pointer-events: none;
     }
   }
 
   &__content {
-    padding: 16rem 0;
+    padding: v.$content-padding;
   }
 }
 </style>

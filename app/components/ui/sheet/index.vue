@@ -85,40 +85,40 @@ function onTouchCancel() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/sheet' as v;
+
 .ui-sheet {
   width: 100%;
-  max-width: 720rem;
-  margin-inline: auto;
-  border-radius: var(--sys-shape-corner-extra-large-top);
-  background-color: var(--color-sheet-surface);
-  box-shadow:
-    0 -4rem 8rem 3rem rgb(0 0 0 / 15%),
-    0 -1rem 3rem rgb(0 0 0 / 30%);
+  max-width: v.$max-width;
+  margin-inline: v.$margin-inline;
+  border-radius: v.$border-radius;
+  background-color: v.$bg-color;
+  box-shadow: v.$shadow;
   overflow: hidden;
 
   &__container {
     display: flex;
     flex-direction: column;
-    gap: 8rem;
-    padding: 16rem 16rem 24rem;
+    gap: v.$container-gap;
+    padding: v.$container-padding;
     transition: transform var(--sys-motion-duration-medium-2)
       var(--sys-motion-easing-standard);
   }
 
   &__drag-handle {
     align-self: center;
-    width: 32rem;
-    height: 4rem;
-    border-radius: 999rem;
-    background-color: var(--color-outline-variant);
-    margin-bottom: 8rem;
+    width: v.$drag-handle-width;
+    height: v.$drag-handle-height;
+    border-radius: v.$drag-handle-radius;
+    background-color: v.$drag-handle-color;
+    margin-bottom: v.$drag-handle-margin-bottom;
   }
 
   &__content {
     display: flex;
     flex-direction: column;
-    gap: 16rem;
-    color: var(--color-on-surface);
+    gap: v.$content-gap;
+    color: v.$content-color;
   }
 }
 </style>

@@ -63,21 +63,19 @@ function onClick() {
 </script>
 
 <style lang="scss">
-.ui-chip {
-  --ui-chip-height: 32rem;
-  --ui-chip-padding-inline: 12rem;
-  --ui-chip-radius: 8rem;
+@use '~/assets/stylesheet/components/chip' as v;
 
+.ui-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8rem;
-  min-height: var(--ui-chip-height);
-  padding-inline: var(--ui-chip-padding-inline);
-  border-radius: var(--ui-chip-radius);
-  border: 1rem solid transparent;
-  background-color: var(--color-surface-container-highest);
-  color: var(--color-on-surface-variant);
+  gap: v.$gap;
+  min-height: v.$height;
+  padding-inline: v.$padding-inline;
+  border-radius: v.$radius;
+  border: v.$border-width solid transparent;
+  background-color: v.$bg-color-default;
+  color: v.$text-color-variant;
   cursor: pointer;
   outline: none;
   text-decoration: none;
@@ -88,15 +86,14 @@ function onClick() {
     box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-  // Typography: Label Large (chips use label styles)
-  @include typescale('label-large');
+  @include typescale(v.$text-type);
 
   &__icon,
   &__trailing {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 18rem;
+    font-size: v.$icon-size;
   }
 
   &__label {
@@ -106,11 +103,11 @@ function onClick() {
   }
 
   &:hover:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-surface-container-highest));
+    background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-hover, v.$bg-color-default);
   }
 
   &:active:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, var(--color-on-surface) 16%, var(--color-surface-container-highest));
+    background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-active, v.$bg-color-default);
     transform: translateY(1rem);
   }
 
@@ -118,41 +115,41 @@ function onClick() {
   &--filter,
   &--input {
     background-color: transparent;
-    border-color: var(--color-outline);
-    color: var(--color-on-surface);
+    border-color: v.$border-color-default;
+    color: v.$text-color-default;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+      background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-hover, transparent);
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+      background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-active, transparent);
     }
   }
 
   &--suggestion {
-    background-color: var(--color-surface-container-low, var(--color-surface));
+    background-color: v.$bg-color-suggestion;
     border-color: transparent;
-    box-shadow: 0 1rem 2rem rgb(0 0 0 / 10%);
+    box-shadow: v.$suggestion-shadow;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-surface-container-low, var(--color-surface)));
+      background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-hover, v.$bg-color-suggestion);
     }
   }
 
   &--selected {
-    background-color: var(--color-secondary-container, var(--color-primary-container));
-    color: var(--color-on-secondary-container, var(--color-on-primary-container));
+    background-color: v.$bg-color-selected;
+    color: v.$text-color-selected;
     border-color: transparent;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-secondary-container, var(--color-on-primary-container)) 8%, var(--color-secondary-container, var(--color-primary-container)));
+      background-color: color-mix(in srgb, v.$text-color-selected v.$state-layer-opacity-hover, v.$bg-color-selected);
     }
   }
 
   &--disabled {
     cursor: default;
-    opacity: 0.38;
+    opacity: v.$disabled-opacity;
     pointer-events: none;
   }
 }

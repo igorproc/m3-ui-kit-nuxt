@@ -94,14 +94,14 @@ if (props.path) {
 </script>
 
 <style lang="scss">
-.ui-checkbox {
-  --ui-checkbox-size: 18rem;
+@use '~/assets/stylesheet/components/checkbox' as v;
 
+.ui-checkbox {
   display: inline-flex;
   align-items: center;
-  gap: 12rem;
+  gap: v.$gap;
   cursor: pointer;
-  color: var(--color-on-surface);
+  color: v.$text-color;
 
   &__input {
     position: absolute;
@@ -114,8 +114,8 @@ if (props.path) {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 40rem;
-    height: 40rem;
+    width: v.$container-size;
+    height: v.$container-size;
     flex-shrink: 0;
   }
 
@@ -124,11 +124,11 @@ if (props.path) {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: var(--ui-checkbox-size);
-    height: var(--ui-checkbox-size);
-    border-radius: 2rem;
-    border: 2rem solid var(--color-outline);
-    background-color: transparent;
+    width: v.$size;
+    height: v.$size;
+    border-radius: v.$control-border-radius;
+    border: v.$control-border-width solid v.$control-border-color;
+    background-color: v.$control-bg-color;
     box-sizing: border-box;
     z-index: 1;
     transition:
@@ -141,11 +141,11 @@ if (props.path) {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 40rem;
-    height: 40rem;
+    width: v.$container-size;
+    height: v.$container-size;
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: v.$text-color;
     opacity: 0;
     pointer-events: none;
     transition:
@@ -155,29 +155,29 @@ if (props.path) {
   }
 
   &--checked &__state-layer {
-    background-color: var(--color-primary);
+    background-color: v.$checked-color;
   }
 
   &--error &__state-layer {
-    background-color: var(--color-warn);
+    background-color: v.$error-color;
   }
 
   &:hover &__state-layer {
-    opacity: 0.08;
+    opacity: v.$state-layer-opacity-hover;
     transform: translate(-50%, -50%) scale(1);
   }
 
   &:active &__state-layer {
-    opacity: 0.12;
+    opacity: v.$state-layer-opacity-active;
   }
 
   &--checked:hover &__state-layer {
-    opacity: 0.08;
+    opacity: v.$state-layer-opacity-hover;
   }
 
   &__icon {
-    font-size: 16rem;
-    color: var(--color-primary-contrast);
+    font-size: v.$icon-size;
+    color: v.$checked-icon-color;
     opacity: 0;
     transform: scale(0.6);
     transition:
@@ -186,7 +186,7 @@ if (props.path) {
   }
 
   &__label {
-    @include typescale('body-medium');
+    @include typescale(v.$label-text-type);
 
     padding-top: 1rem;
     user-select: none;
@@ -194,7 +194,7 @@ if (props.path) {
 
   &--disabled {
     cursor: default;
-    opacity: 0.38;
+    opacity: v.$disabled-opacity;
 
     & &__state-layer {
       display: none;
@@ -202,12 +202,12 @@ if (props.path) {
   }
 
   &--checked &__control {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+    background-color: v.$checked-color;
+    border-color: v.$checked-color;
   }
 
   &--error &__control {
-    border-color: var(--color-warn);
+    border-color: v.$error-color;
   }
 
   &--checked &__icon {

@@ -1,0 +1,27 @@
+// ==========================================
+// EXTENDED FAB MENU LOCAL TOKENS
+// Extracted from app/components/ui/extended-fab-menu/index.vue
+// ==========================================
+
+// --- Base ---
+$icon-size: 24rem !default;
+
+// --- Drawer & List ---
+$drawer-margin-bottom: 16rem !default;
+$list-gap: 16rem !default;
+
+// --- Item ---
+$item-gap: 16rem !default;
+$item-bg-color: var(--color-primary-container) !default;
+$item-text-color: var(--color-primary-container-contrast, var(--color-on-surface)) !default;
+$item-border-radius: 16rem !default;
+$item-padding: 12rem 16rem !default;
+$item-shadow: 0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%) !default;
+$item-icon-size: 24rem !default;
+
+// --- Typography ---
+$item-text-type: 'label-large' !default;
+
+// --- Interaction ---
+$item-hover-overlay: color-mix(in srgb, var(--color-on-surface) 8%, transparent) !default;
+$item-active-overlay: color-mix(in srgb, var(--color-on-surface) 12%, transparent) !default;

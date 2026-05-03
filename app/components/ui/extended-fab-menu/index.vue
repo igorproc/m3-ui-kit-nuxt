@@ -110,6 +110,8 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/extended-fab-menu' as v;
+
 .ui-extended-fab-menu {
   position: relative;
   display: inline-flex;
@@ -126,8 +128,8 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
     align-items: center;
     justify-content: center;
     position: relative;
-    width: 24rem;
-    height: 24rem;
+    width: v.$icon-size;
+    height: v.$icon-size;
     transition: transform var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
 
     &.is-open {
@@ -137,7 +139,7 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
 
   &__icon {
     position: absolute;
-    font-size: 24rem;
+    font-size: v.$icon-size;
 
     &.ui-extended-fab-menu-icon-enter-active,
     &.ui-extended-fab-menu-icon-leave-active {
@@ -159,13 +161,12 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
   &__drawer {
     position: absolute;
     bottom: 100%;
-    margin-bottom: 16rem;
+    margin-bottom: v.$drawer-margin-bottom;
     display: flex;
     flex-direction: column;
-    align-items: flex-end; // Standard FAB menus align elements to the trailing edge
+    align-items: flex-end;
     z-index: 1;
 
-    // The drawer container animation
     &.ui-extended-fab-menu-drawer-enter-active,
     &.ui-extended-fab-menu-drawer-leave-active {
       transition: opacity var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
@@ -180,7 +181,7 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
   &__list {
     display: flex;
     flex-direction: column;
-    gap: 16rem;
+    gap: v.$list-gap;
     align-items: flex-end;
   }
 
@@ -188,25 +189,24 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16rem;
-    background-color: var(--color-primary-container);
-    color: var(--color-primary-container-contrast, var(--color-on-surface));
+    gap: v.$item-gap;
+    background-color: v.$item-bg-color;
+    color: v.$item-text-color;
     border: none;
-    border-radius: 16rem; // Standard M3 pill/fab rounding
-    padding: 12rem 16rem;
+    border-radius: v.$item-border-radius;
+    padding: v.$item-padding;
     cursor: pointer;
-    box-shadow: 0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%); // Elevation 3
+    box-shadow: v.$item-shadow;
     white-space: nowrap;
     position: relative;
     overflow: hidden;
 
-    @include typescale('label-large');
+    @include typescale(v.$item-text-type);
 
     &-icon {
-      font-size: 24rem;
+      font-size: v.$item-icon-size;
     }
 
-    // Staggered list items animation
     &.ui-extended-fab-menu-item-enter-active,
     &.ui-extended-fab-menu-item-leave-active {
       transition: opacity var(--sys-motion-duration-medium-4) var(--sys-motion-easing-emphasized-decelerate),
@@ -220,11 +220,11 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
     }
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, var(--color-primary-container));
+      background-color: color-mix(in srgb, var(--color-on-surface) 8%, v.$item-bg-color);
     }
     
     &:active {
-      background-color: color-mix(in srgb, var(--color-on-surface) 12%, var(--color-primary-container));
+      background-color: color-mix(in srgb, var(--color-on-surface) 12%, v.$item-bg-color);
     }
   }
 }

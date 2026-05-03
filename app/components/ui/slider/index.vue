@@ -71,20 +71,22 @@ const displayValue = computed(() => `${Math.round(modelValue.value)}`)
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/slider' as v;
+
 .ui-slider {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  gap: v.$gap;
 
   &__label {
-    @include typescale('body-medium');
+    @include typescale(v.$label-text-type);
 
-    color: var(--color-on-surface);
+    color: v.$label-color;
   }
 
   &__track-wrapper {
     position: relative;
-    padding-block: 8rem;
+    padding-block: v.$padding-block;
   }
 
   &__input {
@@ -97,32 +99,32 @@ const displayValue = computed(() => `${Math.round(modelValue.value)}`)
 
     &::-webkit-slider-thumb {
       appearance: none;
-      width: 20rem;
-      height: 20rem;
+      width: v.$thumb-size;
+      height: v.$thumb-size;
       border-radius: var(--sys-shape-corner-full);
-      background-color: var(--color-primary);
-      box-shadow: 0 0 0 4rem color-mix(in srgb, var(--color-primary) 24%, transparent);
+      background-color: v.$thumb-color;
+      box-shadow: 0 0 0 v.$thumb-halo-size v.$thumb-halo-color;
       cursor: pointer;
-      margin-top: -8rem;
+      margin-top: calc((v.$thumb-size / -2) + (v.$track-height / 2));
     }
 
     &::-webkit-slider-runnable-track {
-      height: 4rem;
+      height: v.$track-height;
       background: transparent;
     }
 
     &::-moz-range-thumb {
-      width: 20rem;
-      height: 20rem;
+      width: v.$thumb-size;
+      height: v.$thumb-size;
       border-radius: var(--sys-shape-corner-full);
-      background-color: var(--color-primary);
+      background-color: v.$thumb-color;
       border: none;
-      box-shadow: 0 0 0 4rem color-mix(in srgb, var(--color-primary) 24%, transparent);
+      box-shadow: 0 0 0 v.$thumb-halo-size v.$thumb-halo-color;
       cursor: pointer;
     }
 
     &::-moz-range-track {
-      height: 4rem;
+      height: v.$track-height;
       background: transparent;
     }
   }
@@ -133,26 +135,22 @@ const displayValue = computed(() => `${Math.round(modelValue.value)}`)
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    height: 4rem;
+    height: v.$track-height;
     border-radius: 999rem;
-    background-color: color-mix(
-      in srgb,
-      var(--color-on-surface) 16%,
-      transparent
-    );
+    background-color: v.$track-bg-color;
     overflow: hidden;
   }
 
   &__track-fill {
     height: 100%;
     border-radius: inherit;
-    background-color: var(--color-primary);
+    background-color: v.$track-fill-color;
   }
 
   &__value {
-    @include typescale('body-small');
+    @include typescale(v.$value-text-type);
 
-    color: var(--color-surface-variant-contrast);
+    color: v.$value-color;
   }
 }
 </style>

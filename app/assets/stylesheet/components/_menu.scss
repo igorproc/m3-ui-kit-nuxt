@@ -1,0 +1,33 @@
+// ==========================================
+// MENU LOCAL TOKENS
+// Extracted from app/components/ui/menu/index.vue
+// ==========================================
+
+// --- Base ---
+$z-index: 40 !default;
+
+// --- Surface ---
+$surface-top: 72rem !default;
+$surface-right: 32rem !default;
+$surface-min-width: 112rem !default;
+$surface-max-width: 280rem !default;
+$surface-padding-block: 8rem !default;
+$surface-border-radius: var(--sys-shape-corner-extra-small, 4rem) !default;
+$surface-bg-color: var(--color-surface-container, var(--color-surface)) !default;
+$surface-color: var(--color-on-surface) !default;
+$surface-shadow: 0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%) !default;
+
+// --- Item ---
+$item-min-height: 48rem !default;
+$item-padding: 0 12rem !default;
+$item-gap: 12rem !default;
+$item-text-color: var(--color-on-surface) !default;
+$item-shortcut-color: var(--color-on-surface-variant) !default;
+
+// --- Typography ---
+$item-text-type: 'label-large' !default;
+$item-shortcut-type: 'body-small' !default;
+
+// --- Interaction ---
+$item-hover-bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent) !default;
+$item-active-bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent) !default;

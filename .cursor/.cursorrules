@@ -92,3 +92,11 @@ Example:
     - Используем современный синтаксис цветовых функций:
       - Для теней: `rgb(0 0 0 / 16%)` вместо `rgba(0, 0, 0, 0.16)`.
       - Для state-слоёв и микширования – `color-mix(in srgb, ...)` как в Material 3.
+
+## 11. Material Design 3 (MD3) Token Pattern
+- **Token Extraction**: All component styles must be extracted into `assets/stylesheet/components/_<name>.scss`.
+- **Usage**: Import tokens using `@use '...' as v`.
+- **Naming**: Local tokens should be prefixed with `$v-` or simply `$token` within the namespace.
+- **System Tokens**: Reference system tokens via `var(--color-primary)`, `var(--sys-shape-corner-...)`, etc.
+- **Typography**: Strictly use `@include typescale('label-large')` mixin for all text.
+- **States**: Use `color-mix(in srgb, <base-color> <percentage>, <target-color>)` for state layers.

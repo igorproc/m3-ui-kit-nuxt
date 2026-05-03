@@ -278,17 +278,19 @@ watch(modelValue, (next) => {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/date-picker' as v;
+
 .ui-date-picker {
   display: flex;
   flex-direction: column;
-  width: 328rem;
-  background-color: var(--color-surface-container-high);
-  border-radius: 28rem;
+  width: v.$width;
+  background-color: v.$bg-color;
+  border-radius: v.$border-radius;
   overflow: hidden;
-  box-shadow: var(--sys-elevation-3);
+  box-shadow: v.$shadow;
 
   &__header {
-    padding: 16rem 24rem 12rem;
+    padding: v.$header-padding;
     background-color: transparent;
   }
 
@@ -299,20 +301,20 @@ watch(modelValue, (next) => {
   &__headline-label {
     margin: 0;
 
-    @include typescale('label-medium');
+    @include typescale(v.$headline-label-type);
 
-    color: var(--color-on-surface-variant);
+    color: v.$headline-label-color;
   }
 
   &__headline-date {
     margin: 0;
 
-    @include typescale('headline-medium');
+    @include typescale(v.$headline-date-type);
 
-    color: var(--color-on-surface);
+    color: v.$headline-date-color;
 
     &--placeholder {
-      color: var(--color-on-surface-variant);
+      color: v.$headline-date-placeholder-color;
       opacity: 0.7;
     }
   }
@@ -338,15 +340,15 @@ watch(modelValue, (next) => {
     border: none;
     background: none;
     cursor: pointer;
-    color: var(--color-on-surface-variant);
+    color: v.$view-toggle-color;
 
-    @include typescale('label-large');
+    @include typescale(v.$view-toggle-type);
 
     border-radius: 999rem;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface-variant) 8%, transparent);
+      background-color: v.$view-toggle-hover-bg;
     }
   }
 
@@ -359,17 +361,17 @@ watch(modelValue, (next) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40rem;
-    height: 40rem;
+    width: v.$icon-button-size;
+    height: v.$icon-button-size;
     border-radius: 50%;
     border: none;
     background: none;
-    color: var(--color-on-surface-variant);
+    color: v.$icon-button-color;
     cursor: pointer;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface-variant) 8%, transparent);
+      background-color: color-mix(in srgb, v.$icon-button-color 8%, transparent);
     }
   }
 
@@ -391,14 +393,14 @@ watch(modelValue, (next) => {
 
   &__weekday {
     text-align: center;
-    height: 40rem;
+    height: v.$weekday-height;
     display: flex;
     align-items: center;
     justify-content: center;
 
-    @include typescale('body-small');
+    @include typescale(v.$weekday-type);
 
-    color: var(--color-on-surface);
+    color: v.$weekday-color;
   }
 
   &__grid {
@@ -409,7 +411,7 @@ watch(modelValue, (next) => {
 
   &__day {
     position: relative;
-    height: 40rem;
+    height: v.$day-size;
     border: none;
     background: none;
     cursor: pointer;
@@ -420,8 +422,8 @@ watch(modelValue, (next) => {
 
     &-state {
       position: absolute;
-      width: 40rem;
-      height: 40rem;
+      width: v.$day-size;
+      height: v.$day-size;
       border-radius: 50%;
       background-color: transparent;
       transition: background-color 0.2s, transform 0.2s;
@@ -430,27 +432,27 @@ watch(modelValue, (next) => {
     &-label {
       position: relative;
 
-      @include typescale('body-small');
+      @include typescale(v.$day-label-type);
 
-      color: var(--color-on-surface);
+      color: v.$day-label-color;
       z-index: 1;
     }
 
     &:hover {
       &-state {
-        background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+        background-color: v.$day-hover-bg;
       }
     }
   }
 
   &__day--outside {
-    opacity: 0.38;
+    opacity: v.$disabled-opacity;
   }
 
   &__day--today &__day-label {
-    color: var(--color-primary);
+    color: v.$day-today-color;
     font-weight: bold;
-    box-shadow: inset 0 0 0 1rem var(--color-primary);
+    box-shadow: inset 0 0 0 1rem v.$day-today-color;
     border-radius: 50%;
     width: 32rem;
     height: 32rem;
@@ -460,20 +462,20 @@ watch(modelValue, (next) => {
   }
 
   &__day--selected &__day-state {
-    background-color: var(--color-primary);
+    background-color: v.$day-selected-bg;
     transform: scale(1);
   }
 
   &__day--selected:hover &__day-state {
-    background-color: color-mix(in srgb, var(--color-on-primary) 8%, var(--color-primary));
+    background-color: color-mix(in srgb, var(--color-on-primary) 8%, v.$day-selected-bg);
   }
 
   &__day--selected &__day-label {
-    color: var(--color-on-primary);
+    color: v.$day-selected-color;
   }
 
   &__year-grid {
-    height: 280rem;
+    height: v.$year-grid-height;
     overflow-y: auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -491,7 +493,7 @@ watch(modelValue, (next) => {
   }
 
   &__year {
-    height: 48rem;
+    height: v.$year-height;
     border: none;
     background: none;
     cursor: pointer;
@@ -500,31 +502,31 @@ watch(modelValue, (next) => {
     align-items: center;
     justify-content: center;
 
-    @include typescale('body-large');
+    @include typescale(v.$year-type);
 
-    color: var(--color-on-surface-variant);
+    color: v.$year-color;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface-variant) 8%, transparent);
+      background-color: v.$year-hover-bg;
     }
 
     &--selected {
-      background-color: var(--color-primary) !important;
-      color: var(--color-on-primary) !important;
+      background-color: v.$year-selected-bg !important;
+      color: v.$year-selected-color !important;
     }
 
     &--current {
-      color: var(--color-primary);
+      color: v.$year-current-color;
       font-weight: bold;
     }
   }
 
   &__footer {
-    padding: 8rem 12rem 12rem;
+    padding: v.$footer-padding;
     display: flex;
     justify-content: flex-end;
-    gap: 8rem;
+    gap: v.$footer-gap;
   }
 }
 

@@ -1,0 +1,17 @@
+// ==========================================
+// LOADING LOCAL TOKENS
+// Extracted from app/components/ui/loading/index.vue
+// ==========================================
+
+// --- Sizes ---
+$size-small: 16rem !default;
+$size-medium: 24rem !default;
+$size-large: 32rem !default;
+
+// --- Spinner ---
+$border-width: 2rem !default;
+$track-color: color-mix(in srgb, var(--color-primary) 16%, transparent) !default;
+$spinner-color: var(--color-primary) !default;
+
+// --- Motion ---
+$animation-duration: var(--sys-motion-duration-medium-2) !default;

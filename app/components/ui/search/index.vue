@@ -69,18 +69,20 @@ function onClear() {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/search' as v;
+
 .ui-search {
   display: inline-flex;
   align-items: center;
-  gap: 8rem;
+  gap: v.$gap;
   width: 100%;
-  max-width: 720rem;
-  padding-inline: 16rem;
-  min-height: 56rem;
-  border-radius: var(--sys-shape-corner-full);
-  background-color: var(--color-surface-container-highest);
-  color: var(--color-on-surface);
-  box-shadow: 0 0 0 1rem var(--color-outline-variant);
+  max-width: v.$max-width;
+  padding-inline: v.$padding-inline;
+  min-height: v.$min-height;
+  border-radius: v.$border-radius;
+  background-color: v.$bg-color-default;
+  color: v.$text-color-default;
+  box-shadow: 0 0 0 v.$border-width-default v.$border-color-default;
   transition:
     box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -91,14 +93,13 @@ function onClear() {
     border: none;
     outline: none;
     background: transparent;
-    color: var(--color-on-surface);
-    padding-block: 8rem;
+    color: v.$text-color-default;
+    padding-block: v.$input-padding-block;
 
-    // Typography: Body Large
-    @include typescale('body-large');
+    @include typescale(v.$input-text-type);
 
     &::placeholder {
-      color: var(--color-on-surface-variant);
+      color: v.$placeholder-color;
       opacity: 1;
     }
 
@@ -112,11 +113,11 @@ function onClear() {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-on-surface-variant);
+    color: v.$icon-color;
 
     &--trailing {
-      width: 40rem;
-      height: 40rem;
+      width: v.$trailing-icon-size;
+      height: v.$trailing-icon-size;
       border-radius: 999rem;
       border: none;
       background: transparent;
@@ -134,13 +135,13 @@ function onClear() {
   }
 
   &--focused {
-    box-shadow: 0 0 0 2rem var(--color-primary);
-    background-color: var(--color-surface-container-highest);
+    box-shadow: 0 0 0 v.$focused-border-width v.$focused-border-color;
+    background-color: v.$bg-color-default;
   }
 
   &--empty {
     .ui-search__icon--leading {
-      color: var(--color-on-surface-variant);
+      color: v.$icon-color;
     }
   }
 
@@ -148,12 +149,12 @@ function onClear() {
     background-color: color-mix(
       in srgb,
       var(--color-on-surface) 4%,
-      var(--color-surface-container-highest)
+      v.$bg-color-default
     );
   }
 
   &:has(.ui-search__input:disabled) {
-    opacity: 0.38;
+    opacity: v.$disabled-opacity;
     cursor: default;
   }
 }

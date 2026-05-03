@@ -54,35 +54,35 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/app-bar' as v;
+
 .ui-app-bar {
   display: flex;
   align-items: center;
-  gap: 8rem;
-  padding-inline: 16rem;
-  padding-block: 8rem;
-  border-radius: 0 0 var(--sys-shape-corner-large) var(--sys-shape-corner-large);
-  background-color: var(--color-surface);
-  color: var(--color-surface-contrast);
-  box-shadow:
-    0 1rem 2rem rgb(0 0 0 / 8%),
-    0 2rem 4rem rgb(0 0 0 / 8%);
+  gap: v.$gap;
+  padding-inline: v.$padding-inline;
+  padding-block: v.$padding-block;
+  border-radius: v.$border-radius;
+  background-color: v.$bg-color;
+  color: v.$text-color;
+  box-shadow: v.$shadow;
   position: relative;
   z-index: 1;
 
   &--center-aligned {
-    min-height: 80rem;
+    min-height: v.$center-aligned-height;
   }
 
   &--small {
-    min-height: 64rem;
+    min-height: v.$small-height;
   }
 
   &__nav {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 48rem;
-    min-height: 48rem;
+    min-width: v.$nav-min-width;
+    min-height: v.$nav-min-height;
   }
 
   &__title {
@@ -90,7 +90,7 @@ withDefaults(defineProps<Props>(), {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 2rem;
+    gap: v.$title-gap;
     min-width: 0;
   }
 
@@ -100,26 +100,25 @@ withDefaults(defineProps<Props>(), {
     text-overflow: ellipsis;
     overflow: hidden;
 
-    // Typography: Title Large (M3 small/center-aligned top app bar)
-    @include typescale('title-large');
+    font-family: var(--mio-theme-display-font-family);
+    @include typescale(v.$title-text-type);
   }
 
   &__subtitle {
     margin: 0;
-    color: var(--color-surface-variant-contrast);
+    color: v.$subtitle-color;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
 
-    // Typography: Body Medium
-    @include typescale('body-medium');
+    @include typescale(v.$subtitle-text-type);
   }
 
   &__actions {
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 4rem;
+    gap: v.$actions-gap;
   }
 }
 </style>

@@ -62,34 +62,33 @@ function onUpdateModelValue(value: boolean) {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/navigation-drawer' as v;
+
 .ui-navigation-drawer {
   &__surface {
     display: flex;
     flex-direction: column;
-    gap: 8rem;
-    min-width: 360rem;
+    gap: v.$surface-gap;
+    min-width: v.$surface-min-width;
     width: fit-content;
     height: 100%;
-    padding: 16rem;
-    border-radius: 0 var(--sys-shape-corner-large) var(--sys-shape-corner-large) 0;
-    background-color: var(--color-surface);
-    color: var(--color-on-surface);
-    box-shadow:
-      0 0 16rem rgb(0 0 0 / 24%),
-      0 0 32rem rgb(0 0 0 / 20%);
+    padding: v.$surface-padding;
+    border-radius: v.$surface-border-radius-left;
+    background-color: v.$surface-bg-color;
+    color: v.$surface-text-color;
+    box-shadow: v.$surface-shadow;
   }
 
   &__header {
-    padding: 4rem 8rem 12rem;
+    padding: v.$header-padding;
 
-    // Typography: Title Medium
-    @include typescale('title-medium');
+    @include typescale(v.$header-text-type);
   }
 }
 
 .ui-navigation-drawer--right {
   .ui-navigation-drawer__surface {
-    border-radius: var(--sys-shape-corner-large) 0 0 var(--sys-shape-corner-large);
+    border-radius: v.$surface-border-radius-right;
   }
 }
 </style>
