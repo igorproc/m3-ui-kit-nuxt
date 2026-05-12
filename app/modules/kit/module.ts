@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url'
 import { defineNuxtModule, createResolver, addImportsDir, addPlugin, addTemplate } from '@nuxt/kit'
 import { themeFromSourceColor, argbFromHex, hexFromArgb } from '@material/material-color-utilities'
 
-import type { MaterialKitOptions } from './types'
+import type { MaterialKitOptions } from '~~/shared/types/kit'
 import { COOKIE_THEME_KEYS } from '~~/shared/constants/cookie'
 
 export default defineNuxtModule<MaterialKitOptions>({

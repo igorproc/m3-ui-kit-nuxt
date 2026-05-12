@@ -1,5 +1,5 @@
 import { THEME_DEFINITIONS, THEME_CONTRASTS } from '~~/shared/constants/theme'
-import type { ITheme } from '~~/kit/types'
+import type { ITheme } from '~~/shared/types/kit'
 
 export const useThemeStore = defineStore('themeStore', () => {
   const config = useRuntimeConfig().public.materialKit

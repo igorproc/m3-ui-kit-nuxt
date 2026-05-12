@@ -23,7 +23,6 @@ export default defineNuxtConfig({
     // https://nuxt.com/modules/pinia
     '@pinia/nuxt',
     '@vueuse/nuxt',
-    './kit/module',
   ],
 
   components: {
