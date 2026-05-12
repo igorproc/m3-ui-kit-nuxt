@@ -1,7 +1,7 @@
 <template>
   <div class="ui-table-container">
     <table class="ui-table">
-      <ui-table-header
+      <m-table-header
         v-model:sort="sortState"
         :columns="columns"
         :selectable="selectable"
@@ -20,7 +20,7 @@
             {{ col.label }}
           </slot>
         </template>
-      </ui-table-header>
+      </m-table-header>
 
       <tbody>
         <tr
@@ -33,7 +33,7 @@
             v-if="selectable"
             class="ui-table__cell ui-table__cell--checkbox"
           >
-            <ui-checkbox
+            <m-checkbox
               :model-value="isSelected(row)"
               @update:model-value="toggleRow(row)"
             />
@@ -57,7 +57,7 @@
       </tbody>
     </table>
 
-    <ui-table-pagination
+    <m-table-pagination
       v-if="pagination"
       :page-size="pageSize"
       :current-page="currentPage"
@@ -69,7 +69,7 @@
           Items per page: {{ pageSize }}
         </slot>
       </template>
-    </ui-table-pagination>
+    </m-table-pagination>
   </div>
 </template>
 

@@ -14,6 +14,7 @@
     "lint:style": "stylelint **/*.{vue,css,scss}"
   },
   "dependencies": {
+    "@material/material-color-utilities": "^0.4.0",
     "@vee-validate/nuxt": "^4.15.1",
     "@vee-validate/yup": "^4.15.1",
     "@vueuse/core": "^14.3.0",
@@ -26,15 +27,18 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@iconify-json/ic": "^1.2.4",
     "@nuxt/eslint": "^1.15.2",
     "@nuxt/eslint-config": "^1.15.2",
     "@nuxt/icon": "^2.2.1",
     "@nuxt/test-utils": "^4.0.3",
     "@nuxtjs/stylelint-module": "^5.2.1",
+    "@pinia/nuxt": "^0.11.3",
     "@playwright/test": "^1.59.1",
     "@vue/test-utils": "^2.4.10",
     "eslint": "^10.3.0",
     "happy-dom": "^20.9.0",
+    "pinia": "^3.0.4",
     "sass": "^1.99.0",
     "stylelint": "^17.9.1",
     "stylelint-config-standard-scss": "^17.0.0",

@@ -9,9 +9,9 @@
     </label>
 
     <div class="ui-time-picker__field">
-      <ui-icon
+      <m-icon
         class="ui-time-picker__icon"
-        name="baseline-access-time"
+        :name="ICONS.accessTime"
         aria-hidden="true"
       />
 
@@ -53,6 +53,8 @@
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+
 interface Props {
   label?: string
   helperText?: string

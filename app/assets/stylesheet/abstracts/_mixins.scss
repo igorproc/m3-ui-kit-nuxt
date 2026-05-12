@@ -27,7 +27,8 @@
 }
 
 @mixin media-distance($mediaWidthMin, $mediaWidthMax) {
-  @media only screen and (min-width: $mediaWidthMin) and (max-width: $mediaWidthMax - 1) {
+  $max: $mediaWidthMax - 1px;
+  @media only screen and (min-width: $mediaWidthMin) and (max-width: $max) {
     @content;
   }
 }

@@ -9,13 +9,13 @@
       @click="onSelect(item.id)"
     >
       <span class="ui-navigation-bar__icon-wrapper">
-        <ui-icon
+        <m-icon
           class="ui-navigation-bar__icon"
           :name="item.icon"
           aria-hidden="true"
         />
 
-        <ui-badge
+        <m-badge
           v-if="item.badge != null && item.badge > 0"
           class="ui-navigation-bar__badge"
           variant="standard"

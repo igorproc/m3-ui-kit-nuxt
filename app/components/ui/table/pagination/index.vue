@@ -7,26 +7,28 @@
     </div>
 
     <div class="ui-table__pagination-actions">
-      <ui-button
+      <m-button
         variant="text"
         :disabled="currentPage === 1"
         @click="$emit('update:currentPage', currentPage - 1)"
       >
-        <ui-icon name="baseline-chevron-left" />
-      </ui-button>
+        <m-icon :name="ICONS.chevronLeft" />
+      </m-button>
 
-      <ui-button
+      <m-button
         variant="text"
         :disabled="isLastPage"
         @click="$emit('update:currentPage', currentPage + 1)"
       >
-        <ui-icon name="baseline-chevron-right" />
-      </ui-button>
+        <m-icon :name="ICONS.chevronRight" />
+      </m-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+
 interface Props {
   pageSize: number
   currentPage: number

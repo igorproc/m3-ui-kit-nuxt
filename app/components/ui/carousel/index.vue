@@ -22,7 +22,7 @@
         :aria-label="prevLabel"
         @click="goPrev"
       >
-        <ui-icon name="baseline-chevron-left" />
+        <m-icon name="ic:outline-chevron-left" />
       </button>
 
       <div class="ui-carousel__indicators">
@@ -45,7 +45,7 @@
         :aria-label="nextLabel"
         @click="goNext"
       >
-        <ui-icon name="baseline-chevron-right" />
+        <m-icon name="ic:outline-chevron-right" />
       </button>
     </div>
   </div>

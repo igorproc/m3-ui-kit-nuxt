@@ -26,7 +26,7 @@
       </div>
 
       <div class="ui-expansion-panel__trailing">
-        <ui-icon name="baseline-keyboard-arrow-down" />
+        <m-icon :name="ICONS.keyboardArrowDown" />
       </div>
     </button>
 
@@ -42,6 +42,8 @@
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+
 interface Props {
   title?: string
   description?: string

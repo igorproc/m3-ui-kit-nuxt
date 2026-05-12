@@ -5,7 +5,7 @@
     v-click-outside="closeMenu"
   >
     <!-- Activator FAB -->
-    <ui-button-fab
+    <m-button-fab
       class="ui-fab-menu__activator"
       :size="size"
       :color="color"
@@ -15,19 +15,19 @@
       <div class="ui-fab-menu__icon-wrapper" :class="{ 'is-open': isOpen }">
         <!-- Transition between open/close icons -->
         <transition name="ui-fab-menu-icon">
-          <ui-icon
+          <m-icon
             v-if="isOpen"
             :name="closeIcon"
             class="ui-fab-menu__icon ui-fab-menu__icon--close"
           />
-          <ui-icon
+          <m-icon
             v-else
             :name="openIcon"
             class="ui-fab-menu__icon ui-fab-menu__icon--open"
           />
         </transition>
       </div>
-    </ui-button-fab>
+    </m-button-fab>
 
     <!-- Drawer with Menu Items -->
     <transition name="ui-fab-menu-drawer">
@@ -45,7 +45,7 @@
             @click="handleItemClick(item)"
           >
             <span v-if="item.label" class="ui-fab-menu__label">{{ item.label }}</span>
-            <ui-icon v-if="item.icon" :name="item.icon" class="ui-fab-menu__item-icon" />
+            <m-icon v-if="item.icon" :name="item.icon" class="ui-fab-menu__item-icon" />
           </button>
         </transition-group>
       </div>

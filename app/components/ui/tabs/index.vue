@@ -22,7 +22,7 @@
           v-if="item.icon"
           class="ui-tabs__tab-icon"
         >
-          <ui-icon :name="item.icon" />
+          <m-icon :name="item.icon" />
         </span>
 
         <span class="ui-tabs__tab-label">

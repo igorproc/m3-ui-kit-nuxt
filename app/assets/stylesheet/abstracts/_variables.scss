@@ -1,3 +1,6 @@
+@use "sass:map";
+@use "~material-kit-config" as *;
+
 /* variables */
 $scrollbar-width: 4px;
 $breakpoints: (
@@ -18,3 +21,6 @@ $z-indexes: (
   overlay: 10,
   below: -1,
 );
+
+/* computed */
+$breakpoints: map.merge($breakpoints, $material-kit-breakpoints);

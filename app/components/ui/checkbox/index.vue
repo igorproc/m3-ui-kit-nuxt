@@ -16,9 +16,9 @@
 
     <div class="ui-checkbox__container">
       <span class="ui-checkbox__control">
-        <ui-icon
+        <m-icon
           class="ui-checkbox__icon"
-          name="baseline-check"
+          :name="ICONS.check"
         />
       </span>
       <span class="ui-checkbox__state-layer" />

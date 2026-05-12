@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+</script>
+
 <template>
   <thead>
     <tr class="ui-table__row ui-table__row--header">
@@ -5,7 +9,7 @@
         v-if="selectable"
         class="ui-table__cell ui-table__cell--header ui-table__cell--checkbox"
       >
-        <ui-checkbox
+        <m-checkbox
           :model-value="isAllSelected"
           @update:model-value="$emit('toggle-all', $event)"
         />
@@ -25,9 +29,9 @@
           >
             {{ column.label }}
           </slot>
-          <ui-icon
+          <m-icon
             v-if="column.sortable && sort?.key === column.key"
-            :name="sort.direction === 'asc' ? 'baseline-arrow-upward' : 'baseline-arrow-downward'"
+            :name="sort.direction === 'asc' ? ICONS.arrowUpward : ICONS.arrowDownward"
             class="ui-table__sort-icon"
           />
         </div>

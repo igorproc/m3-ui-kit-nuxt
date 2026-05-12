@@ -14,7 +14,7 @@
       class="ui-list-item__leading"
     >
       <slot name="leading">
-        <ui-icon
+        <m-icon
           v-if="leadingIcon"
           :name="leadingIcon"
         />
@@ -42,7 +42,7 @@
       class="ui-list-item__trailing"
     >
       <slot name="trailing">
-        <ui-icon
+        <m-icon
           v-if="trailingIcon"
           :name="trailingIcon"
         />

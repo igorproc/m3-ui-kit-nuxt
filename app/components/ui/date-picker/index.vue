@@ -22,8 +22,8 @@
             @click="toggleView"
           >
             {{ currentMonthYearLabel }}
-            <ui-icon
-              :name="view === 'calendar' ? 'baseline-arrow-drop-down' : 'baseline-arrow-drop-up'"
+            <m-icon
+              :name="view === 'calendar' ? ICONS.arrowDropDown : ICONS.arrowDropUp"
               class="ui-date-picker__view-toggle-icon"
             />
           </button>
@@ -38,7 +38,7 @@
               aria-label="Previous month"
               @click="goToPreviousMonth"
             >
-              <ui-icon name="baseline-chevron-left" />
+              <m-icon :name="ICONS.chevronLeft" />
             </button>
 
             <button
@@ -47,7 +47,7 @@
               aria-label="Next month"
               @click="goToNextMonth"
             >
-              <ui-icon name="baseline-chevron-right" />
+              <m-icon :name="ICONS.chevronRight" />
             </button>
           </div>
         </div>
@@ -124,23 +124,25 @@
     </div>
 
     <footer class="ui-date-picker__footer">
-      <ui-button
+      <m-button
         variant="text"
         @click="$emit('cancel')"
       >
         Cancel
-      </ui-button>
-      <ui-button
+      </m-button>
+      <m-button
         variant="text"
         @click="confirm"
       >
         OK
-      </ui-button>
+      </m-button>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+
 import dayjs from 'dayjs'
 import 'dayjs/locale/ru' // Example, could be dynamic
 

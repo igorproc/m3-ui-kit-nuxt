@@ -5,7 +5,7 @@
     v-click-outside="closeMenu"
   >
     <!-- Activator Extended FAB -->
-    <ui-button-extended-fab
+    <m-button-extended-fab
       class="ui-extended-fab-menu__activator"
       :size="size"
       :color="color"
@@ -16,12 +16,12 @@
         <div class="ui-extended-fab-menu__icon-wrapper" :class="{ 'is-open': isOpen }">
           <!-- Transition between open/close icons -->
           <transition name="ui-extended-fab-menu-icon">
-            <ui-icon
+            <m-icon
               v-if="isOpen"
               :name="closeIcon"
               class="ui-extended-fab-menu__icon ui-extended-fab-menu__icon--close"
             />
-            <ui-icon
+            <m-icon
               v-else
               :name="openIcon"
               class="ui-extended-fab-menu__icon ui-extended-fab-menu__icon--open"
@@ -30,7 +30,7 @@
         </div>
       </template>
       <slot>{{ label }}</slot>
-    </ui-button-extended-fab>
+    </m-button-extended-fab>
 
     <!-- Drawer with Menu Items -->
     <transition name="ui-extended-fab-menu-drawer">
@@ -48,7 +48,7 @@
             @click="handleItemClick(item)"
           >
             <span v-if="item.label" class="ui-extended-fab-menu__label">{{ item.label }}</span>
-            <ui-icon v-if="item.icon" :name="item.icon" class="ui-extended-fab-menu__item-icon" />
+            <m-icon v-if="item.icon" :name="item.icon" class="ui-extended-fab-menu__item-icon" />
           </button>
         </transition-group>
       </div>

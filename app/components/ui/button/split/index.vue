@@ -1,7 +1,7 @@
 <template>
   <div class="ui-split-button" v-click-outside="closeMenu">
     <div class="ui-split-button__wrapper">
-      <ui-button
+      <m-button
         class="ui-split-button__action"
         :variant="variant"
         :color="color"
@@ -9,8 +9,9 @@
         @click="$emit('click')"
       >
         <slot />
-      </ui-button>
-      <ui-button
+      </m-button>
+
+      <m-button
         class="ui-split-button__dropdown"
         :variant="variant"
         :color="color"
@@ -18,13 +19,12 @@
         @click="toggleMenu"
       >
         <template #prepend>
-          <!-- Using a standard test icon or creating one if needed -->
-          <ui-icon name="asset:ui-test-plus" style="transform: rotate(45deg);" /> 
+          <m-icon name="ic:outline-plus" style="transform: rotate(45deg);" /> 
         </template>
-      </ui-button>
+      </m-button>
     </div>
 
-    <ui-menu
+    <m-menu
       v-if="items && items.length > 0"
       v-model="isMenuOpen"
       absolute
@@ -38,9 +38,9 @@
         @click="handleItemClick(item)"
       >
         <span class="ui-menu__item-label">{{ item.label }}</span>
-        <ui-icon v-if="item.icon" :name="item.icon" />
+        <m-icon v-if="item.icon" :name="item.icon" />
       </button>
-    </ui-menu>
+    </m-menu>
   </div>
 </template>
 

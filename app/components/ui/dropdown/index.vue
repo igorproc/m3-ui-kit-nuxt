@@ -8,7 +8,7 @@
       class="ui-dropdown__trigger"
       @click="toggle"
     >
-      <ui-text-field
+      <m-text-field
         :path="path || ''"
         :label="label"
         :placeholder="placeholder"
@@ -19,21 +19,21 @@
         class="ui-dropdown__field"
       >
         <template #append>
-          <ui-icon
-            name="baseline-arrow-drop-down"
+          <m-icon
+            :name="ICONS.arrowDropDown"
             class="ui-dropdown__arrow"
           />
         </template>
-      </ui-text-field>
+      </m-text-field>
     </div>
 
-    <ui-menu
+    <m-menu
       v-model="isOpen"
       class="ui-dropdown__menu"
       absolute
       :origin="menuOrigin"
     >
-      <ui-list>
+      <m-list>
         <button
           v-for="option in options"
           :key="option.value"
@@ -43,19 +43,21 @@
           @click="select(option)"
         >
           <span class="ui-list__leading">
-            <ui-icon
+            <m-icon
               v-if="isSelected(option)"
-              name="baseline-check"
+              :name="ICONS.check"
             />
           </span>
           <span class="ui-list__label">{{ option.label }}</span>
         </button>
-      </ui-list>
-    </ui-menu>
+      </m-list>
+    </m-menu>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+
 import { onClickOutside } from '@vueuse/core'
 import type { UiMenuOrigin } from '~/components/ui/menu/index'
 

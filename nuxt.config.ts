@@ -1,4 +1,5 @@
 import { createResolver } from '@nuxt/kit'
+import { THEME_DEFINITIONS } from './shared/constants/theme'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -18,8 +19,12 @@ export default defineNuxtConfig({
   modules: [
     // https://github.com/nuxt/icon
     '@nuxt/icon',
+    // https://nuxt.com/modules/vee-validate
     '@vee-validate/nuxt',
+    // https://nuxt.com/modules/pinia
+    '@pinia/nuxt',
     '@vueuse/nuxt',
+    './kit/module',
   ],
 
   components: {
@@ -30,7 +35,7 @@ export default defineNuxtConfig({
       },
       {
         path: './components/ui',
-        pathPrefix: false,
+        pathPrefix: true,
         prefix: 'm',
       },
     ],
@@ -41,13 +46,41 @@ export default defineNuxtConfig({
       './composables/**',
       './utils/**',
       '../shared/**',
+      './store/**',
     ],
   },
 
-  css: [resolve('./app/assets/stylesheet/main.scss').replace(/\\/g, '/')],
+  css: ['~/assets/stylesheet/main.scss'],
   appDir: './app',
-
   features: { inlineStyles: false },
 
   vite: VITE_CONFIG,
+
+  icon: {
+    provider: 'server',
+    serverBundle: {
+      collections: ['ic'],
+    },
+  },
+
+  materialKit: {
+    defaultTheme: 'brown',
+    themes: [
+      {
+        key: 'brown',
+        name: 'Brown Theme',
+        definedInScss: true,
+      },
+      {
+        key: 'green',
+        name: 'Green Theme',
+        definedInScss: true,
+      },
+      {
+        key: 'custom-blue',
+        name: 'Custom Blue',
+        color: '#3498db',
+      },
+    ],
+  },
 })

@@ -6,9 +6,9 @@
       'ui-search--empty': !modelValue,
     }"
   >
-    <ui-icon
+    <m-icon
       class="ui-search__icon ui-search__icon--leading"
-      name="baseline-search"
+      :name="ICONS.search"
       aria-hidden="true"
     />
 
@@ -31,12 +31,14 @@
       aria-label="Clear search"
       @click="onClear"
     >
-      <ui-icon name="baseline-close" />
+      <m-icon :name="ICONS.close" />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+
 interface Props {
   placeholder?: string
   ariaLabel?: string
