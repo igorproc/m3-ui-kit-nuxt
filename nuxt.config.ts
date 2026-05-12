@@ -1,5 +1,4 @@
 import { createResolver } from '@nuxt/kit'
-import { THEME_DEFINITIONS } from './shared/constants/theme'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -61,26 +60,5 @@ export default defineNuxtConfig({
     serverBundle: {
       collections: ['ic'],
     },
-  },
-
-  materialKit: {
-    defaultTheme: 'brown',
-    themes: [
-      {
-        key: 'brown',
-        name: 'Brown Theme',
-        definedInScss: true,
-      },
-      {
-        key: 'green',
-        name: 'Green Theme',
-        definedInScss: true,
-      },
-      {
-        key: 'custom-blue',
-        name: 'Custom Blue',
-        color: '#3498db',
-      },
-    ],
   },
 })
