@@ -1,5 +1,39 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends TableData">
 import { ICONS } from '~~/shared/constants/icons'
+import type { TableColumn, TableData, SortState } from '../types'
+
+interface Props {
+  columns: TableColumn<T>[]
+  selectable?: boolean
+  isAllSelected?: boolean
+  sort?: SortState<T> | null
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  'toggle-all': [value: boolean]
+  'update:sort': [value: SortState<T> | null]
+}>()
+
+function toggleSort(column: TableColumn<T>) {
+  if (!column.sortable) return
+
+  const currentSort = props.sort
+  const isCurrentColumn = currentSort?.key === column.key
+
+  let newSort: SortState<T> | null = null
+
+  if (!isCurrentColumn) {
+    newSort = { key: column.key, direction: 'asc' }
+  } else if (currentSort?.direction === 'asc') {
+    newSort = { key: column.key, direction: 'desc' }
+  } else {
+    newSort = null
+  }
+
+  emit('update:sort', newSort)
+}
 </script>
 
 <template>
@@ -39,43 +73,6 @@ import { ICONS } from '~~/shared/constants/icons'
     </tr>
   </thead>
 </template>
-
-<script setup lang="ts" generic="T extends TableData">
-import type { TableColumn, TableData, SortState } from '../types'
-
-interface Props {
-  columns: TableColumn<T>[]
-  selectable?: boolean
-  isAllSelected?: boolean
-  sort?: SortState<T> | null
-}
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<{
-  'toggle-all': [value: boolean]
-  'update:sort': [value: SortState<T> | null]
-}>()
-
-function toggleSort(column: TableColumn<T>) {
-  if (!column.sortable) return
-
-  const currentSort = props.sort
-  const isCurrentColumn = currentSort?.key === column.key
-
-  let newSort: SortState<T> | null = null
-
-  if (!isCurrentColumn) {
-    newSort = { key: column.key, direction: 'asc' }
-  } else if (currentSort?.direction === 'asc') {
-    newSort = { key: column.key, direction: 'desc' }
-  } else {
-    newSort = null
-  }
-
-  emit('update:sort', newSort)
-}
-</script>
 
 <style lang="scss">
 .ui-table {

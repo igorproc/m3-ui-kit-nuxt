@@ -2,8 +2,8 @@ import { pathToFileURL } from 'node:url'
 import { defineNuxtModule, createResolver, addImportsDir, addPlugin, addTemplate } from '@nuxt/kit'
 import { themeFromSourceColor, argbFromHex, hexFromArgb } from '@material/material-color-utilities'
 
-import type { MaterialKitOptions } from '~~/shared/types/kit'
-import { COOKIE_THEME_KEYS } from '~~/shared/constants/cookie'
+import type { MaterialKitOptions } from '../../../shared/types/kit'
+import { COOKIE_THEME_KEYS } from '../../../shared/constants/cookie'
 
 export default defineNuxtModule<MaterialKitOptions>({
   meta: {
@@ -13,7 +13,7 @@ export default defineNuxtModule<MaterialKitOptions>({
   defaults: {
     cookie: {
       theme: {
-        defintion: COOKIE_THEME_KEYS.DEFINITION,
+        definition: COOKIE_THEME_KEYS.DEFINITION,
         pallete: COOKIE_THEME_KEYS.PALETTE,
         contrast: COOKIE_THEME_KEYS.CONTRAST,
       },

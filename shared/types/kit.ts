@@ -7,7 +7,7 @@ export interface ITheme {
 
 export interface ICookie {
   theme: {
-    defintion: string;
+    definition: string;
     pallete: string;
     contrast: string;
   }

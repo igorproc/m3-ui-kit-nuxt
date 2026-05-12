@@ -23,33 +23,35 @@ export default defineNuxtConfig({
     // https://nuxt.com/modules/pinia
     '@pinia/nuxt',
     '@vueuse/nuxt',
+    resolve('./app/modules/kit/module'),
   ],
 
   components: {
     dirs: [
       {
-        path: './components',
+        path: resolve('./app/components'),
         pathPrefix: true,
       },
       {
-        path: './components/ui',
+        path: resolve('./app/components/ui'),
         pathPrefix: true,
         prefix: 'm',
+        global: true,
       },
     ],
   },
 
   imports: {
     dirs: [
-      './composables/**',
-      './utils/**',
-      '../shared/**',
-      './store/**',
+      resolve('./app/composables/**'),
+      resolve('./app/utils/**'),
+      resolve('./shared/**'),
+      resolve('./app/store/**'),
     ],
   },
 
-  css: ['~/assets/stylesheet/main.scss'],
-  appDir: './app',
+  css: [resolve('./app/assets/stylesheet/main.scss')],
+  appDir: resolve('./app'),
   features: { inlineStyles: false },
 
   vite: VITE_CONFIG,
