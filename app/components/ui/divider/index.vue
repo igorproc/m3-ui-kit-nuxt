@@ -34,13 +34,13 @@ const dividerClasses = computed(() => [
   background-color: v.$color;
 
   &--horizontal {
-    width: 100%;
-    height: v.$thickness;
+    width: v.$thickness;
+    height: 100%;
   }
 
   &--vertical {
-    width: v.$thickness;
-    height: 100%;
+    width: 100%;
+    height: v.$thickness;
   }
 
   &--inset.ui-divider--horizontal {
