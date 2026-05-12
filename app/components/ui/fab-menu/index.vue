@@ -1,8 +1,8 @@
 <template>
   <div
+    v-click-outside="closeMenu"
     class="ui-fab-menu"
     :class="[`ui-fab-menu--${size}`]"
-    v-click-outside="closeMenu"
   >
     <!-- Activator FAB -->
     <m-button-fab
@@ -12,7 +12,10 @@
       :disabled="disabled"
       @click="toggleMenu"
     >
-      <div class="ui-fab-menu__icon-wrapper" :class="{ 'is-open': isOpen }">
+      <div
+        class="ui-fab-menu__icon-wrapper"
+        :class="{ 'is-open': isOpen }"
+      >
         <!-- Transition between open/close icons -->
         <transition name="ui-fab-menu-icon">
           <m-icon
@@ -31,7 +34,10 @@
 
     <!-- Drawer with Menu Items -->
     <transition name="ui-fab-menu-drawer">
-      <div v-if="isOpen" class="ui-fab-menu__drawer">
+      <div
+        v-if="isOpen"
+        class="ui-fab-menu__drawer"
+      >
         <transition-group
           name="ui-fab-menu-item"
           tag="div"
@@ -44,8 +50,15 @@
             :style="{ transitionDelay: `${(items.length - 1 - index) * 0.05}s` }"
             @click="handleItemClick(item)"
           >
-            <span v-if="item.label" class="ui-fab-menu__label">{{ item.label }}</span>
-            <m-icon v-if="item.icon" :name="item.icon" class="ui-fab-menu__item-icon" />
+            <span
+              v-if="item.label"
+              class="ui-fab-menu__label"
+            >{{ item.label }}</span>
+            <m-icon
+              v-if="item.icon"
+              :name="item.icon"
+              class="ui-fab-menu__item-icon"
+            />
           </button>
         </transition-group>
       </div>
@@ -217,7 +230,7 @@ function handleItemClick(item: UiFabMenuItem) {
     &:hover {
       background-color: color-mix(in srgb, var(--color-on-surface) 8%, v.$item-bg-color);
     }
-    
+
     &:active {
       background-color: color-mix(in srgb, var(--color-on-surface) 12%, v.$item-bg-color);
     }

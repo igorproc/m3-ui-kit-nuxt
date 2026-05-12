@@ -5,4 +5,3 @@ export const COOKIE_THEME_KEYS = {
   CONTRAST: `${THEME_COOKIE_PREFIX}contrast`,
   PALETTE: `${THEME_COOKIE_PREFIX}palette`,
 }
-

@@ -3,7 +3,7 @@
     class="ui-extended-fab"
     :class="[
       `ui-extended-fab--${color}`,
-      `ui-extended-fab--${size}`
+      `ui-extended-fab--${size}`,
     ]"
     :disabled="disabled"
   >

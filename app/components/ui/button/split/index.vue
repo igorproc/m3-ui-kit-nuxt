@@ -1,5 +1,8 @@
 <template>
-  <div class="ui-split-button" v-click-outside="closeMenu">
+  <div
+    v-click-outside="closeMenu"
+    class="ui-split-button"
+  >
     <div class="ui-split-button__wrapper">
       <m-button
         class="ui-split-button__action"
@@ -19,7 +22,10 @@
         @click="toggleMenu"
       >
         <template #prepend>
-          <m-icon name="ic:outline-plus" style="transform: rotate(45deg);" /> 
+          <m-icon
+            name="ic:outline-plus"
+            style="transform: rotate(45deg);"
+          />
         </template>
       </m-button>
     </div>
@@ -38,7 +44,10 @@
         @click="handleItemClick(item)"
       >
         <span class="ui-menu__item-label">{{ item.label }}</span>
-        <m-icon v-if="item.icon" :name="item.icon" />
+        <m-icon
+          v-if="item.icon"
+          :name="item.icon"
+        />
       </button>
     </m-menu>
   </div>

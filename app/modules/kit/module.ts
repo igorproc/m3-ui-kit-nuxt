@@ -1,5 +1,4 @@
-import { pathToFileURL } from 'node:url'
-import { defineNuxtModule, createResolver, addImportsDir, addPlugin, addTemplate } from '@nuxt/kit'
+import { defineNuxtModule, addTemplate } from '@nuxt/kit'
 import { themeFromSourceColor, argbFromHex, hexFromArgb } from '@material/material-color-utilities'
 
 import type { MaterialKitOptions } from '../../../shared/types/kit'
@@ -53,7 +52,6 @@ ${breakpointsScss}
       for (const theme of options.themes) {
         if (!theme.definedInScss && theme.color) {
           const t = themeFromSourceColor(argbFromHex(theme.color))
-          console.log(t)
 
           // light
           generatedThemesScss += `[data-definition="light"][data-pallet="${theme.key}"] {\n`

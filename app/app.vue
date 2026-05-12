@@ -2,6 +2,7 @@
 // Initialize the theme store to apply global HTML attributes and dynamic CSS
 const themeStore = useThemeStore()
 </script>
+
 <template>
   <div>
     <NuxtRouteAnnouncer />

@@ -1,8 +1,8 @@
 <template>
   <div
+    v-click-outside="closeMenu"
     class="ui-extended-fab-menu"
     :class="[`ui-extended-fab-menu--${size}`]"
-    v-click-outside="closeMenu"
   >
     <!-- Activator Extended FAB -->
     <m-button-extended-fab
@@ -13,7 +13,10 @@
       @click="toggleMenu"
     >
       <template #prepend>
-        <div class="ui-extended-fab-menu__icon-wrapper" :class="{ 'is-open': isOpen }">
+        <div
+          class="ui-extended-fab-menu__icon-wrapper"
+          :class="{ 'is-open': isOpen }"
+        >
           <!-- Transition between open/close icons -->
           <transition name="ui-extended-fab-menu-icon">
             <m-icon
@@ -34,7 +37,10 @@
 
     <!-- Drawer with Menu Items -->
     <transition name="ui-extended-fab-menu-drawer">
-      <div v-if="isOpen" class="ui-extended-fab-menu__drawer">
+      <div
+        v-if="isOpen"
+        class="ui-extended-fab-menu__drawer"
+      >
         <transition-group
           name="ui-extended-fab-menu-item"
           tag="div"
@@ -47,8 +53,15 @@
             :style="{ transitionDelay: `${(items.length - 1 - index) * 0.05}s` }"
             @click="handleItemClick(item)"
           >
-            <span v-if="item.label" class="ui-extended-fab-menu__label">{{ item.label }}</span>
-            <m-icon v-if="item.icon" :name="item.icon" class="ui-extended-fab-menu__item-icon" />
+            <span
+              v-if="item.label"
+              class="ui-extended-fab-menu__label"
+            >{{ item.label }}</span>
+            <m-icon
+              v-if="item.icon"
+              :name="item.icon"
+              class="ui-extended-fab-menu__item-icon"
+            />
           </button>
         </transition-group>
       </div>
@@ -222,7 +235,7 @@ function handleItemClick(item: UiExtendedFabMenuItem) {
     &:hover {
       background-color: color-mix(in srgb, var(--color-on-surface) 8%, v.$item-bg-color);
     }
-    
+
     &:active {
       background-color: color-mix(in srgb, var(--color-on-surface) 12%, v.$item-bg-color);
     }
