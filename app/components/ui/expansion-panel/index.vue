@@ -34,8 +34,10 @@
       class="ui-expansion-panel__content-wrapper"
       :aria-hidden="!isOpen"
     >
-      <div class="ui-expansion-panel__content">
-        <slot />
+      <div class="ui-expansion-panel__content-inner">
+        <div class="ui-expansion-panel__content">
+          <slot />
+        </div>
       </div>
     </div>
   </div>
@@ -143,14 +145,15 @@ function toggle() {
     transition: grid-template-rows var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
   }
 
-  &__content {
+  &__content-inner {
     overflow: hidden;
+  }
+
+  &__content {
     color: v.$content-text-color;
-    padding: 0 v.$content-padding-inline;
+    padding: 0 v.$content-padding-inline v.$content-padding-bottom;
     opacity: 0;
-    transition:
-      opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      padding-bottom var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
+    transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
     @include typescale(v.$content-text-type);
   }
@@ -166,7 +169,6 @@ function toggle() {
 
     .ui-expansion-panel__content {
       opacity: 1;
-      padding-bottom: v.$content-padding-bottom;
 
       &-wrapper {
         grid-template-rows: 1fr;

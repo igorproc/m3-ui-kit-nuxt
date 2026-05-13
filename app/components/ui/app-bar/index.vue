@@ -2,6 +2,7 @@
   <header
     class="ui-app-bar"
     :class="`ui-app-bar--${variant}`"
+    :style="layoutItemStyles"
   >
     <div
       v-if="$slots.nav"
@@ -38,6 +39,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useLayoutItem } from '../../../composables/useLayout'
+
 type AppBarVariant = 'center-aligned' | 'small'
 
 interface Props {
@@ -46,10 +50,23 @@ interface Props {
   variant?: AppBarVariant
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   title: '',
   subtitle: '',
   variant: 'center-aligned',
+})
+
+const sizeToken = computed(() => {
+  return props.variant === 'small' 
+    ? 'var(--ui-app-bar-height-small)' 
+    : 'var(--ui-app-bar-height-center-aligned)'
+})
+
+const { layoutItemStyles } = useLayoutItem({
+  id: 'app-bar',
+  position: 'top',
+  sizeToken,
+  order: 0,
 })
 </script>
 

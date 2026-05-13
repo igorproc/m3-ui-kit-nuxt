@@ -22,7 +22,8 @@ export default defineNuxtConfig({
     '@vee-validate/nuxt',
     // https://nuxt.com/modules/pinia
     '@pinia/nuxt',
-    '@vueuse/nuxt',
+    // https://nuxt.com/modules/device
+    '@nuxtjs/device',
     resolve('./app/modules/kit/module'),
   ],
 

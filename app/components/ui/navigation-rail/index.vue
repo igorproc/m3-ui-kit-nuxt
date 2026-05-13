@@ -1,35 +1,25 @@
 <template>
-  <nav class="ui-navigation-rail">
-    <button
+  <nav
+    class="ui-navigation-rail"
+    :class="{ 'ui-navigation-rail--expanded': isExpanded }"
+    :style="layoutItemStyles"
+  >
+    <m-navigation-rail-item
       v-for="item in items"
       :key="item.id"
-      type="button"
-      class="ui-navigation-rail__item"
-      :class="{ 'ui-navigation-rail__item--active': item.id === modelValue }"
-      @click="onSelect(item.id)"
-    >
-      <span class="ui-navigation-rail__icon-wrapper">
-        <m-icon
-          class="ui-navigation-rail__icon"
-          :name="item.icon"
-          aria-hidden="true"
-        />
-
-        <m-badge
-          v-if="item.badge != null && item.badge > 0"
-          class="ui-navigation-rail__badge"
-          :value="item.badge"
-        />
-      </span>
-
-      <span class="ui-navigation-rail__label">
-        {{ item.label }}
-      </span>
-    </button>
+      :active="item.id === modelValue"
+      :icon="item.icon"
+      :label="item.label"
+      :badge="item.badge"
+      :expanded="isExpanded"
+      @select="onSelect(item.id)"
+    />
   </nav>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 interface NavigationRailItem {
   id: string
   icon: string
@@ -39,9 +29,28 @@ interface NavigationRailItem {
 
 interface Props {
   items: NavigationRailItem[]
+  expanded?: boolean
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  expanded: false,
+})
+
+const bp = useBreakpoint()
+const isExpanded = computed(() => bp.is.value.desktop || props.expanded)
+
+const sizeToken = computed(() => {
+  return isExpanded.value
+    ? 'var(--ui-navigation-rail-width-expanded)'
+    : 'var(--ui-navigation-rail-width)'
+})
+
+const { layoutItemStyles } = useLayoutItem({
+  id: 'navigation-rail',
+  position: 'left',
+  sizeToken,
+  order: 1, // Will be placed below app-bar
+})
 
 const modelValue = defineModel<string | null>({ default: null })
 
@@ -65,45 +74,12 @@ function onSelect(id: string) {
   align-items: center;
   gap: v.$gap;
   color: v.$text-color;
+  transition: width var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
+  overflow: hidden;
 
-  &__item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: v.$item-gap;
-    padding: v.$item-padding;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: v.$item-color;
-
-    @include typescale(v.$item-text-type);
-  }
-
-  &__icon-wrapper {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__icon {
-    font-size: v.$icon-size;
-  }
-
-  &__badge {
-    position: absolute;
-    top: v.$badge-top;
-    right: v.$badge-right;
-  }
-
-  &__label {
-    text-align: center;
-  }
-
-  &__item--active {
-    color: v.$item-active-color;
+  &--expanded {
+    width: 256rem;
+    align-items: flex-start;
   }
 }
 </style>
