@@ -5,6 +5,7 @@
 @use 'vendors/base' as *;
 
 /* 3. base */
+@use 'base/liquid' as *;
 @use 'base/animations' as *;
 @use 'base/reset' as *;
 @use 'base/base' as *;

@@ -1,4 +1,4 @@
-import { computed, inject, onBeforeUnmount, provide, reactive, unref, type InjectionKey, type Ref } from 'vue'
+import { computed, inject, watchEffect, onBeforeUnmount, provide, reactive, unref, type InjectionKey, type Ref } from 'vue'
 
 export type Position = 'top' | 'left' | 'right' | 'bottom'
 
@@ -66,18 +66,12 @@ export function useLayoutItem(options: {
   const sizeTokenRef = computed(() => unref(options.sizeToken))
   const orderRef = computed(() => unref(options.order ?? 0))
 
-  // Vue reactive map doesn't auto-unwrap refs properly inside manual objects if not deep reactive in some cases,
-  // but since we update the registry dynamically on change, it's safer to just watch or use computed for the item.
-  // Actually, since sizeToken can change (e.g. var(--ui-nav-rail-expanded-width)), we need to keep the registry updated.
-  // The simplest is to watchEffect and re-register.
-  import('vue').then(({ watchEffect }) => {
-    watchEffect(() => {
-      layout.register({
-        id: options.id,
-        position: positionRef.value,
-        sizeToken: sizeTokenRef.value,
-        order: orderRef.value,
-      })
+  watchEffect(() => {
+    layout.register({
+      id: options.id,
+      position: positionRef.value,
+      sizeToken: sizeTokenRef.value,
+      order: orderRef.value,
     })
   })
 

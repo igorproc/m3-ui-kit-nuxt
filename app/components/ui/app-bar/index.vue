@@ -57,9 +57,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const sizeToken = computed(() => {
-  return props.variant === 'small' 
-    ? 'var(--ui-app-bar-height-small)' 
-    : 'var(--ui-app-bar-height-center-aligned)'
+  return props.variant === 'small' ? 'var(--ui-app-bar-height-small)' : 'var(--ui-app-bar-height-center-aligned)'
 })
 
 const { layoutItemStyles } = useLayoutItem({
@@ -117,7 +115,6 @@ const { layoutItemStyles } = useLayoutItem({
     text-overflow: ellipsis;
     overflow: hidden;
 
-    font-family: var(--mio-theme-display-font-family);
     @include typescale(v.$title-text-type);
   }
 
