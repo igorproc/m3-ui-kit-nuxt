@@ -1,5 +1,14 @@
+<script setup lang="ts">
+import type { LayoutItem } from '~/app/composables/useLayout'
+
+const schema: LayoutItem[] = [
+  { id: 'app-bar', area: 'header', sizeToken: '--ui-app-bar-height-center-aligned' },
+  { id: 'navigation-drawer', area: 'left', sizeToken: '--ui-navigation-rail-width-expanded' }
+]
+</script>
+
 <template>
-  <m-layout class="layout-youtube">
+  <m-layout class="layout-youtube" :schema="schema">
     <m-layout-header>
       <slot name="header" />
     </m-layout-header>

@@ -34,8 +34,10 @@ const LayoutAreaKey: InjectionKey<Ref<LayoutArea>> = Symbol.for('m3:layout-area'
  * Root-level: called inside <m-layout> to create provide/inject context.
  * Returns reactive layoutStyles that auto-resolve CSS vars from registered items.
  */
-export function createLayout() {
+export function createLayout(initialSchema: LayoutItem[] = []) {
   const items = reactive<Map<string, LayoutItem>>(new Map())
+
+  initialSchema.forEach(item => items.set(item.id, item))
 
   provide(LayoutKey, {
     register: (item) => { items.set(item.id, item) },

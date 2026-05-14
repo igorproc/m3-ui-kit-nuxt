@@ -9,15 +9,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { createLayout, type LayoutItem } from '../../../../composables/useLayout'
+
 interface Props {
   fullHeight?: boolean
+  schema?: LayoutItem[]
 }
 
 withDefaults(defineProps<Props>(), {
   fullHeight: false,
+  schema: () => [],
 })
 
-const { layoutStyles, items } = createLayout()
+const { layoutStyles, items } = createLayout(props.schema)
 
 const headers = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('header')).sort((a,b) => (a.order || 0) - (b.order || 0)))
 const lefts = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('left')).sort((a,b) => (a.order || 0) - (b.order || 0)))
