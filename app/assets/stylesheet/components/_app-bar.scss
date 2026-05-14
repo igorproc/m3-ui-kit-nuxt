@@ -27,3 +27,12 @@ $subtitle-color: var(--color-surface-variant-contrast) !default;
 $subtitle-text-type: 'body-medium' !default;
 
 $actions-gap: 4rem !default;
+
+// --- Liquid Tokens ---
+$token-ca-height: $center-aligned-height + ($padding-block * 2);
+$token-s-height: $small-height + ($padding-block * 2);
+
+:root {
+  --ui-app-bar-height-center-aligned: #{$token-ca-height};
+  --ui-app-bar-height-small: #{$token-s-height};
+}

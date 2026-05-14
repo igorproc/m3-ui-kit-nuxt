@@ -39,11 +39,3 @@ html {
     font-size: calc(1vw / #{$factor});
   }
 }
-
-@media (max-width: map.get($breakpoints, mobile-xs)) {
-  html {
-    $factor: root-scale(mobile-xs);
-
-    font-size: calc(1vw / #{$factor});
-  }
-}

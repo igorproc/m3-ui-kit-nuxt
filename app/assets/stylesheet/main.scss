@@ -5,17 +5,16 @@
 @use 'vendors/base' as *;
 
 /* 3. base */
+@use 'base/typography' as *;
 @use 'base/liquid' as *;
 @use 'base/animations' as *;
 @use 'base/reset' as *;
 @use 'base/base' as *;
 @use 'base/fonts' as *;
-@use 'base/typography' as *;
 @use 'base/shapes' as *;
 @use 'base/adaptive' as *;
 
 /* 4. partials - layout */
-@use 'partials/layout' as *;
 
 /* 5. modules - components */
 

@@ -1,5 +1,5 @@
 <template>
-  <header
+  <div
     class="ui-app-bar"
     :class="`ui-app-bar--${variant}`"
     :style="layoutItemStyles"
@@ -35,13 +35,10 @@
     >
       <slot name="actions" />
     </div>
-  </header>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useLayoutItem } from '../../../composables/useLayout'
-
 type AppBarVariant = 'center-aligned' | 'small'
 
 interface Props {
@@ -56,15 +53,16 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'center-aligned',
 })
 
-const sizeToken = computed(() => {
-  return props.variant === 'small' ? 'var(--ui-app-bar-height-small)' : 'var(--ui-app-bar-height-center-aligned)'
-})
+// Self-register in layout system with correct size token
+const sizeToken = computed(() =>
+  props.variant === 'small'
+    ? '--ui-app-bar-height-small'
+    : '--ui-app-bar-height-center-aligned',
+)
 
 const { layoutItemStyles } = useLayoutItem({
   id: 'app-bar',
-  position: 'top',
   sizeToken,
-  order: 0,
 })
 </script>
 
@@ -81,15 +79,16 @@ const { layoutItemStyles } = useLayoutItem({
   background-color: v.$bg-color;
   color: v.$text-color;
   box-shadow: v.$shadow;
-  position: relative;
-  z-index: 1;
+  position: sticky;
+  top: 0;
+  z-index: z(header);
 
   &--center-aligned {
-    min-height: v.$center-aligned-height;
+    min-height: calc(var(--ui-app-bar-height-center-aligned) - #{v.$padding-block * 2});
   }
 
   &--small {
-    min-height: v.$small-height;
+    min-height: var(--ui-app-bar-height-small);
   }
 
   &__nav {

@@ -19,7 +19,13 @@ export default defineNuxtModule<MaterialKitOptions>({
     },
     breakpoints: {},
     defaultTheme: 'light',
-    themes: [],
+    themes: [
+      {
+        key: 'brown',
+        name: 'Brown',
+        definedInScss: true,
+      },
+    ],
     typography: {
       fontFamily: 'Roboto, sans-serif',
     },

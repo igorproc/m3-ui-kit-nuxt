@@ -1,4 +1,4 @@
-import { THEME_DEFINITIONS, THEME_CONTRASTS } from '~~/shared/constants/theme'
+import { THEME_DEFINITIONS, THEME_CONTRASTS, THEME_COOKIE_OPTIONS } from '~~/shared/constants/theme'
 import type { ITheme } from '~~/shared/types/kit'
 
 export const useThemeStore = defineStore('themeStore', () => {
@@ -6,19 +6,20 @@ export const useThemeStore = defineStore('themeStore', () => {
   const cookieKeys = config.cookie.theme
 
   // Cookies
-  const definitionCookie = useCookie<string>(cookieKeys.defintion, { default: () => THEME_DEFINITIONS.LIGHT, watch: 'shallow' })
-  const contrastCookie = useCookie<string>(cookieKeys.contrast, { default: () => THEME_CONTRASTS.MEDIUM, watch: 'shallow' })
-  const paletteCookie = useCookie<string>(cookieKeys.pallete, { default: () => 'MEDIUM', watch: 'shallow' })
+  const definitionCookie = useCookie<string>(cookieKeys.definition, { default: () => THEME_DEFINITIONS.LIGHT, ...THEME_COOKIE_OPTIONS })
+  const contrastCookie = useCookie<string>(cookieKeys.contrast, { default: () => THEME_CONTRASTS.MEDIUM, ...THEME_COOKIE_OPTIONS })
+  const paletteCookie = useCookie<string>(cookieKeys.pallete, { default: () => 'brown', ...THEME_COOKIE_OPTIONS })
 
   const allowedDefinitions = Object.values(THEME_DEFINITIONS)
   const allowedContrasts = Object.values(THEME_CONTRASTS)
-  const availableThemes = computed<ITheme[]>(() => config.themes || [])
+  const availableThemes = computed(() => config.themes || [])
   const allowedPalettes = computed(() => availableThemes.value.map(t => t.key))
 
   // State proxies with validation
   const definition = computed({
     get() {
       const value = definitionCookie.value
+
       if (!value || !allowedDefinitions.includes(value)) {
         definitionCookie.value = THEME_DEFINITIONS.LIGHT
         return THEME_DEFINITIONS.LIGHT
@@ -35,6 +36,7 @@ export const useThemeStore = defineStore('themeStore', () => {
   const contrast = computed({
     get() {
       const value = contrastCookie.value
+
       if (!value || !allowedContrasts.includes(value)) {
         contrastCookie.value = THEME_CONTRASTS.MEDIUM
         return THEME_CONTRASTS.MEDIUM
@@ -51,6 +53,7 @@ export const useThemeStore = defineStore('themeStore', () => {
   const palette = computed({
     get() {
       const value = paletteCookie.value
+
       if (!value || !allowedPalettes.value.includes(value)) {
         const fallback = config.defaultTheme || availableThemes.value[0]?.key || 'light'
         paletteCookie.value = fallback
@@ -65,7 +68,7 @@ export const useThemeStore = defineStore('themeStore', () => {
     },
   })
 
-  const currentTheme = computed(() => availableThemes.value.find(t => t.key === palette.value))
+  const currentTheme = computed(() => availableThemes.value.find(t => t && t.key === palette.value))
 
   // Inject into Head
   useHead({

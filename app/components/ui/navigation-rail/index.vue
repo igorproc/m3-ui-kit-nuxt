@@ -4,22 +4,22 @@
     :class="{ 'ui-navigation-rail--expanded': isExpanded }"
     :style="layoutItemStyles"
   >
-    <m-navigation-rail-item
-      v-for="item in items"
-      :key="item.id"
-      :active="item.id === modelValue"
-      :icon="item.icon"
-      :label="item.label"
-      :badge="item.badge"
-      :expanded="isExpanded"
-      @select="onSelect(item.id)"
-    />
+    <div class="ui-navigation-rail__list">
+      <m-navigation-rail-item
+        v-for="item in items"
+        :key="item.id"
+        :active="item.id === modelValue"
+        :icon="item.icon"
+        :label="item.label"
+        :badge="item.badge"
+        :expanded="isExpanded"
+        @select="onSelect(item.id)"
+      />
+    </div>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 interface NavigationRailItem {
   id: string
   icon: string
@@ -37,19 +37,19 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const bp = useBreakpoint()
-const isExpanded = computed(() => bp.is.value.desktop || props.expanded)
+const isExpanded = computed(() => props.expanded)
 
-const sizeToken = computed(() => {
-  return isExpanded.value
-    ? 'var(--ui-navigation-rail-width-expanded)'
-    : 'var(--ui-navigation-rail-width)'
-})
+// Self-register in layout system — size token changes based on expanded state
+const sizeToken = computed(() =>
+  isExpanded.value
+    ? '--ui-navigation-rail-width-expanded'
+    : '--ui-navigation-rail-width',
+)
 
 const { layoutItemStyles } = useLayoutItem({
   id: 'navigation-rail',
-  position: 'left',
+  area: 'left',
   sizeToken,
-  order: 1, // Will be placed below app-bar
 })
 
 const modelValue = defineModel<string | null>({ default: null })
@@ -63,9 +63,7 @@ function onSelect(id: string) {
 @use '~/assets/stylesheet/components/navigation-rail' as v;
 
 .ui-navigation-rail {
-  width: v.$width;
-  padding-block: v.$padding-block;
-  padding-inline: v.$padding-inline;
+  width: var(--ui-navigation-rail-width);
   border-radius: v.$border-radius;
   background-color: v.$bg-color;
   box-shadow: v.$shadow;
@@ -76,10 +74,19 @@ function onSelect(id: string) {
   color: v.$text-color;
   transition: width var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
   overflow: hidden;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  z-index: z(aside);
+
+  &__list {
+    padding-block: v.$padding-block;
+    padding-inline: v.$padding-inline;
+  }
 
   &--expanded {
-    width: 256rem;
-    align-items: flex-start;
+    width: var(--ui-navigation-rail-width-expanded);
+    align-items: stretch;
   }
 }
 </style>

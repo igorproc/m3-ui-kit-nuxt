@@ -4,7 +4,8 @@
 // ==========================================
 
 // --- Base ---
-$width: 80rem !default;
+$width: 96rem !default;
+$width-expanded: 256rem !default;
 $padding-block: 12rem !default;
 $padding-inline: 8rem !default;
 $border-radius: var(--sys-shape-corner-large) !default;
@@ -15,7 +16,9 @@ $text-color: var(--color-surface-variant-contrast) !default;
 
 // --- Item ---
 $item-gap: 4rem !default;
-$item-padding: 4rem 0 !default;
+$item-padding-x: 0 !default;
+$item-padding-y: 4rem !default;
+$item-padding: #{$item-padding-y} #{$item-padding-x};
 $item-color: var(--color-on-surface-variant) !default;
 $item-active-color: var(--color-primary) !default;
 
@@ -28,3 +31,9 @@ $icon-size: 24rem !default;
 // --- Badge ---
 $badge-top: -12rem !default;
 $badge-right: -24rem !default;
+
+// --- Export Tokens ---
+:root {
+  --ui-navigation-rail-width: #{$width};
+  --ui-navigation-rail-width-expanded: #{$width-expanded};
+}

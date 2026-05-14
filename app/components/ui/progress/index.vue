@@ -32,6 +32,7 @@
       v-if="indeterminate"
       class="ui-progress__spinner ui-progress__spinner--indeterminate"
     />
+
     <svg
       v-else
       class="ui-progress__spinner"

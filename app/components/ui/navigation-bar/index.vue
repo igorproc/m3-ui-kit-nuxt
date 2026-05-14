@@ -1,5 +1,8 @@
 <template>
-  <nav class="ui-navigation-bar">
+  <nav
+    class="ui-navigation-bar"
+    :style="layoutItemStyles"
+  >
     <button
       v-for="item in items"
       :key="item.id"
@@ -43,6 +46,12 @@ interface Props {
 }
 
 defineProps<Props>()
+
+// Self-register in layout system as footer area
+const { layoutItemStyles } = useLayoutItem({
+  id: 'navigation-bar',
+  area: 'footer',
+})
 
 const modelValue = defineModel<string | null>({ default: null })
 

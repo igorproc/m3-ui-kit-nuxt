@@ -1,5 +1,6 @@
 @use '../abstracts/forward' as *;
 
+/* @deprecated — Use <m-layout> CSS Grid system instead */
 .app-layout {
   display: flex;
   flex-direction: column;
