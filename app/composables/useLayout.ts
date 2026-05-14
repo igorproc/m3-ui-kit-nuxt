@@ -70,7 +70,6 @@ export function createLayout() {
 
     return styles
   })
-  console.log(layoutStyles.value)
 
   return { layoutStyles, items }
 }
