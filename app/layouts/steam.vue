@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LayoutItem } from '~/app/composables/useLayout'
+import type { LayoutItem } from '~/composables/useLayout'
 
 const schema: LayoutItem[] = [
   { id: 'layout-header', area: 'header', sizeToken: '--m3-layout-header-height' },

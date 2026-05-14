@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LayoutItem } from '~/app/composables/useLayout'
+import type { LayoutItem } from '~/composables/useLayout'
 
 const schema: LayoutItem[] = [
   { id: 'app-bar', area: 'header', sizeToken: '--ui-app-bar-height-center-aligned' },

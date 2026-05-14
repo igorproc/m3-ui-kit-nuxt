@@ -10,14 +10,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { createLayout, type LayoutItem } from '../../../../composables/useLayout'
+import { createLayout, type LayoutItem } from '~/composables/useLayout'
 
 interface Props {
   fullHeight?: boolean
   schema?: LayoutItem[]
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   fullHeight: false,
   schema: () => [],
 })
@@ -32,7 +32,7 @@ const footers = computed(() => Array.from(items.values()).filter(i => i.area.sta
 /**
  * Отдельные computed на каждый диапазон: в стилях к ним привязан v-bind() внутри своего @media,
  * браузер выбирает сетку по ширине viewport без ожидания клиентского JS — дружелюбно к SSR и CLS.
- * 
+ *
  * Сетка автоматически собирает все элементы (сколько угодно header/aside/footer) и генерирует
  * правильные `grid-template-areas`, `grid-template-columns` и `grid-template-rows`.
  */
@@ -41,11 +41,11 @@ const mobileGrid = computed(() => {
   // На мобильных left и right не участвуют в сетке (они будут drawer'ами поверх)
   const cols = ['main']
   const rows: string[] = []
-  
+
   headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
   rows.push(`"${cols.join(' ')}"`)
   footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
-  
+
   return {
     areas: rows.join(' ') || '"main"',
     columns: 'minmax(0, 1fr)',
@@ -61,11 +61,11 @@ const tabletGrid = computed(() => {
   // На планшетах есть left, но нет right
   const cols = [...lefts.value.map(i => i.area), 'main']
   const rows: string[] = []
-  
+
   headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
   rows.push(`"${cols.join(' ')}"`)
   footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
-  
+
   return {
     areas: rows.join(' ') || '"main"',
     columns: cols.map(c => c === 'main' ? 'minmax(0, 1fr)' : `var(--m3-layout-${c}-width, 0px)`).join(' ') || 'minmax(0, 1fr)',
@@ -81,11 +81,11 @@ const desktopGrid = computed(() => {
   // На десктопах есть и left, и right
   const cols = [...lefts.value.map(i => i.area), 'main', ...rights.value.map(i => i.area)]
   const rows: string[] = []
-  
+
   headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
   rows.push(`"${cols.join(' ')}"`)
   footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
-  
+
   return {
     areas: rows.join(' ') || '"main"',
     columns: cols.map(c => c === 'main' ? 'minmax(0, 1fr)' : `var(--m3-layout-${c}-width, 0px)`).join(' ') || 'minmax(0, 1fr)',

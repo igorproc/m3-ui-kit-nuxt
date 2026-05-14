@@ -13,6 +13,8 @@ const { layoutItemStyles } = useLayoutItem({
   id: 'layout-main',
   area: 'main',
 })
+
+provideLayoutArea('main')
 </script>
 
 <style lang="scss">
