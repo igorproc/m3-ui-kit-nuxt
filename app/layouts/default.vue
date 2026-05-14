@@ -1,15 +1,5 @@
-<script setup lang="ts">
-import type { LayoutItem } from '~/composables/useLayout'
-
-const schema: LayoutItem[] = [
-  { id: 'app-bar', area: 'header', sizeToken: '--ui-app-bar-height-center-aligned' },
-  { id: 'navigation-rail', area: 'left', sizeToken: '--ui-navigation-rail-width' },
-  { id: 'layout-footer', area: 'footer', sizeToken: '--m3-layout-footer-height' },
-]
-</script>
-
 <template>
-  <m-layout class="layout-default" :schema="schema">
+  <m-layout class="layout-default">
     <m-layout-header>
       <slot name="header" />
     </m-layout-header>

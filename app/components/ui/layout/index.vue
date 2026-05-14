@@ -1,28 +1,44 @@
 <template>
   <div
+    :id="layoutId"
     class="m-layout"
     :class="{ 'm-layout--full-height': fullHeight }"
-    :style="layoutStyles"
   >
     <slot />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
+import { useHead } from '#imports'
 import { createLayout, type LayoutItem } from '~/composables/useLayout'
 
 interface Props {
   fullHeight?: boolean
-  schema?: LayoutItem[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   fullHeight: false,
-  schema: () => [],
 })
 
-const { layoutStyles, items } = createLayout(props.schema)
+const { layoutStyles, items } = createLayout()
+
+const uid = useId()
+const layoutId = `m-layout-${uid.replace(/:/g, '')}`
+
+useHead({
+  style: [
+    {
+      id: layoutId,
+      innerHTML: computed(() => {
+        const styles = layoutStyles.value
+        if (Object.keys(styles).length === 0) return ''
+        const cssProps = Object.entries(styles).map(([k, v]) => `${k}: ${v};`).join('\n')
+        return `#${layoutId} { ${cssProps} }`
+      })
+    }
+  ]
+})
 
 const headers = computed(() => getUniqueAreas('header'))
 const lefts = computed(() => getUniqueAreas('left'))
