@@ -40,7 +40,14 @@ export function createLayout(initialSchema: LayoutItem[] = []) {
   initialSchema.forEach(item => items.set(item.id, item))
 
   provide(LayoutKey, {
-    register: (item) => { items.set(item.id, item) },
+    register: (item) => {
+      const existing = items.get(item.id)
+      if (existing && !item.sizeToken && existing.sizeToken) {
+        items.set(item.id, { ...item, sizeToken: existing.sizeToken })
+      } else {
+        items.set(item.id, item)
+      }
+    },
     unregister: (id) => { items.delete(id) },
     items,
   })

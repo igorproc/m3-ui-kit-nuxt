@@ -24,10 +24,22 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { layoutStyles, items } = createLayout(props.schema)
 
-const headers = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('header')).sort((a,b) => (a.order || 0) - (b.order || 0)))
-const lefts = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('left')).sort((a,b) => (a.order || 0) - (b.order || 0)))
-const rights = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('right')).sort((a,b) => (a.order || 0) - (b.order || 0)))
-const footers = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('footer')).sort((a,b) => (a.order || 0) - (b.order || 0)))
+const headers = computed(() => getUniqueAreas('header'))
+const lefts = computed(() => getUniqueAreas('left'))
+const rights = computed(() => getUniqueAreas('right'))
+const footers = computed(() => getUniqueAreas('footer'))
+
+function getUniqueAreas(prefix: string) {
+  const unique = new Map<string, LayoutItem>()
+  for (const item of items.values()) {
+    if (item.area.startsWith(prefix)) {
+      if (item.sizeToken || !unique.has(item.area)) {
+        unique.set(item.area, item)
+      }
+    }
+  }
+  return Array.from(unique.values()).sort((a,b) => (a.order || 0) - (b.order || 0))
+}
 
 /**
  * Отдельные computed на каждый диапазон: в стилях к ним привязан v-bind() внутри своего @media,
