@@ -147,7 +147,9 @@ defineEmits<{
     gap: 12rem;
 
     .ui-navigation-rail-item__indicator {
-      left: 12rem;
+      padding: v.$indicator-padding;
+      top: 50%;
+      left: calc(#{v.$indicator-padding} / 2);
       transform: translateY(-50%);
       width: calc(100% - 24rem);
     }

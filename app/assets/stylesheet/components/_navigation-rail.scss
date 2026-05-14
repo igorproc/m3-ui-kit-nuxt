@@ -32,6 +32,9 @@ $icon-size: 24rem !default;
 $badge-top: -12rem !default;
 $badge-right: -24rem !default;
 
+// --- Active ---
+$indicator-padding: 6rem;
+
 // --- Export Tokens ---
 :root {
   --ui-navigation-rail-width: #{$width};

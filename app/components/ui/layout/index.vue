@@ -99,6 +99,8 @@ const desktopGrid = computed(() => {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
+
 .m-layout {
   display: grid;
   min-height: 100dvh;
