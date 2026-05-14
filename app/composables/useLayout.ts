@@ -12,7 +12,7 @@ import {
   type Ref,
 } from 'vue'
 
-export type LayoutArea = 'header' | 'left' | 'main' | 'right' | 'footer'
+export type LayoutArea = 'header' | 'left' | 'main' | 'right' | 'footer' | string
 
 export interface LayoutItem {
   id: string
@@ -52,19 +52,10 @@ export function createLayout() {
         continue
       }
 
-      switch (item.area) {
-        case 'header':
-          styles['--m3-layout-header-height'] = `var(${item.sizeToken})`
-          break
-        case 'left':
-          styles['--m3-layout-left-width'] = `var(${item.sizeToken})`
-          break
-        case 'right':
-          styles['--m3-layout-right-width'] = `var(${item.sizeToken})`
-          break
-        case 'footer':
-          styles['--m3-layout-footer-height'] = `var(${item.sizeToken})`
-          break
+      if (item.area.startsWith('header') || item.area.startsWith('footer')) {
+        styles[`--m3-layout-${item.area}-height`] = `var(${item.sizeToken})`
+      } else if (item.area.startsWith('left') || item.area.startsWith('right')) {
+        styles[`--m3-layout-${item.area}-width`] = `var(${item.sizeToken})`
       }
     }
 

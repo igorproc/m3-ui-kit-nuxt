@@ -17,24 +17,80 @@ withDefaults(defineProps<Props>(), {
   fullHeight: false,
 })
 
-const { layoutStyles } = createLayout()
+const { layoutStyles, items } = createLayout()
+
+const headers = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('header')).sort((a,b) => (a.order || 0) - (b.order || 0)))
+const lefts = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('left')).sort((a,b) => (a.order || 0) - (b.order || 0)))
+const rights = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('right')).sort((a,b) => (a.order || 0) - (b.order || 0)))
+const footers = computed(() => Array.from(items.values()).filter(i => i.area.startsWith('footer')).sort((a,b) => (a.order || 0) - (b.order || 0)))
 
 /**
  * Отдельные computed на каждый диапазон: в стилях к ним привязан v-bind() внутри своего @media,
  * браузер выбирает сетку по ширине viewport без ожидания клиентского JS — дружелюбно к SSR и CLS.
- * Строки совпадают с $breakpoints (abstracts/_variables.scss + material-kit merge).
+ * 
+ * Сетка автоматически собирает все элементы (сколько угодно header/aside/footer) и генерирует
+ * правильные `grid-template-areas`, `grid-template-columns` и `grid-template-rows`.
  */
-const mobileGridTemplateAreas = computed(
-  () => '"header" "main" "footer"',
-)
 
-const tabletGridTemplateAreas = computed(
-  () => '"header header" "left main" "footer footer"',
-)
+const mobileGrid = computed(() => {
+  // На мобильных left и right не участвуют в сетке (они будут drawer'ами поверх)
+  const cols = ['main']
+  const rows: string[] = []
+  
+  headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
+  rows.push(`"${cols.join(' ')}"`)
+  footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
+  
+  return {
+    areas: rows.join(' ') || '"main"',
+    columns: 'minmax(0, 1fr)',
+    rows: [
+      ...headers.value.map(h => `var(--m3-layout-${h.area}-height, 0px)`),
+      'minmax(0, 1fr)',
+      ...footers.value.map(f => `var(--m3-layout-${f.area}-height, 0px)`)
+    ].join(' ') || 'minmax(0, 1fr)'
+  }
+})
 
-const desktopGridTemplateAreas = computed(
-  () => '"header header header" "left main right" "footer footer footer"',
-)
+const tabletGrid = computed(() => {
+  // На планшетах есть left, но нет right
+  const cols = [...lefts.value.map(i => i.area), 'main']
+  const rows: string[] = []
+  
+  headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
+  rows.push(`"${cols.join(' ')}"`)
+  footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
+  
+  return {
+    areas: rows.join(' ') || '"main"',
+    columns: cols.map(c => c === 'main' ? 'minmax(0, 1fr)' : `var(--m3-layout-${c}-width, 0px)`).join(' ') || 'minmax(0, 1fr)',
+    rows: [
+      ...headers.value.map(h => `var(--m3-layout-${h.area}-height, 0px)`),
+      'minmax(0, 1fr)',
+      ...footers.value.map(f => `var(--m3-layout-${f.area}-height, 0px)`)
+    ].join(' ') || 'minmax(0, 1fr)'
+  }
+})
+
+const desktopGrid = computed(() => {
+  // На десктопах есть и left, и right
+  const cols = [...lefts.value.map(i => i.area), 'main', ...rights.value.map(i => i.area)]
+  const rows: string[] = []
+  
+  headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
+  rows.push(`"${cols.join(' ')}"`)
+  footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
+  
+  return {
+    areas: rows.join(' ') || '"main"',
+    columns: cols.map(c => c === 'main' ? 'minmax(0, 1fr)' : `var(--m3-layout-${c}-width, 0px)`).join(' ') || 'minmax(0, 1fr)',
+    rows: [
+      ...headers.value.map(h => `var(--m3-layout-${h.area}-height, 0px)`),
+      'minmax(0, 1fr)',
+      ...footers.value.map(f => `var(--m3-layout-${f.area}-height, 0px)`)
+    ].join(' ') || 'minmax(0, 1fr)'
+  }
+})
 </script>
 
 <style lang="scss">
@@ -42,30 +98,24 @@ const desktopGridTemplateAreas = computed(
   display: grid;
   min-height: 100dvh;
   contain: layout style;
-  grid-template-rows:
-    var(--m3-layout-header-height, 0px)
-    minmax(0, 1fr)
-    var(--m3-layout-footer-height, 0px);
 
   /* mobile-first: header / main / footer; left & right — вне потока (drawer/overlay), см. rail/drawer */
-  grid-template-areas: v-bind(mobileGridTemplateAreas);
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: v-bind('mobileGrid.areas');
+  grid-template-columns: v-bind('mobileGrid.columns');
+  grid-template-rows: v-bind('mobileGrid.rows');
 
   /* tablet: две колонки, без колонки right в сетке */
   @include media-distance(map.get($breakpoints, 'tablet-xs'), map.get($breakpoints, 'desktop-xs')) {
-    grid-template-areas: v-bind(tabletGridTemplateAreas);
-    grid-template-columns:
-      var(--m3-layout-left-width, 0px)
-      minmax(0, 1fr);
+    grid-template-areas: v-bind('tabletGrid.areas');
+    grid-template-columns: v-bind('tabletGrid.columns');
+    grid-template-rows: v-bind('tabletGrid.rows');
   }
 
   /* desktop: три колонки */
   @include media-min(map.get($breakpoints, 'desktop-xs')) {
-    grid-template-areas: v-bind(desktopGridTemplateAreas);
-    grid-template-columns:
-      var(--m3-layout-left-width, 0px)
-      minmax(0, 1fr)
-      var(--m3-layout-right-width, 0px);
+    grid-template-areas: v-bind('desktopGrid.areas');
+    grid-template-columns: v-bind('desktopGrid.columns');
+    grid-template-rows: v-bind('desktopGrid.rows');
   }
 
   &--full-height {
