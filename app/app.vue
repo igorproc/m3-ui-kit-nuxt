@@ -7,7 +7,9 @@ const themeStore = useThemeStore()
   <div>
     <NuxtRouteAnnouncer />
 
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
 
     <client-only>
       <core-scope />

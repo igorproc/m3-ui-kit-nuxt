@@ -36,7 +36,6 @@ const props = withDefaults(defineProps<Props>(), {
   expanded: false,
 })
 
-const bp = useBreakpoint()
 const isExpanded = computed(() => props.expanded)
 
 // Self-register in layout system — size token changes based on expanded state
@@ -82,11 +81,13 @@ function onSelect(id: string) {
   &__list {
     padding-block: v.$padding-block;
     padding-inline: v.$padding-inline;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   &--expanded {
     width: var(--ui-navigation-rail-width-expanded);
-    align-items: stretch;
   }
 }
 </style>

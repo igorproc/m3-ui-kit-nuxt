@@ -1,138 +1,69 @@
 <template>
-  <NuxtLayout name="default">
-    <template #header>
-      <m-app-bar title="Material Design 3">
-        <template #nav>
-          <m-button
-            variant="text"
-            class="demo-material__menu-btn"
-            @click="toggleDrawer"
-          >
-            <m-icon :name="ICONS.menu" />
+  <div class="demo-material__content">
+    <!-- Hero Section -->
+    <section class="demo-material__hero">
+      <div class="demo-material__hero-text">
+        <h1 class="demo-material__hero-title">
+          Build beautiful, usable products
+        </h1>
+        <p class="demo-material__hero-subtitle">
+          Material Design 3 is the latest version of Google's open-source design system.
+          Design and build beautiful, usable products with Material 3.
+        </p>
+        <div class="demo-material__hero-actions">
+          <m-button variant="filled">
+            Get Started
           </m-button>
-        </template>
-
-        <template #actions>
-          <m-search
-            v-model="searchQuery"
-            placeholder="Search components..."
-            class="demo-material__search"
-          />
-          <m-button
-            variant="text"
-            @click="toggleTheme"
-          >
-            <m-icon :name="isDark ? ICONS.lightMode : ICONS.darkMode" />
+          <m-button variant="outlined">
+            View Components
           </m-button>
-        </template>
-      </m-app-bar>
-    </template>
-
-    <template #aside-left>
-      <m-navigation-rail
-        v-if="!isMobile"
-        v-model="activeNav"
-        :items="navItems"
-        :expanded="drawerExpanded"
-      />
-    </template>
-
-    <div class="demo-material__content">
-      <!-- Hero Section -->
-      <section class="demo-material__hero">
-        <div class="demo-material__hero-text">
-          <h1 class="demo-material__hero-title">
-            Build beautiful, usable products
-          </h1>
-          <p class="demo-material__hero-subtitle">
-            Material Design 3 is the latest version of Google's open-source design system.
-            Design and build beautiful, usable products with Material 3.
-          </p>
-          <div class="demo-material__hero-actions">
-            <m-button variant="filled">
-              Get Started
-            </m-button>
-            <m-button variant="outlined">
-              View Components
-            </m-button>
-          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Chip Filters -->
-      <section class="demo-material__filters">
-        <m-chip
-          v-for="cat in categories"
-          :key="cat.value"
-          variant="filter"
-          :selected="selectedCategory === cat.value"
-          @click="selectedCategory = cat.value"
-        >
-          {{ cat.label }}
-        </m-chip>
-      </section>
+    <!-- Chip Filters -->
+    <section class="demo-material__filters">
+      <m-chip
+        v-for="cat in categories"
+        :key="cat.value"
+        variant="filter"
+        :selected="selectedCategory === cat.value"
+        @click="selectedCategory = cat.value"
+      >
+        {{ cat.label }}
+      </m-chip>
+    </section>
 
-      <!-- Cards Grid -->
-      <section class="demo-material__grid">
-        <m-card
-          v-for="card in filteredCards"
-          :key="card.id"
-          :title="card.title"
-          :subtitle="card.subtitle"
-          variant="outlined"
-          class="demo-material__card"
-        >
-          <div class="demo-material__card-icon">
-            <m-icon :name="card.icon" />
-          </div>
-          <p class="demo-material__card-desc">
-            {{ card.description }}
-          </p>
-          <template #actions>
-            <m-button variant="tonal">
-              Learn More
-            </m-button>
-          </template>
-        </m-card>
-      </section>
-    </div>
-
-    <template #footer>
-      <!-- Mobile bottom navigation -->
-      <m-navigation-bar
-        v-if="isMobile"
-        v-model="activeNav"
-        :items="navItems"
-      />
-    </template>
-  </NuxtLayout>
+    <!-- Cards Grid -->
+    <section class="demo-material__grid">
+      <m-card
+        v-for="card in filteredCards"
+        :key="card.id"
+        :title="card.title"
+        :subtitle="card.subtitle"
+        variant="outlined"
+        class="demo-material__card"
+      >
+        <div class="demo-material__card-icon">
+          <m-icon :name="card.icon" />
+        </div>
+        <p class="demo-material__card-desc">
+          {{ card.description }}
+        </p>
+        <template #actions>
+          <m-button variant="tonal">
+            Learn More
+          </m-button>
+        </template>
+      </m-card>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ICONS } from '~~/shared/constants/icons'
 
-const bp = useBreakpoint()
-const isMobile = computed(() => bp.less.value.tablet)
-const isDark = ref(false)
-const searchQuery = ref('')
-const activeNav = ref('components')
 const selectedCategory = ref('all')
-const drawerExpanded = ref(false)
-
-function toggleDrawer() {
-  drawerExpanded.value = !drawerExpanded.value
-}
-
-function toggleTheme() {
-  isDark.value = !isDark.value
-}
-
-const navItems = [
-  { id: 'components', icon: ICONS.widgets, label: 'Components' },
-  { id: 'foundations', icon: ICONS.dashboard, label: 'Foundations' },
-  { id: 'styles', icon: ICONS.palette, label: 'Styles' },
-  { id: 'blog', icon: ICONS.article, label: 'Blog' },
-]
 
 const categories = [
   { value: 'all', label: 'All' },
