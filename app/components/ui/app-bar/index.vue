@@ -96,7 +96,7 @@ const { layoutItemStyles } = useLayoutItem({
 
   &--center-aligned {
     min-height: var(--ui-app-bar-height-center-aligned);
-    
+
     .ui-app-bar__title {
       text-align: center;
       align-items: center;
@@ -109,17 +109,17 @@ const { layoutItemStyles } = useLayoutItem({
 
   &--medium {
     min-height: var(--ui-app-bar-height-medium);
-    grid-template-areas: 
+    grid-template-areas:
       "nav . actions"
       "title title title";
     grid-template-rows: auto 1fr;
     align-items: start;
-    
+
     .ui-app-bar__title {
       align-self: end;
       padding-bottom: 24rem; // M3 standard bottom padding for prominent titles
     }
-    
+
     .ui-app-bar__title-text {
       @include typescale(v.$title-text-type-medium);
     }
@@ -127,12 +127,12 @@ const { layoutItemStyles } = useLayoutItem({
 
   &--large {
     min-height: var(--ui-app-bar-height-large);
-    grid-template-areas: 
+    grid-template-areas:
       "nav . actions"
       "title title title";
     grid-template-rows: auto 1fr;
     align-items: start;
-    
+
     .ui-app-bar__title {
       align-self: end;
       padding-bottom: 28rem;

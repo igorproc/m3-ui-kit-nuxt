@@ -11,11 +11,23 @@
       :disabled="item.disabled"
       @click="selectItem(item.value)"
     >
-      <span class="ui-segmented-button__icon" v-if="isSelected(item.value) || item.icon">
-        <UiIcon v-if="isSelected(item.value)" name="ic:baseline-check" />
-        <UiIcon v-else-if="item.icon" :name="item.icon" />
+      <span
+        v-if="isSelected(item.value) || item.icon"
+        class="ui-segmented-button__icon"
+      >
+        <UiIcon
+          v-if="isSelected(item.value)"
+          name="ic:baseline-check"
+        />
+        <UiIcon
+          v-else-if="item.icon"
+          :name="item.icon"
+        />
       </span>
-      <span class="ui-segmented-button__label" v-if="item.label">{{ item.label }}</span>
+      <span
+        v-if="item.label"
+        class="ui-segmented-button__label"
+      >{{ item.label }}</span>
     </button>
   </div>
 </template>
@@ -99,7 +111,7 @@ function selectItem(val: string | number) {
     &:hover:not(:disabled) {
       background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
     }
-    
+
     &:active:not(:disabled) {
       background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
     }
@@ -111,7 +123,7 @@ function selectItem(val: string | number) {
       &:hover:not(:disabled) {
         background-color: color-mix(in srgb, var(--color-accent-container-contrast, var(--color-on-surface)) 8%, var(--color-accent-container));
       }
-      
+
       &:active:not(:disabled) {
         background-color: color-mix(in srgb, var(--color-accent-container-contrast, var(--color-on-surface)) 12%, var(--color-accent-container));
       }

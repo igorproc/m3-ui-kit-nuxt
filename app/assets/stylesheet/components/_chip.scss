@@ -19,7 +19,7 @@ $text-color-default: var(--color-on-surface) !default;
 $bg-color-default: var(--color-surface-container-highest) !default;
 $bg-color-suggestion: var(--color-surface-container-low, var(--color-surface)) !default;
 $bg-color-selected: var(--color-secondary-container, var(--color-primary-container)) !default;
-$text-color-selected: var(--color-on-secondary-container, var(--color-on-primary-container)) !default;
+$text-color-selected: var(--color-primary-container-contrast, var(--color-on-primary-container)) !default;
 $border-color-default: var(--color-outline) !default;
 
 // --- Elements ---

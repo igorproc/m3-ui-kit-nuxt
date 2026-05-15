@@ -54,7 +54,7 @@ const calculate = (e: RippleEvent, el: HTMLElement, value: RippleOptions = {}) =
   const softEdgeSize = Math.max(0.35 * maxDim, 75)
   const hypotenuse = Math.sqrt(el.clientWidth ** 2 + el.clientHeight ** 2)
   const maxRadius = hypotenuse + 10
-  
+
   const radius = (maxRadius + softEdgeSize) / 2
   const scale = (maxDim * 0.2) / (radius * 2)
 
@@ -276,7 +276,7 @@ function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabl
   const rippleData = el._ripple ?? {}
   // @ts-expect-error custom property
   el._ripple = rippleData
-  
+
   rippleData.enabled = enabled
   rippleData.centered = modifiers.center
   rippleData.circle = modifiers.circle
@@ -343,6 +343,9 @@ function removeListeners(el: HTMLElement) {
 
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('ripple', {
+    getSSRProps() {
+      return {}
+    },
     mounted(el: HTMLElement, binding: RippleDirectiveBinding) {
       updateRipple(el, binding, false)
     },
@@ -357,6 +360,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
       const wasEnabled = isRippleEnabled(binding.oldValue)
       updateRipple(el, binding, wasEnabled)
-    }
+    },
   })
 })

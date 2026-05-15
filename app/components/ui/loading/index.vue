@@ -10,7 +10,10 @@
     :aria-label="ariaLabel"
   >
     <!-- Classic Circular Spinner -->
-    <div v-if="variant === 'circular'" class="ui-loading__spinner">
+    <div
+      v-if="variant === 'circular'"
+      class="ui-loading__spinner"
+    >
       <div class="ui-loading__left">
         <div class="ui-loading__circle"></div>
       </div>
@@ -20,18 +23,18 @@
     </div>
 
     <!-- M3 Expressive Morphing Shape -->
-    <UiShape 
-      v-else-if="variant === 'expressive'" 
-      :name="expressiveSequence[currentShapeIndex]" 
-      class="ui-loading__expressive" 
+    <UiShape
+      v-else-if="variant === 'expressive'"
+      :name="expressiveSequence[currentShapeIndex]"
+      class="ui-loading__expressive"
     />
   </span>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import type { M3ShapeName } from '~/assets/icon/shapes'
 import UiShape from '~/components/ui/shape/index.vue'
+import type { M3ShapeName } from '~/assets/icon/shapes'
 
 type LoadingVariant = 'circular' | 'expressive'
 type LoadingSize = 'small' | 'medium' | 'large'
@@ -52,12 +55,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Sequence of shapes for the Expressive Loading Indicator
 const expressiveSequence: M3ShapeName[] = [
-  'circle', 
-  'flower', 
-  'puffyDiamond', 
-  '4LeafClover', 
+  'circle',
+  'flower',
+  'puffyDiamond',
+  '4LeafClover',
   'square',
-  'sunny'
+  'sunny',
+  'ghostIsh',
+  'hexagon',
+  'heart',
 ]
 
 const currentShapeIndex = ref(0)
@@ -195,23 +201,47 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes ui-loading-expand-arc {
-  0% { transform: rotate(265deg); }
-  50% { transform: rotate(130deg); }
-  100% { transform: rotate(265deg); }
+  0% {
+    transform: rotate(265deg);
+  }
+  50% {
+    transform: rotate(130deg);
+  }
+  100% {
+    transform: rotate(265deg);
+  }
 }
 
 @keyframes ui-loading-rotate-arc {
-  12.5% { transform: rotate(135deg); }
-  25% { transform: rotate(270deg); }
-  37.5% { transform: rotate(405deg); }
-  50% { transform: rotate(540deg); }
-  62.5% { transform: rotate(675deg); }
-  75% { transform: rotate(810deg); }
-  87.5% { transform: rotate(945deg); }
-  100% { transform: rotate(1080deg); }
+  12.5% {
+    transform: rotate(135deg);
+  }
+  25% {
+    transform: rotate(270deg);
+  }
+  37.5% {
+    transform: rotate(405deg);
+  }
+  50% {
+    transform: rotate(540deg);
+  }
+  62.5% {
+    transform: rotate(675deg);
+  }
+  75% {
+    transform: rotate(810deg);
+  }
+  87.5% {
+    transform: rotate(945deg);
+  }
+  100% {
+    transform: rotate(1080deg);
+  }
 }
 
 @keyframes ui-loading-linear-rotate {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -1,31 +1,54 @@
 <template>
   <section class="demo-material__showcase">
-    <h2 class="demo-material__section-title">Component Showcase</h2>
+    <h2 class="demo-material__section-title">
+      Component Showcase
+    </h2>
 
     <!-- Badges -->
     <div class="demo-material__showcase-item">
-      <h3 class="demo-material__showcase-subtitle">Badges</h3>
+      <h3 class="demo-material__showcase-subtitle">
+        Badges
+      </h3>
       <div class="demo-material__badges">
         <div class="demo-material__preview-container demo-material__preview-container--badge">
           <span class="demo-material__badge-wrapper">
-            <m-icon :name="ICONS.info" style="font-size: 24rem;" />
-            <m-badge dot class="demo-material__badge-pos" />
+            <m-icon
+              :name="ICONS.info"
+              style="font-size: 24rem;"
+            />
+            <m-badge
+              dot
+              class="demo-material__badge-pos"
+            />
           </span>
           <span class="demo-material__preview-label">Small (Dot)</span>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--badge">
           <span class="demo-material__badge-wrapper">
-            <m-icon :name="ICONS.info" style="font-size: 24rem;" />
-            <m-badge value="3" class="demo-material__badge-pos" />
+            <m-icon
+              :name="ICONS.info"
+              style="font-size: 24rem;"
+            />
+            <m-badge
+              value="3"
+              class="demo-material__badge-pos"
+            />
           </span>
           <span class="demo-material__preview-label">Large (Single Digit)</span>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--badge">
           <span class="demo-material__badge-wrapper">
-            <m-icon :name="ICONS.info" style="font-size: 24rem;" />
-            <m-badge value="999" max="99" class="demo-material__badge-pos" />
+            <m-icon
+              :name="ICONS.info"
+              style="font-size: 24rem;"
+            />
+            <m-badge
+              value="999"
+              max="99"
+              class="demo-material__badge-pos"
+            />
           </span>
           <span class="demo-material__preview-label">Large (Multi Digit + Max)</span>
         </div>
@@ -34,28 +57,50 @@
 
     <!-- Buttons -->
     <div class="demo-material__showcase-item">
-      <h3 class="demo-material__showcase-subtitle">Buttons</h3>
+      <h3 class="demo-material__showcase-subtitle">
+        Buttons
+      </h3>
       <div class="demo-material__buttons">
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <m-button variant="filled">Filled</m-button>
           <m-button variant="filled">
-            <template #prepend><m-icon :name="ICONS.add" /></template>
+            Filled
+          </m-button>
+          <m-button variant="filled">
+            <template #prepend>
+              <m-icon :name="ICONS.add" />
+            </template>
             Filled Icon
           </m-button>
         </div>
 
         <!-- FAB Preview -->
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <UiButtonFab color="primary"><m-icon name="ic:baseline-add" /></UiButtonFab>
-          <UiButtonFab color="secondary"><m-icon name="ic:baseline-edit" /></UiButtonFab>
-          <UiButtonFab color="tertiary" size="small"><m-icon name="ic:baseline-check" /></UiButtonFab>
-          <UiButtonFab color="surface" size="large"><m-icon name="ic:baseline-explore" /></UiButtonFab>
+          <UiButtonFab color="primary">
+            <m-icon name="ic:baseline-add" />
+          </UiButtonFab>
+          <UiButtonFab color="secondary">
+            <m-icon name="ic:baseline-edit" />
+          </UiButtonFab>
+          <UiButtonFab
+            color="tertiary"
+            size="small"
+          >
+            <m-icon name="ic:baseline-check" />
+          </UiButtonFab>
+          <UiButtonFab
+            color="surface"
+            size="large"
+          >
+            <m-icon name="ic:baseline-explore" />
+          </UiButtonFab>
         </div>
 
         <!-- Extended FAB Preview -->
         <div class="demo-material__preview-container demo-material__preview-container--button">
           <UiButtonExtendedFab color="primary">
-            <template #prepend><m-icon name="ic:baseline-add" /></template>
+            <template #prepend>
+              <m-icon name="ic:baseline-add" />
+            </template>
             Create
           </UiButtonExtendedFab>
           <UiButtonExtendedFab color="secondary">
@@ -65,10 +110,18 @@
 
         <!-- Icon Buttons Preview -->
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <UiButtonIcon variant="text"><m-icon name="ic:baseline-search" /></UiButtonIcon>
-          <UiButtonIcon variant="filled"><m-icon name="ic:baseline-settings" /></UiButtonIcon>
-          <UiButtonIcon variant="tonal"><m-icon name="ic:baseline-info" /></UiButtonIcon>
-          <UiButtonIcon variant="outlined"><m-icon name="ic:baseline-explore" /></UiButtonIcon>
+          <UiButtonIcon variant="text">
+            <m-icon name="ic:baseline-search" />
+          </UiButtonIcon>
+          <UiButtonIcon variant="filled">
+            <m-icon name="ic:baseline-settings" />
+          </UiButtonIcon>
+          <UiButtonIcon variant="tonal">
+            <m-icon name="ic:baseline-info" />
+          </UiButtonIcon>
+          <UiButtonIcon variant="outlined">
+            <m-icon name="ic:baseline-explore" />
+          </UiButtonIcon>
         </div>
 
         <!-- Segmented Button Preview -->
@@ -77,7 +130,7 @@
             :items="[
               { label: 'Map', value: 'map' },
               { label: 'Transit', value: 'transit' },
-              { label: 'Satellite', value: 'satellite' }
+              { label: 'Satellite', value: 'satellite' },
             ]"
             :model-value="['map']"
             multiple
@@ -90,7 +143,7 @@
             variant="filled"
             :items="[
               { label: 'Reply All', value: 'reply_all', icon: 'ic:baseline-reply-all' },
-              { label: 'Forward', value: 'forward', icon: 'ic:baseline-forward' }
+              { label: 'Forward', value: 'forward', icon: 'ic:baseline-forward' },
             ]"
           >
             Reply
@@ -98,33 +151,49 @@
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <m-button variant="elevated">Elevated</m-button>
           <m-button variant="elevated">
-            <template #prepend><m-icon :name="ICONS.add" /></template>
+            Elevated
+          </m-button>
+          <m-button variant="elevated">
+            <template #prepend>
+              <m-icon :name="ICONS.add" />
+            </template>
             Elevated Icon
           </m-button>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <m-button variant="tonal">Tonal</m-button>
           <m-button variant="tonal">
-            <template #prepend><m-icon :name="ICONS.add" /></template>
+            Tonal
+          </m-button>
+          <m-button variant="tonal">
+            <template #prepend>
+              <m-icon :name="ICONS.add" />
+            </template>
             Tonal Icon
           </m-button>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <m-button variant="outlined">Outlined</m-button>
           <m-button variant="outlined">
-            <template #prepend><m-icon :name="ICONS.add" /></template>
+            Outlined
+          </m-button>
+          <m-button variant="outlined">
+            <template #prepend>
+              <m-icon :name="ICONS.add" />
+            </template>
             Outlined Icon
           </m-button>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--button">
-          <m-button variant="text">Text</m-button>
           <m-button variant="text">
-            <template #prepend><m-icon :name="ICONS.add" /></template>
+            Text
+          </m-button>
+          <m-button variant="text">
+            <template #prepend>
+              <m-icon :name="ICONS.add" />
+            </template>
             Text Icon
           </m-button>
         </div>
@@ -132,25 +201,45 @@
     </div>
     <!-- Progress & Loading -->
     <div class="demo-material__showcase-item">
-      <h3 class="demo-material__showcase-subtitle">Progress & Loading</h3>
+      <h3 class="demo-material__showcase-subtitle">
+        Progress & Loading
+      </h3>
       <div class="demo-material__buttons">
-        <div class="demo-material__preview-container demo-material__preview-container--button" style="min-width: 200px;">
-          <UiProgress variant="linear" :value="45" />
+        <div
+          class="demo-material__preview-container demo-material__preview-container--button"
+          style="min-width: 200px;"
+        >
+          <UiProgress
+            variant="linear"
+            :value="45"
+          />
           <span class="demo-material__preview-label">Linear Determinate</span>
         </div>
 
-        <div class="demo-material__preview-container demo-material__preview-container--button" style="min-width: 200px;">
-          <UiProgress variant="linear" indeterminate />
+        <div
+          class="demo-material__preview-container demo-material__preview-container--button"
+          style="min-width: 200px;"
+        >
+          <UiProgress
+            variant="linear"
+            indeterminate
+          />
           <span class="demo-material__preview-label">Linear Indeterminate</span>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--badge">
-          <UiProgress variant="circular" :value="60" />
+          <UiProgress
+            variant="circular"
+            :value="60"
+          />
           <span class="demo-material__preview-label">Circular Determinate</span>
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--badge">
-          <UiProgress variant="circular" indeterminate />
+          <UiProgress
+            variant="circular"
+            indeterminate
+          />
           <span class="demo-material__preview-label">Circular Indeterminate</span>
         </div>
 
@@ -160,7 +249,10 @@
         </div>
 
         <div class="demo-material__preview-container demo-material__preview-container--badge">
-          <UiLoading variant="expressive" size="medium" />
+          <UiLoading
+            variant="expressive"
+            size="medium"
+          />
           <span class="demo-material__preview-label">Loading (Expressive)</span>
         </div>
       </div>
@@ -168,36 +260,95 @@
 
     <!-- Sliders -->
     <div class="demo-material__showcase-item">
-      <h3 class="demo-material__showcase-subtitle">Sliders</h3>
+      <h3 class="demo-material__showcase-subtitle">
+        Sliders
+      </h3>
 
       <div style="display: flex; gap: 32rem; flex-wrap: wrap;">
         <!-- Horizontal Sliders -->
-        <div class="demo-material__buttons" style="flex-direction: column; flex: 1; min-width: 300rem;">
-          <div class="demo-material__preview-container demo-material__preview-container--button" style="width: calc(100% - 74rem);">
-            <UiSlider :model-value="50" show-value label="Continuous" />
+        <div
+          class="demo-material__buttons"
+          style="flex-direction: column; flex: 1; min-width: 300rem;"
+        >
+          <div
+            class="demo-material__preview-container demo-material__preview-container--button"
+            style="width: calc(100% - 74rem);"
+          >
+            <UiSlider
+              :model-value="50"
+              show-value
+              label="Continuous"
+            />
           </div>
 
-          <div class="demo-material__preview-container demo-material__preview-container--button" style="width: calc(100% - 74rem);">
-            <UiSlider :model-value="20" discrete :step="10" show-value label="Discrete" />
+          <div
+            class="demo-material__preview-container demo-material__preview-container--button"
+            style="width: calc(100% - 74rem);"
+          >
+            <UiSlider
+              :model-value="20"
+              discrete
+              :step="10"
+              show-value
+              label="Discrete"
+            />
           </div>
 
-          <div class="demo-material__preview-container demo-material__preview-container--button" style="width: calc(100% - 74rem);">
-            <UiSlider :model-value="[20, 80]" range show-value label="Range" />
+          <div
+            class="demo-material__preview-container demo-material__preview-container--button"
+            style="width: calc(100% - 74rem);"
+          >
+            <UiSlider
+              :model-value="[20, 80]"
+              range
+              show-value
+              label="Range"
+            />
           </div>
         </div>
 
         <!-- Vertical Sliders -->
-        <div class="demo-material__buttons" style="flex: 1; min-width: 300rem; align-items: stretch;">
-          <div class="demo-material__preview-container demo-material__preview-container--button" style="flex: 1;">
-            <UiSlider :model-value="50" orientation="vertical" show-value label="Continuous" />
+        <div
+          class="demo-material__buttons"
+          style="flex: 1; min-width: 300rem; align-items: stretch;"
+        >
+          <div
+            class="demo-material__preview-container demo-material__preview-container--button"
+            style="flex: 1;"
+          >
+            <UiSlider
+              :model-value="50"
+              orientation="vertical"
+              show-value
+              label="Continuous"
+            />
           </div>
 
-          <div class="demo-material__preview-container demo-material__preview-container--button" style="flex: 1;">
-            <UiSlider :model-value="20" discrete :step="10" orientation="vertical" show-value label="Discrete" />
+          <div
+            class="demo-material__preview-container demo-material__preview-container--button"
+            style="flex: 1;"
+          >
+            <UiSlider
+              :model-value="20"
+              discrete
+              :step="10"
+              orientation="vertical"
+              show-value
+              label="Discrete"
+            />
           </div>
 
-          <div class="demo-material__preview-container demo-material__preview-container--button" style="flex: 1;">
-            <UiSlider :model-value="[20, 80]" range orientation="vertical" show-value label="Range" />
+          <div
+            class="demo-material__preview-container demo-material__preview-container--button"
+            style="flex: 1;"
+          >
+            <UiSlider
+              :model-value="[20, 80]"
+              range
+              orientation="vertical"
+              show-value
+              label="Range"
+            />
           </div>
         </div>
       </div>

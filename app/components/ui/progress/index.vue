@@ -9,14 +9,20 @@
     :aria-valuenow="indeterminate ? undefined : clampedValue"
     :aria-label="ariaLabel"
   >
-    <div v-if="!indeterminate" class="ui-progress__inactive-track"></div>
+    <div
+      v-if="!indeterminate"
+      class="ui-progress__inactive-track"
+    ></div>
     <div
       class="ui-progress__bar ui-progress__primary-bar"
       :style="indeterminate ? '' : { transform: `scaleX(${clampedValue / 100})` }"
     >
       <div class="ui-progress__bar-inner"></div>
     </div>
-    <div v-if="indeterminate" class="ui-progress__bar ui-progress__secondary-bar">
+    <div
+      v-if="indeterminate"
+      class="ui-progress__bar ui-progress__secondary-bar"
+    >
       <div class="ui-progress__bar-inner"></div>
     </div>
   </div>
@@ -31,7 +37,10 @@
     :aria-valuenow="indeterminate ? undefined : clampedValue"
     :aria-label="ariaLabel"
   >
-    <div v-if="indeterminate" class="ui-progress__spinner">
+    <div
+      v-if="indeterminate"
+      class="ui-progress__spinner"
+    >
       <div class="ui-progress__left">
         <div class="ui-progress__circle"></div>
       </div>

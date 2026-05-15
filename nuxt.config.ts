@@ -69,6 +69,6 @@ export default defineNuxtConfig({
       { key: 'brown', name: 'Brown', definedInScss: true },
       { key: 'm3', name: 'M3 Baseline', color: '#6750A4' },
       { key: 'green', name: 'Forest', color: '#386A20' },
-    ]
+    ],
   },
 })
