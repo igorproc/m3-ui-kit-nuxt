@@ -8,6 +8,7 @@ import {
   unref,
   ref,
   isRef,
+  onServerPrefetch,
   type InjectionKey,
   type Ref,
 } from 'vue'
@@ -102,6 +103,15 @@ export function useLayoutItem(options: {
   const areaRef = computed(() => unref(options.area) ?? parentArea?.value ?? 'main')
   const sizeTokenRef = computed(() => unref(options.sizeToken))
 
+  // Регистрируем сразу, чтобы SSR поймал данные при рендере
+  layout.register({
+    id: idRef.value,
+    area: areaRef.value,
+    sizeToken: sizeTokenRef.value,
+    order: options.order,
+  })
+
+  // Обновляем при изменениях (на клиенте)
   watchEffect(() => {
     layout.register({
       id: idRef.value,

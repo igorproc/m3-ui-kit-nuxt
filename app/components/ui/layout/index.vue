@@ -24,21 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
 const { layoutStyles, items } = createLayout()
 
 const uid = useId()
-const layoutId = `m-layout-${uid.replace(/:/g, '')}`
-
-useHead({
-  style: [
-    {
-      id: layoutId,
-      innerHTML: computed(() => {
-        const styles = layoutStyles.value
-        if (Object.keys(styles).length === 0) return ''
-        const cssProps = Object.entries(styles).map(([k, v]) => `${k}: ${v};`).join('\n')
-        return `#${layoutId} { ${cssProps} }`
-      })
-    }
-  ]
-})
+const layoutId = `m-layout-${(uid || 'ssr').replace(/:/g, '')}`
 
 const headers = computed(() => getUniqueAreas('header'))
 const lefts = computed(() => getUniqueAreas('left'))
@@ -69,18 +55,18 @@ const mobileGrid = computed(() => {
   // На мобильных left и right не участвуют в сетке (они будут drawer'ами поверх)
   const cols = ['main']
   const rows: string[] = []
-
+  
   headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
   rows.push(`"${cols.join(' ')}"`)
   footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
-
+  
   return {
     areas: rows.join(' ') || '"main"',
     columns: 'minmax(0, 1fr)',
     rows: [
-      ...headers.value.map(h => `var(--m3-layout-${h.area}-height, 0px)`),
+      ...headers.value.map(h => h.sizeToken ? `var(--m3-layout-${h.area}-height, 0px)` : 'auto'),
       'minmax(0, 1fr)',
-      ...footers.value.map(f => `var(--m3-layout-${f.area}-height, 0px)`)
+      ...footers.value.map(f => f.sizeToken ? `var(--m3-layout-${f.area}-height, 0px)` : 'auto')
     ].join(' ') || 'minmax(0, 1fr)'
   }
 })
@@ -89,18 +75,22 @@ const tabletGrid = computed(() => {
   // На планшетах есть left, но нет right
   const cols = [...lefts.value.map(i => i.area), 'main']
   const rows: string[] = []
-
+  
   headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
   rows.push(`"${cols.join(' ')}"`)
   footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
-
+  
   return {
     areas: rows.join(' ') || '"main"',
-    columns: cols.map(c => c === 'main' ? 'minmax(0, 1fr)' : `var(--m3-layout-${c}-width, 0px)`).join(' ') || 'minmax(0, 1fr)',
+    columns: cols.map(c => {
+      if (c === 'main') return 'minmax(0, 1fr)'
+      const item = lefts.value.find(i => i.area === c)
+      return (item && item.sizeToken) ? `var(--m3-layout-${c}-width, 0px)` : 'auto'
+    }).join(' ') || 'minmax(0, 1fr)',
     rows: [
-      ...headers.value.map(h => `var(--m3-layout-${h.area}-height, 0px)`),
+      ...headers.value.map(h => h.sizeToken ? `var(--m3-layout-${h.area}-height, 0px)` : 'auto'),
       'minmax(0, 1fr)',
-      ...footers.value.map(f => `var(--m3-layout-${f.area}-height, 0px)`)
+      ...footers.value.map(f => f.sizeToken ? `var(--m3-layout-${f.area}-height, 0px)` : 'auto')
     ].join(' ') || 'minmax(0, 1fr)'
   }
 })
@@ -109,20 +99,71 @@ const desktopGrid = computed(() => {
   // На десктопах есть и left, и right
   const cols = [...lefts.value.map(i => i.area), 'main', ...rights.value.map(i => i.area)]
   const rows: string[] = []
-
+  
   headers.value.forEach(h => rows.push(`"${cols.map(() => h.area).join(' ')}"`))
   rows.push(`"${cols.join(' ')}"`)
   footers.value.forEach(f => rows.push(`"${cols.map(() => f.area).join(' ')}"`))
-
+  
   return {
     areas: rows.join(' ') || '"main"',
-    columns: cols.map(c => c === 'main' ? 'minmax(0, 1fr)' : `var(--m3-layout-${c}-width, 0px)`).join(' ') || 'minmax(0, 1fr)',
+    columns: cols.map(c => {
+      if (c === 'main') return 'minmax(0, 1fr)'
+      const item = lefts.value.find(i => i.area === c) || rights.value.find(i => i.area === c)
+      return (item && item.sizeToken) ? `var(--m3-layout-${c}-width, 0px)` : 'auto'
+    }).join(' ') || 'minmax(0, 1fr)',
     rows: [
-      ...headers.value.map(h => `var(--m3-layout-${h.area}-height, 0px)`),
+      ...headers.value.map(h => h.sizeToken ? `var(--m3-layout-${h.area}-height, 0px)` : 'auto'),
       'minmax(0, 1fr)',
-      ...footers.value.map(f => `var(--m3-layout-${f.area}-height, 0px)`)
+      ...footers.value.map(f => f.sizeToken ? `var(--m3-layout-${f.area}-height, 0px)` : 'auto')
     ].join(' ') || 'minmax(0, 1fr)'
   }
+})
+
+useHead({
+  style: [
+    computed(() => {
+      const styles = layoutStyles.value
+      const cssProps = Object.keys(styles).length > 0 
+        ? Object.entries(styles).map(([k, v]) => `${k}: ${v};`).join('\n  ') 
+        : ''
+      
+      const mGrid = mobileGrid.value
+      const tGrid = tabletGrid.value
+      const dGrid = desktopGrid.value
+
+      const innerHTML = `
+#${layoutId} {
+  ${cssProps}
+  grid-template-areas: ${mGrid.areas};
+  grid-template-columns: ${mGrid.columns};
+  grid-template-rows: ${mGrid.rows};
+}
+
+/* tablet: две колонки, без колонки right в сетке (768px - 1199px) */
+@media only screen and (min-width: 768px) and (max-width: 1199px) {
+  #${layoutId} {
+    grid-template-areas: ${tGrid.areas};
+    grid-template-columns: ${tGrid.columns};
+    grid-template-rows: ${tGrid.rows};
+  }
+}
+
+/* desktop: три колонки (1200px+) */
+@media only screen and (min-width: 1200px) {
+  #${layoutId} {
+    grid-template-areas: ${dGrid.areas};
+    grid-template-columns: ${dGrid.columns};
+    grid-template-rows: ${dGrid.rows};
+  }
+}
+      `.trim()
+
+      return {
+        id: layoutId,
+        innerHTML
+      }
+    })
+  ]
 })
 </script>
 
@@ -133,25 +174,6 @@ const desktopGrid = computed(() => {
   display: grid;
   min-height: 100dvh;
   contain: layout style;
-
-  /* mobile-first: header / main / footer; left & right — вне потока (drawer/overlay), см. rail/drawer */
-  grid-template-areas: v-bind('mobileGrid.areas');
-  grid-template-columns: v-bind('mobileGrid.columns');
-  grid-template-rows: v-bind('mobileGrid.rows');
-
-  /* tablet: две колонки, без колонки right в сетке */
-  @include media-distance(map.get($breakpoints, 'tablet-xs'), map.get($breakpoints, 'desktop-xs')) {
-    grid-template-areas: v-bind('tabletGrid.areas');
-    grid-template-columns: v-bind('tabletGrid.columns');
-    grid-template-rows: v-bind('tabletGrid.rows');
-  }
-
-  /* desktop: три колонки */
-  @include media-min(map.get($breakpoints, 'desktop-xs')) {
-    grid-template-areas: v-bind('desktopGrid.areas');
-    grid-template-columns: v-bind('desktopGrid.columns');
-    grid-template-rows: v-bind('desktopGrid.rows');
-  }
 
   &--full-height {
     height: 100dvh;
