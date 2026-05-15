@@ -17,20 +17,16 @@
 </template>
 
 <script setup lang="ts">
-type BadgeVariant = 'standard' | 'large'
-
 interface Props {
   value?: string | number
   max?: number
   dot?: boolean
-  variant?: BadgeVariant
 }
 
 const props = withDefaults(defineProps<Props>(), {
   value: undefined,
   max: 99,
   dot: false,
-  variant: 'standard',
 })
 
 const displayValue = computed(() => {
@@ -58,9 +54,9 @@ const displayValue = computed(() => {
 })
 
 const badgeClasses = computed(() => [
-  `ui-badge--${props.variant}`,
   {
-    'ui-badge--dot': props.dot,
+    'ui-badge--large': !props.dot,
+    'ui-badge--small': props.dot,
   },
 ])
 </script>
@@ -69,33 +65,33 @@ const badgeClasses = computed(() => [
 @use '~/assets/stylesheet/components/badge' as v;
 
 .ui-badge {
-  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: v.$size;
-  min-height: v.$size;
-  padding-inline: v.$padding-inline;
   border-radius: v.$shape;
   background-color: v.$bg-color;
   color: v.$text-color;
   z-index: 1;
 
-  @include typescale(v.$label-text-type);
+  &--large {
+    min-width: v.$size;
+    min-height: v.$size;
+    padding-inline: v.$padding-inline;
+    @include typescale(v.$label-text-type);
+  }
 
-  font-size: v.$font-size;
-  line-height: v.$line-height;
+  &--small {
+    padding-inline: v.$dot-padding-inline;
+    min-width: v.$dot-size;
+    min-height: v.$dot-size;
+    width: v.$dot-size;
+    height: v.$dot-size;
+  }
 
   &__label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-
-  &--dot {
-    padding-inline: v.$dot-padding-inline;
-    min-width: v.$dot-size;
-    min-height: v.$dot-size;
   }
 }
 </style>

@@ -18,7 +18,7 @@
       />
 
       <m-badge
-        v-if="badge != null && badge > 0"
+        v-if="badge"
         class="ui-navigation-rail-item__badge"
         :value="badge"
       />
@@ -52,6 +52,13 @@ defineEmits<{
 
 <style lang="scss">
 @use '~/assets/stylesheet/components/navigation-rail' as v;
+
+%active-indicator {
+  .ui-navigation-rail-item__indicator {
+    opacity: 0.08;
+    background-color: var(--color-on-surface);
+  }
+}
 
 .ui-navigation-rail-item {
   position: relative;

@@ -218,6 +218,8 @@
 <script setup lang="ts">
 import { ICONS } from '~~/shared/constants/icons'
 
+definePageMeta({ layout: 'primetime' })
+
 const bp = useBreakpoint()
 const isMobile = computed(() => bp.less.value.tablet)
 const searchQuery = ref('')

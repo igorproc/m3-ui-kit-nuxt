@@ -4,7 +4,7 @@
     class="ui-split-button"
   >
     <div class="ui-split-button__wrapper">
-      <m-button
+      <UiButton
         class="ui-split-button__action"
         :variant="variant"
         :color="color"
@@ -12,9 +12,9 @@
         @click="$emit('click')"
       >
         <slot />
-      </m-button>
+      </UiButton>
 
-      <m-button
+      <UiButton
         class="ui-split-button__dropdown"
         :variant="variant"
         :color="color"
@@ -22,15 +22,15 @@
         @click="toggleMenu"
       >
         <template #prepend>
-          <m-icon
+          <UiIcon
             name="ic:outline-plus"
             style="transform: rotate(45deg);"
           />
         </template>
-      </m-button>
+      </UiButton>
     </div>
 
-    <m-menu
+    <UiMenu
       v-if="items && items.length > 0"
       v-model="isMenuOpen"
       absolute
@@ -44,17 +44,21 @@
         @click="handleItemClick(item)"
       >
         <span class="ui-menu__item-label">{{ item.label }}</span>
-        <m-icon
+        <UiIcon
           v-if="item.icon"
           :name="item.icon"
         />
       </button>
-    </m-menu>
+    </UiMenu>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+
+import UiButton from '~/components/ui/button/index.vue'
+import UiIcon from '~/components/ui/icon/index.vue'
+import UiMenu from '~/components/ui/menu/index.vue'
 
 export interface UiSplitMenuItem {
   label: string

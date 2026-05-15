@@ -15,6 +15,8 @@
 </template>
 
 <script setup lang="ts">
+import UiButton from '~/components/ui/button/index.vue'
+
 import type { NuxtLinkProps } from '#app'
 
 type ButtonTag = 'button' | 'link'

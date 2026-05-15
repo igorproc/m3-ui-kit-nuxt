@@ -34,6 +34,9 @@
       </m-chip>
     </section>
 
+    <!-- Component Showcase -->
+    <material-showcase />
+
     <!-- Cards Grid -->
     <section class="demo-material__grid">
       <m-card
@@ -118,7 +121,6 @@ const filteredCards = computed(() => {
     padding: 32rem;
     max-width: 1400rem;
     margin: 0 auto;
-    width: 100%;
 
     @media (max-width: 768px) {
       padding: 16rem;

@@ -1,6 +1,7 @@
 <template>
   <component
     :is="componentTag"
+    v-ripple="!disabled"
     class="ui-button"
     :class="buttonClasses"
     v-bind="linkBindings"
@@ -136,17 +137,17 @@ const linkBindings = computed(() => {
   }
 
   &--has-prepend {
-    padding-left: v.$padding-has-icon;
+    padding-left: v.$padding-with-icon-edge;
   }
 
   &--has-append {
-    padding-right: v.$padding-has-icon;
+    padding-right: v.$padding-with-icon-edge;
   }
 
   &--icon-only {
     padding-inline: v.$padding-icon-only;
     width: v.$height;
-    border-radius: var(--sys-shape-corner-full);
+    border-radius: var(--sys-shape-corner-full, 100rem);
   }
 
   // VARIANTS
@@ -157,15 +158,14 @@ const linkBindings = computed(() => {
     border-color: transparent;
     box-shadow: v.$elevated-shadow;
 
-    &:hover {
+    &:hover:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$elevated-color v.$hover-opacity, v.$elevated-bg);
       box-shadow: v.$elevated-hover-shadow;
     }
 
-    &:active {
+    &:active:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$elevated-color v.$active-opacity, v.$elevated-bg);
       box-shadow: v.$elevated-active-shadow;
-      transform: v.$elevated-active-transform;
     }
   }
 
@@ -175,16 +175,14 @@ const linkBindings = computed(() => {
     border-color: transparent;
     box-shadow: v.$filled-shadow;
 
-    &:hover {
+    &:hover:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$filled-color v.$hover-opacity, v.$filled-bg);
       box-shadow: v.$filled-hover-shadow;
     }
 
-    &:active {
+    &:active:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$filled-color v.$active-opacity, v.$filled-bg);
-      box-shadow: none;
       box-shadow: v.$filled-active-shadow;
-      transform: v.$filled-active-transform;
     }
   }
 
@@ -195,11 +193,11 @@ const linkBindings = computed(() => {
     border-color: v.$outlined-border-color;
     box-shadow: none;
 
-    &:hover {
+    &:hover:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$outlined-color v.$hover-opacity, v.$outlined-bg);
     }
 
-    &:active {
+    &:active:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$outlined-color v.$active-opacity, transparent);
     }
   }
@@ -209,12 +207,27 @@ const linkBindings = computed(() => {
     color: v.$text-color;
     border-color: transparent;
     box-shadow: none;
+    padding-inline: v.$text-padding-inline;
 
-    &:hover {
+    &.ui-button--has-prepend {
+      padding-left: v.$text-padding-inline;
+      padding-right: v.$text-padding-with-icon-edge;
+    }
+
+    &.ui-button--has-append {
+      padding-left: v.$text-padding-with-icon-edge;
+      padding-right: v.$text-padding-inline;
+    }
+
+    &.ui-button--has-prepend.ui-button--has-append {
+      padding-inline: v.$text-padding-inline;
+    }
+
+    &:hover:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$text-color v.$hover-opacity, transparent 92%);
     }
 
-    &:active {
+    &:active:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$text-color v.$active-opacity, transparent);
     }
   }
@@ -225,11 +238,11 @@ const linkBindings = computed(() => {
     border-color: transparent;
     box-shadow: none;
 
-    &:hover {
+    &:hover:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$tonal-color v.$hover-opacity, v.$tonal-bg);
     }
 
-    &:active {
+    &:active:not(.ui-button--disabled) {
       background-color: color-mix(in srgb, v.$tonal-color v.$active-opacity, v.$tonal-bg);
     }
   }

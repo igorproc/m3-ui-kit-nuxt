@@ -1,5 +1,6 @@
 <template>
   <button
+    v-ripple="!disabled"
     class="ui-extended-fab"
     :class="[
       `ui-extended-fab--${color}`,
@@ -7,7 +8,6 @@
     ]"
     :disabled="disabled"
   >
-    <span class="ui-extended-fab__state-layer" />
     <span
       v-if="$slots.prepend"
       class="ui-extended-fab__icon"
@@ -50,13 +50,6 @@ withDefaults(defineProps<Props>(), {
               background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
   @include typescale('label-large');
-
-  &__state-layer {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-  }
 
   &__icon,
   &__label {
@@ -102,19 +95,49 @@ withDefaults(defineProps<Props>(), {
   &--primary {
     background-color: var(--color-primary-container);
     color: var(--color-primary-container-contrast, var(--color-on-surface));
+
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-primary-container-contrast, var(--color-on-surface)) 8%, var(--color-primary-container));
+    }
+    &:active:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-primary-container-contrast, var(--color-on-surface)) 12%, var(--color-primary-container));
+    }
   }
 
-  &--primary &__state-layer {
-    background-color: var(--color-primary-container-contrast, var(--color-on-surface));
+  &--secondary {
+    background-color: var(--color-accent-container);
+    color: var(--color-accent-container-contrast, var(--color-on-surface));
+
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-accent-container-contrast, var(--color-on-surface)) 8%, var(--color-accent-container));
+    }
+    &:active:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-accent-container-contrast, var(--color-on-surface)) 12%, var(--color-accent-container));
+    }
+  }
+
+  &--tertiary {
+    background-color: var(--md-sys-color-tertiary-container, #e2e7b0);
+    color: var(--md-sys-color-on-tertiary-container, #454a21);
+
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--md-sys-color-on-tertiary-container, #454a21) 8%, var(--md-sys-color-tertiary-container, #e2e7b0));
+    }
+    &:active:not(:disabled) {
+      background-color: color-mix(in srgb, var(--md-sys-color-on-tertiary-container, #454a21) 12%, var(--md-sys-color-tertiary-container, #e2e7b0));
+    }
   }
 
   &--surface {
-    background-color: var(--color-surface-container-high);
+    background-color: var(--color-surface-container-high, var(--color-surface-variant));
     color: var(--color-primary);
-  }
 
-  &--surface &__state-layer {
-    background-color: var(--color-primary);
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-container-high, var(--color-surface-variant)));
+    }
+    &:active:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface-container-high, var(--color-surface-variant)));
+    }
   }
 
   // Interactions
@@ -129,16 +152,8 @@ withDefaults(defineProps<Props>(), {
     box-shadow: 0 6rem 10rem 4rem rgb(0 0 0 / 15%), 0 2rem 3rem rgb(0 0 0 / 30%); // Elevation 4
   }
 
-  &:hover:not(:disabled) &__state-layer {
-    opacity: 0.08;
-  }
-
   &:active:not(:disabled) {
     box-shadow: 0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%); // Elevation 3
-  }
-
-  &:active:not(:disabled) &__state-layer {
-    opacity: 0.12;
   }
 }
 </style>
