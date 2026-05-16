@@ -7,7 +7,9 @@
     [data-definition="#{$definition}"][data-pallet="#{$pallet}"] {
       @content;
     }
-  } @else {
+  }
+
+  @else {
     [data-definition="#{$definition}"][data-pallet="#{$pallet}"][data-contrast="#{$contrast}"] {
       @content;
     }
@@ -28,6 +30,7 @@
 
 @mixin media-distance($mediaWidthMin, $mediaWidthMax) {
   $max: $mediaWidthMax - 1px;
+
   @media only screen and (min-width: $mediaWidthMin) and (max-width: $max) {
     @content;
   }
@@ -64,4 +67,29 @@
   font-size: var(--md-sys-typescale-#{$token}-size);
   line-height: var(--md-sys-typescale-#{$token}-line-height);
   font-weight: var(--md-sys-typescale-#{$token}-weight);
+}
+
+@mixin apply-typography($type-map) {
+  font-family: map.get($type-map, 'font');
+  font-size: map.get($type-map, 'size');
+  font-weight: map.get($type-map, 'weight');
+  line-height: map.get($type-map, 'line-height');
+
+  @if map.has-key($type-map, 'letter-spacing') {
+    letter-spacing: map.get($type-map, 'letter-spacing');
+  }
+}
+
+@mixin generate-tokens($tokens, $token-prefix: '') {
+  @each $key, $value in $tokens {
+    $var-name: if($token-prefix =='', $key, '#{$token-prefix}-#{$key}');
+
+    @if type-of($value)=='map' {
+      @include generate-tokens($value, $var-name);
+    }
+
+    @else {
+      --#{$var-name}: #{$value};
+    }
+  }
 }

@@ -22,5 +22,200 @@ $z-indexes: (
   below: -1,
 );
 
-/* computed */
+/* links */
+$theme-color-link: (
+  // Primary
+  'primary': var(--md-sys-color-primary),
+  'on-primary': var(--md-sys-color-on-primary),
+  'primary-container': var(--md-sys-color-primary-container),
+  'on-primary-container': var(--md-sys-color-on-primary-container),
+
+  // Secondary
+  'secondary': var(--md-sys-color-secondary),
+  'on-secondary': var(--md-sys-color-on-secondary),
+  'secondary-container': var(--md-sys-color-secondary-container),
+  'on-secondary-container': var(--md-sys-color-on-secondary-container),
+
+  // Tertiary
+  'tertiary': var(--md-sys-color-tertiary),
+  'on-tertiary': var(--md-sys-color-on-tertiary),
+  'tertiary-container': var(--md-sys-color-tertiary-container),
+  'on-tertiary-container': var(--md-sys-color-on-tertiary-container),
+
+  // Error
+  'error': var(--md-sys-color-error),
+  'on-error': var(--md-sys-color-on-error),
+  'error-container': var(--md-sys-color-error-container),
+  'on-error-container': var(--md-sys-color-on-error-container),
+
+  // Background & Surface
+  'background': var(--md-sys-color-background),
+  'on-background': var(--md-sys-color-on-background),
+  'surface': var(--md-sys-color-surface),
+  'on-surface': var(--md-sys-color-on-surface),
+  'surface-variant': var(--md-sys-color-surface-variant),
+  'on-surface-variant': var(--md-sys-color-on-surface-variant),
+
+  // Outlines & Utility
+  'outline': var(--md-sys-color-outline),
+  'outline-variant': var(--md-sys-color-outline-variant),
+  'shadow': var(--md-sys-color-shadow),
+  'scrim': var(--md-sys-color-scrim),
+
+  // Inverse
+  'inverse-surface': var(--md-sys-color-inverse-surface),
+  'inverse-on-surface': var(--md-sys-color-inverse-on-surface),
+  'inverse-primary': var(--md-sys-color-inverse-primary)
+);
+$theme-animation-link: (
+  'easing': (
+    'linear': var(--sys-motion-easing-linear),
+    'standard': var(--sys-motion-easing-standard),
+    'standard-accelerate': var(--sys-motion-easing-standard-accelerate),
+    'standard-decelerate': var(--sys-motion-easing-standard-decelerate),
+    'emphasized': var(--sys-motion-easing-emphasized),
+    'emphasized-decelerate': var(--sys-motion-easing-emphasized-decelerate),
+    'emphasized-accelerate': var(--sys-motion-easing-emphasized-accelerate),
+  ),
+  'duration': (
+    'short': (
+      '1': var(--sys-motion-duration-short-1),
+      '2': var(--sys-motion-duration-short-2),
+      '3': var(--sys-motion-duration-short-3),
+      '4': var(--sys-motion-duration-short-4),
+    ),
+    'medium': (
+      '1': var(--sys-motion-duration-medium-1),
+      '2': var(--sys-motion-duration-medium-2),
+      '3': var(--sys-motion-duration-medium-3),
+      '4': var(--sys-motion-duration-medium-4),
+    ),
+    'long': (
+      '1': var(--sys-motion-duration-long-1),
+      '2': var(--sys-motion-duration-long-2),
+      '3': var(--sys-motion-duration-long-3),
+      '4': var(--sys-motion-duration-long-4),
+    ),
+    'xlong': (
+      '1': var(--sys-motion-duration-extra-long-1),
+      '2': var(--sys-motion-duration-extra-long-2),
+      '3': var(--sys-motion-duration-extra-long-3),
+      '4': var(--sys-motion-duration-extra-long-4),
+    ),
+  )
+);
+$theme-shape-link: (
+  'none': var(--sys-shape-corner-none),
+  'extra-small': var(--sys-shape-corner-extra-small),
+  'small': var(--sys-shape-corner-small),
+  'medium': var(--sys-shape-corner-medium),
+  'large': var(--sys-shape-corner-large),
+  'extra-large': var(--sys-shape-corner-extra-large),
+  'extra-large-top': var(--sys-shape-corner-extra-large-top),
+  'full': var(--sys-shape-corner-full)
+);
+$theme-typography-link: (
+  'display': (
+    'large': (
+      'font': var(--md-sys-typescale-display-large-font),
+      'line-height': var(--md-sys-typescale-display-large-line-height),
+      'size': var(--md-sys-typescale-display-large-size),
+      'weight': var(--md-sys-typescale-display-large-weight),
+    ),
+    'medium': (
+      'font': var(--md-sys-typescale-display-medium-font),
+      'line-height': var(--md-sys-typescale-display-medium-line-height),
+      'size': var(--md-sys-typescale-display-medium-size),
+      'weight': var(--md-sys-typescale-display-medium-weight),
+    ),
+    'small': (
+      'font': var(--md-sys-typescale-display-small-font),
+      'line-height': var(--md-sys-typescale-display-small-line-height),
+      'size': var(--md-sys-typescale-display-small-size),
+      'weight': var(--md-sys-typescale-display-small-weight),
+    ),
+  ),
+  'headline': (
+    'large': (
+      'font': var(--md-sys-typescale-headline-large-font),
+      'line-height': var(--md-sys-typescale-headline-large-line-height),
+      'size': var(--md-sys-typescale-headline-large-size),
+      'weight': var(--md-sys-typescale-headline-large-weight),
+    ),
+    'medium': (
+      'font': var(--md-sys-typescale-headline-medium-font),
+      'line-height': var(--md-sys-typescale-headline-medium-line-height),
+      'size': var(--md-sys-typescale-headline-medium-size),
+      'weight': var(--md-sys-typescale-headline-medium-weight),
+    ),
+    'small': (
+      'font': var(--md-sys-typescale-headline-small-font),
+      'line-height': var(--md-sys-typescale-headline-small-line-height),
+      'size': var(--md-sys-typescale-headline-small-size),
+      'weight': var(--md-sys-typescale-headline-small-weight),
+    ),
+  ),
+  'title': (
+    'large': (
+      'font': var(--md-sys-typescale-title-large-font),
+      'line-height': var(--md-sys-typescale-title-large-line-height),
+      'size': var(--md-sys-typescale-title-large-size),
+      'weight': var(--md-sys-typescale-title-large-weight),
+    ),
+    'medium': (
+      'font': var(--md-sys-typescale-title-medium-font),
+      'line-height': var(--md-sys-typescale-title-medium-line-height),
+      'size': var(--md-sys-typescale-title-medium-size),
+      'weight': var(--md-sys-typescale-title-medium-weight),
+    ),
+    'small': (
+      'font': var(--md-sys-typescale-title-small-font),
+      'line-height': var(--md-sys-typescale-title-small-line-height),
+      'size': var(--md-sys-typescale-title-small-size),
+      'weight': var(--md-sys-typescale-title-small-weight),
+    ),
+  ),
+  'label': (
+    'large': (
+      'font': var(--md-sys-typescale-label-large-font),
+      'line-height': var(--md-sys-typescale-label-large-line-height),
+      'size': var(--md-sys-typescale-label-large-size),
+      'weight': var(--md-sys-typescale-label-large-weight),
+    ),
+    'medium': (
+      'font': var(--md-sys-typescale-label-medium-font),
+      'line-height': var(--md-sys-typescale-label-medium-line-height),
+      'size': var(--md-sys-typescale-label-medium-size),
+      'weight': var(--md-sys-typescale-label-medium-weight),
+    ),
+    'small': (
+      'font': var(--md-sys-typescale-label-small-font),
+      'line-height': var(--md-sys-typescale-label-small-line-height),
+      'size': var(--md-sys-typescale-label-small-size),
+      'weight': var(--md-sys-typescale-label-small-weight),
+    ),
+  ),
+  'body': (
+    'large': (
+      'font': var(--md-sys-typescale-body-large-font),
+      'line-height': var(--md-sys-typescale-body-large-line-height),
+      'size': var(--md-sys-typescale-body-large-size),
+      'weight': var(--md-sys-typescale-body-large-weight),
+    ),
+    'medium': (
+      'font': var(--md-sys-typescale-body-medium-font),
+      'line-height': var(--md-sys-typescale-body-medium-line-height),
+      'size': var(--md-sys-typescale-body-medium-size),
+      'weight': var(--md-sys-typescale-body-medium-weight),
+    ),
+    'small': (
+      'font': var(--md-sys-typescale-body-small-font),
+      'line-height': var(--md-sys-typescale-body-small-line-height),
+      'size': var(--md-sys-typescale-body-small-size),
+      'weight': var(--md-sys-typescale-body-small-weight),
+    ),
+  ),
+);
+
+/* reassign */
 $breakpoints: map.merge($breakpoints, $material-kit-breakpoints);

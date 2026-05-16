@@ -97,257 +97,127 @@ const linkBindings = computed(() => {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/button' as v;
+@use '~/assets/stylesheet/components/button/_index' as t;
 
 .ui-button {
+  $prefix: 'md-button';
+  $t: material-map(t.$tokens, $prefix);
+
+  // Base Styles
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: v.$gap;
-  min-height: v.$height;
-  padding-inline: v.$padding-inline;
-  border-radius: v.$radius;
-  border-width: 0;
-  border-style: solid;
-  cursor: pointer;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
   text-decoration: none;
-  transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-  color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-  border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-  box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-  transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+  border: none;
+  background-color: transparent;
+  outline: none;
 
-  // Typography: Label Large
-  @include typescale(v.$label-text-type);
+  gap: g($t, 'container-gap');
+  min-height: g($t, 'container-height');
+  border-radius: g($t, 'container-shape');
+  padding-inline: g($t, 'container-padding-inline');
+
+  // Typography
+  @include typescale('label-large');
+
+  transition:
+    background-color g($t, 'state-duration') g($t, 'state-easing'),
+    color g($t, 'state-duration') g($t, 'state-easing'),
+    box-shadow g($t, 'state-duration') g($t, 'state-easing'),
+    border-color g($t, 'state-duration') g($t, 'state-easing'),
+    transform g($t, 'state-duration') g($t, 'state-easing');
 
   &__label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    z-index: 1;
   }
 
   &__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: v.$icon-size;
+    font-size: g($t, 'icon-size');
     line-height: 0;
+    z-index: 1;
   }
 
   &--has-prepend {
-    padding-left: v.$padding-with-icon-edge;
+    padding-left: g($t, 'container-padding-with-icon');
   }
 
   &--has-append {
-    padding-right: v.$padding-with-icon-edge;
+    padding-right: g($t, 'container-padding-with-icon');
   }
 
   &--icon-only {
-    padding-inline: v.$padding-icon-only;
-    width: v.$height;
-    border-radius: var(--sys-shape-corner-full, 100rem);
+    padding-inline: g($t, 'container-padding-icon-only');
+    width: g($t, 'container-height');
   }
 
-  // VARIANTS
+  // COLOR MIXIN
+  // Применяет токены выбранной схемы ко всем вариантам
+  @mixin apply-scheme($scheme) {
+    // Цикл по вариантам для DRY-применения токенов состояний
+    $variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
 
-  &--elevated {
-    background-color: v.$elevated-bg;
-    color: v.$elevated-color;
-    border-color: transparent;
-    box-shadow: v.$elevated-shadow;
+    @each $v in $variants {
+      &.ui-button--#{$v} {
+        $base: "#{$scheme}-#{$v}";
+        
+        background-color: g($t, "#{$base}-container-color");
+        color: g($t, "#{$base}-label-text-color");
 
-    &:hover:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$elevated-color v.$hover-opacity, v.$elevated-bg);
-      box-shadow: v.$elevated-hover-shadow;
-    }
+        @if $v == 'outlined' {
+          border: 1rem solid g($t, "#{$base}-outline-color");
+        }
 
-    &:active:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$elevated-color v.$active-opacity, v.$elevated-bg);
-      box-shadow: v.$elevated-active-shadow;
-    }
-  }
+        @if $v == 'elevated' {
+          box-shadow: g($t, "#{$base}-shadow");
+        }
 
-  &--filled {
-    background-color: v.$filled-bg;
-    color: v.$filled-color;
-    border-color: transparent;
-    box-shadow: v.$filled-shadow;
+        &:hover:not(.ui-button--disabled) {
+          background-color: g($t, "#{$base}-container-hover-color");
+          @if $v == 'elevated' {
+            box-shadow: g($t, "#{$base}-hover-shadow");
+          }
+        }
 
-    &:hover:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$filled-color v.$hover-opacity, v.$filled-bg);
-      box-shadow: v.$filled-hover-shadow;
-    }
+        &:active:not(.ui-button--disabled) {
+          background-color: g($t, "#{$base}-container-pressed-color");
+        }
 
-    &:active:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$filled-color v.$active-opacity, v.$filled-bg);
-      box-shadow: v.$filled-active-shadow;
-    }
-  }
-
-  &--outlined {
-    background-color: v.$outlined-bg;
-    color: v.$outlined-color;
-    border-width: v.$outlined-border-width;
-    border-color: v.$outlined-border-color;
-    box-shadow: none;
-
-    &:hover:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$outlined-color v.$hover-opacity, v.$outlined-bg);
-    }
-
-    &:active:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$outlined-color v.$active-opacity, transparent);
+        &.ui-button--disabled {
+          background-color: g($t, "#{$base}-container-disabled-color");
+          color: g($t, "#{$base}-label-text-disabled-color");
+          @if $v == 'outlined' {
+            border-color: g($t, "#{$base}-outline-disabled-color");
+          }
+          box-shadow: none !important;
+        }
+      }
     }
   }
 
-  &--text {
-    background-color: v.$text-bg;
-    color: v.$text-color;
-    border-color: transparent;
-    box-shadow: none;
-    padding-inline: v.$text-padding-inline;
+  // ПРИМЕНЕНИЕ СХЕМ
+  @include apply-scheme('primary');
 
-    &.ui-button--has-prepend {
-      padding-left: v.$text-padding-inline;
-      padding-right: v.$text-padding-with-icon-edge;
-    }
-
-    &.ui-button--has-append {
-      padding-left: v.$text-padding-with-icon-edge;
-      padding-right: v.$text-padding-inline;
-    }
-
-    &.ui-button--has-prepend.ui-button--has-append {
-      padding-inline: v.$text-padding-inline;
-    }
-
-    &:hover:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$text-color v.$hover-opacity, transparent 92%);
-    }
-
-    &:active:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$text-color v.$active-opacity, transparent);
-    }
-  }
-
-  &--tonal {
-    background-color: v.$tonal-bg;
-    color: v.$tonal-color;
-    border-color: transparent;
-    box-shadow: none;
-
-    &:hover:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$tonal-color v.$hover-opacity, v.$tonal-bg);
-    }
-
-    &:active:not(.ui-button--disabled) {
-      background-color: color-mix(in srgb, v.$tonal-color v.$active-opacity, v.$tonal-bg);
-    }
-  }
-
-  // COLORS
   &--accent {
-    &.ui-button--elevated {
-      color: v.$accent-color;
-
-      &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$accent-color v.$hover-opacity, v.$elevated-bg);
-      }
-
-      &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$accent-color v.$active-opacity, v.$elevated-bg);
-      }
-    }
-
-    &.ui-button--filled {
-      background-color: v.$accent-color;
-      color: v.$accent-contrast-color;
-
-      &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$accent-contrast-color v.$hover-opacity, v.$accent-color);
-      }
-
-      &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$accent-contrast-color v.$active-opacity, v.$accent-color);
-      }
-    }
-
-    &.ui-button--outlined,
-    &.ui-button--text {
-      color: v.$accent-color;
-      border-color: color-mix(in srgb, v.$accent-color 50%, transparent 50%);
-
-      &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$accent-color v.$hover-opacity, transparent);
-      }
-
-      &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$accent-color v.$active-opacity, transparent);
-      }
-    }
+    @include apply-scheme('accent');
   }
 
   &--warn {
-    &.ui-button--elevated {
-      color: v.$warn-color;
-
-      &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$warn-color v.$hover-opacity, v.$elevated-bg);
-      }
-
-      &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$warn-color v.$active-opacity, v.$elevated-bg);
-      }
-    }
-
-    &.ui-button--filled {
-      background-color: v.$warn-color;
-      color: v.$warn-contrast-color;
-
-      &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$warn-contrast-color v.$hover-opacity, v.$warn-color);
-      }
-
-      &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$warn-contrast-color v.$active-opacity, v.$warn-color);
-      }
-    }
-
-    &.ui-button--outlined,
-    &.ui-button--text {
-      color: v.$warn-color;
-      border-color: color-mix(in srgb, v.$warn-color 50%, transparent 50%);
-
-      &:hover:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$warn-color v.$hover-opacity, transparent);
-      }
-
-      &:active:not(.ui-button--disabled) {
-        background-color: color-mix(in srgb, v.$warn-color v.$active-opacity, transparent);
-      }
-    }
+    @include apply-scheme('warn');
   }
 
   // STATE
   &--disabled {
     cursor: default;
     pointer-events: none;
-    box-shadow: none;
-
-    // By default, text and outlined use transparent background, others use surface-variant
-    background-color: color-mix(in srgb, v.$disabled-base-color v.$disabled-bg-mix, transparent);
-    color: color-mix(in srgb, v.$disabled-base-color v.$disabled-color-mix, transparent);
-  }
-
-  &--outlined#{&}--disabled,
-  &--text#{&}--disabled {
-    background-color: transparent;
-  }
-
-  &--outlined#{&}--disabled {
-    border-color: color-mix(in srgb, v.$disabled-base-color v.$disabled-bg-mix, transparent);
   }
 }
 </style>

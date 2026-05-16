@@ -33,3 +33,144 @@
 
   @return math.div(strip-unit($bp), 100);
 }
+
+@function material-map($tokens, $prefix, $current-path: '', $use-variables: false) {
+  $result: ();
+
+  @each $key, $value in $tokens {
+    $new-path: if($current-path == '', $key, '#{$current-path}-#{$key}');
+
+    @if type-of($value) == 'map' {
+      $inner-map: material-map($value, $prefix, $new-path, $use-variables);
+      $result: map.merge($result, ($key: $inner-map));
+    } @else {
+      $val: if($use-variables, var(--#{$prefix}-#{$new-path}, #{$value}), $value);
+      $result: map.merge($result, ($key: $val));
+    }
+  }
+
+  @return $result;
+}
+
+/// Поиск значения в глубоко вложенной мапе по строковому пути через дефис
+/// @example g($t, 'text-typography-font') -> map.get($t, text, typography, font)
+@function g($map, $path) {
+  $keys: ();
+  $separator: '-';
+  $remaining: $path;
+
+  @while str-index($remaining, $separator) {
+    $index: str-index($remaining, $separator);
+    $keys: append($keys, str-slice($remaining, 1, $index - 1));
+    $remaining: str-slice($remaining, $index + 1);
+  }
+
+  $keys: append($keys, $remaining);
+
+  @return map.get($map, $keys...);
+}
+
+/// Генератор токенов цветовой схемы для кнопок в стиле Material Design 3.
+/// Возвращает мапу со всеми вариантами и их состояниями.
+/// @param $main - Основной цвет схемы (primary, secondary, error)
+/// @param $on-main - Цвет контента на основном цвете
+/// @param $container - Цвет контейнера схемы
+/// @param $on-container - Цвет контента на контейнере
+/// @param $outline - Цвет границы
+/// @param $surface-tokens - Опционально мапа с системными цветами (on-surface, surface-container-low)
+@function m3-button-scheme(
+  $main, 
+  $on-main, 
+  $container, 
+  $on-container, 
+  $outline,
+  $surface-tokens: ()
+) {
+  $hover-opacity: 8%;
+  $pressed-opacity: 12%;
+  $disabled-container-opacity: 12%;
+  $disabled-content-opacity: 38%;
+
+  // Разрешаем системные цвета
+  $on-surface: map.get($surface-tokens, 'on-surface') or map.get($theme-color-link, 'on-surface');
+  $surface-container-low: map.get($surface-tokens, 'surface-container-low') or map.get($theme-color-link, 'surface-container-low');
+
+  @return (
+    filled: (
+      container: (
+        color: $main,
+        hover: (color: color-mix(in srgb, $on-main $hover-opacity, $main)),
+        pressed: (color: color-mix(in srgb, $on-main $pressed-opacity, $main)),
+        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+      ),
+      label: (
+        text: (
+          color: $on-main,
+          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+        )
+      )
+    ),
+    elevated: (
+      container: (
+        color: $surface-container-low,
+        hover: (color: color-mix(in srgb, $main $hover-opacity, $surface-container-low)),
+        pressed: (color: color-mix(in srgb, $main $pressed-opacity, $surface-container-low)),
+        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+      ),
+      label: (
+        text: (
+          color: $main,
+          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+        )
+      ),
+      shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
+      hover: (shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+    ),
+    tonal: (
+      container: (
+        color: $container,
+        hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
+        pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
+        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+      ),
+      label: (
+        text: (
+          color: $on-container,
+          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+        )
+      )
+    ),
+    outlined: (
+      container: (
+        color: transparent,
+        hover: (color: color-mix(in srgb, $main $hover-opacity, transparent)),
+        pressed: (color: color-mix(in srgb, $main $pressed-opacity, transparent)),
+        disabled: (color: transparent),
+      ),
+      label: (
+        text: (
+          color: $main,
+          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+        )
+      ),
+      outline: (
+        color: $outline,
+        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+      )
+    ),
+    text: (
+      container: (
+        color: transparent,
+        hover: (color: color-mix(in srgb, $main $hover-opacity, transparent)),
+        pressed: (color: color-mix(in srgb, $main $pressed-opacity, transparent)),
+        disabled: (color: transparent),
+      ),
+      label: (
+        text: (
+          color: $main,
+          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+        )
+      )
+    )
+  );
+}

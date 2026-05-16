@@ -1,0 +1,63 @@
+@use 'sass:map';
+@use '../../../abstracts/forward.scss' as *;
+
+// Material 3 State Opacities
+$hover-state-layer-opacity: 8%;
+$pressed-state-layer-opacity: 12%;
+$disabled-content-opacity: 38%;
+
+// M3 Standard Colors (Fallback to hex if variables are missing)
+$on-surface: var(--color-on-surface, #1C1B1F);
+$outline: var(--color-outline, #79747E);
+$selected-container: var(--md-sys-color-secondary-container, #E8DEF8);
+$selected-on-container: var(--md-sys-color-on-secondary-container, #4A4458);
+
+$tokens: (
+  container: (
+    height: 40rem,
+    shape: var(--sys-shape-corner-full, 100vmax),
+    outline: (
+      color: $outline
+    )
+  ),
+
+  segment: (
+    padding: (
+      inline: 12rem
+    ),
+    gap: 8rem,
+    typography: 'label-large',
+  ),
+
+  unselected: (
+    container: (
+      color: transparent,
+      hover: (color: color-mix(in srgb, $on-surface $hover-state-layer-opacity, transparent)),
+      pressed: (color: color-mix(in srgb, $on-surface $pressed-state-layer-opacity, transparent)),
+    ),
+    content: (
+      color: $on-surface,
+      disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+    )
+  ),
+  
+  selected: (
+    container: (
+      color: $selected-container,
+      hover: (color: color-mix(in srgb, $selected-on-container $hover-state-layer-opacity, $selected-container)),
+      pressed: (color: color-mix(in srgb, $selected-on-container $pressed-state-layer-opacity, $selected-container)),
+    ),
+    content: (
+      color: $selected-on-container,
+    )
+  ),
+
+  icon: (
+    size: 18rem
+  ),
+
+  motion: (
+    duration: var(--sys-motion-duration-short-3, 200ms),
+    easing: var(--sys-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)),
+  )
+);

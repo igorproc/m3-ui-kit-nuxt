@@ -1,7 +1,7 @@
 <template>
   <div class="ui-segmented-button">
     <button
-      v-for="(item, index) in items"
+      v-for="item in items"
       :key="item.value"
       v-ripple="!item.disabled"
       class="ui-segmented-button__segment"
@@ -15,15 +15,23 @@
         v-if="isSelected(item.value) || item.icon"
         class="ui-segmented-button__icon"
       >
-        <UiIcon
-          v-if="isSelected(item.value)"
-          name="ic:baseline-check"
-        />
-        <UiIcon
-          v-else-if="item.icon"
-          :name="item.icon"
-        />
+        <transition
+          name="ui-segmented-button-icon-scale"
+          mode="out-in"
+        >
+          <UiIcon
+            v-if="isSelected(item.value)"
+            key="check"
+            name="ic:baseline-check"
+          />
+          <UiIcon
+            v-else-if="item.icon"
+            :key="item.icon"
+            :name="item.icon"
+          />
+        </transition>
       </span>
+
       <span
         v-if="item.label"
         class="ui-segmented-button__label"
@@ -33,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import { useVModel } from '@vueuse/core'
 import UiIcon from '~/components/ui/icon/index.vue'
 
 export interface UiSegmentedItem {
@@ -57,34 +66,44 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number | (string | number)[]): void
 }>()
 
+const value = useVModel(props, 'modelValue', emit, {
+  passive: true,
+  deep: true,
+})
+
 function isSelected(val: string | number) {
-  if (props.multiple && Array.isArray(props.modelValue)) {
-    return props.modelValue.includes(val)
+  if (props.multiple && Array.isArray(value.value)) {
+    return value.value.includes(val)
   }
-  return props.modelValue === val
+  return value.value === val
 }
 
 function selectItem(val: string | number) {
   if (props.multiple) {
-    const current = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+    const current = Array.isArray(value.value) ? [...value.value] : []
     if (current.includes(val)) {
-      emit('update:modelValue', current.filter(i => i !== val))
+      value.value = current.filter(i => i !== val)
     } else {
-      emit('update:modelValue', [...current, val])
+      value.value = [...current, val]
     }
   } else {
-    emit('update:modelValue', val)
+    value.value = val
   }
 }
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/button/segmented' as t;
+
 .ui-segmented-button {
+  $prefix: 'm3-segmented';
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: stretch;
-  height: 40rem;
-  border-radius: var(--sys-shape-corner-full, 100vmax);
-  border: 1rem solid var(--color-outline);
+  height: g($t, 'container-height');
+  border-radius: g($t, 'container-shape');
+  border: 1rem solid g($t, 'container-outline-color');
   overflow: hidden;
 
   &__segment {
@@ -93,51 +112,78 @@ function selectItem(val: string | number) {
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding-inline: 12rem;
-    gap: 8rem;
-    background: transparent;
-    color: var(--color-on-surface);
+    padding-inline: g($t, 'segment-padding-inline');
+    gap: g($t, 'segment-gap');
+    
+    background-color: g($t, 'unselected-container-color');
+    color: g($t, 'unselected-content-color');
+    
     border: none;
-    border-right: 1rem solid var(--color-outline);
+    border-right: 1rem solid g($t, 'container-outline-color');
     cursor: pointer;
-    @include typescale('label-large');
-    transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-                color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+    outline: none;
+
+    @include typescale(g($t, 'segment-typography'));
+    
+    transition: 
+      background-color g($t, 'motion-duration') g($t, 'motion-easing'),
+      color g($t, 'motion-duration') g($t, 'motion-easing');
 
     &:last-child {
       border-right: none;
     }
 
-    &:hover:not(:disabled) {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+    &:hover {
+      background-color: g($t, 'unselected-container-hover-color');
     }
 
-    &:active:not(:disabled) {
-      background-color: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+    &:active {
+      background-color: g($t, 'unselected-container-pressed-color');
     }
 
     &--selected {
-      background-color: var(--color-accent-container);
-      color: var(--color-accent-container-contrast, var(--color-on-surface));
+      background-color: g($t, 'selected-container-color');
+      color: g($t, 'selected-content-color');
 
-      &:hover:not(:disabled) {
-        background-color: color-mix(in srgb, var(--color-accent-container-contrast, var(--color-on-surface)) 8%, var(--color-accent-container));
+      &:hover {
+        background-color: g($t, 'selected-container-hover-color');
       }
 
-      &:active:not(:disabled) {
-        background-color: color-mix(in srgb, var(--color-accent-container-contrast, var(--color-on-surface)) 12%, var(--color-accent-container));
+      &:active {
+        background-color: g($t, 'selected-container-pressed-color');
       }
     }
 
     &:disabled {
-      color: color-mix(in srgb, var(--color-on-surface) 38%, transparent);
+      color: g($t, 'unselected-content-disabled-color');
       cursor: default;
+      pointer-events: none;
     }
   }
 
   &__icon {
-    font-size: 18rem;
+    font-size: g($t, 'icon-size');
     display: inline-flex;
+    width: g($t, 'icon-size');
+    height: g($t, 'icon-size');
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Transitions
+  .ui-segmented-button-icon-scale {
+    &-enter-active,
+    &-leave-active {
+      transition: 
+        transform g($t, 'motion-duration') g($t, 'motion-easing'),
+        opacity g($t, 'motion-duration') g($t, 'motion-easing');
+    }
+
+    &-enter-from,
+    &-leave-to {
+      transform: scale(0.5);
+      opacity: 0;
+    }
   }
 }
 </style>

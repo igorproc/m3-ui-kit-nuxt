@@ -1,6 +1,6 @@
 <template>
   <span
-    class="ui-badge"
+    class="ui-badge --variables"
     :class="badgeClasses"
     role="status"
     aria-live="polite"
@@ -62,30 +62,36 @@ const badgeClasses = computed(() => [
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/badge' as v;
+@use 'sass:map';
+@use '~/assets/stylesheet/components/badge/index' as t;
+
+$prefix: 'm3-badge';
 
 .ui-badge {
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: v.$shape;
-  background-color: v.$bg-color;
-  color: v.$text-color;
+  border-radius: g($t, 'border-radius');
+  background-color: g($t, 'background-color');
+  color: g($t, 'text-color');
   z-index: 1;
 
   &--large {
-    min-width: v.$size;
-    min-height: v.$size;
-    padding-inline: v.$padding-inline;
-    @include typescale(v.$label-text-type);
+    min-width: g($t, 'large-size');
+    min-height: g($t, 'large-size');
+    padding-inline: g($t, 'large-padding-inline');
+
+    @include apply-typography(g($t, 'text-typography'));
   }
 
   &--small {
-    padding-inline: v.$dot-padding-inline;
-    min-width: v.$dot-size;
-    min-height: v.$dot-size;
-    width: v.$dot-size;
-    height: v.$dot-size;
+    min-width: g($t, 'dot-size');
+    min-height: g($t, 'dot-size');
+    width: g($t, 'dot-size');
+    height: g($t, 'dot-size');
+    padding-inline: g($t, 'dot-padding-inline');
   }
 
   &__label {

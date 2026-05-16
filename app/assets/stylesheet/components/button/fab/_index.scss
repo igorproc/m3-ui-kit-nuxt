@@ -1,0 +1,52 @@
+@use 'sass:map';
+@use '../../../abstracts/forward.scss' as *;
+
+$hover-opacity: 8%;
+$pressed-opacity: 12%;
+$disabled-container-opacity: 12%;
+$disabled-content-opacity: 38%;
+
+$on-surface: map.get($theme-color-link, 'on-surface');
+
+@function fab-scheme($container, $on-container) {
+  @return (container: (color: $container,
+      hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
+      pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
+      disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+    ),
+    icon: (color: $on-container,
+      disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+    ));
+}
+
+$tokens: (
+  // Color Schemes
+  primary: fab-scheme(map.get($theme-color-link, 'primary-container'),
+    map.get($theme-color-link, 'on-primary-container')),
+  secondary: fab-scheme(map.get($theme-color-link, 'secondary-container'),
+    map.get($theme-color-link, 'on-secondary-container')),
+  tertiary: fab-scheme(map.get($theme-color-link, 'tertiary-container'),
+    map.get($theme-color-link, 'on-tertiary-container')),
+  surface: fab-scheme(var(--md-sys-color-surface-container-low, map.get($theme-color-link, 'surface-variant')),
+    map.get($theme-color-link, 'primary')),
+
+  // Sizes
+  small: (container: (size: 40rem,
+      shape: map.get($theme-shape-link, 'medium')),
+    icon: (size: 24rem)),
+  medium: (container: (size: 56rem,
+      shape: map.get($theme-shape-link, 'large')),
+    icon: (size: 24rem)),
+  large: (container: (size: 96rem,
+      shape: map.get($theme-shape-link, 'extra-large')),
+    icon: (size: 36rem)),
+
+  // Shared
+  elevation: (resting: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+    hover: (0 6rem 10rem 4rem rgb(0 0 0 / 15%), 0 2rem 3rem rgb(0 0 0 / 30%)),
+    pressed: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+  ),
+  motion: (duration: map.get(map.get($theme-animation-link, 'duration'), 'short', '3'),
+    easing: map.get(map.get($theme-animation-link, 'easing'), 'standard'),
+  )
+);

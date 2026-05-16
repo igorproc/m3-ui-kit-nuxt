@@ -1,0 +1,90 @@
+@use 'sass:map';
+@use '../../../abstracts/forward.scss' as *;
+
+// Material 3 State Opacities
+$hover-state-layer-opacity: 8%;
+$focus-state-layer-opacity: 12%;
+$pressed-state-layer-opacity: 12%;
+
+$disabled-container-opacity: 12%;
+$disabled-content-opacity: 38%;
+
+$on-surface: map.get($theme-color-link, 'on-surface');
+
+@function extended-fab-scheme($container, $on-container) {
+  @return (
+    container: (
+      color: $container,
+      hover-color: color-mix(in srgb, $on-container $hover-state-layer-opacity, $container),
+      pressed-color: color-mix(in srgb, $on-container $pressed-state-layer-opacity, $container),
+      disabled-color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent),
+    ),
+    content: (
+      color: $on-container,
+      disabled-color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent),
+    )
+  );
+}
+
+$tokens: (
+  // Geometry
+  container: (
+    height: (
+      small: 40rem,
+      medium: 56rem,
+      large: 96rem
+    ),
+    shape: (
+      small: 12rem,
+      medium: 16rem,
+      large: 28rem
+    ),
+    padding: (
+      small: 12rem,
+      medium: 16rem,
+      large: 24rem
+    ),
+    gap: (
+      small: 8rem,
+      medium: 12rem,
+      large: 16rem
+    ),
+    elevation: (
+      resting: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+      hover: (0 6rem 10rem 4rem rgb(0 0 0 / 15%), 0 2rem 3rem rgb(0 0 0 / 30%)),
+      pressed: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+    ),
+  ),
+
+  icon: (
+    size: (
+      small: 20rem,
+      medium: 24rem,
+      large: 36rem
+    )
+  ),
+
+  // Schemes
+  primary: extended-fab-scheme(
+    map.get($theme-color-link, 'primary-container'),
+    var(--color-primary-container-contrast, $on-surface)
+  ),
+  secondary: extended-fab-scheme(
+    map.get($theme-color-link, 'secondary-container'),
+    var(--color-accent-container-contrast, $on-surface)
+  ),
+  tertiary: extended-fab-scheme(
+    var(--md-sys-color-tertiary-container, #e2e7b0),
+    var(--md-sys-color-on-tertiary-container, #454a21)
+  ),
+  surface: extended-fab-scheme(
+    var(--color-surface-container-high, map.get($theme-color-link, 'surface-variant')),
+    map.get($theme-color-link, 'primary')
+  ),
+
+  // Motion
+  motion: (
+    duration: map.get(map.get($theme-animation-link, 'duration'), 'short', '3'),
+    easing: map.get(map.get($theme-animation-link, 'easing'), 'standard'),
+  )
+);

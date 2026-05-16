@@ -1,0 +1,43 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// BUTTON M3 COMPONENT TOKENS (COLLECTION)
+// ==========================================
+
+$tokens: (
+  // Базовая геометрия и анимация
+  container: (height: 40rem,
+    shape: map.get($theme-shape-link, full),
+    gap: 8rem,
+    padding: (inline: 24rem,
+      with-icon: 16rem,
+      icon-only: 8rem,
+      text-inline: 12rem,
+    ),
+  ),
+  icon: (size: 18rem,
+  ),
+  state: (duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
+
+  // Схемы (полные наборы для каждого типа)
+  primary: m3-button-scheme(map.get($theme-color-link, primary),
+    map.get($theme-color-link, on-primary),
+    map.get($theme-color-link, primary-container),
+    map.get($theme-color-link, on-primary-container),
+    map.get($theme-color-link, outline)),
+
+  accent: m3-button-scheme(map.get($theme-color-link, secondary),
+    map.get($theme-color-link, on-secondary),
+    map.get($theme-color-link, secondary-container),
+    map.get($theme-color-link, on-secondary-container),
+    color-mix(in srgb, map.get($theme-color-link, secondary) 50%, transparent)),
+
+  warn: m3-button-scheme(map.get($theme-color-link, error),
+    map.get($theme-color-link, on-error),
+    map.get($theme-color-link, error-container),
+    map.get($theme-color-link, on-error-container),
+    color-mix(in srgb, map.get($theme-color-link, error) 50%, transparent))
+);
