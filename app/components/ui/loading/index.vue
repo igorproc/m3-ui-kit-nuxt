@@ -17,6 +17,7 @@
       <div class="ui-loading__left">
         <div class="ui-loading__circle"></div>
       </div>
+
       <div class="ui-loading__right">
         <div class="ui-loading__circle"></div>
       </div>

@@ -8,10 +8,18 @@
 </template>
 
 <script setup lang="ts">
-// Main renders a <main> because it wraps arbitrary content that can't self-register
+interface Props {
+  order?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  order: undefined,
+})
+
 const { layoutItemStyles } = useLayoutItem({
   id: 'layout-main',
   area: 'main',
+  order: props.order,
 })
 
 provideLayoutArea('main')

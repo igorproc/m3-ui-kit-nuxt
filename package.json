@@ -37,6 +37,7 @@
     "@nuxtjs/stylelint-module": "^5.2.1",
     "@pinia/nuxt": "^0.11.3",
     "@playwright/test": "^1.59.1",
+    "@types/flubber": "^0.4.0",
     "@vue/test-utils": "^2.4.10",
     "eslint": "^10.3.0",
     "happy-dom": "^20.9.0",

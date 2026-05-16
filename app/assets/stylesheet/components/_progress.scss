@@ -1,19 +1,31 @@
 // ==========================================
 // PROGRESS LOCAL TOKENS
-// Extracted from app/components/ui/progress/index.vue
+// Aligned with Material 3 Specifications
 // ==========================================
 
 // --- Linear ---
-$linear-height: 4rem !default;
-$linear-track-bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent) !default;
+$linear-height-small: 2rem !default;
+$linear-height-medium: 4rem !default;
+$linear-height-large: 8rem !default;
+
+$linear-track-bg: var(--color-secondary-container) !default;
 $linear-bar-bg: var(--color-primary) !default;
+$linear-stop-size: 4rem !default;
 
 // --- Circular ---
-$circular-size: 40rem !default;
-$circular-spinner-border-width: 3rem !default;
-$circular-track-bg: color-mix(in srgb, var(--color-primary) 16%, transparent) !default;
+$circular-size-small: 24rem !default;
+$circular-size-medium: 40rem !default;
+$circular-size-large: 48rem !default;
+
+$circular-stroke-small: 2.5 !default;
+$circular-stroke-medium: 4 !default;
+$circular-stroke-large: 4 !default;
+
+$circular-track-bg: var(--color-secondary-container) !default;
 $circular-spinner-bg: var(--color-primary) !default;
 
-// --- SVG Circular ---
-$circular-svg-track-bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent) !default;
-$circular-svg-stroke-width: 4 !default;
+// --- Animation Timings ---
+$linear-indeterminate-duration: 2s;
+$circular-arc-duration: 1333ms;
+$circular-cycle-duration: calc(4 * $circular-arc-duration);
+$circular-linear-rotate-duration: calc($circular-arc-duration * 360 / 306);

@@ -2,15 +2,21 @@
 // Layout Header area component
 interface Props {
   sticky?: boolean
+  sizeToken?: string
+  order?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   sticky: true,
+  sizeToken: undefined,
+  order: undefined,
 })
 
 const { layoutItemStyles } = useLayoutItem({
   id: 'layout-header',
   area: 'header',
+  sizeToken: computed(() => props.sizeToken),
+  order: props.order,
 })
 
 // Provide area context for children (like m-app-bar)

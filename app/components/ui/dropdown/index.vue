@@ -33,31 +33,40 @@
       absolute
       :origin="menuOrigin"
     >
-      <m-list>
-        <button
-          v-for="option in options"
-          :key="option.value"
-          type="button"
-          class="ui-list__item"
-          :class="{ 'ui-list__item--selected': isSelected(option) }"
-          @click="select(option)"
-        >
-          <span class="ui-list__leading">
-            <m-icon
-              v-if="isSelected(option)"
-              :name="ICONS.check"
-            />
-          </span>
-          <span class="ui-list__label">{{ option.label }}</span>
-        </button>
+      <m-list class="ui-dropdown__list">
+        <!-- List-style generic slot -->
+        <template v-if="items?.length">
+          <slot
+            v-for="(item, index) in items"
+            :key="item.id || index"
+            :item="item"
+            :index="index"
+            :selected="isSelected(item)"
+            :on-select="() => select(item)"
+          />
+        </template>
+
+        <!-- Default slot for manual items -->
+        <slot v-else-if="$slots.default" />
+
+        <!-- Fallback to options loop -->
+        <template v-else>
+          <m-dropdown-item
+            v-for="option in options"
+            :key="option.value"
+            :selected="isSelected(option)"
+            @click="select(option)"
+          >
+            {{ option.label }}
+          </m-dropdown-item>
+        </template>
       </m-list>
     </m-menu>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends { id?: string | number, value?: any, label?: string }">
 import { ICONS } from '~~/shared/constants/icons'
-
 import { onClickOutside } from '@vueuse/core'
 import type { UiMenuOrigin } from '~/components/ui/menu/index'
 
@@ -70,7 +79,8 @@ interface Props {
   path?: string
   label?: string
   placeholder?: string
-  options: Option[]
+  options?: Option[]
+  items?: T[]
   disabled?: boolean
   variant?: 'filled' | 'outlined'
   menuOrigin?: UiMenuOrigin
@@ -80,6 +90,8 @@ const props = withDefaults(defineProps<Props>(), {
   path: undefined,
   label: undefined,
   placeholder: undefined,
+  options: () => [],
+  items: () => [],
   disabled: false,
   variant: 'filled',
   menuOrigin: 'top left',
@@ -94,6 +106,12 @@ onClickOutside(dropdownRef, () => {
 })
 
 const selectedLabel = computed(() => {
+  // Check in items first
+  if (props.items?.length) {
+    const item = props.items.find(i => (i.value ?? i.id) === modelValue.value)
+    return item?.label || ''
+  }
+  // Fallback to options
   const option = props.options.find(o => o.value === modelValue.value)
   return option ? option.label : ''
 })
@@ -106,13 +124,14 @@ function toggle() {
   isOpen.value = !isOpen.value
 }
 
-function select(option: Option) {
-  modelValue.value = option.value
+function select(option: any) {
+  modelValue.value = option.value ?? option.id ?? option
   isOpen.value = false
 }
 
-function isSelected(option: Option) {
-  return modelValue.value === option.value
+function isSelected(option: any) {
+  const val = option.value ?? option.id ?? option
+  return modelValue.value === val
 }
 </script>
 
@@ -128,7 +147,7 @@ function isSelected(option: Option) {
   }
 
   &__field {
-    pointer-events: none; // Click is handled by trigger div
+    pointer-events: none;
   }
 
   &__arrow {
@@ -154,54 +173,9 @@ function isSelected(option: Option) {
       margin-top: v.$menu-margin-top;
     }
   }
-}
 
-.ui-list__item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: v.$list-item-height;
-  padding: v.$list-item-padding;
-  background-color: transparent;
-  color: v.$list-item-color;
-  border: none;
-  cursor: pointer;
-  transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-
-  @include typescale(v.$list-item-text-type);
-
-  &:hover {
-    background-color: v.$list-item-hover-bg;
+  &__list {
+    padding: 8rem 0;
   }
-
-  &--selected {
-    background-color: v.$list-item-selected-bg;
-    color: v.$list-item-selected-color;
-
-    &:hover {
-      background-color: color-mix(in srgb, v.$list-item-selected-bg 92%, v.$list-item-selected-color 8%);
-    }
-  }
-}
-
-.ui-list__leading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: v.$list-leading-size;
-  height: v.$list-leading-size;
-  margin-right: v.$list-leading-margin-right;
-
-  .ui-icon {
-    font-size: v.$list-leading-size;
-  }
-}
-
-.ui-list__label {
-  flex: 1;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>

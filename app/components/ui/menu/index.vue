@@ -90,7 +90,6 @@ onMounted(() => {
     right: v.$surface-right;
     min-width: v.$surface-min-width;
     max-width: v.$surface-max-width;
-    padding-block: v.$surface-padding-block;
     border-radius: v.$surface-border-radius;
     background-color: v.$surface-bg-color;
     color: v.$surface-color;
