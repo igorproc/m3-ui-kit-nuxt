@@ -1,0 +1,33 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  container: (
+    bg: var(--md-sys-color-surface-container-high, #ECE6F0),
+    radius: map.get($theme-shape-link, extra-large),
+    shadow: var(--sys-elevation-3),
+  ),
+  header: (
+    padding: 24rem 24rem 12rem,
+    headline: (
+      label: (
+        typography: map.get($theme-typography-link, label, medium),
+        color: var(--md-sys-color-on-surface-variant, #49454F),
+      ),
+      date: (
+        typography: map.get($theme-typography-link, headline, large),
+        color: var(--md-sys-color-on-surface, #1D1B20),
+        placeholder: (
+          color: var(--md-sys-color-on-surface-variant, #49454F),
+        ),
+      ),
+    ),
+  ),
+  body: (
+    padding: 8rem 24rem 16rem,
+  ),
+  footer: (
+    padding: 8rem 24rem 24rem,
+    gap: 8rem,
+  ),
+);

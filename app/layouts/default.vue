@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ICONS } from '#shared/constants/icons'
+import { ICONS } from '../../shared/constants/icons'
 
 const bp = useBreakpoint()
 const isMobile = computed(() => bp.is.value.mobile)

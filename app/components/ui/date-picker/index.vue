@@ -141,12 +141,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
-
-import dayjs from 'dayjs'
-import 'dayjs/locale/ru' // Example, could be dynamic
-
-type ViewMode = 'calendar' | 'year'
+import { useDatePicker } from '~/composables/date'
 
 interface Props {
   headline?: string
@@ -161,138 +158,49 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits(['update:modelValue', 'cancel', 'confirm'])
-
 const modelValue = defineModel<Date | string | number | null>({ default: null })
 
-const view = ref<ViewMode>('calendar')
-const today = dayjs()
-const displayDate = ref(modelValue.value ? dayjs(modelValue.value) : dayjs())
+const {
+  view,
+  today,
+  displayDate,
+  yearGrid,
+  selectedLabel,
+  currentMonthYearLabel,
+  weekdayLabels,
+  days,
+  years,
+  toggleView,
+  goToPreviousMonth,
+  goToNextMonth,
+  onSelect,
+  onSelectYear,
+} = useDatePicker(modelValue)
 
-const yearGrid = ref<HTMLElement | null>(null)
-
-// Labels
 const headlineLabel = computed(() => props.headline)
-const selectedLabel = computed(() => {
-  if (!modelValue.value) return 'Select date'
-  return dayjs(modelValue.value).format('ddd, MMM D')
-})
-
-const currentMonthYearLabel = computed(() => {
-  return displayDate.value.format('MMMM YYYY')
-})
-
-const weekdayLabels = computed(() => {
-  const weekdays = []
-  // Start from Sunday (0) or Monday (1) depending on locale
-  // Here we use Sunday as 0 for simplicity or dynamic shift
-  for (let i = 0; i < 7; i++) {
-    weekdays.push(dayjs().day(i).format('dd').charAt(0))
-  }
-  return weekdays
-})
-
-// Calendar Logic
-interface DayCell {
-  key: string
-  date: dayjs.Dayjs
-  label: number
-  inCurrentMonth: boolean
-  isToday: boolean
-  isSelected: boolean
-  ariaLabel: string
-}
-
-const days = computed<DayCell[]>(() => {
-  const startOfMonth = displayDate.value.startOf('month')
-  const endOfMonth = displayDate.value.endOf('month')
-
-  const startOfWeek = startOfMonth.startOf('week')
-  const endOfWeek = endOfMonth.endOf('week')
-
-  const result: DayCell[] = []
-  let current = startOfWeek
-
-  while (current.isBefore(endOfWeek) || current.isSame(endOfWeek, 'day')) {
-    result.push({
-      key: current.format('YYYY-MM-DD'),
-      date: current,
-      label: current.date(),
-      inCurrentMonth: current.month() === displayDate.value.month(),
-      isToday: current.isSame(today, 'day'),
-      isSelected: modelValue.value ? current.isSame(dayjs(modelValue.value), 'day') : false,
-      ariaLabel: current.format('MMMM D, YYYY'),
-    })
-    current = current.add(1, 'day')
-  }
-
-  return result
-})
-
-// Year View Logic
-const years = computed(() => {
-  const currentYear = today.year()
-  const start = currentYear - 100
-  const end = currentYear + 100
-  const result = []
-  for (let i = start; i <= end; i++) {
-    result.push(i)
-  }
-  return result
-})
-
-// Methods
-function toggleView() {
-  view.value = view.value === 'calendar' ? 'year' : 'calendar'
-  if (view.value === 'year') {
-    nextTick(() => {
-      const selectedYear = yearGrid.value?.querySelector('.ui-date-picker__year--selected')
-      selectedYear?.scrollIntoView({ block: 'center' })
-    })
-  }
-}
-
-function goToPreviousMonth() {
-  displayDate.value = displayDate.value.subtract(1, 'month')
-}
-
-function goToNextMonth() {
-  displayDate.value = displayDate.value.add(1, 'month')
-}
-
-function onSelect(date: dayjs.Dayjs) {
-  modelValue.value = date.toDate()
-}
-
-function onSelectYear(year: number) {
-  displayDate.value = displayDate.value.year(year)
-  view.value = 'calendar'
-}
 
 function confirm() {
   emit('confirm', modelValue.value)
 }
-
-watch(modelValue, (next) => {
-  if (next) {
-    displayDate.value = dayjs(next)
-  }
-})
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/date-picker' as v;
+@use '~/assets/stylesheet/components/date-picker/docked' as t;
 
 .ui-date-picker {
+  $prefix: 'md-date-picker';
+  $t: material-map(t.$tokens, $prefix);
+
   display: flex;
   flex-direction: column;
-  width: v.$width;
-  background-color: v.$bg-color;
-  border-radius: v.$border-radius;
+  width: g($t, 'container-width');
+  background-color: g($t, 'container-bg');
+  border-radius: g($t, 'container-radius');
   overflow: hidden;
-  box-shadow: v.$shadow;
+  box-shadow: g($t, 'container-shadow');
 
   &__header {
-    padding: v.$header-padding;
+    padding: g($t, 'header-padding');
     background-color: transparent;
   }
 
@@ -302,21 +210,17 @@ watch(modelValue, (next) => {
 
   &__headline-label {
     margin: 0;
-
-    @include typescale(v.$headline-label-type);
-
-    color: v.$headline-label-color;
+    @include apply-typography(g($t, 'header-headline-label-typography'));
+    color: g($t, 'header-headline-label-color');
   }
 
   &__headline-date {
     margin: 0;
-
-    @include typescale(v.$headline-date-type);
-
-    color: v.$headline-date-color;
+    @include apply-typography(g($t, 'header-headline-date-typography'));
+    color: g($t, 'header-headline-date-color');
 
     &--placeholder {
-      color: v.$headline-date-placeholder-color;
+      color: g($t, 'header-headline-date-placeholder-color');
       opacity: 0.7;
     }
   }
@@ -342,15 +246,13 @@ watch(modelValue, (next) => {
     border: none;
     background: none;
     cursor: pointer;
-    color: v.$view-toggle-color;
-
-    @include typescale(v.$view-toggle-type);
-
+    color: g($t, 'controls-view-toggle-color');
+    @include apply-typography(g($t, 'controls-view-toggle-typography'));
     border-radius: 999rem;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: v.$view-toggle-hover-bg;
+      background-color: g($t, 'controls-view-toggle-hover-bg');
     }
   }
 
@@ -363,17 +265,17 @@ watch(modelValue, (next) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: v.$icon-button-size;
-    height: v.$icon-button-size;
+    width: g($t, 'controls-icon-button-size');
+    height: g($t, 'controls-icon-button-size');
     border-radius: 50%;
     border: none;
     background: none;
-    color: v.$icon-button-color;
+    color: g($t, 'controls-icon-button-color');
     cursor: pointer;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: color-mix(in srgb, v.$icon-button-color 8%, transparent);
+      background-color: g($t, 'controls-icon-button-hover-bg');
     }
   }
 
@@ -395,14 +297,12 @@ watch(modelValue, (next) => {
 
   &__weekday {
     text-align: center;
-    height: v.$weekday-height;
+    height: g($t, 'weekday-height');
     display: flex;
     align-items: center;
     justify-content: center;
-
-    @include typescale(v.$weekday-type);
-
-    color: v.$weekday-color;
+    @include apply-typography(g($t, 'weekday-typography'));
+    color: g($t, 'weekday-color');
   }
 
   &__grid {
@@ -413,7 +313,7 @@ watch(modelValue, (next) => {
 
   &__day {
     position: relative;
-    height: v.$day-size;
+    height: g($t, 'day-size');
     border: none;
     background: none;
     cursor: pointer;
@@ -424,8 +324,8 @@ watch(modelValue, (next) => {
 
     &-state {
       position: absolute;
-      width: v.$day-size;
-      height: v.$day-size;
+      width: g($t, 'day-size');
+      height: g($t, 'day-size');
       border-radius: 50%;
       background-color: transparent;
       transition: background-color 0.2s, transform 0.2s;
@@ -433,28 +333,26 @@ watch(modelValue, (next) => {
 
     &-label {
       position: relative;
-
-      @include typescale(v.$day-label-type);
-
-      color: v.$day-label-color;
+      @include apply-typography(g($t, 'day-typography'));
+      color: g($t, 'day-color');
       z-index: 1;
     }
 
     &:hover {
       &-state {
-        background-color: v.$day-hover-bg;
+        background-color: g($t, 'day-hover-bg');
       }
     }
   }
 
   &__day--outside {
-    opacity: v.$disabled-opacity;
+    opacity: g($t, 'day-disabled-opacity');
   }
 
   &__day--today &__day-label {
-    color: v.$day-today-color;
+    color: g($t, 'day-today-color');
     font-weight: bold;
-    box-shadow: inset 0 0 0 1rem v.$day-today-color;
+    box-shadow: inset 0 0 0 g($t, 'day-today-outline-width') g($t, 'day-today-color');
     border-radius: 50%;
     width: 32rem;
     height: 32rem;
@@ -464,20 +362,20 @@ watch(modelValue, (next) => {
   }
 
   &__day--selected &__day-state {
-    background-color: v.$day-selected-bg;
+    background-color: g($t, 'day-selected-bg');
     transform: scale(1);
   }
 
   &__day--selected:hover &__day-state {
-    background-color: color-mix(in srgb, var(--color-on-primary) 8%, v.$day-selected-bg);
+    background-color: g($t, 'day-selected-hover-bg');
   }
 
   &__day--selected &__day-label {
-    color: v.$day-selected-color;
+    color: g($t, 'day-selected-color');
   }
 
   &__year-grid {
-    height: v.$year-grid-height;
+    height: 280rem;
     overflow-y: auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -495,7 +393,7 @@ watch(modelValue, (next) => {
   }
 
   &__year {
-    height: v.$year-height;
+    height: g($t, 'year-height');
     border: none;
     background: none;
     cursor: pointer;
@@ -503,32 +401,30 @@ watch(modelValue, (next) => {
     display: flex;
     align-items: center;
     justify-content: center;
-
-    @include typescale(v.$year-type);
-
-    color: v.$year-color;
+    @include apply-typography(g($t, 'year-typography'));
+    color: g($t, 'year-color');
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: v.$year-hover-bg;
+      background-color: g($t, 'year-hover-bg');
     }
 
     &--selected {
-      background-color: v.$year-selected-bg !important;
-      color: v.$year-selected-color !important;
+      background-color: g($t, 'year-selected-bg') !important;
+      color: g($t, 'year-selected-color') !important;
     }
 
     &--current {
-      color: v.$year-current-color;
+      color: g($t, 'year-current-color');
       font-weight: bold;
     }
   }
 
   &__footer {
-    padding: v.$footer-padding;
+    padding: g($t, 'footer-padding');
     display: flex;
     justify-content: flex-end;
-    gap: v.$footer-gap;
+    gap: g($t, 'footer-gap');
   }
 }
 

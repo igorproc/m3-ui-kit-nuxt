@@ -1,0 +1,75 @@
+
+@use "sass:map";
+@use "sass:list";
+@use "sass:meta";
+@use "sass:string";
+@use "_index.scss" as target;
+
+@function to-json($value) {
+  $type: meta.type-of($value);
+  
+  @if $type == 'map' {
+    $keys: map.keys($value);
+    $json: '{';
+    @for $i from 1 through list.length($keys) {
+      $key: list.nth($keys, $i);
+      $val: map.get($value, $key);
+      $json: '#{$json}"#{$key}": #{to-json($val)}';
+      @if $i < list.length($keys) {
+        $json: '#{$json},';
+      }
+    }
+    @return '#{$json}}';
+  }
+  
+  @if $type == 'list' {
+    $json: '[';
+    @for $i from 1 through list.length($value) {
+      $val: list.nth($value, $i);
+      $json: '#{$json}#{to-json($val)}';
+      @if $i < list.length($value) {
+        $json: '#{$json},';
+      }
+    }
+    @return '#{$json}]';
+  }
+  
+  @if $type == 'number' {
+    @if meta.inspect($value) == '#{meta.inspect($value)}' and unitless($value) {
+      @return '#{$value}';
+    } @else {
+      $str-num: '#{$value}';
+      @return '"#{$str-num}"';
+    }
+  }
+  
+  @if $type == 'bool' {
+    @return '#{$value}';
+  }
+  
+  @if $value == null {
+    @return 'null';
+  }
+  
+  // Colors, strings, etc.
+  $str-val: '#{$value}';
+  
+  // Simple JSON string escape for double quotes and backslashes
+  $escaped: '';
+  @for $i from 1 through string.length($str-val) {
+    $char: string.slice($str-val, $i, $i);
+    @if $char == '"' {
+      $escaped: '#{$escaped}\"';
+    } @else if $char == '\\' {
+      $escaped: '#{$escaped}\\\\';
+    } @else {
+      $escaped: '#{$escaped}#{$char}';
+    }
+  }
+  
+  @return '"#{$escaped}"';
+}
+
+.extracted-tokens {
+  content: to-json(target.$tokens);
+}

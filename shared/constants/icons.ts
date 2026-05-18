@@ -49,4 +49,6 @@ export const ICONS = {
   speed: 'ic:outline-speed',
   security: 'ic:outline-security',
   cloud: 'ic:outline-cloud',
+  edit: 'ic:outline-edit',
+  event: 'ic:outline-event',
 } as const

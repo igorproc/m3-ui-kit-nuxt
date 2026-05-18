@@ -1,0 +1,94 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  container: (
+    bg: var(--md-sys-color-surface-container-high, #ECE6F0),
+    radius: map.get($theme-shape-link, extra-large),
+    shadow: var(--sys-elevation-3),
+  ),
+  header: (
+    padding: 24rem 24rem 12rem,
+    headline: (
+      label: (
+        typography: map.get($theme-typography-link, label, medium),
+        color: var(--md-sys-color-on-surface-variant, #49454F),
+      ),
+      date: (
+        typography: map.get($theme-typography-link, headline, large),
+        color: var(--md-sys-color-on-surface, #1D1B20),
+        placeholder: (
+          color: var(--md-sys-color-on-surface-variant, #49454F),
+        ),
+      ),
+    ),
+  ),
+  controls: (
+    view: (
+      toggle: (
+        typography: map.get($theme-typography-link, label, large),
+        color: var(--md-sys-color-on-surface-variant, #49454F),
+        hover: (
+          bg: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 8%, transparent),
+        ),
+      ),
+    ),
+    icon: (
+      button: (
+        size: 40rem,
+        color: var(--md-sys-color-on-surface-variant, #49454F),
+        hover: (
+          bg: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 8%, transparent),
+        ),
+      ),
+    ),
+  ),
+  weekday: (
+    height: 40rem,
+    typography: map.get($theme-typography-link, body, small),
+    color: var(--md-sys-color-on-surface, #1D1B20),
+  ),
+  day: (
+    size: 40rem,
+    typography: map.get($theme-typography-link, body, small),
+    color: var(--md-sys-color-on-surface, #1D1B20),
+    disabled: (
+      opacity: 0.38,
+    ),
+    hover: (
+      bg: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent),
+    ),
+    today: (
+      color: var(--md-sys-color-primary, #6750A4),
+      outline: (
+        width: 1rem,
+      ),
+    ),
+    selected: (
+      bg: var(--md-sys-color-primary, #6750A4),
+      color: var(--md-sys-color-on-primary, #FFFFFF),
+      hover: (
+        bg: color-mix(in srgb, var(--md-sys-color-on-primary) 8%, var(--md-sys-color-primary)),
+      ),
+    ),
+  ),
+  year: (
+    height: 48rem,
+    typography: map.get($theme-typography-link, body, large),
+    color: var(--md-sys-color-on-surface-variant, #49454F),
+    hover: (
+      bg: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 8%, transparent),
+    ),
+    selected: (
+      bg: var(--md-sys-color-primary, #6750A4),
+      color: var(--md-sys-color-on-primary, #FFFFFF),
+    ),
+    current: (
+      color: var(--md-sys-color-primary, #6750A4),
+    ),
+  ),
+  footer: (
+    padding: 8rem 24rem 24rem,
+    gap: 8rem,
+  ),
+);
