@@ -1,0 +1,46 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// RADIO M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  container: (
+    size: 40rem,
+    gap: 12rem,
+  ),
+  control: (
+    size: 20rem,
+  ),
+  outer: (
+    border: (
+      width: 2rem,
+      color: map.get($theme-color-link, outline),
+    ),
+  ),
+  inner: (
+    size: 10rem,
+    bg: map.get($theme-color-link, primary),
+  ),
+  checked: (
+    color: map.get($theme-color-link, primary),
+  ),
+  state: (
+    layer: (
+      opacity: (
+        hover: 0.08,
+        active: 0.12,
+      ),
+    ),
+  ),
+  error: (
+    color: map.get($theme-color-link, error),
+  ),
+  disabled: (
+    opacity: 0.38,
+  ),
+  typography: (
+    label: 'body-medium',
+  ),
+);

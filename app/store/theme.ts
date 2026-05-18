@@ -8,7 +8,7 @@ export const useThemeStore = defineStore('themeStore', () => {
   // Cookies
   const definitionCookie = useCookie<string>(cookieKeys.definition, { default: () => THEME_DEFINITIONS.LIGHT, ...THEME_COOKIE_OPTIONS })
   const contrastCookie = useCookie<string>(cookieKeys.contrast, { default: () => THEME_CONTRASTS.MEDIUM, ...THEME_COOKIE_OPTIONS })
-  const paletteCookie = useCookie<string>(cookieKeys.pallete, { default: () => 'brown', ...THEME_COOKIE_OPTIONS })
+  const paletteCookie = useCookie<string>(cookieKeys.pallete, { default: () => '_m3-fallback', ...THEME_COOKIE_OPTIONS })
 
   const allowedDefinitions = Object.values(THEME_DEFINITIONS)
   const allowedContrasts = Object.values(THEME_CONTRASTS)

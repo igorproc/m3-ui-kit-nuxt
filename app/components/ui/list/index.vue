@@ -22,14 +22,18 @@ defineProps<Props>()
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/list' as v;
+@use 'sass:map';
+@use '~/assets/stylesheet/components/list/index' as t;
 
 .ui-list {
+  $prefix: 'md-list';
+  $t: material-map(t.$tokens, $prefix);
+
   display: flex;
   flex-direction: column;
-  padding-block: v.$padding-block;
-  padding-inline: v.$padding-inline;
-  border-radius: v.$border-radius;
-  background-color: v.$bg-color;
+  padding-block: g($t, 'container-padding-block');
+  padding-inline: g($t, 'container-padding-inline');
+  border-radius: g($t, 'container-shape');
+  background-color: g($t, 'container-color');
 }
 </style>

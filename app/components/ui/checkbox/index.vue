@@ -5,13 +5,14 @@
   >
     <input
       :id="fieldId"
-      v-model="modelValue"
+      :checked="modelValue"
       class="ui-checkbox__input"
       type="checkbox"
       :name="path"
       :disabled="disabled"
       :aria-checked="modelValue"
       :aria-invalid="errorMessage ? 'true' : undefined"
+      @change="modelValue = ($event.target as HTMLInputElement).checked"
     >
 
     <div class="ui-checkbox__container">
@@ -37,6 +38,7 @@
 
 <script setup lang="ts">
 import { useField } from 'vee-validate'
+import { ICONS } from '~~/shared/constants/icons'
 
 interface Props {
   path?: string
@@ -94,14 +96,17 @@ if (props.path) {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/checkbox' as v;
+@use '~/assets/stylesheet/components/checkbox/index' as t;
 
 .ui-checkbox {
+  $prefix: 'md-checkbox';
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: center;
-  gap: v.$gap;
+  gap: g($t, 'container-gap');
   cursor: pointer;
-  color: v.$text-color;
+  color: var(--color-on-surface);
 
   &__input {
     position: absolute;
@@ -114,8 +119,8 @@ if (props.path) {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: v.$container-size;
-    height: v.$container-size;
+    width: g($t, 'container-size');
+    height: g($t, 'container-size');
     flex-shrink: 0;
   }
 
@@ -124,11 +129,11 @@ if (props.path) {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: v.$size;
-    height: v.$size;
-    border-radius: v.$control-border-radius;
-    border: v.$control-border-width solid v.$control-border-color;
-    background-color: v.$control-bg-color;
+    width: g($t, 'control-size');
+    height: g($t, 'control-size');
+    border-radius: g($t, 'control-border-radius');
+    border: g($t, 'control-border-width') solid g($t, 'control-border-color');
+    background-color: g($t, 'control-bg');
     box-sizing: border-box;
     z-index: 1;
     transition:
@@ -141,11 +146,11 @@ if (props.path) {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: v.$container-size;
-    height: v.$container-size;
+    width: g($t, 'container-size');
+    height: g($t, 'container-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: v.$text-color;
+    background-color: var(--color-on-surface);
     opacity: 0;
     pointer-events: none;
     transition:
@@ -155,29 +160,29 @@ if (props.path) {
   }
 
   &--checked &__state-layer {
-    background-color: v.$checked-color;
+    background-color: g($t, 'checked-color');
   }
 
   &--error &__state-layer {
-    background-color: v.$error-color;
+    background-color: g($t, 'error-color');
   }
 
   &:hover &__state-layer {
-    opacity: v.$state-layer-opacity-hover;
+    opacity: g($t, 'state-layer-opacity-hover');
     transform: translate(-50%, -50%) scale(1);
   }
 
   &:active &__state-layer {
-    opacity: v.$state-layer-opacity-active;
+    opacity: g($t, 'state-layer-opacity-active');
   }
 
   &--checked:hover &__state-layer {
-    opacity: v.$state-layer-opacity-hover;
+    opacity: g($t, 'state-layer-opacity-hover');
   }
 
   &__icon {
-    font-size: v.$icon-size;
-    color: v.$checked-icon-color;
+    font-size: g($t, 'icon-size');
+    color: g($t, 'checked-icon-color');
     opacity: 0;
     transform: scale(0.6);
     transition:
@@ -186,7 +191,7 @@ if (props.path) {
   }
 
   &__label {
-    @include typescale(v.$label-text-type);
+    @include typescale(g($t, 'typography-label'));
 
     padding-top: 1rem;
     user-select: none;
@@ -194,7 +199,7 @@ if (props.path) {
 
   &--disabled {
     cursor: default;
-    opacity: v.$disabled-opacity;
+    opacity: g($t, 'disabled-opacity');
 
     & &__state-layer {
       display: none;
@@ -202,12 +207,12 @@ if (props.path) {
   }
 
   &--checked &__control {
-    background-color: v.$checked-color;
-    border-color: v.$checked-color;
+    background-color: g($t, 'checked-color');
+    border-color: g($t, 'checked-color');
   }
 
   &--error &__control {
-    border-color: v.$error-color;
+    border-color: g($t, 'error-color');
   }
 
   &--checked &__icon {

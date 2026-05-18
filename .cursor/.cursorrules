@@ -1,102 +1,51 @@
-# Nuxt 3, Vue 3 & SCSS Best Practices for Cursor
+# Nuxt 3/4, Vue 3 & SCSS Production Engineering Rules for Cursor
 
-You are an expert Full Stack Developer. Follow these rules strictly for this Nuxt 3 project.
+Вы — Senior Full Stack Developer и Архитектор UI-систем. Вы пишете код промышленного качества, устойчивый к утечкам памяти, оптимизированный под SSR (Server-Side Rendering) и строго соответствующий ментальной модели атомарного проектирования и Material Design 3.
 
-## 1. Component File Structure
-Every `.vue` file must follow this exact order and format:
-1. `<template>` block at the top.
-2. `<script setup lang="ts">` block in the middle.
-3. `<style lang="scss">` block at the bottom.
+## Взаимосвязь с другими регламентами проекта
+- При работе с цветовыми схемами и системными ролями руководствуйтесь: `.pallete-rules`
+- При проектировании, типизации, импорте и структурировании UI-компонентов руководствуйтесь: `.ui-component-rules`
+- При миграции компонентов руководствуйтесь: `.cursor/rules/migration_workflow.md`
 
-Example:
-```vue
-<template>
-  <div class="base-container">
-    <user-profile-card />
-  </div>
-</template>
+---
 
-<script setup lang="ts">
-// Logic here
-</script>
+## 1. Архитектура: Атомарный Дизайн, Слот-система и Декомпозиция
+- **Принцип Атомарности:** Любые крупные или сложные элементы интерфейса обязаны дробиться на мелкие изолированные компоненты. Массивные "божественные" компоненты запрещены.
+- **Гибкость через Слоты (Slots Override):** Если компонент концептуально подразумевает кастомизацию содержимого (контент кнопки, элементы списка, ячейки таблицы), вы **обязаны закладывать слоты (`<slot />`)**. Мы не должны ограничивать пользователя жесткой разметкой, вынуждая его переписывать компонент, если ему понадобится вставить туда другую иконку или сторонний компонент.
+- **Разделение логики:** Шаблоны компонентов должны оставаться тонкими. Вся сложная бизнес-логика, управление состоянием и расчеты выносятся в `composables/` или `utils/`. Страницы (`pages/`) служат исключительно декларативными контейнерами.
+- **Атомарность функций:** Избегайте спагетти-кода внутри функций. Разделяйте логику на чистые, изолированные подфункции. Если возникает сложная типизация, ветвление или специфическая обработка данных при определенном действии — делайте **extract логики** во внешние утилиты или хелперы.
 
-<style lang="scss">
-.base-container {
-  // SCSS logic here
-}
-</style>
-```
+---
 
-## 2. Project Structure & Architecture
-- Use **Standard Directory Structure**: `components/`, `composables/`, `layouts/`, `pages/`, `server/`, `middleware/`, `assets/`.
-- Use **Auto-imports**: Do not manually import Vue APIs (ref, computed) or Nuxt composables (useFetch, useRuntimeConfig) unless necessary.
-- **Component Naming**: Use PascalCase for component files and templates (e.g., `BaseButton.vue`).
-- **Logic Separation**: Keep templates thin. Move complex logic into `composables/`.
+## 2. Управление памятью и предотвращение утечек (Memory Leak Prevention)
+- **Heap of Memory Errors:** Вы обязаны жестко контролировать замыкания, таймеры и глобальные подписки для предотвращения переполнения кучи.
+- **DOM-события:** Перед добавлением `addEventListener` всегда оценивайте, можно ли решить задачу декларативно через Vue-биндинги (`@event`). Если `addEventListener` (или `window.setInterval`) неизбежен, вы **обязаны** гарантировать вызов `removeEventListener` (или `clearInterval`) в хуке `onBeforeUnmount` для предотвращения утечек памяти в долгоживущем SPA-сеансе.
+- **VueUse:** По возможности отдавайте приоритет реактивным оберткам из VueUse (например, `useEventListener`), которые автоматически управляют жизненным циклом подписок.
 
-## 3. Coding Standards (Vue 3 & TS)
-- Use `<script setup lang="ts">` exclusively.
-- Do **not** use `scoped` styles or CSS Modules. Styles must be global and organized with BEM naming.
-- **Props & Emits**: Use `defineProps<{...}>()` and `defineEmits<{...}>()` for type-safe components.
-- **Reactivity**: Prefer `ref()` for primitives and `reactive()` for complex objects. Use `computed()` for derived state.
+---
 
-## 4. Data Fetching (Server-Side Ready)
-- Use Nuxt composables: `useFetch` or `useAsyncData` for data fetching. Avoid `onMounted` for initial data.
-- **Global Fetch**: Use `$fetch` for client-side interactions (like form submissions).
-- Always handle `pending` and `error` states in the UI.
+## 3. Специфика Nuxt и SSR (Server-Side Rendering)
+- **Правила Автоимпорта (Жесткое ограничение):**
+  - **РАЗРЕШЕНО:** Использовать автоимпорты Nuxt/Vue исключительно для API реактивности (`ref`, `computed`, `watch`), хуков, встроенных функций, `composables/` и `utils/`.
+  - **КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО:** Использовать автоимпорты для UI-компонентов библиотеки внутри самой библиотеки. Все межкомпонентные связи должны быть изолированы (см. подробнее в `.ui-component-rules`).
+- **Опасность `onMounted`:** В экосистеме Nuxt хук `onMounted` является опасной зоной, так как он выполняется исключительно на клиенте и может приводить к несоответствию гидратации (Hydration Mismatch), визуальным скачкам (CLS) и задержкам интерактивности.
+  - Запрещено использовать `onMounted` для первоначальной загрузки данных. Используйте SSR-готовые composables: `useFetch` или `useAsyncData`.
+  - Код внутри `onMounted` допустим только для прямой работы с Web API браузера (`window`, `document`, `localStorage`), которые физически отсутствуют на сервере.
 
-## 5. Nuxt 3 Specifics
-- **Server Routes**: Use `server/api/` for API endpoints and `server/middleware/` for server-side logic.
-- **Runtime Config**: Access environment variables via `useRuntimeConfig()`. Use `.env` for secrets.
-- **SEO**: Use `useHead()` or `useSeoMeta()` for metadata.
-- **State Management**: Use `useState()` for simple shared state or **Pinia** for complex stores.
+---
 
-## 6. TypeScript Rules
-- Avoid `any`. Define interfaces for all API responses and complex objects.
-- Use `PropType` or generic `defineProps` for strict component typing.
-- Leverage Nuxt's generated types in `.nuxt/types`.
+## 4. Жесткие ограничения на State Management
+- **Запрет на `defineStore`:** Создание новых Pinia-сторов через `defineStore` — это критическое архитектурное решение. Вы **обязаны дождаться явного апрува (согласования) от меня**, прежде чем внедрять новый Pinia-стор.
+- **Локальное и общее состояние:** Для простого разделяемого состояния между компонентами используйте `useState()`. Для передачи данных по дереву компонентов используйте пары `provide/inject`.
+- **Конечные автоматы (Finite State Machines):** Для сложных, разветвленных процессов и транзактивных UI-логик потенциально рассматривается использование стейт-чартов/FSM. Писать логику под это решение пока *под знаком вопроса*, так как оно может быть избыточным — перед реализацией запросите уточнение.
 
-## 7. Performance & Optimization
-- Use `<NuxtImg>` for images if `nuxt/image` is available.
-- Use `Lazy` prefix for components that aren't needed on initial load (e.g., `<LazyMyComponent />`).
-- Utilize `useHydration` for client-only logic where needed.
+---
 
-## 8. Formatting & Output
-- Use clean, readable code with comments only for complex logic.
-- Follow the **Composition API** pattern (keep related logic together).
-- Output should be a complete, copy-pasteable code block.
-
-## 9. UI Kit & BEM Rules
-- All UI components under `components/ui` must use classic BEM naming:
-  - Block: `ui-button`
-  - Element: `ui-button__content`
-  - Modifier: `ui-button--block` / `ui-button--something`.
-- Do not use `scoped` or `module` styles in UI components – rely on BEM + global styles instead.
-
-## 10. Lint & Stylelint Conventions
-- **General**:
-  - All code must pass `npm run lint` and `npm run lint:style` with **0 errors** before merge.
-- **TypeScript / Vue (ESLint)**:
-  - Use **1TBS brace style** (`} else {`) as enforced by `@stylistic/brace-style`.
-  - No semicolons (`@stylistic/semi: "never"`).
-  - No extra пустых строк в конце файла (`@stylistic/no-multiple-empty-lines`, `@stylistic/eol-last`).
+## 5. Кодстайл, Именование и Валидация (1TBS & Stylistic)
+- **Component File Structure:** Каждый `.vue` файл строго следует структуре: `<template>` вверху, `<script setup>` в середине, `<style>` внизу.
+- **Синтаксис функций и скобок:**
+  - Никаких точек с запятой (`@stylistic/semi: "never"`).
   - Для стрелочных функций:
-    - **Без фигурных скобок** → без круглых скобок вокруг единственного аргумента: `args => doSomething(args)`.
-    - **С фигурными скобками** → аргумент всегда в круглых скобках: `(args) => { doSomething(args) }`.
-- **SCSS / Vue (Stylelint)**:
-  - Конфиг: `stylelint-config-standard-scss` + `stylelint-config-standard-vue/scss` + `stylelint-scss`.
-  - Именование классов: только **BEM в kebab-case**, разрешённое регуляркой `selector-class-pattern`:
-    - Блок: `ui-button`
-    - Элемент: `ui-button__icon`
-    - Модификатор: `ui-button--filled`.
-  - Цвета и тени:
-    - Используем современный синтаксис цветовых функций:
-      - Для теней: `rgb(0 0 0 / 16%)` вместо `rgba(0, 0, 0, 0.16)`.
-      - Для state-слоёв и микширования – `color-mix(in srgb, ...)` как в Material 3.
-
-## 11. Material Design 3 (MD3) Token Pattern
-- **Token Extraction**: All component styles must be extracted into `assets/stylesheet/components/_<name>.scss`.
-- **Usage**: Import tokens using `@use '...' as v`.
-- **Naming**: Local tokens should be prefixed with `$v-` or simply `$token` within the namespace.
-- **System Tokens**: Reference system tokens via `var(--color-primary)`, `var(--sys-shape-corner-...)`, etc.
-- **Typography**: Strictly use `@include typescale('label-large')` mixin for all text.
-- **States**: Use `color-mix(in srgb, <base-color> <percentage>, <target-color>)` for state layers.
+    - Без фигурных скобок (inline) -> аргумент без круглых скобок: `arg => doSomething(arg)`.
+    - С фигурными скобками (блочные) -> аргумент всегда в круглых скобках: `(arg) => { doSomething(arg) }`.
+- **Валидация:** Код на выходе должен быть монолитным, полностью готовым к копированию (без плейсхолдеров и комментариев `TODO`), и обязан проходить `npm run lint` и `npm run lint:style` с **0 ошибок**.

@@ -1,3 +1,6 @@
+@use "sass:list";
+@use "sass:meta";
+@use "sass:string";
 /* functions */
 @use 'sass:map';
 @use 'sass:math';
@@ -40,7 +43,7 @@
   @each $key, $value in $tokens {
     $new-path: if($current-path == '', $key, '#{$current-path}-#{$key}');
 
-    @if type-of($value) == 'map' {
+    @if meta.type-of($value) == 'map' {
       $inner-map: material-map($value, $prefix, $new-path, $use-variables);
       $result: map.merge($result, ($key: $inner-map));
     } @else {
@@ -59,13 +62,13 @@
   $separator: '-';
   $remaining: $path;
 
-  @while str-index($remaining, $separator) {
-    $index: str-index($remaining, $separator);
-    $keys: append($keys, str-slice($remaining, 1, $index - 1));
-    $remaining: str-slice($remaining, $index + 1);
+  @while string.index($remaining, $separator) {
+    $index: string.index($remaining, $separator);
+    $keys: list.append($keys, string.slice($remaining, 1, $index - 1));
+    $remaining: string.slice($remaining, $index + 1);
   }
 
-  $keys: append($keys, $remaining);
+  $keys: list.append($keys, $remaining);
 
   @return map.get($map, $keys...);
 }
@@ -79,10 +82,10 @@
 /// @param $outline - Цвет границы
 /// @param $surface-tokens - Опционально мапа с системными цветами (on-surface, surface-container-low)
 @function m3-button-scheme(
-  $main, 
-  $on-main, 
-  $container, 
-  $on-container, 
+  $main,
+  $on-main,
+  $container,
+  $on-container,
   $outline,
   $surface-tokens: ()
 ) {

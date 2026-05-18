@@ -1,0 +1,131 @@
+@use 'sass:map';
+@use '../../../abstracts/forward.scss' as *;
+
+// ==========================================
+// LIST ITEM M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  // Base Heights
+  height: (
+    one: 56rem,
+    two: 72rem,
+    three: 88rem,
+  ),
+  // Spaces / Padding
+  padding: (
+    leading: 16rem,
+    trailing: 16rem,
+    top: 8rem,
+    bottom: 8rem,
+    between: 16rem,
+  ),
+  // Shape
+  shape: map.get($theme-shape-link, small), // Slight rounded corners for item hover/pressed container
+
+  // Core Colors
+  container: (
+    color: transparent,
+    selected: (
+      color: map.get($theme-color-link, primary-container),
+    ),
+    disabled: (
+      opacity: 0.38,
+    )
+  ),
+
+  // Content Colors & Typography
+  label: (
+    text: (
+      color: map.get($theme-color-link, on-surface),
+      typography: map.get($theme-typography-link, body, large),
+      selected: (
+        color: map.get($theme-color-link, on-primary-container),
+      )
+    )
+  ),
+  supporting: (
+    text: (
+      color: map.get($theme-color-link, on-surface-variant),
+      typography: map.get($theme-typography-link, body, medium),
+      selected: (
+        color: map.get($theme-color-link, on-primary-container),
+      )
+    )
+  ),
+  overline: (
+    color: map.get($theme-color-link, on-surface-variant),
+    typography: map.get($theme-typography-link, label, small),
+    selected: (
+      color: map.get($theme-color-link, on-primary-container),
+    )
+  ),
+
+  // Media & Icons
+  leading: (
+    icon: (
+      color: map.get($theme-color-link, on-surface-variant),
+      size: 24rem,
+      selected: (
+        color: map.get($theme-color-link, on-primary-container),
+      )
+    ),
+    avatar: (
+      size: 40rem,
+      color: map.get($theme-color-link, primary-container),
+      label: (
+        color: map.get($theme-color-link, on-primary-container),
+        typography: map.get($theme-typography-link, title, medium),
+      )
+    ),
+    image: (
+      width: 56rem,
+      height: 56rem,
+      shape: map.get($theme-shape-link, small),
+    ),
+    video: (
+      width: 100rem,
+      height: 56rem,
+      shape: map.get($theme-shape-link, small),
+    )
+  ),
+  trailing: (
+    icon: (
+      color: map.get($theme-color-link, on-surface-variant),
+      size: 24rem,
+      selected: (
+        color: map.get($theme-color-link, on-primary-container),
+      )
+    ),
+    supporting: (
+      text: (
+        color: map.get($theme-color-link, on-surface-variant),
+        typography: map.get($theme-typography-link, label, small),
+        selected: (
+          color: map.get($theme-color-link, on-primary-container),
+        )
+      )
+    )
+  ),
+
+  // State Colors
+  state: (
+    hover: (
+      color: map.get($theme-color-link, on-surface),
+      opacity: 8%,
+    ),
+    pressed: (
+      color: map.get($theme-color-link, on-surface),
+      opacity: 12%,
+    ),
+    focus: (
+      color: map.get($theme-color-link, on-surface),
+      opacity: 10%,
+      indicator: (
+        color: map.get($theme-color-link, outline),
+        thickness: 3rem,
+        offset: -3rem,
+      )
+    )
+  )
+);

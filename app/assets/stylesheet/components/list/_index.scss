@@ -1,0 +1,27 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// LIST M3 COMPONENT TOKENS (HYPHEN-FREE KEYS)
+// ==========================================
+
+$tokens: (
+  container: (
+    padding: (
+      block: 8rem,
+      inline: 0,
+    ),
+    shape: map.get($theme-shape-link, none),
+    color: transparent,
+  ),
+
+  // Divider Tokens
+  divider: (
+    color: map.get($theme-color-link, outline-variant),
+    height: 1rem,
+    space: (
+      leading: 16rem,
+      trailing: 16rem,
+    )
+  )
+);

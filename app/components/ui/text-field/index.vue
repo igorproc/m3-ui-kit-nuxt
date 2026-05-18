@@ -1,8 +1,17 @@
 <template>
-  <div class="ui-text-field">
+  <div
+    class="ui-text-field"
+    :class="[`ui-text-field--${variant}`]"
+  >
     <div
       class="ui-text-field__control"
-      :class="controlClasses"
+      :class="[
+        controlClasses,
+        {
+          'ui-text-field__control--has-prepend': !!$slots.prepend,
+          'ui-text-field__control--has-append': !!$slots.append
+        }
+      ]"
     >
       <div
         v-if="$slots.prepend"
@@ -27,7 +36,7 @@
         :name="path"
         :placeholder="placeholder"
         :disabled="disabledModel"
-        :aria-invalid="!meta.valid"
+        :aria-invalid="!meta.valid || props.error || !!props.errorMessage"
         :aria-describedby="describedBy"
         @focus="onFocus"
         @blur="onBlur"
@@ -42,11 +51,11 @@
     </div>
 
     <p
-      v-if="errorMessage"
+      v-if="errorMessage || props.errorMessage || (props.error && helperText)"
       :id="`${fieldId}-error`"
       class="ui-text-field__error"
     >
-      {{ errorMessage }}
+      {{ errorMessage || props.errorMessage || helperText }}
     </p>
 
     <p
@@ -65,19 +74,24 @@ import { useField } from 'vee-validate'
 type TextFieldVariant = 'filled' | 'outlined'
 
 interface Props {
-  path: string
+  path?: string
   label?: string
   placeholder?: string
   type?: 'text' | 'email' | 'password'
   disabled?: boolean
   helperText?: string
   variant?: TextFieldVariant
+  error?: boolean
+  errorMessage?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  path: undefined,
   type: 'text',
   disabled: false,
   variant: 'filled',
+  error: false,
+  errorMessage: undefined,
 })
 
 const modelValue = defineModel<string>({ default: '' })
@@ -85,13 +99,13 @@ const disabledModel = defineModel<boolean>('disabled', { default: false })
 const isFocused = defineModel<boolean>('focused', { default: false })
 
 const slots = useSlots()
-const hasPrepend = computed(() => !!slots.prepend)
-const hasAppend = computed(() => !!slots.append)
 
 const fieldId = useId()
 
-const field = useField<string>(() => props.path, undefined)
-const { value, meta, errorMessage } = field
+const field = props.path ? useField<string>(() => props.path!, undefined) : null
+const value = field ? field.value : ref(modelValue.value)
+const meta = field ? field.meta : reactive({ valid: true })
+const errorMessage = field ? field.errorMessage : ref<string | undefined>(undefined)
 
 watch(
   value,
@@ -109,7 +123,7 @@ watch(
 )
 
 const describedBy = computed(() => {
-  if (errorMessage.value) {
+  if (errorMessage.value || props.errorMessage || (props.error && props.helperText)) {
     return `${fieldId}-error`
   }
 
@@ -125,10 +139,8 @@ const controlClasses = computed(() => [
   {
     'ui-text-field__control--focused': isFocused.value,
     'ui-text-field__control--populated': !!modelValue.value,
-    'ui-text-field__control--error': !meta.valid,
+    'ui-text-field__control--error': props.error || !!props.errorMessage || !meta.valid,
     'ui-text-field__control--disabled': disabledModel.value,
-    'ui-text-field__control--has-prepend': hasPrepend.value,
-    'ui-text-field__control--has-append': hasAppend.value,
   },
 ])
 
@@ -142,46 +154,53 @@ function onBlur() {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/text-field' as v;
+@use '~/assets/stylesheet/components/text-field' as t;
 
 .ui-text-field {
+  $prefix: 'm-text-field';
+  $t: material-map(t.$tokens, $prefix);
+
   display: flex;
   flex-direction: column;
-  gap: v.$gap;
+  gap: g($t, 'container-gap');
+
+  &--outlined {
+    padding-top: 8rem; // Reserve space for the floating label to prevent CLS
+  }
 
   &__control {
     position: relative;
     display: flex;
     align-items: center;
-    min-height: v.$control-min-height;
-    padding-inline: v.$control-padding-inline;
-    border-width: v.$control-border-width;
+    min-height: g($t, 'container-height');
+    padding-inline: g($t, 'container-padding-inline');
+    border-width: g($t, 'container-border-width');
     border-style: solid;
     transition:
-      border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+      border-color g($t, 'state-duration') g($t, 'state-easing'),
+      background-color g($t, 'state-duration') g($t, 'state-easing'),
+      box-shadow g($t, 'state-duration') g($t, 'state-easing');
 
     .ui-text-field__label {
       position: absolute;
-      left: v.$label-left;
+      left: g($t, 'label-left');
       top: 50%;
       transform: translateY(-50%);
       transform-origin: left top;
       transition:
-        transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-        top var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-        font-size var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-        color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+        transform g($t, 'state-duration') g($t, 'state-easing'),
+        top g($t, 'state-duration') g($t, 'state-easing'),
+        font-size g($t, 'state-duration') g($t, 'state-easing'),
+        color g($t, 'state-duration') g($t, 'state-easing');
       pointer-events: none;
-      color: v.$label-color;
+      color: g($t, 'label-color');
       z-index: 1;
       max-width: calc(100% - 32rem);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
 
-      @include typescale(v.$label-text-type);
+      @include typescale(g($t, 'typography-label'));
     }
 
     .ui-text-field__input {
@@ -191,15 +210,15 @@ function onBlur() {
       border: none;
       outline: none;
       background-color: transparent;
-      color: v.$input-color;
+      color: g($t, 'input-color');
 
-      @include typescale(v.$input-text-type);
+      @include typescale(g($t, 'typography-input'));
 
       padding: 0;
 
       &::placeholder {
         opacity: 0;
-        transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+        transition: opacity g($t, 'state-duration') g($t, 'state-easing');
       }
     }
 
@@ -207,43 +226,43 @@ function onBlur() {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: v.$icon-color;
-      min-width: v.$icon-min-width;
-      font-size: v.$icon-font-size;
+      color: g($t, 'icon-color');
+      min-width: g($t, 'icon-width');
+      font-size: g($t, 'icon-size');
 
       &--prepend {
-        margin-right: v.$icon-prepend-margin-right;
+        margin-right: g($t, 'icon-prepend-margin');
       }
 
       &--append {
-        margin-left: v.$icon-append-margin-left;
+        margin-left: g($t, 'icon-append-margin');
       }
     }
 
     &.ui-text-field__control {
       &--has-prepend {
-        padding-left: v.$control-has-prepend-padding-left;
+        padding-left: g($t, 'container-padding-prepend');
 
         .ui-text-field__label {
-          left: v.$label-has-prepend-left;
+          left: g($t, 'label-prepend-left');
         }
       }
 
       &--has-append {
-        padding-right: v.$control-has-append-padding-right;
+        padding-right: g($t, 'container-padding-append');
       }
     }
 
     &.ui-text-field__control--filled {
       border-color: transparent;
-      border-bottom: 1rem solid v.$filled-border-bottom-color;
-      background-color: v.$filled-bg-color;
-      border-radius: v.$filled-border-radius;
+      border-bottom: g($t, 'container-border-width') solid g($t, 'filled-border-bottom-color');
+      background-color: g($t, 'filled-bg');
+      border-radius: g($t, 'filled-radius');
       align-items: center;
 
       .ui-text-field__input {
-        padding-top: v.$filled-input-padding-top;
-        padding-bottom: v.$filled-input-padding-bottom;
+        padding-top: g($t, 'filled-input-padding-top');
+        padding-bottom: g($t, 'filled-input-padding-bottom');
       }
 
       .ui-text-field__label {
@@ -251,50 +270,84 @@ function onBlur() {
       }
 
       &:hover {
-        background-color: v.$hover-filled-bg-color;
-        border-bottom-color: v.$hover-filled-border-bottom-color;
+        background-color: g($t, 'filled-hover-bg');
+        border-bottom-color: g($t, 'filled-hover-border-bottom-color');
       }
     }
 
     &.ui-text-field__control--outlined {
-      border-color: v.$outlined-border-color;
+      border-color: g($t, 'outlined-border-color');
       background-color: transparent;
-      border-radius: v.$outlined-border-radius;
+      border-radius: g($t, 'outlined-radius');
 
       .ui-text-field__label {
-        padding-inline: v.$outlined-label-padding-inline;
-        margin-left: v.$outlined-label-margin-left;
+        padding-inline: g($t, 'outlined-label-padding-inline');
+        margin-left: g($t, 'outlined-label-margin-left');
       }
 
       &:hover {
-        border-color: v.$hover-outlined-border-color;
+        border-color: g($t, 'outlined-hover-border-color');
       }
     }
 
     &.ui-text-field__control--error {
-      border-color: v.$error-color !important;
+      border-color: g($t, 'filled-error-border-bottom-color') !important;
 
       .ui-text-field__label {
-        color: v.$error-color !important;
+        color: g($t, 'filled-error-label-color') !important;
       }
 
       &.ui-text-field__control--filled {
-        border-bottom-color: v.$error-color;
+        border-bottom-color: g($t, 'filled-error-border-bottom-color');
+      }
+
+      &.ui-text-field__control--outlined {
+        border-color: g($t, 'outlined-error-border-color');
+
+        .ui-text-field__label {
+          color: g($t, 'outlined-error-label-color') !important;
+        }
       }
     }
 
     &.ui-text-field__control--disabled {
-      opacity: v.$disabled-opacity;
       cursor: default;
       background-color: transparent;
-      border-color: v.$disabled-border-color;
+      border-color: g($t, 'filled-disabled-border-bottom-color');
+      color: g($t, 'filled-disabled-input-color');
 
       .ui-text-field__label {
-        color: v.$disabled-label-color;
+        color: g($t, 'filled-disabled-label-color');
+      }
+
+      .ui-text-field__input {
+        color: g($t, 'filled-disabled-input-color');
+      }
+
+      .ui-text-field__icon {
+        color: g($t, 'filled-disabled-icon-color');
       }
 
       &.ui-text-field__control--filled {
-        background-color: v.$disabled-filled-bg-color;
+        background-color: g($t, 'filled-disabled-bg');
+        border-bottom-color: g($t, 'filled-disabled-border-bottom-color');
+      }
+
+      &.ui-text-field__control--outlined {
+        border-color: g($t, 'outlined-disabled-border-color');
+        background-color: transparent;
+
+        .ui-text-field__label {
+          color: g($t, 'outlined-disabled-label-color');
+        }
+
+        .ui-text-field__input {
+          color: g($t, 'outlined-disabled-input-color');
+        }
+
+        .ui-text-field__icon {
+          color: g($t, 'outlined-disabled-icon-color');
+        }
       }
     }
 
@@ -302,8 +355,8 @@ function onBlur() {
     &.ui-text-field__control--populated {
       &.ui-text-field__control--filled {
         .ui-text-field__label {
-          top: v.$filled-active-label-top;
-          transform: translateY(0) scale(v.$label-active-scale);
+          top: g($t, 'filled-active-label-top');
+          transform: translateY(0) scale(g($t, 'label-active-scale'));
         }
 
         .ui-text-field__input::placeholder {
@@ -314,8 +367,8 @@ function onBlur() {
       &.ui-text-field__control--outlined {
         .ui-text-field__label {
           top: 0;
-          transform: translateY(-50%) scale(v.$label-active-scale);
-          background-color: v.$outlined-active-label-bg;
+          transform: translateY(-50%) scale(g($t, 'label-active-scale'));
+          background-color: g($t, 'outlined-label-bg');
         }
 
         .ui-text-field__input::placeholder {
@@ -326,18 +379,36 @@ function onBlur() {
 
     &.ui-text-field__control--focused {
       &.ui-text-field__control--filled {
-        background-color: v.$filled-bg-color;
-        border-bottom-color: v.$focused-color;
-        border-bottom-width: v.$focused-border-width;
+        background-color: g($t, 'filled-focused-bg');
+        border-bottom-color: g($t, 'filled-focused-border-bottom-color');
+        border-bottom-width: g($t, 'filled-focused-border-width');
+
+        .ui-text-field__label {
+          color: g($t, 'filled-focused-label-color');
+        }
+
+        &.ui-text-field__control--error {
+          border-bottom-color: g($t, 'filled-error-focused-border-bottom-color');
+          .ui-text-field__label {
+            color: g($t, 'filled-error-focused-label-color') !important;
+          }
+        }
       }
 
       &.ui-text-field__control--outlined {
-        border-color: v.$focused-color;
-        border-width: v.$focused-border-width;
-        padding-inline: v.$focused-outlined-padding-inline;
+        border-color: g($t, 'outlined-focused-border-color');
+        border-width: g($t, 'outlined-focused-border-width');
+        padding-inline: g($t, 'outlined-focused-padding-inline');
 
         .ui-text-field__label {
-          color: v.$focused-outlined-label-color;
+          color: g($t, 'outlined-focused-label-color');
+        }
+
+        &.ui-text-field__control--error {
+          border-color: g($t, 'outlined-error-focused-border-color') !important;
+          .ui-text-field__label {
+            color: g($t, 'outlined-error-focused-label-color') !important;
+          }
         }
       }
     }
@@ -345,18 +416,18 @@ function onBlur() {
 
   &__helper,
   &__error {
-    padding-inline: v.$helper-padding-inline;
-    margin-top: v.$helper-margin-top;
+    padding-inline: g($t, 'helper-padding-inline');
+    margin-top: g($t, 'helper-margin-top');
 
-    @include typescale(v.$helper-text-type);
+    @include typescale(g($t, 'typography-helper'));
   }
 
   &__helper {
-    color: v.$helper-color;
+    color: g($t, 'helper-color');
   }
 
   &__error {
-    color: v.$error-color;
+    color: g($t, 'filled-error-helper-color');
   }
 }
 </style>

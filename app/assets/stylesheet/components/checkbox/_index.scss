@@ -1,0 +1,48 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// CHECKBOX M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  container: (
+    size: 40rem,
+    gap: 12rem,
+  ),
+  control: (
+    size: 18rem,
+    border: (
+      width: 2rem,
+      radius: 2rem,
+      color: map.get($theme-color-link, outline),
+    ),
+    bg: transparent,
+  ),
+  icon: (
+    size: 16rem,
+  ),
+  checked: (
+    color: map.get($theme-color-link, primary),
+    icon: (
+      color: map.get($theme-color-link, on-primary),
+    ),
+  ),
+  state: (
+    layer: (
+      opacity: (
+        hover: 0.08,
+        active: 0.12,
+      ),
+    ),
+  ),
+  error: (
+    color: map.get($theme-color-link, error),
+  ),
+  disabled: (
+    opacity: 0.38,
+  ),
+  typography: (
+    label: 'body-medium',
+  ),
+);

@@ -21,9 +21,10 @@ export default defineNuxtModule<MaterialKitOptions>({
     defaultTheme: 'light',
     themes: [
       {
-        key: 'brown',
-        name: 'Brown',
+        key: '_m3-fallback',
+        name: 'Classic Neo',
         definedInScss: true,
+        color: '#888888',
       },
     ],
     typography: {

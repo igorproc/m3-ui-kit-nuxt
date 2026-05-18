@@ -1,92 +1,47 @@
-UI component rules & ссылки
-===========================
+### 3. Конфигурация `.ui-component-rules`
 
-Как кидать ссылки на компоненты
--------------------------------
+```markdown
+# UI Component Architecture & Core Isolation Rules (Material 3)
 
-- **Один компонент = один блок ссылок**:
-  - В начале блока указываем название компонента и кратко его роль:
-    - `Component: ui-button – primary action, secondary, tonal, text.`
-  - Далее – список ссылок по разделам Material 3:
-    - `Overview: https://m3.material.io/components/buttons/overview`
-    - `Specs: https://m3.material.io/components/buttons/specs`
-    - `Guidelines: https://m3.material.io/components/buttons/guidelines`
-    - `Accessibility: https://m3.material.io/components/buttons/accessibility`
-- **Формат для нескольких компонентов**:
-  - Компоненты идут друг за другом, разделяются пустой строкой.
-  - Для каждого компонента минимум `Overview` и `Specs`, по возможности `Guidelines` и `Accessibility`.
+Этот документ определяет строгие правила проектирования, декомпозиции, типизации, SCSS-изоляции, межкомпонентного импорта и протокола миграции токенов в экосистеме `m3-ui-kit-nuxt`. Любой компонент под `components/ui/` обязан беспрекословно следовать этим пунктам.
 
-Как я буду читать эти ссылки
-----------------------------
+---
 
-- Я всегда рассматриваю **все четыре раздела** для компонента:
-  - `Overview` – какие типы кнопок есть (filled, elevated, outlined, text, tonal), когда какой использовать, key states.
-  - `Specs` – размеры, paddings, иконки, corner radius, elevation, state layers.
-  - `Guidelines` – поведение, плотность, размещение, комбинация с другими элементами.
-  - `Accessibility` – контраст, фокус‑рамки, touch target 48×48 dp, labels.
-- На основе этого:
-  - Формирую **API компонента** (props, модификаторы, слоты) согласно Material 3.
-  - Определяю **токены и состояния** для теминга (используя уже описанные палитры и правила из `.pallete-rules`).
-  - Настраиваю поведение и стили `ui-*` компонентов так, чтобы они максимально соответствовали M3 (см. [Buttons overview](https://m3.material.io/components/buttons/overview), [Buttons specs](https://m3.material.io/components/buttons/specs), [Buttons guidelines](https://m3.material.io/components/buttons/guidelines), [Buttons accessibility](https://m3.material.io/components/buttons/accessibility)).
+## 1. Межкомпонентные связи и Строгая Изоляция Импортов (Anti-Prefix Break)
+- **Запрет на Автоимпорт Компонентов внутри ядра:** Внутри папки `components/ui/` компоненты **категорически запрещено** использовать через глобальный автоимпорт Nuxt (например, писать тег `<ui-button />` или `<md-button />` внутри кода `dropdown/index.vue`). Если пользователь изменит префикс компонентов в конфигурации модуля, все внутренние автоимпорты ядра сломаются.
+- **Прямой Явный Импорт (Direct Core Import):** Если один UI-компонент использует другой UI-компонент нашей системы, он обязан **явно импортировать его функцию/определение** в блоке `<script setup>` через относительный путь или внутренний алиас слоя.
+- **Динамический рендеринг через `:is`:** В шаблоне импортированный компонент выводится через тег `<component :is="ImportedComponent">`. Это полностью изолирует внутренности ядра от внешнего префикса тегов.
+  - *Пример реализации внутри `components/ui/dropdown/index.vue`:*
+    ```vue
+    <script setup lang="ts">
+    import UiButton from '../button/index.vue' // Прямой импорт
+    const isOpen = ref(false)
+    </script>
+    <template>
+      <div class="ui-dropdown">
+        <component :is="UiButton" variant="text">Открыть меню</component>
+      </div>
+    </template>
+    ```
 
-Пример блока для кнопок
------------------------
+---
 
-- `Component: ui-button – primary, secondary, tonal, text, icon support.`
-  - `Overview: https://m3.material.io/components/buttons/overview`
-  - `Specs: https://m3.material.io/components/buttons/specs`
-  - `Guidelines: https://m3.material.io/components/buttons/guidelines`
-  - `Accessibility: https://m3.material.io/components/buttons/accessibility`
+## 2. Протокол Миграции Компонентов к Zero-Runtime M3 Architecture
+При создании нового компонента или рефакторинге существующего вы обязаны строго следовать **трехшаговому протоколу**:
 
-Правила для структуры ui-компонентов
-------------------------------------
+### Шаг 1: Аудит (Discovery Phase)
+Перед написанием любого кода проведите аудит существующего `<style>` блока. Найдите все хардкодные значения, устаревшие переменные интерфейса (`v.$...`) и методы обработки состояний (`:hover`, `:active`, `[disabled]`). СВЕРИТЕСЬ со следующими источниками правды:
+- `app/assets/stylesheet/abstracts/_variables.scss` для системных токенов.
+- `app/assets/stylesheet/abstracts/_functions.scss` для глобальных хелперов схемы (например, `m3-button-scheme()`).
 
-- **Путь и имя файла**:
-  - Любой ui‑компонент живёт под `components/ui/${component_name}/index.vue`.
-    - Примеры:
-      - `components/ui/button/index.vue`
-      - `components/ui/text-field/index.vue`
-  - Для групп/композиции:
-    - Если это, например, button group, то:
-      - `components/ui/groups/button.vue`
-    - То есть группы лежат в `components/ui/groups`, а не в папке конкретного компонента.
-- **Сложные компоненты**:
-  - Если компонент становится сложным:
-    - Выношу внутренние части в более маленькие компоненты в той же папке:
-      - `components/ui/button/index.vue`
-      - `components/ui/button/icon.vue`
-      - `components/ui/button/label.vue`
-    - Внешний `index.vue` остаётся thin‑wrapper’ом:
-      - Собирает layout.
-      - Пробрасывает props/слоты.
-      - Держит минимум логики (остальное выносится в composables).
+### Шаг 2: Декларация Инфраструктуры в `_index.scss` (Infrastructure Phase)
+Вся абстрактная логика стилей и токенов выносится в файл `_index.scss` внутри директории компонента.
+- **Правило вложенности (Nesting Rule):** Геттер `g()` разделяет пути по символу `-`. Вы **обязаны гнездить Sass-карты**, чтобы они строго соответствовали целевому пути геттера.
+  - *Пример:* Путь `primary-filled-container-color` требует структуры: `primary: ( filled: ( container: ( color: ... ) ) )`.
+- **Использование схем:** Если компонент похож по поведению на кнопку, используйте генератор коллекции `m3-button-scheme($main, $on-main, $container, $on-container, $outline)`.
 
-Правила для стилей ui-компонентов
----------------------------------
-
-- **Общий подход**:
-  - Стили для ui‑компонентов пишутся **внутри** `index.vue` в `<style lang="scss">` без `scoped`.
-  - Все имена классов следуют правилам из `.cursorrules` (BEM, kebab-case).
-  - Цвета/темы – только через CSS‑переменные из палитры (`--color-*`, `--md-sys-color-*` не использовать напрямую в UI).
-- **Референс: `components/ui/button/index.vue`**:
-  - Блок: `.ui-button`.
-  - Элементы: `.ui-button__label`, `.ui-button__icon`.
-  - Модификаторы:
-    - Вариант: `ui-button--filled`, `ui-button--outlined`, `ui-button--text`.
-    - Цвет: `ui-button--primary` (по умолчанию), `ui-button--accent`, `ui-button--warn`.
-    - Состояние: `ui-button--disabled`.
-  - Связь с темами:
-    - Filled:
-      - `background-color: var(--color-primary);`
-      - `color: var(--color-primary-contrast);`
-    - Accent / Warn:
-      - `background-color: var(--color-accent);` / `var(--color-warn);`
-      - `color: var(--color-accent-contrast);` / `var(--color-warn-contrast);`
-    - State‑слои/hover/active:
-      - Используются `color-mix` with `--color-primary`/`--color-accent`/`--color-warn` как в Material 3.
-- **Новые ui‑компоненты**:
-  - Поведение по цветам и состояниям строю аналогично `ui-button`:
-    - Основной цвет → `--color-primary` и его контейнер.
-    - Альтернативные (accent/warn) → соответствующие алиасы.
-    - Поверхности → `--color-surface` / `--color-surface-contrast`.
-  - Любые дополнительные токены сначала описываю в `.pallete-rules`, а потом использую в стилях.
+### Шаг 3: Реализация Стилизации в компоненте (Implementation Phase)
+Рефакторите блок `<style lang="scss">` самого Vue-файла по следующим правилам:
+1. **Импорт токенов:** Подключайте локальную карту через `@use './index' as t;`.
+2. **Запрет на генерацию runtime-переменных:** Никакого создания новых динамических CSS-переменных для состояний ховера/клик внутри компонента. Используйте статическое Sass-разрешение карт.
+3. **DRY Миксин `apply-scheme`:** Всегда используйте миксин для DRY-обработки вариантов цветовых...\

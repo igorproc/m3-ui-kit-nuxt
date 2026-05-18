@@ -1,90 +1,26 @@
-Material 3 palettes & usage
-============================
+# Material Design 3 Palette & Zero-CLS SCSS Compilation Rules
 
-- Палитры генерируются через [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/) и следуют системе цветов Material 3: см. раздел «Color system» в [документации](https://m3.material.io/styles/color/system/overview).
-- В приложении используются **только классические (standard) контрастные палитры**:
-  - `assets/styles/themes/base/_light.scss` → классическая светлая тема.
-  - `assets/styles/themes/base/_dark.scss` → классическая тёмная тема.
-- Внутри этих файлов объявлены токены `--md-sys-color-*` (system roles) и плоские алиасы `--color-*` для UI kit.
+Этот документ описывает архитектуру распределения цветов, генерации дизайн-токенов и компиляции палитр Material 3. Главная цель — Zero-CLS (нулевой сдвиг макета) при SSR-гидратации за счет глубокой компиляции токенов через Sass-карты и нативные CSS-переменные браузера.
 
-Базовые системные роли (Material 3)
------------------------------------
+## 1. Архитектура Zero-CLS SCSS Compile (Приоритет №1)
+- **Полный runtime-запрет:** Запрещено управлять базовыми цветами, темами или состояниями элементов из JS (например, через динамические стили Pinia `store/theme.ts`). Всё состояние тем должно быть предкомпилировано на уровне CSS/Sass.
+- **Инжекция через Класс Тега:** Переключение темы (`light` / `dark`) управляется исключительно через изменение дата-атрибута или класса на теге `<html>` (например, `html[data-theme="dark"]`). Селекторы тем инжектируются сервером (SSR) до рендеринга DOM-дерева, полностью исключая Flash of Unstyled Content (FOCU) и CLS.
+- **Использование CSS Custom Properties:** Карты соответствий в Sass (`$theme-color-link`) обязаны ссылаться исключительно на нативные CSS-переменные `var(--md-sys-color-*)`. Это позволяет браузеру мгновенно переключать значения токенов при смене класса темы без перекомпиляции стилей.
 
-- `--md-sys-color-primary` / `--md-sys-color-on-primary`
-  - Основной брендовый цвет и контрастный текст/иконка поверх сплошной primary-поверхности (filled-кнопки, FAB, активные элементы).
-- `--md-sys-color-primary-container` / `--md-sys-color-on-primary-container`
-  - Мягкая акцентная поверхность (chips, tonal buttons, selection backgrounds).
-- `--md-sys-color-secondary` / `--md-sys-color-on-secondary`
-  - Вспомогательный цвет для менее акцентных элементов (фильтрующие/secondary-кнопки, иконки).
-- `--md-sys-color-tertiary` / `--md-sys-color-on-tertiary`
-  - Дополнительный акцент (например, success/info) – пока может не использоваться.
-- `--md-sys-color-error` / `--md-sys-color-on-error`
-  - Ошибки, destructive actions, critical chips.
-- `--md-sys-color-surface` / `--md-sys-color-on-surface`
-  - Основные поверхности приложения (cards, sheets, app background surfaces).
-- `--md-sys-color-background` / `--md-sys-color-on-background`
-  - Фон приложения под поверхностями (html/body) и базовый цвет текста.
-- `--md-sys-color-surface-variant` / `--md-sys-color-on-surface-variant`
-  - Поверхности и бордеры второстепенной важности (dividers, outline).
-- `--md-sys-color-outline` / `--md-sys-color-outline-variant`
-  - Границы и обводки (outlined-кнопки, текстовые поля).
+## 2. Архитектура и Структура Токенов (Sass Map & Deep Getter)
+Проект использует строгую иерархию распределения токенов через Sass-карты в `app/assets/stylesheet/abstracts/`:
+1. **Системные токены (`var(--md-sys-color-*)`):** Генерируются из Material Theme Builder, объявляются глобально в `:root` и селекторах тем (`_light.scss` / `_dark.scss`). Прямое использование `--md-sys-color-*` внутри стилей UI-компонентов **категорически запрещено**.
+2. **Карта Связей Схемы (`$theme-color-link`):** Находится в `_variables.scss`. Маппит семантические роли M3 (`primary`, `on-primary`, `surface-variant`) на переменные браузера.
+3. **Компонентные токены (`$tokens`):** Находятся в папке компонента (например, `button/_index.scss`). Это вложенная Sass-карта, собирающая воедино геометрию (`container`), анимацию (`state`) и цветовые схемы (`m3-button-scheme`).
 
-Алиасы для UI kit (`--color-*`)
--------------------------------
+## 3. Правила извлечения и генерации токенов в компонентах
+При стилизации UI-компонентных стилей в блоке `<style lang="scss">` вы обязаны использовать следующий паттерн для локализации токенов:
+- **Локализация пространства имен (`material-map` & `g`):** В начале селектора компонента объявляется локальный префикс и создается изолированная карта токенов:
+  ```scss
+  .ui-button {
+    $prefix: 'md-button';
+    $t: material-map(t.$tokens, $prefix);
 
-Все UI‑компоненты под `components/ui` должны работать **только** с алиасами `--color-*`, а не напрямую с `--md-sys-color-*`. Карта соответствий:
-
-- Primary:
-  - `--color-primary` → `var(--md-sys-color-primary)`
-  - `--color-primary-contrast` → `var(--md-sys-color-on-primary)`
-  - `--color-primary-container` → `var(--md-sys-color-primary-container)`
-  - `--color-primary-container-contrast` → `var(--md-sys-color-on-primary-container)`
-- Accent (Material secondary):
-  - `--color-accent` → `var(--md-sys-color-secondary)`
-  - `--color-accent-contrast` → `var(--md-sys-color-on-secondary)`
-  - `--color-accent-container` → `var(--md-sys-color-secondary-container)`
-  - `--color-accent-container-contrast` → `var(--md-sys-color-on-secondary-container)`
-- Warn (Material error):
-  - `--color-warn` → `var(--md-sys-color-error)`
-  - `--color-warn-contrast` → `var(--md-sys-color-on-error)`
-  - `--color-warn-container` → `var(--md-sys-color-error-container)`
-  - `--color-warn-container-contrast` → `var(--md-sys-color-on-error-container)`
-- Surfaces & background:
-  - `--color-surface` → `var(--md-sys-color-surface)`
-  - `--color-surface-contrast` → `var(--md-sys-color-on-surface)`
-  - `--color-surface-variant` → `var(--md-sys-color-surface-variant)`
-  - `--color-surface-variant-contrast` → `var(--md-sys-color-on-surface-variant)`
-  - `--color-background` → `var(--md-sys-color-background)`
-  - `--color-background-contrast` → `var(--md-sys-color-on-background)`
-- Outline:
-  - `--color-outline` → `var(--md-sys-color-outline)`
-  - `--color-outline-variant` → `var(--md-sys-color-outline-variant)`
-
-Правила для UI‑компонентов
---------------------------
-
-- **Кнопки (`ui-button`)**:
-  - Filled:
-    - `background-color: var(--color-primary);`
-    - `color: var(--color-primary-contrast);`
-  - Outlined:
-    - `color: var(--color-primary);`
-    - `border-color: color-mix(in srgb, var(--color-primary) 50%, transparent 50%);`
-    - hover/active state-layer через `color-mix` с `--color-primary`.
-  - Text:
-    - `color: var(--color-primary);`
-    - hover/active – state-layer на `--color-primary` аналогично Material 3.
-- **Поверхности (карточки, панели, модалки)**:
-  - `background-color: var(--color-surface);`
-  - `color: var(--color-surface-contrast);`
-  - Бордеры/разделители: `border-color: var(--color-outline)` или `var(--color-outline-variant)`.
-- **Фон приложения**:
-  - `html, body`:
-    - `background-color: var(--color-background);`
-    - `color: var(--color-background-contrast);`
-
-Контраст
---------
-
-- В приложении используются только **standard** контрастные палитры (`_light.scss`, `_dark.scss`).
-- Палитры `*-medium-contrast` и `*-high-contrast` из `.cursor/pallete/*.css` служат лишь справочными/вспомогательными и в UI‑токены не проброшены.
+    min-height: g($t, 'container-height');
+    border-radius: g($t, 'container-shape');
+  }
