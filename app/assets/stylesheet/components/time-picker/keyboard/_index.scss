@@ -1,0 +1,53 @@
+@use 'sass:map';
+@use '../../../abstracts/forward.scss' as *;
+
+$tokens: (
+  container: (
+    gap: 24rem,
+    padding: 24rem,
+  ),
+  field: (
+    width: 96rem,
+    height: 72rem,
+    shape: map.get($theme-shape-link, medium),
+    color: (
+      default: map.get($theme-color-link, surface-variant),
+      active: map.get($theme-color-link, primary-container),
+    ),
+    outline: (
+      color: (
+        active: map.get($theme-color-link, primary),
+        error: map.get($theme-color-link, error),
+      )
+    )
+  ),
+  text: (
+    color: (
+      default: map.get($theme-color-link, on-surface),
+      active: map.get($theme-color-link, on-primary-container),
+      error: map.get($theme-color-link, error),
+    ),
+    typography: map.get($theme-typography-link, display, medium),
+  ),
+  label: (
+    color: map.get($theme-color-link, on-surface-variant),
+    typography: map.get($theme-typography-link, label, medium),
+  ),
+  separator: (
+    color: map.get($theme-color-link, on-surface),
+    typography: map.get($theme-typography-link, display, medium),
+  ),
+  ampm: (
+    color: (
+      default: map.get($theme-color-link, on-surface-variant),
+      active: map.get($theme-color-link, on-tertiary-container),
+    ),
+    background: (
+      default: transparent,
+      active: map.get($theme-color-link, tertiary-container),
+    ),
+    border: (
+      color: map.get($theme-color-link, outline),
+    )
+  ),
+);

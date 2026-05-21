@@ -6,15 +6,18 @@ $tokens: (
   ),
   background: (color: map.get($theme-color-link, error),
   ),
-  text: (color: map.get($theme-color-link, on-error),
+  text: (
+    color: map.get($theme-color-link, on-error),
     typography: map.get($theme-typography-link, label, small),
   ),
 
-  large: (size: 16rem,
+  large: (
+    size: 16rem,
     padding: (inline: 4rem),
     text: 0,
   ),
-  dot: (size: 6rem,
+  dot: (
+    size: 6rem,
     padding: (inline: 0),
   ),
 );
