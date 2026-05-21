@@ -24,6 +24,6 @@ logs
 !.env.example
 
 # AI Rules
-.cursor
+.cursor/temp
 .agent
 .planing
