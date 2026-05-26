@@ -55,11 +55,18 @@
   @return $result;
 }
 
-/// Поиск значения в глубоко вложенной мапе по строковому пути через дефис
-/// @example g($t, 'text-typography-font') -> map.get($t, text, typography, font)
+/// Поиск значения в глубоко вложенной мапе по строковому пути через точку (или через дефис для обратной совместимости)
+/// @example g($t, 'label.text.color') -> map.get($t, label, text, color)
+/// @example g($t, 'height.center-aligned') -> map.get($t, height, center-aligned)
+/// @example g($t, 'label-text-color') -> map.get($t, label, text, color)
 @function g($map, $path) {
   $keys: ();
   $separator: '-';
+
+  @if string.index($path, '.') {
+    $separator: '.';
+  }
+
   $remaining: $path;
 
   @while string.index($remaining, $separator) {
@@ -72,6 +79,7 @@
 
   @return map.get($map, $keys...);
 }
+
 
 /// Генератор токенов цветовой схемы для кнопок в стиле Material Design 3.
 /// Возвращает мапу со всеми вариантами и их состояниями.

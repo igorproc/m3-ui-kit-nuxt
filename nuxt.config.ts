@@ -64,11 +64,13 @@ export default defineNuxtConfig({
     },
   },
 
-  // materialKit: {
-  //   themes: [
-  //     { key: 'brown', name: 'Brown', definedInScss: true },
-  //     { key: 'm3', name: 'M3 Baseline', color: '#6750A4' },
-  //     { key: 'green', name: 'Forest', color: '#386A20' },
-  //   ],
-  // },
+  materialKit: {
+    themes: [
+      // { key: 'monochrome', name: 'Gemini', color: '#000', preset: 'monochrome' },
+      // { key: 'tonal-spot', name: 'M3 Tonal', color: '#6750A4', preset: 'tonalSpot' },
+      // { key: 'neutral', name: 'Forest Mist', color: '#386A20', preset: 'neutral' },
+      // { key: 'vibrant', name: 'Vibrant Sunset', color: '#FF5722', preset: 'vibrant' },
+      // { key: 'fidelity', name: 'Fidelity Cyan', color: '#00BCD4', preset: 'fidelity' },
+    ],
+  },
 })

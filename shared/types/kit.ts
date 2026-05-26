@@ -5,6 +5,12 @@ export interface ITheme {
   definedInScss?: boolean // Flag: theme is already described in static SCSS files
 }
 
+interface IThemeWithPreset extends ITheme {
+  preset: 'tonalSpot' | 'monochrome' | 'neutral' | 'vibrant' | 'fidelity'
+}
+
+export type TTheme = ITheme | IThemeWithPreset
+
 export interface ICookie {
   theme: {
     definition: string
@@ -17,7 +23,7 @@ export interface MaterialKitOptions {
   breakpoints?: Partial<Record<'desktop' | 'desktop-xs' | 'tablet' | 'tablet-xs' | 'mobile' | 'mobile-xs', string>>
   cookie: ICookie
   defaultTheme?: string // Default theme key
-  themes?: ITheme[] // List of available themes
+  themes?: TTheme[] // List of available themes
   typography?: {
     fontFamily?: string // Base font family
   }

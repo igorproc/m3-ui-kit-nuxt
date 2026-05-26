@@ -1,67 +1,93 @@
 <template>
   <div
     class="ui-app-bar"
-    :class="`ui-app-bar--${variant}`"
-    :style="layoutItemStyles"
+    :class="[
+      `ui-app-bar--${variant}`,
+      {
+        'ui-app-bar--scrolled': isScrolled,
+        'ui-app-bar--with-subtitle': hasSubtitle,
+      }
+    ]"
+    :style="[
+      layoutItemStyles,
+      dynamicGridStyles,
+    ]"
   >
-    <div
-      v-if="$slots.nav"
-      class="ui-app-bar__nav"
-    >
-      <slot name="nav" />
-    </div>
-
-    <div class="ui-app-bar__title">
-      <slot name="title">
-        <p
-          v-if="title"
-          class="ui-app-bar__title-text"
-        >
-          {{ title }}
-        </p>
-      </slot>
-
-      <p
-        v-if="subtitle"
-        class="ui-app-bar__subtitle"
+    <slot name="container">
+      <div
+        v-if="$slots.nav"
+        class="ui-app-bar__nav"
       >
-        {{ subtitle }}
-      </p>
-    </div>
+        <slot name="nav" />
+      </div>
 
-    <div
-      v-if="$slots.actions"
-      class="ui-app-bar__actions"
-    >
-      <slot name="actions" />
-    </div>
+      <div
+        v-if="$slots.title || title || subtitle || $slots.subtitle"
+        class="ui-app-bar__title"
+      >
+        <slot name="title">
+          <p
+            v-if="title"
+            class="ui-app-bar__title-text"
+          >
+            {{ title }}
+          </p>
+        </slot>
+
+        <slot name="subtitle">
+          <p
+            v-if="subtitle"
+            class="ui-app-bar__subtitle"
+          >
+            {{ subtitle }}
+          </p>
+        </slot>
+      </div>
+
+      <div
+        v-if="$slots.actions"
+        class="ui-app-bar__actions"
+      >
+        <slot name="actions" />
+      </div>
+    </slot>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, readonly, ref, useSlots } from 'vue'
+
 type AppBarVariant = 'center-aligned' | 'small' | 'medium' | 'large'
 
 interface Props {
   title?: string
   subtitle?: string
   variant?: AppBarVariant
+  isScrolled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: '',
   subtitle: '',
   variant: 'center-aligned',
+  isScrolled: false,
 })
 
-// Self-register in layout system with correct size token
+const slots = useSlots()
+
+const hasSubtitle = computed(() => {
+  return !!props.subtitle || !!slots.subtitle
+})
+
+// Self-register in layout system with correct CSS variable token resolved in SCSS
 const sizeToken = computed(() => {
   switch (props.variant) {
     case 'small':
       return '--ui-app-bar-height-small'
     case 'medium':
-      return '--ui-app-bar-height-medium'
+      return hasSubtitle.value ? '--ui-app-bar-height-medium-subtitle' : '--ui-app-bar-height-medium'
     case 'large':
-      return '--ui-app-bar-height-large'
+      return hasSubtitle.value ? '--ui-app-bar-height-large-subtitle' : '--ui-app-bar-height-large'
     case 'center-aligned':
     default:
       return '--ui-app-bar-height-center-aligned'
@@ -72,27 +98,104 @@ const { layoutItemStyles } = useLayoutItem({
   id: 'app-bar',
   sizeToken,
 })
+
+// Dynamic grid template layout based on variant and active slots
+const dynamicGridStyles = computed(() => {
+  // If the container slot is used, we skip all dynamic grid layouts
+  if (slots.container) {
+    return {
+      display: 'block',
+    }
+  }
+
+  const hasNav = !!slots.nav
+  const hasTitle = !!slots.title || !!props.title || !!props.subtitle || !!slots.subtitle
+  const hasActions = !!slots.actions
+
+  // Build grid columns based on slot presence
+  const columns: string[] = []
+  if (hasNav) columns.push('auto')
+  if (hasTitle) columns.push('1fr')
+  if (hasActions) columns.push('auto')
+
+  const gridTemplateColumns = columns.length > 0 ? columns.join(' ') : '1fr'
+
+  if (props.variant === 'medium' || props.variant === 'large') {
+    // Two-row layout:
+    // Row 1: nav (left), space (center), actions (right)
+    // Row 2: title spanning across
+    const row1Areas: string[] = []
+    row1Areas.push(hasNav ? 'nav' : '.')
+
+    // Add empty space/column if both nav/actions exist or only title exists
+    if (hasTitle && (hasNav || hasActions)) {
+      row1Areas.push('.')
+    }
+
+    row1Areas.push(hasActions ? 'actions' : '.')
+
+    const areas = `
+      "${row1Areas.join(' ')}"
+      "title title title"
+    `
+
+    return {
+      display: 'grid',
+      gridTemplateColumns: hasNav && hasActions ? 'auto 1fr auto' : 'auto 1fr',
+      gridTemplateRows: 'auto 1fr',
+      gridTemplateAreas: areas.trim(),
+    }
+  }
+
+  // Single-row layout (center-aligned or small)
+  const rowAreas: string[] = []
+  if (hasNav) rowAreas.push('nav')
+  if (hasTitle) rowAreas.push('title')
+  if (hasActions) rowAreas.push('actions')
+
+  const areas = `"${rowAreas.join(' ')}"`
+
+  return {
+    display: 'grid',
+    gridTemplateColumns,
+    gridTemplateAreas: areas,
+  }
+})
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/app-bar' as v;
+@use '~/assets/stylesheet/components/app-bar/_index' as *;
 
 .ui-app-bar {
+  $prefix: 'ui-app-bar';
+  $t: material-map($tokens, $prefix);
+
+  @at-root :root {
+    --ui-app-bar-height-center-aligned: #{g($t, 'height.center-aligned')};
+    --ui-app-bar-height-small: #{g($t, 'height.small')};
+    --ui-app-bar-height-medium: #{g($t, 'height.medium')};
+    --ui-app-bar-height-medium-subtitle: #{g($t, 'height.medium-with-subtitle')};
+    --ui-app-bar-height-large: #{g($t, 'height.large')};
+    --ui-app-bar-height-large-subtitle: #{g($t, 'height.large-with-subtitle')};
+  }
+
+  min-height: var(--ui-app-bar-height-center-aligned);
   display: grid;
   align-items: center;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: "nav title actions";
-  gap: v.$gap;
-  padding-inline: v.$padding-inline;
-  padding-block: v.$padding-block;
-  border-radius: v.$border-radius;
-  background-color: v.$bg-color;
-  color: v.$text-color;
-  box-shadow: v.$shadow;
+  gap: g($t, 'container-gap');
+  padding-inline: g($t, 'container-padding-inline');
+  padding-block: g($t, 'container-padding-block');
+  border-radius: 0;
+  background-color: g($t, 'container-color');
+  color: g($t, 'title-text-color');
+  box-shadow: g($t, 'container-shadow');
   position: sticky;
   top: 0;
   z-index: z(header);
-  transition: min-height 0.2s ease, background-color 0.2s ease;
+  transition:
+    min-height var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard),
+    background-color var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard),
+    box-shadow var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
 
   &--center-aligned {
     min-height: var(--ui-app-bar-height-center-aligned);
@@ -109,27 +212,25 @@ const { layoutItemStyles } = useLayoutItem({
 
   &--medium {
     min-height: var(--ui-app-bar-height-medium);
-    grid-template-areas:
-      "nav . actions"
-      "title title title";
     grid-template-rows: auto 1fr;
     align-items: start;
 
     .ui-app-bar__title {
       align-self: end;
-      padding-bottom: 24rem; // M3 standard bottom padding for prominent titles
+      padding-bottom: 24rem;
     }
 
     .ui-app-bar__title-text {
-      @include typescale(v.$title-text-type-medium);
+      @include apply-typography(g($t, 'title-text-typography-medium'));
+    }
+
+    &.ui-app-bar--with-subtitle {
+      min-height: var(--ui-app-bar-height-medium-subtitle);
     }
   }
 
   &--large {
     min-height: var(--ui-app-bar-height-large);
-    grid-template-areas:
-      "nav . actions"
-      "title title title";
     grid-template-rows: auto 1fr;
     align-items: start;
 
@@ -139,8 +240,17 @@ const { layoutItemStyles } = useLayoutItem({
     }
 
     .ui-app-bar__title-text {
-      @include typescale(v.$title-text-type-large);
+      @include apply-typography(g($t, 'title-text-typography-large'));
     }
+
+    &.ui-app-bar--with-subtitle {
+      min-height: var(--ui-app-bar-height-large-subtitle);
+    }
+  }
+
+  &--scrolled {
+    background-color: g($t, 'container-scrolled-color');
+    box-shadow: g($t, 'container-scrolled-shadow');
   }
 
   &__nav {
@@ -148,9 +258,8 @@ const { layoutItemStyles } = useLayoutItem({
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: v.$nav-min-width;
-    min-height: v.$nav-min-height;
-    margin-left: calc(-1 * (v.$padding-inline - 4rem)); // Offset by 4px from left edge per M3 spec
+    min-width: g($t, 'nav-min-width');
+    min-height: g($t, 'nav-min-height');
   }
 
   &__title {
@@ -158,7 +267,7 @@ const { layoutItemStyles } = useLayoutItem({
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: v.$title-gap;
+    gap: g($t, 'title-gap');
     min-width: 0;
   }
 
@@ -168,17 +277,17 @@ const { layoutItemStyles } = useLayoutItem({
     text-overflow: ellipsis;
     overflow: hidden;
 
-    @include typescale(v.$title-text-type-small);
+    @include apply-typography(g($t, 'title-text-typography-small'));
   }
 
   &__subtitle {
     margin: 0;
-    color: v.$subtitle-color;
+    color: g($t, 'subtitle-color');
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
 
-    @include typescale(v.$subtitle-text-type);
+    @include apply-typography(g($t, 'subtitle-typography'));
   }
 
   &__actions {
@@ -186,8 +295,7 @@ const { layoutItemStyles } = useLayoutItem({
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    gap: v.$actions-gap;
-    margin-right: calc(-1 * (v.$padding-inline - 4rem)); // Offset by 4px from right edge per M3 spec
+    gap: g($t, 'actions-gap');
   }
 }
 </style>
