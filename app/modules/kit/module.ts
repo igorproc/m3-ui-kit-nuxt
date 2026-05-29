@@ -1,7 +1,5 @@
 import { defineNuxtModule, addTemplate } from '@nuxt/kit'
 import {
-  themeFromSourceColor,
-  argbFromHex,
   hexFromArgb,
   Scheme,
   DynamicScheme,

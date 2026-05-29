@@ -1,5 +1,4 @@
 import { THEME_DEFINITIONS, THEME_CONTRASTS, THEME_COOKIE_OPTIONS } from '~~/shared/constants/theme'
-import type { ITheme } from '~~/shared/types/kit'
 
 export const useThemeStore = defineStore('themeStore', () => {
   const config = useRuntimeConfig().public.materialKit
@@ -55,7 +54,7 @@ export const useThemeStore = defineStore('themeStore', () => {
       const value = paletteCookie.value
 
       if (!value || !allowedPalettes.value.includes(value)) {
-        const fallback = config.defaultTheme || availableThemes.value[0]?.key || 'light'
+        const fallback = config.defaultTheme || availableThemes.value[0]?.key || '_m3-fallback'
         paletteCookie.value = fallback
         return fallback
       }

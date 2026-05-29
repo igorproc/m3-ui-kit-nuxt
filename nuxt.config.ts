@@ -1,4 +1,5 @@
 import { createResolver } from '@nuxt/kit'
+import type { MaterialKitOptions } from "#shared/types/kit";
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -52,6 +53,13 @@ export default defineNuxtConfig({
   },
 
   css: [resolve('./app/assets/stylesheet/main.scss')],
+
+  runtimeConfig: {
+    public: {
+      materialKit: {} as MaterialKitOptions,
+    },
+  },
+
   appDir: resolve('./app'),
   features: { inlineStyles: false },
 
@@ -65,12 +73,13 @@ export default defineNuxtConfig({
   },
 
   materialKit: {
+    defaultTheme: 'monochrome',
     themes: [
-      // { key: 'monochrome', name: 'Gemini', color: '#000', preset: 'monochrome' },
-      // { key: 'tonal-spot', name: 'M3 Tonal', color: '#6750A4', preset: 'tonalSpot' },
-      // { key: 'neutral', name: 'Forest Mist', color: '#386A20', preset: 'neutral' },
-      // { key: 'vibrant', name: 'Vibrant Sunset', color: '#FF5722', preset: 'vibrant' },
-      // { key: 'fidelity', name: 'Fidelity Cyan', color: '#00BCD4', preset: 'fidelity' },
+      { key: 'monochrome', name: 'Gemini', color: '#000', preset: 'monochrome' },
+      { key: 'tonal-spot', name: 'M3 Tonal', color: '#6750A4', preset: 'tonalSpot' },
+      { key: 'neutral', name: 'Forest Mist', color: '#386A20', preset: 'neutral' },
+      { key: 'vibrant', name: 'Vibrant Sunset', color: '#FF5722', preset: 'vibrant' },
+      { key: 'fidelity', name: 'Fidelity Cyan', color: '#00BCD4', preset: 'fidelity' },
     ],
   },
 })
