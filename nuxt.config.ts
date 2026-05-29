@@ -75,7 +75,6 @@ export default defineNuxtConfig({
   materialKit: {
     defaultTheme: 'monochrome',
     themes: [
-      { key: 'monochrome', name: 'Gemini', color: '#000', preset: 'monochrome' },
       { key: 'tonal-spot', name: 'M3 Tonal', color: '#6750A4', preset: 'tonalSpot' },
       { key: 'neutral', name: 'Forest Mist', color: '#386A20', preset: 'neutral' },
       { key: 'vibrant', name: 'Vibrant Sunset', color: '#FF5722', preset: 'vibrant' },

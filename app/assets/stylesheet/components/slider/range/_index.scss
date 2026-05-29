@@ -1,0 +1,12 @@
+@use 'sass:map';
+@use '../../../abstracts/variables' as *;
+
+$tokens: (
+  height: 16rem,
+  border: (
+    radius: 8rem,
+  ),
+  background: (
+    color: map.get($theme-color-link, primary),
+  ),
+);

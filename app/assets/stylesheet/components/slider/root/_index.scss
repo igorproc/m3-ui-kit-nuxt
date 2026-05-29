@@ -1,0 +1,11 @@
+@use 'sass:map';
+@use '../../../abstracts/variables' as *;
+
+$tokens: (
+  gap: 4rem,
+  height: 48rem, // Touch target height
+  label: (
+    color: map.get($theme-color-link, on-surface),
+    typography: map.get($theme-typography-link, body, medium),
+  ),
+);

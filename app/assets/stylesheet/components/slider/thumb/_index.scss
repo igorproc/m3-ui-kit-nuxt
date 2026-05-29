@@ -1,0 +1,28 @@
+@use 'sass:map';
+@use '../../../abstracts/variables' as *;
+
+$tokens: (
+  size: 20rem,
+  color: map.get($theme-color-link, primary),
+  elevation: (
+    shadow: (0 1rem 2rem 0 rgba(0, 0, 0, 0.3), 0 1rem 3rem 1rem rgba(0, 0, 0, 0.15)),
+  ),
+  state: (
+    layer: (
+      size: 40rem,
+      hover: (
+        opacity: 0.08,
+      ),
+      pressed: (
+        opacity: 0.12,
+      ),
+    ),
+  ),
+  tooltip: (
+    width: 32rem,
+    height: 40rem,
+    background: map.get($theme-color-link, inverse-surface),
+    color: map.get($theme-color-link, inverse-on-surface),
+    typography: map.get($theme-typography-link, body, small),
+  ),
+);

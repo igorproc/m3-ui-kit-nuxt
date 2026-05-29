@@ -1,0 +1,18 @@
+@use 'sass:map';
+@use '../../../abstracts/variables' as *;
+
+$tokens: (
+  height: 16rem,
+  border: (
+    radius: 8rem,
+  ),
+  background: (
+    color: color-mix(in srgb, map.get($theme-color-link, on-surface) 16%, transparent),
+  ),
+  tickmarks: (
+    color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent),
+    active: (
+      color: color-mix(in srgb, map.get($theme-color-link, on-primary) 38%, transparent),
+    ),
+  ),
+);

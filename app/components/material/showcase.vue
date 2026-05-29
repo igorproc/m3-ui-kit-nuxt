@@ -275,7 +275,8 @@
             style="width: calc(100% - 74rem);"
           >
             <UiSlider
-              :model-value="50"
+              name="test"
+              v-model="sliderValContinuous"
               show-value
               label="Continuous"
             />
@@ -286,7 +287,7 @@
             style="width: calc(100% - 74rem);"
           >
             <UiSlider
-              :model-value="20"
+              v-model="sliderValDiscrete"
               discrete
               :step="10"
               show-value
@@ -299,7 +300,7 @@
             style="width: calc(100% - 74rem);"
           >
             <UiSlider
-              :model-value="[20, 80]"
+              v-model="sliderValRange"
               range
               show-value
               label="Range"
@@ -317,7 +318,7 @@
             style="flex: 1;"
           >
             <UiSlider
-              :model-value="50"
+              v-model="sliderValVerticalContinuous"
               orientation="vertical"
               show-value
               label="Continuous"
@@ -329,7 +330,7 @@
             style="flex: 1;"
           >
             <UiSlider
-              :model-value="20"
+              v-model="sliderValVerticalDiscrete"
               discrete
               :step="10"
               orientation="vertical"
@@ -343,7 +344,7 @@
             style="flex: 1;"
           >
             <UiSlider
-              :model-value="[20, 80]"
+              v-model="sliderValVerticalRange"
               range
               orientation="vertical"
               show-value
@@ -357,6 +358,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
 
 import UiButtonSplit from '~/components/ui/button/split/index.vue'
@@ -367,6 +369,14 @@ import UiButtonExtendedFab from '~/components/ui/button/extended-fab/index.vue'
 import UiProgress from '~/components/ui/progress/index.vue'
 import UiLoading from '~/components/ui/loading/index.vue'
 import UiSlider from '~/components/ui/slider/index.vue'
+
+const sliderValContinuous = ref(50)
+const sliderValDiscrete = ref(20)
+const sliderValRange = ref([20, 80])
+
+const sliderValVerticalContinuous = ref(50)
+const sliderValVerticalDiscrete = ref(20)
+const sliderValVerticalRange = ref([20, 80])
 </script>
 
 <style lang="scss">
