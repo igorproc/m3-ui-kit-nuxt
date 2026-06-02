@@ -9,8 +9,8 @@
         controlClasses,
         {
           'ui-text-field__control--has-prepend': !!$slots.prepend,
-          'ui-text-field__control--has-append': !!$slots.append
-        }
+          'ui-text-field__control--has-append': !!$slots.append,
+        },
       ]"
     >
       <div

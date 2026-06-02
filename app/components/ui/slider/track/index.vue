@@ -6,7 +6,7 @@
       { 'ui-slider-track--vertical': orientation === 'vertical' },
       { 'ui-slider-track--disabled': disabled },
       { 'ui-slider-track--readonly': readonly },
-      { 'ui-slider-track--discrete': discrete }
+      { 'ui-slider-track--discrete': discrete },
     ]"
     :style="cssVars"
   >

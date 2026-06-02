@@ -32,7 +32,7 @@ export function useTimePicker(modelValue: Ref<string>, is24h: Ref<boolean> = ref
       hours.value = h.toString()
       minutes.value = m
     },
-    { immediate: true }
+    { immediate: true },
   )
 
   watch(
@@ -52,7 +52,7 @@ export function useTimePicker(modelValue: Ref<string>, is24h: Ref<boolean> = ref
       }
 
       modelValue.value = `${pad2(h)}:${pad2(m)}`
-    }
+    },
   )
 
   function clampPart(value: string, min: number, max: number): number | null {
@@ -85,6 +85,6 @@ export function useTimePicker(modelValue: Ref<string>, is24h: Ref<boolean> = ref
     period,
     onBlur,
     clampPart,
-    pad2
+    pad2,
   }
 }

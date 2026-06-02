@@ -1,10 +1,22 @@
 <template>
-  <div class="ui-time-picker-dial" :class="[`ui-time-picker-dial--${layout}`]">
+  <div
+    class="ui-time-picker-dial"
+    :class="[`ui-time-picker-dial--${layout}`]"
+  >
     <div class="ui-time-picker-dial__content">
       <div class="ui-time-picker-dial__left-panel">
-        <div v-if="label || helperText" class="ui-time-picker-dial__title-area">
-          <span v-if="label" class="ui-time-picker-dial__label">{{ label }}</span>
-          <span v-if="helperText" class="ui-time-picker-dial__helper">{{ helperText }}</span>
+        <div
+          v-if="label || helperText"
+          class="ui-time-picker-dial__title-area"
+        >
+          <span
+            v-if="label"
+            class="ui-time-picker-dial__label"
+          >{{ label }}</span>
+          <span
+            v-if="helperText"
+            class="ui-time-picker-dial__helper"
+          >{{ helperText }}</span>
         </div>
 
         <div class="ui-time-picker-dial__header">
@@ -17,38 +29,38 @@
         </div>
       </div>
 
-    <div
-      ref="faceRef"
-      class="ui-time-picker-dial__face"
-      @mousedown="onPointerDown"
-      @touchstart.passive="onPointerDown"
-    >
-      <div class="ui-time-picker-dial__center-dot"></div>
-
       <div
-        class="ui-time-picker-dial__selector"
-        :class="{ 'ui-time-picker-dial__selector--inner': isInnerRing }"
-        :style="{ transform: `rotate(${selectorAngle}deg)` }"
+        ref="faceRef"
+        class="ui-time-picker-dial__face"
+        @mousedown="onPointerDown"
+        @touchstart.passive="onPointerDown"
       >
-        <div class="ui-time-picker-dial__selector-knob"></div>
-      </div>
+        <div class="ui-time-picker-dial__center-dot"></div>
 
-      <div
-        v-for="num in currentNumbers"
-        :key="num.id"
-        class="ui-time-picker-dial__number"
-        :class="{ 'ui-time-picker-dial__number--active': num.value === activeValue }"
-        :style="{ transform: `translate(-50%, -50%) rotate(${num.angle}deg) translateY(-${num.radius}) rotate(-${num.angle}deg)` }"
-      >
-        {{ num.display }}
-      </div>
+        <div
+          class="ui-time-picker-dial__selector"
+          :class="{ 'ui-time-picker-dial__selector--inner': isInnerRing }"
+          :style="{ transform: `rotate(${selectorAngle}deg)` }"
+        >
+          <div class="ui-time-picker-dial__selector-knob"></div>
+        </div>
+
+        <div
+          v-for="num in currentNumbers"
+          :key="num.id"
+          class="ui-time-picker-dial__number"
+          :class="{ 'ui-time-picker-dial__number--active': num.value === activeValue }"
+          :style="{ transform: `translate(-50%, -50%) rotate(${num.angle}deg) translateY(-${num.radius}) rotate(-${num.angle}deg)` }"
+        >
+          {{ num.display }}
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onUnmounted } from 'vue'
 import MTimePickerKeyboard from '../keyboard/index.vue'
 
 interface Props {
@@ -74,7 +86,7 @@ const parsedTime = computed(() => {
   const [hStr, mStr] = (modelValue.value || '00:00').split(':')
   return {
     hours: Number.parseInt(hStr || '0', 10),
-    minutes: Number.parseInt(mStr || '0', 10)
+    minutes: Number.parseInt(mStr || '0', 10),
   }
 })
 
@@ -99,7 +111,7 @@ const currentNumbers = computed(() => {
     } else {
       // 12h: 12, 1..11
       for (let i = 0; i < 12; i++) {
-        let val = i === 0 ? 12 : i
+        const val = i === 0 ? 12 : i
         nums.push({ id: `h-${val}`, value: val, display: val.toString(), angle: i * 30, radius: `96rem` })
       }
     }
@@ -136,7 +148,7 @@ let isDragging = false
 
 function updateTimeFromEvent(e: MouseEvent | TouchEvent) {
   if (!faceRef.value || !keyboardRef.value) return
-  
+
   const rect = faceRef.value.getBoundingClientRect()
   const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
   const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
@@ -178,19 +190,19 @@ function onDragMove(e: MouseEvent | TouchEvent) {
 function onPointerDown(e: MouseEvent | TouchEvent) {
   if (e.cancelable && e.type !== 'touchstart') e.preventDefault() // prevent default text selection, except passive touchstart
   isDragging = true
-  
+
   window.addEventListener('mousemove', onDragMove, { passive: false })
   window.addEventListener('touchmove', onDragMove, { passive: false })
   window.addEventListener('mouseup', onPointerUp)
   window.addEventListener('touchend', onPointerUp)
-  
+
   updateTimeFromEvent(e)
 }
 
 function onPointerUp(e: MouseEvent | TouchEvent) {
   if (!isDragging) return
   isDragging = false
-  
+
   window.removeEventListener('mousemove', onDragMove)
   window.removeEventListener('touchmove', onDragMove)
   window.removeEventListener('mouseup', onPointerUp)
@@ -200,8 +212,6 @@ function onPointerUp(e: MouseEvent | TouchEvent) {
     keyboardRef.value.activeField = 'minutes'
   }
 }
-
-import { onUnmounted } from 'vue'
 onUnmounted(() => {
   window.removeEventListener('mousemove', onDragMove)
   window.removeEventListener('touchmove', onDragMove)

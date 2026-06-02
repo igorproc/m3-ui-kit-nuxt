@@ -49,7 +49,10 @@
         </div>
       </div>
 
-      <div v-if="!is24h" class="ui-time-picker-keyboard__ampm">
+      <div
+        v-if="!is24h"
+        class="ui-time-picker-keyboard__ampm"
+      >
         <button
           class="ui-time-picker-keyboard__ampm-btn"
           :class="{ 'ui-time-picker-keyboard__ampm-btn--active': period === 'AM' }"

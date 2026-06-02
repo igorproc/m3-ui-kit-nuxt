@@ -1,0 +1,27 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// DROPDOWN M3 COMPONENT TOKENS (NESTED M3 COMPLIANT)
+// ==========================================
+
+$tokens: (
+  arrow: (
+    size: 24rem,
+    color: map.get($theme-color-link, on-surface-variant),
+  ),
+  menu: (
+    margin: (
+      top: 4rem,
+    ),
+  ),
+  list: (
+    padding: (
+      vertical: 8rem,
+    ),
+  ),
+  state: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
+);

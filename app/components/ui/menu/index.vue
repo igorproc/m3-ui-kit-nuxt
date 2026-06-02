@@ -27,8 +27,7 @@
 
 <script setup lang="ts">
 import { onClickOutside } from '@vueuse/core'
-
-export type UiMenuOrigin = 'top left' | 'top right' | 'bottom left' | 'bottom right' | 'center' | 'top' | 'bottom'
+import type { UiMenuOrigin } from './types'
 
 interface Props {
   closeOnBackdrop?: boolean

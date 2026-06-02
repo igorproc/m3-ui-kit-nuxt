@@ -1,13 +1,13 @@
 <template>
   <vue-final-modal
-    v-bind="{ modelValue, ...themeAttrs }"
+    v-model="modelValue"
+    v-bind="themeAttrs"
     class="ui-date-dialog-backdrop"
     content-class="ui-date-dialog"
     overlay-transition="vfm-fade"
     content-transition="vfm-fade"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
-    @update:model-value="emit('update:modelValue', $event)"
     @before-open="onBeforeOpen"
   >
     <div
@@ -209,31 +209,43 @@ import type { ComputedRef } from 'vue'
 import { VueFinalModal } from 'vue-final-modal'
 import { ICONS } from '../../../../../shared/constants/icons'
 import { useDatePicker } from '../../../../composables/date'
+import { useModal } from '~/composables/modal/useModal'
+import type { M3ModalContext } from '~/composables/modal/useModal'
 import dayjs from 'dayjs'
 
 type DialogMode = 'picker' | 'input'
 
 interface Props {
   headline?: string
-  modelValue?: boolean // Dialog Visibility
   clickToClose?: boolean
   escToClose?: boolean
   initialMode?: DialogMode
+  parent?: M3ModalContext | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   headline: 'Select date',
-  modelValue: undefined,
   clickToClose: true,
   escToClose: true,
   initialMode: 'picker',
+  parent: undefined,
 })
 
+const modelValue = defineModel<boolean>('modelValue', { default: false })
+
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
   (e: 'cancel'): void
   (e: 'confirm', date: Date | null): void
 }>()
+
+const { close } = useModal({
+  visible: modelValue,
+  parent: props.parent,
+})
+
+defineExpose({
+  close,
+})
 
 // Writable v-model date
 const date = defineModel<Date | string | number | null>('date', { default: null })
@@ -303,9 +315,9 @@ function onTextInput(val: string) {
     return
   }
 
-  const d = parseInt(parts[0], 10)
-  const m = parseInt(parts[1], 10)
-  const y = parseInt(parts[2], 10)
+  const d = Number.parseInt(parts[0], 10)
+  const m = Number.parseInt(parts[1], 10)
+  const y = Number.parseInt(parts[2], 10)
 
   if (isNaN(d) || isNaN(m) || isNaN(y)) {
     inputError.value = 'Invalid date format'
@@ -323,7 +335,7 @@ function onTextInput(val: string) {
 }
 
 function onCancel() {
-  emit('update:modelValue', false)
+  modelValue.value = false
   emit('cancel')
 }
 
@@ -333,7 +345,7 @@ function onConfirm() {
   }
   date.value = localDate.value ? new Date(localDate.value) : null
   emit('confirm', date.value as Date | null)
-  emit('update:modelValue', false)
+  modelValue.value = false
 }
 </script>
 

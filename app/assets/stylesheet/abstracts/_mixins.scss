@@ -82,7 +82,7 @@
 
 @mixin generate-tokens($tokens, $token-prefix: '') {
   @each $key, $value in $tokens {
-    $var-name: if($token-prefix =='', $key, '#{$token-prefix}-#{$key}');
+    $var-name: if(sass($token-prefix == ""): $key; else: "#{$token-prefix}-#{$key}");
 
     @if type-of($value)=='map' {
       @include generate-tokens($value, $var-name);

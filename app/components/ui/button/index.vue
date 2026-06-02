@@ -168,7 +168,7 @@ const linkBindings = computed(() => {
     @each $v in $variants {
       &.ui-button--#{$v} {
         $base: "#{$scheme}-#{$v}";
-        
+
         background-color: g($t, "#{$base}-container-color");
         color: g($t, "#{$base}-label-text-color");
 

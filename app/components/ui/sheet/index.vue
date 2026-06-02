@@ -1,13 +1,12 @@
 <template>
   <vue-final-modal
-    v-bind="{ modelValue }"
+    v-model="modelValue"
     class="ui-sheet-backdrop"
     content-class="ui-sheet"
     overlay-transition="vfm-fade"
     content-transition="vfm-fade"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <div
       class="ui-sheet__container"
@@ -26,22 +25,36 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
+import { useModal } from '~/composables/modal/useModal'
+import type { M3ModalContext } from '~/composables/modal/useModal'
 
 interface Props {
-  modelValue?: boolean
   clickToClose?: boolean
   escToClose?: boolean
+  parent?: M3ModalContext | null
 }
 
-withDefaults(defineProps<Props>(), {
-  modelValue: undefined,
+const props = withDefaults(defineProps<Props>(), {
   clickToClose: true,
   escToClose: true,
+  parent: undefined,
 })
 
+const modelValue = defineModel<boolean>({ default: false })
+
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
+  (e: 'cancel'): void
+  (e: 'confirm', data?: any): void
 }>()
+
+const { close } = useModal({
+  visible: modelValue,
+  parent: props.parent,
+})
+
+defineExpose({
+  close,
+})
 
 const dragState = reactive({
   startY: 0,

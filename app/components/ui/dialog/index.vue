@@ -1,13 +1,13 @@
 <template>
   <vue-final-modal
-    v-bind="{ modelValue, ...themeAttrs }"
+    v-model="modelValue"
+    v-bind="themeAttrs"
     class="ui-dialog-backdrop"
     content-class="ui-dialog"
     overlay-transition="vfm-fade"
     content-transition="vfm-fade"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
-    @update:model-value="emit('update:modelValue', $event)"
   >
     <div class="ui-dialog__container">
       <!-- Icon -->
@@ -44,28 +44,44 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
+import { computed, inject } from 'vue'
+import type { ComputedRef } from 'vue'
+import { useModal } from '~/composables/modal/useModal'
+import type { M3ModalContext } from '~/composables/modal/useModal'
 
 interface Props {
   title?: string
-  modelValue?: boolean
   clickToClose?: boolean
   escToClose?: boolean
+  parent?: M3ModalContext | null
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   title: undefined,
-  modelValue: undefined,
   clickToClose: true,
   escToClose: true,
+  parent: undefined,
 })
 
-const injectedThemeAttrs = inject<ComputedRef<Record<string, string | undefined>> | null>('theme-attrs', null)
+const modelValue = defineModel<boolean>({ default: false })
 
+const injectedThemeAttrs = inject<ComputedRef<Record<string, string | undefined>> | null>('theme-attrs', null)
 const themeAttrs = computed(() => injectedThemeAttrs?.value ?? {})
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
+  (e: 'cancel'): void
+  (e: 'confirm', data?: any): void
 }>()
+
+// Register this modal in the Context API
+const { close } = useModal({
+  visible: modelValue,
+  parent: props.parent,
+})
+
+defineExpose({
+  close,
+})
 </script>
 
 <style lang="scss">

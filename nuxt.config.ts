@@ -1,5 +1,5 @@
 import { createResolver } from '@nuxt/kit'
-import type { MaterialKitOptions } from "#shared/types/kit";
+import type { MaterialKitOptions } from '#shared/types/kit'
 
 const { resolve } = createResolver(import.meta.url)
 

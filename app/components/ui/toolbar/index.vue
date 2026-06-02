@@ -1,8 +1,14 @@
 <template>
-  <div class="ui-toolbar" :class="toolbarClasses">
+  <div
+    class="ui-toolbar"
+    :class="toolbarClasses"
+  >
     <slot>
       <template v-if="items && items.length">
-        <template v-for="(item, index) in items" :key="item.id || index">
+        <template
+          v-for="(item, index) in items"
+          :key="item.id || index"
+        >
           <slot
             name="item"
             :item="item"
@@ -16,8 +22,13 @@
               v-bind="getPropsForItem(item)"
               @click="onSelect(item)"
             >
-              <Icon v-if="item.icon" :name="item.icon" />
-              <template v-else-if="item.label">{{ item.label }}</template>
+              <Icon
+                v-if="item.icon"
+                :name="item.icon"
+              />
+              <template v-else-if="item.label">
+                {{ item.label }}
+              </template>
             </component>
           </slot>
         </template>
@@ -117,9 +128,9 @@ const getPropsForItem = (item: ToolbarItem) => {
   &--variant-standard {
     background-color: g($t, 'standard-container-color');
     border-radius: g($t, 'standard-container-shape');
-    
+
     $shadow-color: var(--color-shadow, #000);
-    box-shadow: 
+    box-shadow:
       0 g($t, 'standard-container-elevation-umbra-y') g($t, 'standard-container-elevation-umbra-blur') g($t, 'standard-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-umbra-opacity'), transparent),
       0 g($t, 'standard-container-elevation-penumbra-y') g($t, 'standard-container-elevation-penumbra-blur') g($t, 'standard-container-elevation-penumbra-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-penumbra-opacity'), transparent),
       0 g($t, 'standard-container-elevation-ambient-y') g($t, 'standard-container-elevation-ambient-blur') g($t, 'standard-container-elevation-ambient-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-ambient-opacity'), transparent);
@@ -133,9 +144,9 @@ const getPropsForItem = (item: ToolbarItem) => {
   &--variant-baseline {
     background-color: g($t, 'baseline-container-color');
     border-radius: g($t, 'baseline-container-shape');
-    
+
     $shadow-color: var(--color-shadow, #000);
-    box-shadow: 
+    box-shadow:
       0 g($t, 'baseline-container-elevation-umbra-y') g($t, 'baseline-container-elevation-umbra-blur') g($t, 'baseline-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-umbra-opacity'), transparent),
       0 g($t, 'baseline-container-elevation-penumbra-y') g($t, 'baseline-container-elevation-penumbra-blur') g($t, 'baseline-container-elevation-penumbra-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-penumbra-opacity'), transparent),
       0 g($t, 'baseline-container-elevation-ambient-y') g($t, 'baseline-container-elevation-ambient-blur') g($t, 'baseline-container-elevation-ambient-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-ambient-opacity'), transparent);

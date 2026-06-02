@@ -125,7 +125,7 @@ const computedLines = computed(() => {
   }
   const hasSupporting = props.supportingText || slots.supporting || slots.default
   const hasOverline = props.overline || slots.overline
-  
+
   if (hasOverline && hasSupporting) {
     return 3
   }
@@ -197,7 +197,7 @@ const tag = computed(() => {
   &--lines-3 {
     min-height: g($t, 'height-three');
     align-items: flex-start;
-    
+
     .ui-list-item__leading {
       margin-top: 4rem; // align to top for three lines
     }
@@ -306,7 +306,7 @@ const tag = computed(() => {
   &__overline {
     color: g($t, 'overline-color');
     margin-bottom: 4rem;
-    
+
     @include apply-typography(g($t, 'overline-typography'));
   }
 
@@ -345,4 +345,3 @@ const tag = computed(() => {
   }
 }
 </style>
-

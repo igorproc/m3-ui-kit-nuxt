@@ -41,13 +41,13 @@
   $result: ();
 
   @each $key, $value in $tokens {
-    $new-path: if($current-path == '', $key, '#{$current-path}-#{$key}');
+    $new-path: if(sass($current-path == ''): $key; else: '#{$current-path}-#{$key}');
 
     @if meta.type-of($value) == 'map' {
       $inner-map: material-map($value, $prefix, $new-path, $use-variables);
       $result: map.merge($result, ($key: $inner-map));
     } @else {
-      $val: if($use-variables, var(--#{$prefix}-#{$new-path}, #{$value}), $value);
+      $val: if(sass($use-variables): var(--#{$prefix}-#{$new-path}, #{$value}); else: $value);
       $result: map.merge($result, ($key: $val));
     }
   }

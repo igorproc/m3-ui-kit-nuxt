@@ -5,7 +5,10 @@
     :interactive="true"
     v-bind="$attrs"
   >
-    <template v-if="$slots.leading || selected" #leading>
+    <template
+      v-if="$slots.leading || selected"
+      #leading
+    >
       <slot name="leading">
         <m-loading
           v-if="selected"
@@ -17,7 +20,10 @@
 
     <slot />
 
-    <template v-if="$slots.trailing" #trailing>
+    <template
+      v-if="$slots.trailing"
+      #trailing
+    >
       <slot name="trailing" />
     </template>
   </m-list-item>
@@ -32,12 +38,24 @@ defineProps<Props>()
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/dropdown/item' as *;
+
 .ui-dropdown-item {
+  $prefix: 'm-dropdown-item';
+  $t: material-map($tokens, $prefix);
+
   position: relative;
+  height: g($t, 'height');
+  padding-inline: g($t, 'padding-inline');
+  color: g($t, 'color');
+
+  @include typescale(g($t, 'typography'));
+
+
 
   &--selected {
-    background-color: var(--color-secondary-container);
-    color: var(--color-on-secondary-container);
+    background-color: g($t, 'selected-bg');
+    color: g($t, 'selected-color');
 
     &::before {
       content: '';
@@ -46,12 +64,12 @@ defineProps<Props>()
       top: 15%;
       height: 70%;
       width: 4rem;
-      background-color: var(--color-primary);
+      background-color: g($t, 'selected-indicator');
       border-radius: 0 4rem 4rem 0;
     }
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-secondary-container) 92%, var(--color-on-secondary-container) 8%);
+      background-color: g($t, 'hover-selected-bg');
     }
   }
 }

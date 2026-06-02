@@ -6,7 +6,7 @@
       {
         'ui-app-bar--scrolled': isScrolled,
         'ui-app-bar--with-subtitle': hasSubtitle,
-      }
+      },
     ]"
     :style="[
       layoutItemStyles,

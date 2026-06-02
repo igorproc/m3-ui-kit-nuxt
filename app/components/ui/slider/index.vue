@@ -128,16 +128,18 @@ const {
 const trackComponent = ref<{ element: HTMLElement | null } | null>(null)
 const draggingIndex = ref<number | null>(null)
 const dragOffset = ref(0)
-let cachedTrackRect: DOMRect | null = null
 let isListening = false
+let rafId: number | null = null
 
 // --- DOM Pointer Logic ---
 const getPercent = (e: PointerEvent): number => {
-  const rect = cachedTrackRect
-  if (!rect) {
+  const el = trackComponent.value?.element
+  if (!el) {
     return 0
   }
 
+  // Re-query rect to prevent jumps if the page scrolls or layout shifts during drag
+  const rect = el.getBoundingClientRect()
   const isVertical = props.orientation === 'vertical'
 
   const rawPercent = isVertical
@@ -152,16 +154,26 @@ const onPointerMove = (e: PointerEvent) => {
     return
   }
 
-  const percent = getPercent(e)
-  const targetValue = fromPercent(percent)
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+  }
 
-  updateValue(draggingIndex.value, targetValue)
+  rafId = requestAnimationFrame(() => {
+    const percent = getPercent(e)
+    const targetValue = fromPercent(percent)
+
+    updateValue(draggingIndex.value!, targetValue)
+  })
 }
 
 const onPointerUp = () => {
   draggingIndex.value = null
   dragOffset.value = 0
-  cachedTrackRect = null
+
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
 
   cleanupDragListeners()
 }
@@ -171,8 +183,8 @@ const setupDragListeners = () => {
     return
   }
 
-  document.addEventListener('pointermove', onPointerMove)
-  document.addEventListener('pointerup', onPointerUp)
+  document.addEventListener('pointermove', onPointerMove, { passive: true })
+  document.addEventListener('pointerup', onPointerUp, { passive: true })
   isListening = true
 }
 
@@ -194,10 +206,6 @@ const onThumbPointerdown = (index: number, event: PointerEvent, thumbElement?: H
 
   event.preventDefault()
   event.stopPropagation()
-
-  if (trackComponent.value?.element) {
-    cachedTrackRect = trackComponent.value.element.getBoundingClientRect()
-  }
 
   if (thumbElement) {
     const rect = thumbElement.getBoundingClientRect()
@@ -224,7 +232,6 @@ const onTrackPointerdown = (e: PointerEvent) => {
   }
 
   const rect = el.getBoundingClientRect()
-  cachedTrackRect = rect
   const isVertical = props.orientation === 'vertical'
 
   const percent = isVertical

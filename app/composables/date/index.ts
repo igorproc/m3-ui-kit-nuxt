@@ -22,7 +22,7 @@ export interface UseDatePickerOptions {
 
 export function useDatePicker(
   modelValue: Ref<Date | string | number | null>,
-  options: UseDatePickerOptions = {}
+  options: UseDatePickerOptions = {},
 ) {
   const view = ref<ViewMode>('calendar')
   const today = dayjs()

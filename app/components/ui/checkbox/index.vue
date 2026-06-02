@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { useField } from 'vee-validate'
-import { ICONS } from '../../../../shared/constants/icons'
+import { ICONS } from '~~/shared/constants/icons'
 
 interface Props {
   path?: string

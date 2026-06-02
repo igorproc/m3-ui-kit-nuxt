@@ -6,8 +6,8 @@
       `ui-progress--${size}`,
       {
         'ui-progress--indeterminate': indeterminate,
-        'ui-progress--expressive': expressive
-      }
+        'ui-progress--expressive': expressive,
+      },
     ]"
     role="progressbar"
     :aria-valuemin="0"
@@ -19,8 +19,15 @@
       v-if="showTrack"
       class="ui-progress__track"
     >
-      <svg v-if="expressive" class="ui-progress__wave-svg" preserveAspectRatio="none">
-        <path :d="linearWavePath" class="ui-progress__wave-path-track" />
+      <svg
+        v-if="expressive"
+        class="ui-progress__wave-svg"
+        preserveAspectRatio="none"
+      >
+        <path
+          :d="linearWavePath"
+          class="ui-progress__wave-path-track"
+        />
       </svg>
     </div>
 
@@ -29,9 +36,19 @@
       class="ui-progress__bar ui-progress__primary-bar"
       :style="indeterminate ? '' : { transform: `scaleX(${clampedValue / 100})` }"
     >
-      <div v-if="!expressive" class="ui-progress__bar-inner"></div>
-      <svg v-else class="ui-progress__wave-svg" preserveAspectRatio="none">
-        <path :d="linearWavePath" class="ui-progress__wave-path-active" />
+      <div
+        v-if="!expressive"
+        class="ui-progress__bar-inner"
+      ></div>
+      <svg
+        v-else
+        class="ui-progress__wave-svg"
+        preserveAspectRatio="none"
+      >
+        <path
+          :d="linearWavePath"
+          class="ui-progress__wave-path-active"
+        />
       </svg>
     </div>
 
@@ -50,8 +67,8 @@
       `ui-progress--${size}`,
       {
         'ui-progress--indeterminate': indeterminate,
-        'ui-progress--expressive': expressive
-      }
+        'ui-progress--expressive': expressive,
+      },
     ]"
     role="progressbar"
     :aria-valuemin="0"
@@ -126,7 +143,7 @@ const circularPath = computed(() => {
     // Standard circle path (easier for dasharray than <circle> when combined with expressive paths)
     return `M 24, 24 m -${radius}, 0 a ${radius},${radius} 0 1,1 ${radius * 2},0 a ${radius},${radius} 0 1,1 -${radius * 2},0`
   }
-  
+
   // Wavy circle path
   const waves = 10
   const amplitude = props.size === 'small' ? 1.5 : 2
@@ -187,7 +204,7 @@ const linearWavePath = computed(() => {
     &.ui-progress--small { height: v.$linear-height-small; }
     &.ui-progress--medium { height: v.$linear-height-medium; }
     &.ui-progress--large { height: v.$linear-height-large; }
-    
+
     &.ui-progress--expressive {
       height: auto;
       min-height: 12rem;
@@ -246,7 +263,7 @@ const linearWavePath = computed(() => {
       stroke-linejoin: round;
       // In expressive mode, the bar itself is a full-width SVG and we clip its container
     }
-    
+
     &.ui-progress--indeterminate .ui-progress__wave-path-active {
       animation: ui-progress-linear-wave-move 1s linear infinite;
     }

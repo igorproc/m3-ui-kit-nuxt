@@ -4,7 +4,7 @@
     :class="[
       { 'ui-slider-range--vertical': orientation === 'vertical' },
       { 'ui-slider-range--disabled': disabled },
-      { 'ui-slider-range--readonly': readonly }
+      { 'ui-slider-range--readonly': readonly },
     ]"
     :style="cssVars"
   >

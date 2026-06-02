@@ -65,21 +65,17 @@
   </div>
 </template>
 
-<script setup lang="ts" generic="T extends { id?: string | number, value?: any, label?: string }">
+<script setup lang="ts" generic="T extends DropdownItem">
 import { ICONS } from '~~/shared/constants/icons'
 import { onClickOutside } from '@vueuse/core'
-import type { UiMenuOrigin } from '~/components/ui/menu/index'
-
-interface Option {
-  label: string
-  value: any
-}
+import type { UiMenuOrigin } from '~/components/ui/menu/types'
+import type { DropdownOption, DropdownItem } from './types'
 
 interface Props {
   path?: string
   label?: string
   placeholder?: string
-  options?: Option[]
+  options?: DropdownOption[]
   items?: T[]
   disabled?: boolean
   variant?: 'filled' | 'outlined'
@@ -87,9 +83,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  path: undefined,
-  label: undefined,
-  placeholder: undefined,
+  path: '',
+  label: '',
+  placeholder: '',
   options: () => [],
   items: () => [],
   disabled: false,
@@ -136,9 +132,12 @@ function isSelected(option: any) {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/dropdown' as v;
+@use '~/assets/stylesheet/components/dropdown' as *;
 
 .ui-dropdown {
+  $prefix: 'm-dropdown';
+  $t: material-map($tokens, $prefix);
+
   position: relative;
   width: 100%;
 
@@ -151,9 +150,9 @@ function isSelected(option: any) {
   }
 
   &__arrow {
-    transition: transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    font-size: v.$arrow-size;
-    color: v.$arrow-color;
+    transition: transform g($t, 'state-duration') g($t, 'state-easing');
+    font-size: g($t, 'arrow-size');
+    color: g($t, 'arrow-color');
   }
 
   &--open &__arrow {
@@ -170,12 +169,12 @@ function isSelected(option: any) {
       min-width: unset;
       top: 0;
       right: 0;
-      margin-top: v.$menu-margin-top;
+      margin-top: g($t, 'menu-margin-top');
     }
   }
 
   &__list {
-    padding: 8rem 0;
+    padding: g($t, 'list-padding-vertical') 0;
   }
 }
 </style>

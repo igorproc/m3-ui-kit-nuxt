@@ -4,11 +4,9 @@
 $tokens: (
   standard: (container: (color: map.get($theme-color-link, surface-container),
       shape: map.get($theme-shape-link, full),
-      elevation: (
-        umbra: (y: 3rem, blur: 1rem, spread: -2rem, opacity: 20%),
+      elevation: (umbra: (y: 3rem, blur: 1rem, spread: -2rem, opacity: 20%),
         penumbra: (y: 2rem, blur: 2rem, spread: 0, opacity: 14%),
-        ambient: (y: 1rem, blur: 5rem, spread: 0, opacity: 12%)
-      ),
+        ambient: (y: 1rem, blur: 5rem, spread: 0, opacity: 12%)),
       height: 64rem,
     ),
     icon: (color: (default: map.get($theme-color-link, on-surface-variant),
@@ -18,11 +16,9 @@ $tokens: (
   ),
   baseline: (container: (color: map.get($theme-color-link, surface-container),
       shape: 0,
-      elevation: (
-        umbra: (y: 3rem, blur: 1rem, spread: -2rem, opacity: 20%),
+      elevation: (umbra: (y: 3rem, blur: 1rem, spread: -2rem, opacity: 20%),
         penumbra: (y: 2rem, blur: 2rem, spread: 0, opacity: 14%),
-        ambient: (y: 1rem, blur: 5rem, spread: 0, opacity: 12%)
-      ),
+        ambient: (y: 1rem, blur: 5rem, spread: 0, opacity: 12%)),
       height: 80rem,
     ),
     with-fab: (container: (height: 72rem,

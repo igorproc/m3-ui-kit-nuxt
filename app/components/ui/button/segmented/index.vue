@@ -114,18 +114,18 @@ function selectItem(val: string | number) {
     height: 100%;
     padding-inline: g($t, 'segment-padding-inline');
     gap: g($t, 'segment-gap');
-    
+
     background-color: g($t, 'unselected-container-color');
     color: g($t, 'unselected-content-color');
-    
+
     border: none;
     border-right: 1rem solid g($t, 'container-outline-color');
     cursor: pointer;
     outline: none;
 
     @include typescale(g($t, 'segment-typography'));
-    
-    transition: 
+
+    transition:
       background-color g($t, 'motion-duration') g($t, 'motion-easing'),
       color g($t, 'motion-duration') g($t, 'motion-easing');
 
@@ -174,7 +174,7 @@ function selectItem(val: string | number) {
   .ui-segmented-button-icon-scale {
     &-enter-active,
     &-leave-active {
-      transition: 
+      transition:
         transform g($t, 'motion-duration') g($t, 'motion-easing'),
         opacity g($t, 'motion-duration') g($t, 'motion-easing');
     }
