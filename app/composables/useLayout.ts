@@ -1,17 +1,14 @@
 import {
   computed,
-  inject,
   watchEffect,
   onBeforeUnmount,
-  provide,
   reactive,
   unref,
   ref,
   isRef,
-  onServerPrefetch,
-  type InjectionKey,
   type Ref,
 } from 'vue'
+import { createContext } from '~~/shared/utils/createContext'
 
 export type LayoutArea = 'header' | 'left' | 'main' | 'right' | 'footer' | string
 
@@ -28,8 +25,10 @@ interface LayoutProvide {
   items: Map<string, LayoutItem>
 }
 
-const LayoutKey: InjectionKey<LayoutProvide> = Symbol.for('m3:layout')
-const LayoutAreaKey: InjectionKey<Ref<LayoutArea>> = Symbol.for('m3:layout-area')
+// Nullable defaults: layout-aware components degrade to a no-op when used
+// outside an `<m-layout>` (no throw), so both contexts default to `null`.
+const [useLayoutContext, provideLayoutContext] = createContext<LayoutProvide | null>('m3:layout', null)
+const [useLayoutAreaContext, provideLayoutAreaContext] = createContext<Ref<LayoutArea> | null>('m3:layout-area', null)
 
 /**
  * Root-level: called inside <m-layout> to create provide/inject context.
@@ -38,7 +37,7 @@ const LayoutAreaKey: InjectionKey<Ref<LayoutArea>> = Symbol.for('m3:layout-area'
 export function createLayout() {
   const items = reactive<Map<string, LayoutItem>>(new Map())
 
-  provide(LayoutKey, {
+  provideLayoutContext({
     register: (item) => {
       const existing = items.get(item.id)
       if (existing && !item.sizeToken && existing.sizeToken) {
@@ -77,7 +76,7 @@ export function createLayout() {
  * Provides area context for children inside renderless layout wrappers.
  */
 export function provideLayoutArea(area: LayoutArea | Ref<LayoutArea>) {
-  provide(LayoutAreaKey, isRef(area) ? area : ref(area))
+  provideLayoutAreaContext(isRef(area) ? area : ref(area))
 }
 
 /**
@@ -92,8 +91,8 @@ export function useLayoutItem(options: {
   sizeToken?: string | Ref<string>
   order?: number
 }) {
-  const layout = inject(LayoutKey, null)
-  const parentArea = inject(LayoutAreaKey, null)
+  const layout = useLayoutContext()
+  const parentArea = useLayoutAreaContext()
 
   if (!layout) {
     return { layoutItemStyles: computed(() => ({})) }

@@ -2,7 +2,7 @@
  * @module useModal
  *
  * @remarks
- * Composable for managing modal and overlay state. It provides a local Context API 
+ * Composable for managing modal and overlay state. It provides a local Context API
  * wrapper around `vue-final-modal` (VFM) to manage atomic, deeply nested modals.
  *
  * @example
@@ -15,8 +15,7 @@
  */
 import type { Ref } from 'vue'
 import { useModal as useVfmModal } from 'vue-final-modal'
-
-export const M3_MODAL_KEY = Symbol('m3-modal-context')
+import { createContext } from '~~/shared/utils/createContext'
 
 export interface M3ModalContext {
   id: string
@@ -25,6 +24,10 @@ export interface M3ModalContext {
   close: () => void
 }
 
+// Nullable context: a root modal has no parent (`null`), so the default is
+// `null` rather than throw-on-missing — child modals inject the nearest parent.
+const [useModalContext, provideModalContext] = createContext<M3ModalContext | null>('m3:modal', null)
+
 /**
  * Composable for registering a modal component in the Context API tree.
  *
@@ -32,7 +35,7 @@ export interface M3ModalContext {
  * @returns The modal context including hierarchy refs and close controls.
  *
  * @remarks
- * Modals automatically inject their parent context or can accept it explicitly 
+ * Modals automatically inject their parent context or can accept it explicitly
  * for programmatic invocations.
  */
 export function useModal(options?: {
@@ -44,7 +47,7 @@ export function useModal(options?: {
   // Inject parent context from template tree, or allow explicit parent override for programmatic modals
   const parent = options?.parent !== undefined
     ? options.parent
-    : inject<M3ModalContext | null>(M3_MODAL_KEY, null)
+    : useModalContext()
 
   const children = ref<M3ModalContext[]>([])
 
@@ -70,12 +73,12 @@ export function useModal(options?: {
   if (parent) {
     parent.children.value.push(context)
     onBeforeUnmount(() => {
-      parent.children.value = parent.children.value.filter((child) => child.id !== id)
+      parent.children.value = parent.children.value.filter(child => child.id !== id)
     })
   }
 
   // Provide for any deeply nested children
-  provide(M3_MODAL_KEY, context)
+  provideModalContext(context)
 
   return {
     id,
@@ -116,8 +119,8 @@ export function openModal<T = unknown>(
       component,
       attrs: {
         ...props,
-        parent: parentContext, // Explicitly pass parent context to the dynamically rendered component
-        modelValue: true,
+        'parent': parentContext, // Explicitly pass parent context to the dynamically rendered component
+        'modelValue': true,
         'onUpdate:modelValue': (value: boolean) => {
           if (!value && !resolved) {
             resolved = true
@@ -141,9 +144,9 @@ export function openModal<T = unknown>(
         },
         'onClosed': () => {
           destroy()
-        }
+        },
       },
-      slots
+      slots,
     })
 
     open()
