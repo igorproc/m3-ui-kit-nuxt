@@ -43,14 +43,14 @@ Legend — effort: **S** small · **M** medium · **L** large.
 
 ## Phase 1 — Shared headless primitives  *(confirm porting depth in chat before each)*
 
-- [ ] **1.1** `useSelection` (single/multiple/mandatory) — kit composable inspired by v0 `createSelection`/`createGroup`. Used by tabs, toolbar, radio-group, dropdown, table, nav-bar/rail. **(L)**
-- [ ] **1.2** `useGroup` — parent↔children registration over `createContext` + a small reactive registry (children self-register, parent owns active/selected state). **(L)**
-- [ ] **1.3** `usePopover` — consolidate anchor/positioning math shared by menu + tooltip + dropdown (extend the existing `menu/useMenu.ts` FSM rather than duplicate). **(M)**
-- [ ] **1.4** `useDrag` — pointer/touch drag-gesture composable (delta, threshold, start/move/end) shared by slider + sheet; listeners via `useGlobalListener`. **(M)**
-- [ ] **1.5** `useField` — form-binding wrapper over `vee-validate`/`useFormBuilder` shared by checkbox, radio, text-field, search, switch. **(M)**
-- [ ] **1.6** `useRaf` + `useTimer` — port from v0 (animation frame + interval with cleanup) for loading, shape, progress. **(S)**
-- [ ] **1.7** Refactor `app/composables/useFormBuilder.ts` — eliminate `any` (type `validationSchema` against yup `AnyObjectSchema`/`InferType`, type `resolveInitialValues` and the `field.type` switch), drop the bare `console.error` (surface via `onError`/return), tighten `FormBuilderReturn` typing, keep `defineFormBuilder` factory. **(M)**
-- [ ] **1.8** Config-driven form generation — build `useFormSchema(config)` + a thin `<MFormRenderer :config>` example that, from a passed field config (type/name/label/rules/options), derives the yup schema, drives `useFormBuilder`, and renders the matching kit inputs (text-field/checkbox/radio/switch/search) via the new `useField`. Atomic: renderer orchestrator + per-field-type leaf renderers. Confirm config shape with user before building. **(M)**
+- [x] **1.1** `useSelection` (single/multiple/mandatory) — **delivered as the full registry-backed v0 chain** (Variant B, per user) in `app/composables/registry/`: `createRegistry` → `createModel` → `createSelection` (canonical `useSelection`) → `createSingle`. Foundation in `shared/utils/` (`createTrinity`, `helpers`, `instance`, `logger` shim, `useId`) + `shared/types/registry.ts`. Used by tabs, toolbar, radio-group, dropdown, table, nav-bar/rail. **(L)**
+- [x] **1.2** `useGroup` — **delivered** as `createGroup`/`createGroupContext`/`useGroup` in `app/composables/registry/createGroup.ts` (batch select + tri-state mixed/indeterminate), backed by `useProxyRegistry` over `createContext`/`createTrinity`. Children self-register; parent owns selected/mixed state. **(L)**
+- [x] **1.3** `usePopover` — built `app/composables/popover/usePopover.ts`: shared FSM (`status`/`isOpen`/`open`/`close`/`toggle`/`onAfter*`) + positioning (CSS anchor `position-area` **and** JS fallback with viewport flip/clamp) + **opt-in DOM ownership** (pass `trigger`/`surface` refs → measures + repositions on scroll/resize via `useGlobalListener`). `menu/useMenu.ts` rewritten as a thin wrapper over it (FSM/rect/anchor shared; menu's exact `menuStyle`/`origin→position-area`/`--ui-menu-origin` kept byte-for-byte → `menu/index.vue` untouched). tooltip/dropdown migrate in Phase 2 (2.4/2.10/2.11); hover-delay deferred to 1.6. **(M)**
+- [x] **1.4** `useDrag` — pointer/touch drag-gesture composable (delta, threshold, start/move/end) shared by slider + sheet; listeners via `useGlobalListener`. **(M)**
+- [x] **1.5** `useField` — form-binding wrapper over `vee-validate`/`useFormBuilder` shared by checkbox, radio, text-field, search, switch. **(M)**
+- [x] **1.6** `useRaf` + `useTimer` — port from v0 (animation frame + interval with cleanup) for loading, shape, progress. **(S)**
+- [x] **1.7** Refactor `app/composables/useFormBuilder.ts` — eliminate `any` (type `validationSchema` against yup `AnyObjectSchema`/`InferType`, type `resolveInitialValues` and the `field.type` switch), drop the bare `console.error` (surface via `onError`/return), tighten `FormBuilderReturn` typing, keep `defineFormBuilder` factory. **(M)**
+- [x] **1.8** Config-driven form generation — build `useFormSchema(config)` + a thin `<MFormRenderer :config>` example that, from a passed field config (type/name/label/rules/options), derives the yup schema, drives `useFormBuilder`, and renders the matching kit inputs (text-field/checkbox/radio/switch/search) via the new `useField`. Atomic: renderer orchestrator + per-field-type leaf renderers. Confirm config shape with user before building. **(M)**
 
 ## Phase 2 — Per-component refactors  *(SCSS axis + logic axis together)*
 
@@ -105,5 +105,26 @@ Legend — effort: **S** small · **M** medium · **L** large.
 - [ ] **3.2** Confirm every global DOM listener routes through `useEventListener`/`useGlobalListener`/`useClickOutside` (no raw `addEventListener` left in `.vue`). **(S)**
 - [ ] **3.3** `npm run lint` + `npm run lint:style` = 0 errors; `npm run test` green. **(M)**
 - [ ] **3.4** Add a dated summary in `.cursor/summary/` capturing the refactor for the next session. **(S)**
-</content>
-</invoke>
+
+## Phase 4 — Registry-backed selection ✅ (folded into Phase 1)
+
+> **Status.** Originally drafted as a *future* upgrade path (Variant B), but per the
+> user it was implemented up front as part of **1.1/1.2**. The full v0 chain now
+> lives in `app/composables/registry/` — `createRegistry` (with the event bus) →
+> `createModel` (value store + `enroll`/`apply`) → `createSelection` (canonical
+> `useSelection`, `mandatory`/`'force'`) → `createSingle` (singular computeds) and
+> `createGroup` (batch + tri-state, via `useProxyRegistry`). Foundation in
+> `shared/utils/` (`createTrinity`, `helpers`, `instance`, `logger` shim, `useId`)
+> and `shared/types/registry.ts`.
+>
+> **Deviations from a literal v0 port:** `useLogger` replaced by a dev-`console`
+> shim (no `createPlugin`/adapters subtree); `__DEV__` → `import.meta.dev`; native
+> Vue `useId`; namespaces re-prefixed `m3:*`. The registry **event subsystem was
+> kept** (initially slated to drop) because `useProxyRegistry`, used by
+> `createGroup`, subscribes to it. JSDoc condensed; runtime semantics unchanged.
+>
+> **Note:** `createSelection.apply()` uses `Set.prototype.difference`. Type-checks
+> fine (kit `lib` is `ESNext`, which includes the es2025 `Set.difference` decl; TS
+> 6.0.3). Runtime needs a modern engine (Node 22+/recent browsers) — true of the
+> Nuxt 4 toolchain already.
+

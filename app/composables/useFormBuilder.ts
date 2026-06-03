@@ -1,3 +1,18 @@
+/**
+ * @module useFormBuilder
+ *
+ * @remarks
+ * Universal composable that wraps `vee-validate` + `yup` boilerplate. It owns
+ * the `pending`/`isError` submission state, auto-derives initial values from the
+ * schema, and exposes a typed `submit` handler. `defineFormBuilder` is a thin
+ * factory for encapsulating reusable, props-driven forms.
+ *
+ * @example
+ * ```ts
+ * const schema = yup.object({ name: yup.string().required() })
+ * const form = useFormBuilder({ validationSchema: schema, onSubmit: save })
+ * ```
+ */
 import { ref, type Ref } from 'vue'
 import { useForm } from 'vee-validate'
 import type { FormOptions, FormContext, FormErrors } from 'vee-validate'
@@ -5,18 +20,18 @@ import type { AnyObjectSchema, InferType } from 'yup'
 
 // --- Types ---
 
-export interface FormBuilderOptions<TValues extends Record<string, any>>
+export interface FormBuilderOptions<TValues extends Record<string, unknown>>
   extends Omit<FormOptions<TValues>, 'validationSchema' | 'initialValues'> {
   /**
-   * Validation schema (e.g., yup.object())
+   * Validation schema (a yup object schema, e.g. `yup.object({ … })`).
    */
-  validationSchema: any
+  validationSchema: AnyObjectSchema
 
   /**
    * Initial values for the form.
    * If not provided, they will be generated from the schema.
    */
-  initialValues?: Partial<TValues> | Record<string, any>
+  initialValues?: Partial<TValues>
 
   /**
    * Automatically parse schema to generate default empty values.
@@ -40,7 +55,7 @@ export interface FormBuilderOptions<TValues extends Record<string, any>>
   onValidationError?: (errors: FormErrors<TValues>) => void
 }
 
-export type FormBuilderReturn<TValues extends Record<string, any>> = FormContext<TValues> & {
+export type FormBuilderReturn<TValues extends Record<string, unknown>> = FormContext<TValues> & {
   /** Reactive state indicating if the form is currently submitting */
   pending: Ref<boolean>
   /** Reactive state indicating if the last submission threw an error */
@@ -49,22 +64,27 @@ export type FormBuilderReturn<TValues extends Record<string, any>> = FormContext
   submit: ReturnType<FormContext<TValues>['handleSubmit']>
 }
 
+/** The string union yup exposes on `field.type` for the schema fields we support. */
+type YupFieldType = 'string' | 'number' | 'boolean' | 'array' | 'object' | 'date' | 'mixed'
+
 // --- Utils ---
 
 /**
  * Extracts initial empty values from a schema based on field types.
  */
-export function resolveInitialValues<TValues extends Record<string, any>>(
-  schema: any,
-  fallbackValues: Partial<TValues> | Record<string, any> = {},
+export function resolveInitialValues<TValues extends Record<string, unknown>>(
+  schema: AnyObjectSchema | undefined,
+  fallbackValues: Partial<TValues> = {},
 ): Partial<TValues> {
-  const initial: Record<string, any> = { ...fallbackValues }
+  const initial: Record<string, unknown> = { ...fallbackValues }
 
   if (!schema || !schema.fields) {
     return initial as Partial<TValues>
   }
 
-  for (const [key, field] of Object.entries(schema.fields as Record<string, any>)) {
+  const fields = schema.fields as Record<string, { type?: YupFieldType }>
+
+  for (const [key, field] of Object.entries(fields)) {
     // Skip if value is already provided
     if (initial[key] !== undefined) {
       continue
@@ -99,7 +119,7 @@ export function resolveInitialValues<TValues extends Record<string, any>>(
  * Universal composable for building forms with vee-validate and yup.
  * Hides boilerplate variables and provides pending/error states.
  */
-export function useFormBuilder<TValues extends Record<string, any> = Record<string, any>>(
+export function useFormBuilder<TValues extends Record<string, unknown> = Record<string, unknown>>(
   options: FormBuilderOptions<TValues>,
 ): FormBuilderReturn<TValues> {
   const pending = ref(false)
@@ -107,12 +127,14 @@ export function useFormBuilder<TValues extends Record<string, any> = Record<stri
 
   const initialValues = options.autoGenerateInitialValues !== false
     ? resolveInitialValues<TValues>(options.validationSchema, options.initialValues)
-    : (options.initialValues as Partial<TValues> | undefined)
+    : options.initialValues
 
   const form = useForm<TValues>({
     ...options,
     validationSchema: options.validationSchema,
-    initialValues: initialValues as any,
+    // vee-validate's `initialValues` expects `MaybeRef<TValues>` while we only
+    // ever resolve a `Partial<TValues>`; the narrowing is intentional here.
+    initialValues: initialValues as FormOptions<TValues>['initialValues'],
     keepValuesOnUnmount: options.keepValuesOnUnmount ?? false,
   })
 
@@ -132,11 +154,9 @@ export function useFormBuilder<TValues extends Record<string, any> = Record<stri
 
         if (options.onError) {
           options.onError(error, values as TValues)
-        } else {
-          console.error('[useFormBuilder] Form submission error:', error)
         }
 
-        throw error // Rethrow to allow handling in the component if needed
+        throw error // Rethrow to surface the failure when no onError is provided
       } finally {
         pending.value = false
       }
@@ -169,15 +189,13 @@ export function useFormBuilder<TValues extends Record<string, any> = Record<stri
  *   return { ...form, myComputed };
  * });
  */
-export function defineFormBuilder<TProps, TValues extends Record<string, any>, TResult>(
+export function defineFormBuilder<TProps, TValues extends Record<string, unknown>, TResult>(
   setup: (
     props: TProps,
     build: (options: FormBuilderOptions<TValues>) => FormBuilderReturn<TValues>,
   ) => TResult,
 ) {
-  return (props: TProps): TResult => {
-    return setup(props, useFormBuilder)
-  }
+  return (props: TProps): TResult => setup(props, useFormBuilder)
 }
 
 // --- Type Helpers ---

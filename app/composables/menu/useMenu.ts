@@ -1,21 +1,20 @@
-import { shallowRef, computed, watch, useId } from 'vue'
+import { computed } from 'vue'
 import type { Ref } from 'vue'
 import type { UiMenuOrigin } from '~/components/ui/menu/types'
+import { usePopover } from '~/composables/popover/usePopover'
+import type { PopoverRect, PopoverStatus } from '~/composables/popover/usePopover'
 
 /**
  * @module useMenu
  *
  * @remarks
- * Finite State Machine for floating menu surfaces (menus, dropdowns,
- * split-button overflows). Acts as a pure state machine: it owns the
- * open/close lifecycle and the positioning math, but never touches the
- * DOM. All DOM interaction (measuring the trigger rect, scroll/resize
- * listeners, outside-click detection) is the responsibility of the
- * consumer component, mirroring the architectural split of `useSlider`.
- *
- * The `model` ref is the single source of truth. `status` follows it as
- * an animation guard, so a menu can always be closed (or re-opened)
- * mid-transition without getting stuck in a half-animated state.
+ * Thin adapter over the shared {@link usePopover} primitive, preserving the
+ * menu's exact public surface and CSS output. The open/close FSM, trigger rect
+ * and anchor-support detection now live in `usePopover` (shared with tooltip and
+ * dropdown), while this wrapper keeps the menu-specific `menuStyle` math
+ * (`origin → position-area`, the `--ui-menu-origin` custom property, the
+ * `absolute` early-return and the right-edge JS fallback) byte-for-byte, so
+ * `menu/index.vue` is unchanged.
  *
  * @example
  * ```ts
@@ -29,24 +28,16 @@ import type { UiMenuOrigin } from '~/components/ui/menu/types'
  */
 
 /** Lifecycle states. `opening`/`closing` are transient animation guards. */
-export type MenuStatus = 'closed' | 'opening' | 'open' | 'closing'
+export type MenuStatus = PopoverStatus
 
 /** Viewport-relative geometry of the trigger, measured by the component. */
-export interface MenuRect {
-  top: number
-  bottom: number
-  left: number
-  right: number
-  width: number
-}
+export type MenuRect = PopoverRect
 
 export interface UseMenuOptions {
   absolute: () => boolean
   origin: () => UiMenuOrigin
   matchWidth: () => boolean
 }
-
-const EMPTY_RECT: MenuRect = { top: 0, bottom: 0, left: 0, right: 0, width: 0 }
 
 const Z_INDEX = '999'
 
@@ -55,9 +46,7 @@ const Z_INDEX = '999'
  *
  * @remarks
  * Default (left) origins align the surface to the trigger's left edge and
- * span rightwards (`span-right`); right origins mirror that. The legacy
- * `bottom left` value pushed the surface off the trigger's left edge,
- * which is what made dropdowns render flush against the viewport edge.
+ * span rightwards (`span-right`); right origins mirror that.
  */
 function originToArea(origin: UiMenuOrigin): string {
   if (origin.includes('right')) {
@@ -70,65 +59,7 @@ function originToArea(origin: UiMenuOrigin): string {
 }
 
 export function useMenu(model: Ref<boolean>, options: UseMenuOptions) {
-  const anchorName = `--menu-anchor-${useId()}`
-
-  const status = shallowRef<MenuStatus>(model.value ? 'open' : 'closed')
-  const rect = shallowRef<MenuRect>({ ...EMPTY_RECT })
-
-  const isAnchorSupported = shallowRef(false)
-  if (import.meta.client) {
-    isAnchorSupported.value = typeof CSS !== 'undefined'
-      && typeof CSS.supports === 'function'
-      && (CSS.supports('position-anchor: --a') || CSS.supports('anchor-name: --a'))
-  }
-
-  // Surface stays mounted for the whole non-closed window so the leave
-  // transition can play; `isOpen` is the v-if/teleport gate.
-  const isOpen = computed(() => status.value !== 'closed')
-
-  // `model` is the source of truth; `status` is only an animation guard,
-  // so transitions never block a close (or a re-open).
-  watch(model, (val) => {
-    status.value = val ? 'opening' : 'closing'
-  })
-
-  function open() {
-    if (!model.value) {
-      model.value = true
-    }
-  }
-
-  function close() {
-    if (model.value) {
-      model.value = false
-    }
-  }
-
-  function toggle() {
-    if (model.value) {
-      close()
-    } else {
-      open()
-    }
-  }
-
-  // Settle the FSM once Vue's <transition> finishes, but only if the
-  // model hasn't flipped again mid-animation.
-  function onAfterEnter() {
-    if (model.value) {
-      status.value = 'open'
-    }
-  }
-
-  function onAfterLeave() {
-    if (!model.value) {
-      status.value = 'closed'
-    }
-  }
-
-  function setRect(next: MenuRect) {
-    rect.value = next
-  }
+  const popover = usePopover(model)
 
   /** Pure positioning math derived from the measured trigger rect. */
   const menuStyle = computed<Record<string, string>>(() => {
@@ -138,14 +69,13 @@ export function useMenu(model: Ref<boolean>, options: UseMenuOptions) {
       return { '--ui-menu-origin': origin }
     }
 
-    // Preferred path: let the browser anchor the surface natively, which
-    // removes scroll re-positioning lag entirely.
-    if (isAnchorSupported.value) {
+    // Preferred path: let the browser anchor the surface natively.
+    if (popover.isAnchorSupported.value) {
       const style: Record<string, string> = {
         'position': 'fixed',
         'inset': 'unset',
         'margin': 'unset',
-        'position-anchor': anchorName,
+        'position-anchor': popover.anchorName,
         'position-area': originToArea(origin),
         'z-index': Z_INDEX,
         '--ui-menu-origin': origin,
@@ -157,37 +87,38 @@ export function useMenu(model: Ref<boolean>, options: UseMenuOptions) {
     }
 
     // JS fallback: pin to the measured rect, re-measured on scroll/resize.
+    const rect = popover.rect.value
     const style: Record<string, string> = {
       'position': 'fixed',
-      'top': `${rect.value.bottom}px`,
+      'top': `${rect.bottom}px`,
       'z-index': Z_INDEX,
       '--ui-menu-origin': origin,
     }
 
     if (origin.includes('right') && import.meta.client) {
-      style.right = `${window.innerWidth - rect.value.right}px`
+      style.right = `${window.innerWidth - rect.right}px`
     } else {
-      style.left = `${rect.value.left}px`
+      style.left = `${rect.left}px`
     }
 
     if (options.matchWidth()) {
-      style.width = `${rect.value.width}px`
+      style.width = `${rect.width}px`
     }
 
     return style
   })
 
   return {
-    anchorName,
-    status,
-    isOpen,
-    isAnchorSupported,
+    anchorName: popover.anchorName,
+    status: popover.status,
+    isOpen: popover.isOpen,
+    isAnchorSupported: popover.isAnchorSupported,
     menuStyle,
-    open,
-    close,
-    toggle,
-    onAfterEnter,
-    onAfterLeave,
-    setRect,
+    open: popover.open,
+    close: popover.close,
+    toggle: popover.toggle,
+    onAfterEnter: popover.onAfterEnter,
+    onAfterLeave: popover.onAfterLeave,
+    setRect: popover.setRect,
   }
 }
