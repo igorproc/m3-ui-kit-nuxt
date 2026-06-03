@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-click-outside="closeMenu"
-    class="ui-split-button"
-  >
+  <div class="ui-split-button">
     <div class="ui-split-button__wrapper">
       <UiButton
         class="ui-split-button__action"
@@ -36,6 +33,7 @@
       absolute
       origin="top"
       class="ui-split-button__menu-container"
+      @click-outside="closeMenu"
     >
       <button
         v-for="(item, index) in items"
@@ -82,8 +80,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'click'): void
-  (e: 'dropdown'): void
+  (e: 'click' | 'dropdown'): void
   (e: 'select', item: UiSplitMenuItem): void
 }>()
 
@@ -140,11 +137,9 @@ function handleItemClick(item: UiSplitMenuItem) {
     }
   }
 
+  // The menu teleports out and positions itself (fixed / CSS anchor); only
+  // its intrinsic sizing belongs here, never layout offsets.
   &__menu-container {
-    position: absolute;
-    top: 100%;
-    right: 0; // Align right side by default or let ui-menu handle it
-    margin-top: 4rem;
     min-width: 150rem;
   }
 }

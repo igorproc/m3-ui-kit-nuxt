@@ -51,8 +51,6 @@ defineProps<Props>()
 
   @include typescale(g($t, 'typography'));
 
-
-
   &--selected {
     background-color: g($t, 'selected-bg');
     color: g($t, 'selected-color');

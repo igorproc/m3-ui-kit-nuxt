@@ -467,6 +467,21 @@
           </UiDropdown>
           <span class="demo-material__preview-label">Custom Items (Slot Filled)</span>
         </div>
+
+        <!-- Multiple Dropdown (chips, menu stays open) -->
+        <div
+          class="demo-material__preview-container demo-material__preview-container--button"
+          style="min-width: 320rem; align-items: stretch;"
+        >
+          <UiDropdown
+            v-model="dropdownValMultiple"
+            label="Multiple (Chips)"
+            variant="outlined"
+            multiple
+            :options="dropdownOptions"
+          />
+          <span class="demo-material__preview-label">Multi-select (Chips Slot)</span>
+        </div>
       </div>
     </div>
   </section>
@@ -603,6 +618,7 @@ const dropdownValFilled = ref('option1')
 const dropdownValOutlined = ref('option2')
 const dropdownValDisabled = ref('option1')
 const dropdownValCustom = ref('custom1')
+const dropdownValMultiple = ref<string[]>(['option1', 'option3'])
 
 const dropdownOptions = [
   { label: 'Option 1', value: 'option1' },

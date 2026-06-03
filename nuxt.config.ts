@@ -3,18 +3,6 @@ import type { MaterialKitOptions } from '#shared/types/kit'
 
 const { resolve } = createResolver(import.meta.url)
 
-const VITE_CONFIG = {
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: `
-          @use "${resolve('./app/assets/stylesheet/additional.scss').replace(/\\/g, '/')}" as *;
-        `,
-      },
-    },
-  },
-}
-
 export default defineNuxtConfig({
   modules: [
     // https://github.com/nuxt/icon
@@ -63,7 +51,26 @@ export default defineNuxtConfig({
   appDir: resolve('./app'),
   features: { inlineStyles: false },
 
-  vite: VITE_CONFIG,
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,
+      },
+      hmr: {
+        protocol: 'ws',
+        host: String(process.env.HOST) || '0.0.0.0',
+      },
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `
+          @use "${resolve('./app/assets/stylesheet/additional.scss').replace(/\\/g, '/')}" as *;
+        `,
+        },
+      },
+    },
+  },
 
   icon: {
     provider: 'server',
