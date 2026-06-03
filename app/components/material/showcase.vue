@@ -484,6 +484,86 @@
         </div>
       </div>
     </div>
+
+    <!-- Auto-built Form (MFormRenderer) -->
+    <div class="demo-material__showcase-item">
+      <h3 class="demo-material__showcase-subtitle">
+        Auto-built Form (MFormRenderer)
+      </h3>
+
+      <div class="demo-material__form-demo">
+        <!-- Field manager -->
+        <div class="demo-material__form-builder">
+          <span class="demo-material__preview-label">Fields ({{ formFields.length }})</span>
+
+          <ul class="demo-material__field-list">
+            <li
+              v-for="field in formFields"
+              :key="field.name"
+              class="demo-material__field-row"
+            >
+              <span class="demo-material__field-tag">{{ field.type }}</span>
+              <span class="demo-material__field-name">{{ field.label || field.name }}</span>
+              <UiButtonIcon
+                variant="text"
+                @click="removeField(field.name)"
+              >
+                <m-icon name="ic:baseline-close" />
+              </UiButtonIcon>
+            </li>
+          </ul>
+
+          <div class="demo-material__field-adder">
+            <UiDropdown
+              v-model="newFieldType"
+              label="Field type"
+              :options="fieldTypeOptions"
+            />
+            <m-text-field
+              v-model="newFieldName"
+              label="Name (schema key)"
+            />
+            <m-text-field
+              v-model="newFieldLabel"
+              label="Label"
+            />
+            <m-checkbox
+              v-model="newFieldRequired"
+              label="Required"
+            />
+            <m-button
+              variant="tonal"
+              @click="addField"
+            >
+              <template #prepend>
+                <m-icon :name="ICONS.add" />
+              </template>
+              Add field
+            </m-button>
+            <span
+              v-if="addFieldError"
+              class="demo-material__field-error"
+            >
+              {{ addFieldError }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Generated form -->
+        <div class="demo-material__form-preview">
+          <m-form-renderer
+            :key="formKey"
+            :config="formFields"
+            :on-submit="onFormSubmit"
+          />
+
+          <pre
+            v-if="submittedValues"
+            class="demo-material__form-result"
+          >{{ JSON.stringify(submittedValues, null, 2) }}</pre>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Demo Overlays Layer -->
@@ -580,8 +660,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
+import type { FormFieldConfig, FormFieldType } from '~/composables/useFormSchema'
 
 import UiButtonSplit from '~/components/ui/button/split/index.vue'
 import UiButtonFab from '~/components/ui/button/fab/index.vue'
@@ -631,6 +712,92 @@ const dropdownCustomItems = [
   { id: 'custom2', name: 'Notification Center', desc: 'Control alerts and messages', icon: 'ic:baseline-notifications' },
   { id: 'custom3', name: 'Security Preferences', desc: 'Update passwords and auth', icon: 'ic:baseline-security' },
 ]
+
+// --- Auto-built form (MFormRenderer) demo ---
+const formFields = ref<FormFieldConfig[]>([
+  { type: 'text', name: 'fullName', label: 'Full name', rules: { required: true, min: 2 } },
+  { type: 'text', name: 'email', label: 'Email', rules: { required: true, email: true } },
+  { type: 'number', name: 'age', label: 'Age', rules: { min: 18, max: 120 } },
+  { type: 'checkbox', name: 'subscribe', label: 'Subscribe to newsletter' },
+  { type: 'switch', name: 'darkMode', label: 'Enable dark mode' },
+  {
+    type: 'radio',
+    name: 'plan',
+    label: 'Plan',
+    rules: { required: true },
+    options: [
+      { label: 'Free', value: 'free' },
+      { label: 'Pro', value: 'pro' },
+    ],
+  },
+])
+
+// useFormSchema runs once at MFormRenderer setup, so changing the field set
+// remounts the renderer via this key to rebuild the schema/form.
+const formKey = computed(() => formFields.value.map(field => `${field.type}:${field.name}`).join('|'))
+
+const submittedValues = ref<Record<string, unknown> | null>(null)
+
+function onFormSubmit(values: Record<string, unknown>) {
+  submittedValues.value = values
+}
+
+const fieldTypeOptions = [
+  { label: 'Text', value: 'text' },
+  { label: 'Number', value: 'number' },
+  { label: 'Checkbox', value: 'checkbox' },
+  { label: 'Switch', value: 'switch' },
+  { label: 'Radio', value: 'radio' },
+  { label: 'Textarea', value: 'textarea' },
+  { label: 'Search', value: 'search' },
+]
+
+const newFieldType = ref<FormFieldType>('text')
+const newFieldName = ref('')
+const newFieldLabel = ref('')
+const newFieldRequired = ref(false)
+const addFieldError = ref('')
+
+function addField() {
+  const name = newFieldName.value.trim()
+
+  if (!name) {
+    addFieldError.value = 'Name is required'
+    return
+  }
+  if (formFields.value.some(field => field.name === name)) {
+    addFieldError.value = 'Name must be unique'
+    return
+  }
+
+  const field: FormFieldConfig = {
+    type: newFieldType.value,
+    name,
+    label: newFieldLabel.value.trim() || name,
+  }
+
+  if (newFieldRequired.value) {
+    field.rules = { required: true }
+  }
+  if (newFieldType.value === 'radio') {
+    field.options = [
+      { label: 'Option A', value: 'a' },
+      { label: 'Option B', value: 'b' },
+    ]
+  }
+
+  formFields.value = [...formFields.value, field]
+  submittedValues.value = null
+  newFieldName.value = ''
+  newFieldLabel.value = ''
+  newFieldRequired.value = false
+  addFieldError.value = ''
+}
+
+function removeField(name: string) {
+  formFields.value = formFields.value.filter(field => field.name !== name)
+  submittedValues.value = null
+}
 </script>
 
 <style lang="scss">
@@ -716,6 +883,88 @@ const dropdownCustomItems = [
   &__preview-label {
     @include typescale('label-medium');
     color: var(--color-on-surface-variant);
+  }
+
+  &__form-demo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24rem;
+    align-items: flex-start;
+  }
+
+  &__form-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 16rem;
+    flex: 1;
+    min-width: 320rem;
+  }
+
+  &__field-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8rem;
+  }
+
+  &__field-row {
+    display: flex;
+    align-items: center;
+    gap: 8rem;
+  }
+
+  &__field-tag {
+    @include typescale('label-small');
+    padding: 2rem 8rem;
+    border-radius: 999rem;
+    border: 1rem solid var(--color-outline-variant);
+    color: var(--color-on-surface-variant);
+    text-transform: uppercase;
+  }
+
+  &__field-name {
+    flex: 1;
+    color: var(--color-on-surface);
+  }
+
+  &__field-adder {
+    display: flex;
+    flex-direction: column;
+    gap: 12rem;
+    align-items: stretch;
+    padding: 16rem;
+    border: 1rem solid var(--color-outline-variant);
+    border-radius: 12rem;
+  }
+
+  &__field-error {
+    @include typescale('label-small');
+    color: var(--color-error);
+  }
+
+  &__form-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 16rem;
+    flex: 1;
+    min-width: 320rem;
+    padding: 24rem;
+    border: 1rem solid var(--color-outline-variant);
+    border-radius: 12rem;
+    background-color: var(--color-surface);
+  }
+
+  &__form-result {
+    @include typescale('body-small');
+    margin: 0;
+    padding: 16rem;
+    border-radius: 12rem;
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+    overflow: auto;
+    white-space: pre-wrap;
   }
 }
 </style>
