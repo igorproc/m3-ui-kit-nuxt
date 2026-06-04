@@ -62,33 +62,35 @@ function onUpdateModelValue(value: boolean) {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/navigation-drawer' as v;
+@use '~/assets/stylesheet/components/navigation-drawer/index' as t;
+
+$t: material-map(t.$tokens, 'md-navigation-drawer');
 
 .ui-navigation-drawer {
   &__surface {
     display: flex;
     flex-direction: column;
-    gap: v.$surface-gap;
-    min-width: v.$surface-min-width;
+    gap: g($t, 'surface-gap');
+    min-width: g($t, 'surface-min-width');
     width: fit-content;
     height: 100%;
-    padding: v.$surface-padding;
-    border-radius: v.$surface-border-radius-left;
-    background-color: v.$surface-bg-color;
-    color: v.$surface-text-color;
-    box-shadow: v.$surface-shadow;
+    padding: g($t, 'surface-padding');
+    border-radius: g($t, 'surface-shape-left');
+    background-color: g($t, 'surface-color');
+    color: g($t, 'surface-text-color');
+    box-shadow: g($t, 'surface-shadow');
   }
 
   &__header {
-    padding: v.$header-padding;
+    padding: g($t, 'header-padding');
 
-    @include typescale(v.$header-text-type);
+    @include typescale(g($t, 'header-typography'));
   }
 }
 
 .ui-navigation-drawer--right {
   .ui-navigation-drawer__surface {
-    border-radius: v.$surface-border-radius-right;
+    border-radius: g($t, 'surface-shape-right');
   }
 }
 </style>

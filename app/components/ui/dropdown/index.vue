@@ -3,116 +3,69 @@
     class="ui-dropdown"
     :class="{ 'ui-dropdown--open': isOpen, 'ui-dropdown--disabled': disabled }"
   >
-    <div
-      class="ui-dropdown__trigger"
-      @click="toggle"
+    <dropdown-trigger
+      :path="path"
+      :label="label"
+      :placeholder="placeholder"
     >
-      <m-text-field
-        :path="path || ''"
-        :label="label"
-        :placeholder="placeholder"
-        :model-value="multiple ? '' : selectedLabel"
-        :focused="fieldFocused"
-        readonly
-        :disabled="disabled"
-        :variant="variant"
-        class="ui-dropdown__field"
-        :class="{ 'ui-dropdown__field--multiple': multiple && selectedItems.length }"
-      >
-        <template
-          v-if="multiple && selectedItems.length"
-          #prepend
-        >
-          <div class="ui-dropdown__chips">
-            <!-- Whole-area override; defaults to a chip per selected item. -->
+      <template #chips>
+        <dropdown-selected-chips>
+          <template #selected="slotProps">
             <slot
               name="selected"
-              :items="selectedItems"
-              :remove="remove"
-            >
-              <template
-                v-for="(item, index) in selectedItems"
-                :key="item.value ?? item.id ?? index"
-              >
-                <!-- Per-item wrapper; falls back to an input chip with a remove affordance. -->
-                <slot
-                  name="chip"
-                  :item="item"
-                  :index="index"
-                  :remove="() => remove(item)"
-                >
-                  <m-chip
-                    variant="input"
-                    class="ui-dropdown__chip"
-                    @click.stop
-                  >
-                    {{ item.label }}
-                    <template #trailing>
-                      <m-icon
-                        :name="ICONS.close"
-                        @click.stop="remove(item)"
-                      />
-                    </template>
-                  </m-chip>
-                </slot>
-              </template>
-            </slot>
-          </div>
-        </template>
+              v-bind="slotProps"
+            />
+          </template>
 
-        <template #append>
-          <m-icon
-            :name="ICONS.arrowDropDown"
-            class="ui-dropdown__arrow"
-          />
-        </template>
-      </m-text-field>
-    </div>
+          <template #chip="slotProps">
+            <slot
+              name="chip"
+              v-bind="slotProps"
+            />
+          </template>
+        </dropdown-selected-chips>
+      </template>
+    </dropdown-trigger>
 
-    <m-menu
-      v-model="isOpen"
-      class="ui-dropdown__menu"
-      absolute
-      match-width
-      :origin="menuOrigin"
-      @click-outside="isOpen = false"
-    >
-      <m-list class="ui-dropdown__list">
-        <!-- List-style generic slot -->
-        <template v-if="items?.length">
-          <slot
-            v-for="(item, index) in items"
-            :key="item.id || index"
-            :item="item"
-            :index="index"
-            :selected="isSelected(item)"
-            :on-select="() => select(item)"
-          />
-        </template>
+    <dropdown-panel>
+      <!-- List-style generic slot -->
+      <template v-if="items?.length">
+        <slot
+          v-for="(item, index) in items"
+          :key="item.id || index"
+          :item="item"
+          :index="index"
+          :selected="isSelected(item)"
+          :on-select="() => select(item)"
+        />
+      </template>
 
-        <!-- Default slot for manual items -->
-        <slot v-else-if="$slots.default" />
+      <!-- Default slot for manual items -->
+      <slot v-else-if="$slots.default" />
 
-        <!-- Fallback to options loop -->
-        <template v-else>
-          <m-dropdown-item
-            v-for="option in options"
-            :key="option.value"
-            :selected="isSelected(option)"
-            @click="select(option)"
-          >
-            {{ option.label }}
-          </m-dropdown-item>
-        </template>
-      </m-list>
-    </m-menu>
+      <!-- Fallback to options loop -->
+      <template v-else>
+        <dropdown-option-row
+          v-for="option in options"
+          :key="String(option.value)"
+          :option="option"
+        />
+      </template>
+    </dropdown-panel>
   </div>
 </template>
 
 <script setup lang="ts" generic="T extends DropdownItem">
-import { ICONS } from '~~/shared/constants/icons'
+import { computed, ref, watch } from 'vue'
 import type { UiMenuOrigin } from '~/components/ui/menu/types'
-import type { DropdownOption, DropdownItem } from './types'
+import { createSingle } from '~/composables/registry/createSingle'
+import { createGroup } from '~/composables/registry/createGroup'
+import { provideDropdownContext } from './context'
+import type { DropdownContext, DropdownEntry, DropdownItem, DropdownOption } from './types'
+import DropdownTrigger from './trigger/index.vue'
+import DropdownPanel from './panel/index.vue'
+import DropdownOptionRow from './option/index.vue'
+import DropdownSelectedChips from './selected-chips/index.vue'
 
 interface Props {
   path?: string
@@ -138,86 +91,147 @@ const props = withDefaults(defineProps<Props>(), {
   multiple: false,
 })
 
-const modelValue = defineModel<any>()
+const modelValue = defineModel<unknown>()
 const isOpen = ref(false)
 
-const valueOf = (option: any) => option?.value ?? option?.id ?? option
-
-// Resolve a raw model value back to its source item (items first, then options)
-// so the chips can render a label; unknown values still surface as a bare chip.
-const resolveItem = (val: any) => {
-  const source = props.items?.length ? props.items : props.options
-  return source.find((o: any) => valueOf(o) === val) ?? { value: val, label: String(val) }
+// Resolve a value the way the legacy API did: option/item value first, then id,
+// then the raw entry itself (so primitive arrays still work).
+const valueOf = (entry: DropdownEntry | unknown): unknown => {
+  const e = entry as DropdownOption & DropdownItem
+  return e?.value ?? e?.id ?? entry
 }
 
-// Selected entries shown as chips in multiple mode.
-const selectedItems = computed(() => {
-  if (!props.multiple) {
-    return []
+// Source of truth for the registry: items first, then options.
+const source = computed<DropdownEntry[]>(() =>
+  props.items?.length ? props.items as DropdownEntry[] : props.options)
+
+// --- Registry-backed selection -------------------------------------------
+// Single mode → one selected value; multiple mode → batch select with chips.
+const single = props.multiple ? null : createSingle<{ value: unknown }>({ mandatory: false })
+const group = props.multiple ? createGroup<{ value: unknown }>() : null
+
+// Map a resolved value to its registered ticket id.
+const ticketIds = new Map<unknown, string | number>()
+
+function syncTickets() {
+  const sel = (single ?? group)!
+  const wanted = new Set(source.value.map(valueOf))
+
+  // Register new values.
+  for (const entry of source.value) {
+    const val = valueOf(entry)
+    if (ticketIds.has(val)) continue
+    const ticket = sel.register({ value: val })
+    ticketIds.set(val, ticket.id)
   }
 
-  const vals = Array.isArray(modelValue.value) ? modelValue.value : []
-  return vals.map(resolveItem)
+  // Unregister values that disappeared from the source.
+  for (const [val, id] of ticketIds) {
+    if (wanted.has(val)) continue
+    sel.unregister(id)
+    ticketIds.delete(val)
+  }
+}
+
+watch(source, syncTickets, { immediate: true })
+
+// Sync external v-model → registry.
+watch(
+  [() => modelValue.value, () => (single ?? group)!.size],
+  ([v]) => {
+    if (props.multiple) {
+      group!.apply(Array.isArray(v) ? v : [])
+      return
+    }
+    single!.apply(v === undefined || v === null ? [] : [v])
+  },
+  { immediate: true, deep: true },
+)
+
+// Sync registry → external v-model.
+if (props.multiple) {
+  watch(() => Array.from(group!.selectedValues.value), (vals) => {
+    const current = Array.isArray(modelValue.value) ? modelValue.value : []
+    if (vals.length !== current.length || vals.some((x, i) => x !== current[i])) {
+      modelValue.value = vals
+    }
+  })
+} else {
+  watch(single!.selectedValue, (v) => {
+    if (v !== modelValue.value) modelValue.value = v
+  })
+}
+
+// --- Derived view state ---------------------------------------------------
+const selectedItems = computed<DropdownEntry[]>(() => {
+  if (!props.multiple) return []
+  const vals = Array.from(group!.selectedValues.value)
+  return vals.map(val =>
+    source.value.find(entry => valueOf(entry) === val)
+    ?? ({ value: val, label: String(val) } as DropdownEntry))
 })
 
 const selectedLabel = computed(() => {
-  // Check in items first
-  if (props.items?.length) {
-    const item = props.items.find(i => (i.value ?? i.id) === modelValue.value)
-    return item?.label || ''
-  }
-  // Fallback to options
-  const option = props.options.find(o => o.value === modelValue.value)
-  return option ? option.label : ''
+  if (props.multiple) return ''
+  const val = single!.selectedValue.value
+  const entry = source.value.find(e => valueOf(e) === val) as DropdownItem | undefined
+  return entry?.label ?? ''
 })
 
-// True when the dropdown holds a value (a chip in multiple mode, a label in single).
 const hasSelection = computed(() =>
   props.multiple ? selectedItems.value.length > 0 : !!selectedLabel.value)
 
-// Float the field label (focused look) while the menu is open or a value is
-// present — otherwise the label would overlap the chips / selected text.
 const fieldFocused = computed(() => isOpen.value || hasSelection.value)
 
+// --- Actions --------------------------------------------------------------
 function toggle() {
-  if (props.disabled) {
-    return
-  }
-
+  if (props.disabled) return
   isOpen.value = !isOpen.value
 }
 
-function select(option: any) {
-  const val = valueOf(option)
-
-  // Multiple: toggle membership and keep the menu open for further picks.
-  if (props.multiple) {
-    const current = Array.isArray(modelValue.value) ? modelValue.value : []
-    modelValue.value = current.includes(val)
-      ? current.filter((v: any) => v !== val)
-      : [...current, val]
-    return
-  }
-
-  modelValue.value = val
+function close() {
   isOpen.value = false
 }
 
-function remove(item: any) {
-  const val = valueOf(item)
-  const current = Array.isArray(modelValue.value) ? modelValue.value : []
-  modelValue.value = current.filter((v: any) => v !== val)
-}
-
-function isSelected(option: any) {
-  const val = valueOf(option)
+function select(entry: DropdownEntry) {
+  const val = valueOf(entry)
+  const id = ticketIds.get(val)
 
   if (props.multiple) {
-    return Array.isArray(modelValue.value) && modelValue.value.includes(val)
+    if (id !== undefined) group!.toggle(id)
+    return
   }
 
-  return modelValue.value === val
+  if (id !== undefined) single!.select(id)
+  close()
 }
+
+function remove(entry: DropdownEntry) {
+  const id = ticketIds.get(valueOf(entry))
+  if (id !== undefined) group?.unselect(id)
+}
+
+function isSelected(entry: DropdownEntry | unknown): boolean {
+  const val = valueOf(entry)
+  if (props.multiple) return Array.from(group!.selectedValues.value).includes(val)
+  return single!.selectedValue.value === val
+}
+
+provideDropdownContext({
+  multiple: computed(() => props.multiple),
+  disabled: computed(() => props.disabled),
+  variant: computed(() => props.variant),
+  menuOrigin: computed(() => props.menuOrigin),
+  isOpen: computed(() => isOpen.value),
+  fieldFocused,
+  selectedLabel,
+  selectedItems,
+  toggle,
+  close,
+  select,
+  remove,
+  isSelected,
+} satisfies DropdownContext)
 </script>
 
 <style lang="scss">

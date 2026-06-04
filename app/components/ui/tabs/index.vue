@@ -3,46 +3,38 @@
     <div
       class="ui-tabs__list"
       role="tablist"
+      @keydown="onKeydown"
     >
-      <button
+      <m-tab
         v-for="item in items"
         :key="item.value"
-        class="ui-tabs__tab"
-        :class="{
-          'ui-tabs__tab--active': item.value === currentValue,
-          'ui-tabs__tab--disabled': item.disabled,
-        }"
-        type="button"
-        role="tab"
-        :aria-selected="item.value === currentValue"
+        :value="item.value"
+        :label="item.label"
+        :icon="item.icon"
         :disabled="item.disabled"
-        @click="onSelect(item)"
-      >
-        <span
-          v-if="item.icon"
-          class="ui-tabs__tab-icon"
-        >
-          <m-icon :name="item.icon" />
-        </span>
+      />
 
-        <span class="ui-tabs__tab-label">
-          {{ item.label }}
-        </span>
-      </button>
+      <slot name="tabs" />
     </div>
+
+    <slot name="panels" />
 
     <div
       v-if="$slots.default"
       class="ui-tabs__content"
       role="tabpanel"
     >
-      <slot :value="currentValue" />
+      <slot :value="selectedValue" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-type TabValue = string | number
+import { ref, toValue } from 'vue'
+import { createSingle } from '~/composables/registry/createSingle'
+import { provideTabsContext } from '~/composables/tabs/useTabs'
+import type { TabValue } from '~/composables/tabs/useTabs'
+import MTab from './tab/index.vue'
 
 interface TabItem {
   value: TabValue
@@ -52,123 +44,115 @@ interface TabItem {
 }
 
 interface Props {
-  items: TabItem[]
+  items?: TabItem[]
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  items: undefined,
+})
 
 const modelValue = defineModel<TabValue | null>({ default: null })
 
-const currentValue = computed<TabValue | null>(() => {
-  if (modelValue.value !== null && modelValue.value !== undefined) {
-    return modelValue.value
-  }
+// `'force'` keeps one tab always active (auto-selects the first non-disabled
+// tab on registration), matching the legacy default-to-first behavior. An
+// external `v-model` value still overrides it via the apply watch below.
+const sel = createSingle<{ value: TabValue, disabled?: boolean }>({ mandatory: 'force' })
 
-  return props.items?.[0]?.value ?? null
+const selectedValue = computed(() => sel.selectedValue.value ?? null)
+
+watch(
+  [() => modelValue.value, () => sel.size],
+  ([v]) => {
+    if (v === null || v === undefined) return
+    if (sel.selectedValue.value !== v) sel.apply([v])
+  },
+  { immediate: true },
+)
+
+watch(sel.selectedValue, (v) => {
+  if (v !== undefined && v !== modelValue.value) modelValue.value = v
 })
 
-function onSelect(item: TabItem) {
-  if (item.disabled) {
-    return
+// --- Keyboard navigation + ARIA id wiring ---------------------------------
+// Roving focus: arrows move between non-disabled tabs (activation follows
+// focus, per the M3 automatic-activation pattern); Home/End jump to the ends.
+const idBase = useId()
+const focusedValue = ref<TabValue | null>(null)
+
+const safeId = (value: TabValue) => String(value).replace(/[^\w-]/g, '_')
+const tabId = (value: TabValue) => `${idBase}-tab-${safeId(value)}`
+const panelId = (value: TabValue) => `${idBase}-panel-${safeId(value)}`
+
+function focusByOffset(target: 'next' | 'prev' | 'first' | 'last') {
+  const tickets = sel.values().filter(ticket => !toValue(ticket.disabled))
+  if (tickets.length === 0) return
+
+  const currentIndex = tickets.findIndex(ticket => ticket.id === sel.selectedId.value)
+
+  let nextIndex: number
+  if (target === 'first') nextIndex = 0
+  else if (target === 'last') nextIndex = tickets.length - 1
+  else if (target === 'next') nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % tickets.length
+  else nextIndex = currentIndex <= 0 ? tickets.length - 1 : currentIndex - 1
+
+  const ticket = tickets[nextIndex]
+  if (!ticket) return
+
+  sel.select(ticket.id)
+  focusedValue.value = ticket.value as TabValue
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const handlers: Record<string, 'next' | 'prev' | 'first' | 'last'> = {
+    ArrowRight: 'next',
+    ArrowLeft: 'prev',
+    Home: 'first',
+    End: 'last',
   }
 
-  modelValue.value = item.value
+  const target = handlers[event.key]
+  if (!target) return
+
+  event.preventDefault()
+  focusByOffset(target)
 }
+
+provideTabsContext({
+  register: sel.register,
+  unregister: sel.unregister,
+  select: sel.select,
+  get size() {
+    return sel.size
+  },
+  selectedValue: sel.selectedValue,
+  focusedValue,
+  tabId,
+  panelId,
+})
+
+defineExpose({ selectedValue })
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/tabs' as v;
+@use '~/assets/stylesheet/components/tabs/index' as t;
 
 .ui-tabs {
+  $prefix: 'md-tabs';
+  $t: material-map(t.$tokens, $prefix);
+
   display: flex;
   flex-direction: column;
-  gap: v.$list-gap;
+  gap: g($t, 'list-gap');
 
   &__list {
     display: flex;
     align-items: stretch;
-    border-bottom: 1rem solid v.$list-border-color;
+    border-bottom: g($t, 'list-border-width') solid g($t, 'list-border-color');
     width: 100%;
   }
 
-  &__tab {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: v.$tab-gap;
-    padding-inline: v.$tab-padding-inline;
-    min-height: v.$tab-min-height;
-    flex: 1;
-    border: none;
-    background-color: transparent;
-    color: v.$tab-text-color;
-    cursor: pointer;
-    outline: none;
-    transition:
-      color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-
-    @include typescale(v.$tab-text-type);
-
-    &-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: v.$tab-icon-size;
-    }
-
-    &-label {
-      white-space: nowrap;
-    }
-
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-color: v.$tab-state-layer-bg;
-      opacity: 0;
-      transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    }
-
-    &:hover::before {
-      opacity: v.$state-layer-opacity-hover;
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 0;
-      height: v.$tab-indicator-height;
-      background-color: v.$tab-indicator-color;
-      border-radius: 3rem 3rem 0 0;
-      transform: translateX(-50%);
-      transition: width var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    }
-
-    &--active {
-      color: v.$tab-active-color;
-
-      &::after {
-        width: v.$tab-active-indicator-width;
-      }
-
-      &::before {
-        background-color: v.$tab-active-state-layer-bg;
-      }
-    }
-
-    &--disabled {
-      cursor: default;
-      opacity: v.$tab-disabled-opacity;
-      pointer-events: none;
-    }
-  }
-
   &__content {
-    padding: v.$content-padding;
+    padding: g($t, 'content-padding');
   }
 }
 </style>

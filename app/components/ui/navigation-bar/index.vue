@@ -8,7 +8,7 @@
       :key="item.id"
       type="button"
       class="ui-navigation-bar__item"
-      :class="{ 'ui-navigation-bar__item--active': item.id === modelValue }"
+      :class="{ 'ui-navigation-bar__item--active': item.id === selectedValue }"
       @click="onSelect(item.id)"
     >
       <span class="ui-navigation-bar__icon-wrapper">
@@ -34,6 +34,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed, watch } from 'vue'
+import { createSingle } from '~/composables/registry/createSingle'
+import { provideNavigationBarContext } from '~/composables/navigation/useNavigationBar'
+import type { ID } from '~~/shared/types/registry'
+
 interface NavigationItem {
   id: string
   icon: string
@@ -45,7 +50,7 @@ interface Props {
   items: NavigationItem[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 // Self-register in layout system as footer area
 const { layoutItemStyles } = useLayoutItem({
@@ -55,24 +60,80 @@ const { layoutItemStyles } = useLayoutItem({
 
 const modelValue = defineModel<string | null>({ default: null })
 
+// Single-select, non-mandatory: clicking a different destination selects it,
+// matching the previous `item.id === modelValue` behavior.
+const single = createSingle<{ value: string }>({ mandatory: false })
+
+// The flat `items[]` path drives the registry directly: each entry is a ticket
+// keyed by its `id`. Tickets are kept in sync as `items` changes.
+const ticketIds = new Map<string, ID>()
+
+function syncTickets() {
+  const wanted = new Set(props.items.map(item => item.id))
+
+  for (const item of props.items) {
+    if (ticketIds.has(item.id)) continue
+    const ticket = single.register({ value: item.id })
+    ticketIds.set(item.id, ticket.id)
+  }
+
+  for (const [value, id] of ticketIds) {
+    if (wanted.has(value)) continue
+    single.unregister(id)
+    ticketIds.delete(value)
+  }
+}
+
+watch(() => props.items, syncTickets, { immediate: true, deep: true })
+
+// Keep the registry in sync with the bound model.
+watch(
+  [() => modelValue.value, () => single.size],
+  ([value]) => {
+    if (value === null || value === undefined) {
+      if (single.selectedValue.value !== undefined) single.apply([])
+      return
+    }
+    if (single.selectedValue.value !== value) single.apply([value])
+  },
+  { immediate: true },
+)
+
+// Reflect registry selection back to the model.
+watch(single.selectedValue, (value) => {
+  if (value !== modelValue.value) modelValue.value = (value ?? null)
+})
+
+const selectedValue = computed(() => single.selectedValue.value ?? null)
+
+provideNavigationBarContext({
+  register: ticket => single.register(ticket),
+  unregister: id => single.unregister(id),
+  select: id => single.select(id),
+  selectedValue: single.selectedValue,
+})
+
 function onSelect(id: string) {
-  modelValue.value = id
+  const ticketId = ticketIds.get(id)
+  if (ticketId !== undefined) single.select(ticketId)
 }
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/navigation-bar' as v;
+@use '~/assets/stylesheet/components/navigation-bar/index' as t;
 
 .ui-navigation-bar {
+  $t: material-map(t.$tokens, 'md-navigation-bar');
+
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-inline: v.$padding-inline;
-  padding-block: v.$padding-block;
-  border-radius: v.$border-radius;
-  background-color: v.$bg-color;
-  box-shadow: v.$shadow;
-  color: v.$text-color;
+  padding-inline: g($t, 'container-padding-inline');
+  padding-block: g($t, 'container-padding-block');
+  border-radius: g($t, 'container-shape');
+  background-color: g($t, 'container-color');
+  box-shadow: g($t, 'container-shadow');
+  color: g($t, 'container-text-color');
 
   &__item {
     position: relative;
@@ -81,14 +142,14 @@ function onSelect(id: string) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: v.$item-gap;
-    padding-block: v.$item-padding-block;
+    gap: g($t, 'item-gap');
+    padding-block: g($t, 'item-padding-block');
     border: none;
     background: transparent;
     cursor: pointer;
-    color: v.$item-color;
+    color: g($t, 'item-color');
 
-    @include typescale(v.$item-text-type);
+    @include typescale(g($t, 'item-typography'));
   }
 
   &__icon-wrapper {
@@ -99,24 +160,24 @@ function onSelect(id: string) {
   }
 
   &__icon {
-    font-size: v.$icon-size;
+    font-size: g($t, 'icon-size');
   }
 
   &__badge {
     position: absolute;
-    top: v.$badge-top;
-    right: v.$badge-right;
+    top: g($t, 'badge-top');
+    right: g($t, 'badge-right');
   }
 
   &__label {
-    max-width: v.$label-max-width;
+    max-width: g($t, 'label-max-width');
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   &__item--active {
-    color: v.$item-active-color;
+    color: g($t, 'item-active-color');
   }
 }
 </style>

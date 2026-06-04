@@ -1,0 +1,29 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NAVIGATION DRAWER M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  surface: (
+    gap: 8rem,
+    min: (
+      width: 360rem,
+    ),
+    padding: 16rem,
+    color: var(--color-surface),
+    text: (
+      color: var(--color-on-surface),
+    ),
+    shadow: (0 0 16rem rgb(0 0 0 / 24%), 0 0 32rem rgb(0 0 0 / 20%)),
+    shape: (
+      left: 0 var(--sys-shape-corner-large) var(--sys-shape-corner-large) 0,
+      right: var(--sys-shape-corner-large) 0 0 var(--sys-shape-corner-large),
+    ),
+  ),
+  header: (
+    padding: 4rem 8rem 12rem,
+    typography: 'title-medium',
+  ),
+);

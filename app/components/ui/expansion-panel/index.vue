@@ -44,36 +44,72 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onScopeDispose, useId } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
+import { useExpansionPanelGroupContext } from '~/composables/expansion-panel/useExpansionPanelGroup'
+import type { PanelValue } from '~/composables/expansion-panel/useExpansionPanelGroup'
 
 interface Props {
+  value?: PanelValue
   title?: string
   description?: string
   disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  value: undefined,
   title: '',
   description: '',
   disabled: false,
 })
 
-const isOpen = defineModel<boolean>({ default: false })
+const modelValue = defineModel<boolean>({ default: false })
+
+const group = useExpansionPanelGroupContext()
+
+// Grouped mode derives a stable value (prop or generated id); standalone keeps
+// using its own `v-model`.
+const generatedValue = useId()
+const panelValue = computed(() => props.value ?? generatedValue)
+
+if (group) {
+  const ticket = group.register({
+    value: panelValue.value,
+    disabled: () => props.disabled,
+  })
+
+  onScopeDispose(() => group.unregister(ticket.id))
+}
+
+const isOpen = computed(() => {
+  if (group) return group.isOpen(panelValue.value)
+
+  return modelValue.value
+})
 
 function toggle() {
   if (props.disabled) return
-  isOpen.value = !isOpen.value
+
+  if (group) {
+    group.toggle(panelValue.value)
+
+    return
+  }
+
+  modelValue.value = !modelValue.value
 }
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/expansion-panel' as v;
+@use '~/assets/stylesheet/components/expansion-panel/index' as *;
 
 .ui-expansion-panel {
+  $t: material-map($tokens, 'md-expansion-panel');
+
   display: flex;
   flex-direction: column;
-  background-color: v.$bg-color-default;
-  border-radius: v.$border-radius;
+  background-color: g($t, 'base-bg-default');
+  border-radius: g($t, 'base-border-radius');
   transition:
     background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     margin var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -85,57 +121,57 @@ function toggle() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: v.$header-gap;
+    gap: g($t, 'header-gap');
     width: 100%;
-    min-height: v.$header-min-height;
-    padding: v.$header-padding;
+    min-height: g($t, 'header-min-height');
+    padding: g($t, 'header-padding');
     background: transparent;
     border: none;
     cursor: pointer;
     text-align: left;
-    color: v.$header-text-color;
+    color: g($t, 'header-text-color');
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
     &:disabled {
       cursor: default;
-      opacity: v.$disabled-opacity;
+      opacity: g($t, 'disabled-opacity');
     }
 
     &:hover:not(:disabled) {
-      background-color: v.$header-hover-bg;
+      background-color: g($t, 'header-hover-bg');
     }
 
     &:active:not(:disabled) {
-      background-color: v.$header-active-bg;
+      background-color: g($t, 'header-active-bg');
     }
   }
 
   &__header-content {
     display: flex;
     flex-direction: column;
-    gap: v.$header-content-gap;
+    gap: g($t, 'header-content-gap');
     flex: 1;
   }
 
   &__title {
-    color: v.$header-text-color;
+    color: g($t, 'header-text-color');
 
-    @include typescale(v.$title-text-type);
+    @include typescale(g($t, 'typography-title'));
   }
 
   &__description {
-    color: v.$description-text-color;
+    color: g($t, 'description-text-color');
 
-    @include typescale(v.$description-text-type);
+    @include typescale(g($t, 'typography-description'));
   }
 
   &__trailing {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: v.$trailing-color-default;
+    color: g($t, 'trailing-color-default');
     transition: transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    font-size: v.$trailing-icon-size;
+    font-size: g($t, 'trailing-icon-size');
   }
 
   // Content Animation using Grid Trick
@@ -150,21 +186,21 @@ function toggle() {
   }
 
   &__content {
-    color: v.$content-text-color;
-    padding: 0 v.$content-padding-inline v.$content-padding-bottom;
+    color: g($t, 'content-text-color');
+    padding: 0 g($t, 'content-padding-inline') g($t, 'content-padding-bottom');
     opacity: 0;
     transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-    @include typescale(v.$content-text-type);
+    @include typescale(g($t, 'typography-content'));
   }
 
   &--expanded {
-    background-color: v.$bg-color-expanded;
-    box-shadow: v.$expanded-shadow;
+    background-color: g($t, 'base-bg-expanded');
+    box-shadow: g($t, 'base-expanded-shadow');
 
     .ui-expansion-panel__trailing {
       transform: rotate(180deg);
-      color: v.$trailing-color-active;
+      color: g($t, 'trailing-color-active');
     }
 
     .ui-expansion-panel__content {

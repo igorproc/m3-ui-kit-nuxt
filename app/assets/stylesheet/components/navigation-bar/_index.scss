@@ -1,0 +1,44 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NAVIGATION BAR M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  container: (
+    padding: (
+      inline: 12rem,
+      block: 8rem,
+    ),
+    shape: var(--sys-shape-corner-large),
+    color: var(--color-surface),
+    shadow: (0 -2rem 4rem rgb(0 0 0 / 8%), 0 -4rem 8rem rgb(0 0 0 / 10%)),
+    text: (
+      color: var(--color-surface-variant-contrast),
+    ),
+  ),
+  item: (
+    gap: 4rem,
+    padding: (
+      block: 4rem,
+    ),
+    color: var(--color-on-surface-variant),
+    active: (
+      color: var(--color-primary),
+    ),
+    typography: 'label-medium',
+  ),
+  label: (
+    max: (
+      width: 72rem,
+    ),
+  ),
+  icon: (
+    size: 24rem,
+  ),
+  badge: (
+    top: -12rem,
+    right: -24rem,
+  ),
+);

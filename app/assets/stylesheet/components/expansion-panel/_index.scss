@@ -1,0 +1,71 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// EXPANSION PANEL M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  base: (
+    bg: (
+      default: var(--color-surface),
+      expanded: var(--color-surface-container-low),
+    ),
+    border: (
+      radius: var(--sys-shape-corner-medium),
+    ),
+    expanded: (
+      shadow: 0 1rem 3rem rgb(0 0 0 / 8%),
+    ),
+  ),
+  header: (
+    gap: 16rem,
+    min: (
+      height: 56rem,
+    ),
+    padding: 12rem 24rem,
+    text: (
+      color: var(--color-on-surface),
+    ),
+    hover: (
+      bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent),
+    ),
+    active: (
+      bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent),
+    ),
+    content: (
+      gap: 4rem,
+    ),
+  ),
+  trailing: (
+    icon: (
+      size: 24rem,
+    ),
+    color: (
+      default: var(--color-on-surface-variant),
+      active: var(--color-primary),
+    ),
+  ),
+  content: (
+    padding: (
+      inline: 24rem,
+      bottom: 24rem,
+    ),
+    text: (
+      color: var(--color-on-surface-variant),
+    ),
+  ),
+  description: (
+    text: (
+      color: var(--color-on-surface-variant),
+    ),
+  ),
+  typography: (
+    title: 'body-large',
+    description: 'body-medium',
+    content: 'body-medium',
+  ),
+  disabled: (
+    opacity: 0.38,
+  ),
+);

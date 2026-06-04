@@ -14,5 +14,5 @@ export interface SortState<T> {
 
 export interface TableData {
   id: string | number
-  [key: string]: any
+  [key: string]: unknown
 }

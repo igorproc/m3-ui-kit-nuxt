@@ -1,0 +1,61 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TABS M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  list: (
+    gap: 8rem,
+    border: (
+      width: 1rem,
+      color: map.get($theme-color-link, outline-variant),
+    ),
+  ),
+  tab: (
+    gap: 4rem,
+    padding: (
+      inline: 16rem,
+    ),
+    min: (
+      height: 48rem,
+    ),
+    text: (
+      color: map.get($theme-color-link, on-surface-variant),
+    ),
+    icon: (
+      size: 24rem,
+    ),
+  ),
+  indicator: (
+    height: 3rem,
+    color: map.get($theme-color-link, primary),
+    active: (
+      width: 40rem,
+    ),
+  ),
+  active: (
+    color: map.get($theme-color-link, primary),
+  ),
+  disabled: (
+    opacity: 0.38,
+  ),
+  state: (
+    layer: (
+      bg: map.get($theme-color-link, on-surface),
+      active: (
+        bg: map.get($theme-color-link, primary),
+      ),
+      opacity: (
+        hover: 0.08,
+      ),
+    ),
+  ),
+  typography: (
+    label: 'label-large',
+  ),
+  content: (
+    padding: 16rem 0,
+  ),
+);

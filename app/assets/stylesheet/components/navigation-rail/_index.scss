@@ -1,0 +1,56 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NAVIGATION RAIL M3 COMPONENT TOKENS
+// (shared by navigation-rail/index.vue and navigation-rail/item/index.vue)
+// ==========================================
+
+$width: 96rem;
+$width-expanded: 256rem;
+$tokens: (
+  container: (
+    width: $width,
+    width-expanded: $width-expanded,
+    padding: (
+      block: 12rem,
+      inline: 8rem,
+    ),
+    shape: var(--sys-shape-corner-large),
+    color: var(--color-surface),
+    shadow: 0 0 0 1rem color-mix(in srgb, var(--color-outline-variant) 40%, transparent),
+    gap: 8rem,
+    text: (
+      color: var(--color-surface-variant-contrast),
+    ),
+  ),
+  item: (
+    color: var(--color-on-surface-variant),
+    active: (
+      color: var(--color-primary),
+    ),
+    typography: 'label-small',
+    indicator: (
+      color: var(--color-secondary-container),
+      hover: (
+        color: var(--color-on-surface),
+        opacity: 0.08,
+      ),
+      active: (
+        hover: (
+          opacity: 0.12,
+        ),
+      ),
+    ),
+    hover: (
+      color: var(--color-surface-contrast),
+    ),
+  ),
+  icon: (
+    size: 24rem,
+  ),
+  badge: (
+    top: -12rem,
+    right: -24rem,
+  ),
+);

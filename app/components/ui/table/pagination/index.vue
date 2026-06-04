@@ -48,24 +48,28 @@ const isLastPage = computed(() => {
 </script>
 
 <style lang="scss">
+@use '~/assets/stylesheet/components/table/index' as t;
+
 .ui-table__pagination {
+  $t: material-map(t.$tokens, 'md-table');
+
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 8rem 16rem;
-  gap: 24rem;
-  border-top: 1rem solid var(--color-outline-variant);
+  padding: g($t, 'pagination-padding');
+  gap: g($t, 'pagination-gap');
+  border-top: g($t, 'pagination-border-width') solid g($t, 'pagination-border-color');
 
   &-info {
-    color: var(--color-on-surface-variant);
+    color: g($t, 'pagination-info-color');
 
-    @include typescale('body-small');
+    @include typescale(g($t, 'pagination-info-text-type'));
   }
 
   &-actions {
     display: flex;
     align-items: center;
-    gap: 8rem;
+    gap: g($t, 'pagination-actions-gap');
   }
 }
 </style>

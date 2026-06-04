@@ -5,10 +5,10 @@ import {
   DynamicScheme,
 } from '@material/material-color-utilities'
 
-import { generateScheme } from '~~/shared/utils/defineKit'
-import { COOKIE_THEME_KEYS } from '~~/shared/constants/cookie'
+import { generateScheme } from '../../../shared/utils/defineKit'
+import { COOKIE_THEME_KEYS } from '../../../shared/constants/cookie'
 
-import type { MaterialKitOptions } from '~~/shared/types/kit'
+import type { MaterialKitOptions } from '../../../shared/types/kit'
 
 export default defineNuxtModule<MaterialKitOptions>({
   meta: {

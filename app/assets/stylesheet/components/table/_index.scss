@@ -1,0 +1,78 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TABLE M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  container: (
+    bg: var(--color-surface),
+    border: (
+      radius: var(--sys-shape-corner-medium),
+      color: var(--color-outline-variant),
+      width: 1rem,
+    ),
+  ),
+  row: (
+    border: (
+      color: var(--color-outline-variant),
+      width: 1rem,
+    ),
+    hover: (
+      bg: color-mix(in srgb, var(--color-on-surface) 4%, transparent),
+    ),
+    selected: (
+      bg: color-mix(in srgb, var(--color-primary) 8%, transparent),
+    ),
+  ),
+  cell: (
+    padding: 12rem 16rem,
+    color: var(--color-on-surface),
+    text: (
+      type: 'body-medium',
+    ),
+    checkbox: (
+      width: 48rem,
+      padding: (
+        inline: 12rem,
+      ),
+    ),
+  ),
+  header: (
+    bg: var(--color-surface-container-low),
+    color: var(--color-on-surface-variant),
+    text: (
+      type: 'label-large',
+    ),
+    hover: (
+      bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent),
+    ),
+    content: (
+      gap: 4rem,
+    ),
+    sort: (
+      icon: (
+        size: 16rem,
+        color: var(--color-on-surface),
+      ),
+    ),
+  ),
+  pagination: (
+    padding: 8rem 16rem,
+    gap: 24rem,
+    border: (
+      color: var(--color-outline-variant),
+      width: 1rem,
+    ),
+    info: (
+      color: var(--color-on-surface-variant),
+      text: (
+        type: 'body-small',
+      ),
+    ),
+    actions: (
+      gap: 8rem,
+    ),
+  ),
+);

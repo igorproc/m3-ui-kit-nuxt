@@ -5,14 +5,15 @@
   >
     <input
       :id="fieldId"
-      v-model="modelValueLocal"
       class="ui-radio__input"
       type="radio"
-      :name="name"
+      :name="resolvedName"
       :value="value"
-      :disabled="disabled"
-      :aria-checked="modelValueLocal === value"
+      :checked="isChecked"
+      :disabled="isDisabled"
+      :aria-checked="isChecked"
       :aria-invalid="errorMessage ? 'true' : undefined"
+      @change="onChange"
     >
 
     <div class="ui-radio__container">
@@ -35,7 +36,10 @@
 </template>
 
 <script setup lang="ts">
+import { onScopeDispose } from 'vue'
 import { useField } from 'vee-validate'
+import { useRadioGroupContext } from '~/composables/radio/useRadioGroup'
+import type { SingleTicket } from '~/composables/registry/createSingle'
 
 type RadioValue = string | number
 
@@ -60,22 +64,60 @@ const fieldId = useId()
 
 const errorMessage = ref<string | undefined>()
 
+const group = useRadioGroupContext()
+
+// Grouped mode registers a ticket; standalone mode leaves this `null`.
+let ticket: SingleTicket<{ value: RadioValue, disabled?: boolean }> | null = null
+
+if (group) {
+  ticket = group.register({
+    value: props.value,
+    disabled: () => props.disabled,
+  })
+
+  onScopeDispose(() => group?.unregister(ticket!.id))
+}
+
+const isChecked = computed(() => {
+  if (group && ticket) return ticket.isSelected.value
+
+  return modelValue.value === props.value
+})
+
+const isDisabled = computed(() => {
+  if (group) return props.disabled || group.disabled.value
+
+  return props.disabled
+})
+
+const resolvedName = computed(() => {
+  if (group) return group.name.value
+
+  return props.name
+})
+
 const radioClasses = computed(() => [
   {
-    'ui-radio--checked': modelValue.value === props.value,
-    'ui-radio--disabled': props.disabled,
+    'ui-radio--checked': isChecked.value,
+    'ui-radio--disabled': isDisabled.value,
     'ui-radio--error': Boolean(errorMessage.value),
   },
 ])
 
-const modelValueLocal = computed<RadioValue | undefined>({
-  get: () => modelValue.value,
-  set: (val) => {
-    modelValue.value = val
-  },
-})
+function onChange() {
+  if (isDisabled.value) return
 
-if (props.path) {
+  if (group && ticket) {
+    ticket.select()
+
+    return
+  }
+
+  modelValue.value = props.value
+}
+
+// --- Standalone vee-validate path (form-renderer relies on this) ------------
+if (!group && props.path) {
   const field = useField<RadioValue>(() => props.path as string, undefined)
   const { value, errorMessage: fieldError } = field
 
@@ -87,12 +129,9 @@ if (props.path) {
     { immediate: true },
   )
 
-  watch(
-    modelValue,
-    (next) => {
-      value.value = next as RadioValue
-    },
-  )
+  watch(modelValue, (next) => {
+    value.value = next as RadioValue
+  })
 
   watch(
     fieldError,

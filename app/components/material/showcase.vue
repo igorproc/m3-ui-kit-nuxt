@@ -811,6 +811,7 @@ function removeField(name: string) {
   &__section-title {
     margin: 0;
     color: var(--color-primary-container-contrast);
+
     @include typescale('headline-medium');
   }
 
@@ -823,6 +824,7 @@ function removeField(name: string) {
   &__showcase-subtitle {
     margin: 0;
     color: var(--color-on-surface-variant);
+
     @include typescale('title-large');
   }
 
@@ -882,6 +884,7 @@ function removeField(name: string) {
 
   &__preview-label {
     @include typescale('label-medium');
+
     color: var(--color-on-surface-variant);
   }
 
@@ -917,6 +920,7 @@ function removeField(name: string) {
 
   &__field-tag {
     @include typescale('label-small');
+
     padding: 2rem 8rem;
     border-radius: 999rem;
     border: 1rem solid var(--color-outline-variant);
@@ -941,6 +945,7 @@ function removeField(name: string) {
 
   &__field-error {
     @include typescale('label-small');
+
     color: var(--color-error);
   }
 
@@ -958,6 +963,7 @@ function removeField(name: string) {
 
   &__form-result {
     @include typescale('body-small');
+
     margin: 0;
     padding: 16rem;
     border-radius: 12rem;

@@ -1,50 +1,12 @@
-<script setup lang="ts" generic="T extends TableData">
-import { ICONS } from '~~/shared/constants/icons'
-import type { TableColumn, TableData, SortState } from '../types'
-
-interface Props {
-  columns: TableColumn<T>[]
-  selectable?: boolean
-  isAllSelected?: boolean
-  sort?: SortState<T> | null
-}
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<{
-  'toggle-all': [value: boolean]
-  'update:sort': [value: SortState<T> | null]
-}>()
-
-function toggleSort(column: TableColumn<T>) {
-  if (!column.sortable) return
-
-  const currentSort = props.sort
-  const isCurrentColumn = currentSort?.key === column.key
-
-  let newSort: SortState<T> | null = null
-
-  if (!isCurrentColumn) {
-    newSort = { key: column.key, direction: 'asc' }
-  } else if (currentSort?.direction === 'asc') {
-    newSort = { key: column.key, direction: 'desc' }
-  } else {
-    newSort = null
-  }
-
-  emit('update:sort', newSort)
-}
-</script>
-
 <template>
   <thead>
     <tr class="ui-table__row ui-table__row--header">
       <th
-        v-if="selectable"
+        v-if="resolvedSelectable"
         class="ui-table__cell ui-table__cell--header ui-table__cell--checkbox"
       >
         <m-checkbox
-          :model-value="isAllSelected"
+          :model-value="resolvedIsAllSelected"
           @update:model-value="$emit('toggle-all', $event)"
         />
       </th>
@@ -64,8 +26,8 @@ function toggleSort(column: TableColumn<T>) {
             {{ column.label }}
           </slot>
           <m-icon
-            v-if="column.sortable && sort?.key === column.key"
-            :name="sort.direction === 'asc' ? ICONS.arrowUpward : ICONS.arrowDownward"
+            v-if="column.sortable && resolvedSort?.key === column.key"
+            :name="resolvedSort.direction === 'asc' ? ICONS.arrowUpward : ICONS.arrowDownward"
             class="ui-table__sort-icon"
           />
         </div>
@@ -74,24 +36,76 @@ function toggleSort(column: TableColumn<T>) {
   </thead>
 </template>
 
+<script setup lang="ts" generic="T extends TableData">
+import { computed } from 'vue'
+import { ICONS } from '~~/shared/constants/icons'
+import type { TableColumn, TableData, SortState } from '../types'
+import { useTableContext } from '~/composables/table/useTableContext'
+
+interface Props {
+  columns: TableColumn<T>[]
+  selectable?: boolean
+  isAllSelected?: boolean
+  sort?: SortState<T> | null
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  'toggle-all': [value: boolean]
+  'update:sort': [value: SortState<T> | null]
+}>()
+
+// Optional parent context (present when rendered inside `<MTable>`); props win
+// for explicit/standalone usage so the public API stays backward-compatible.
+const ctx = useTableContext()
+
+const resolvedSelectable = computed(() => props.selectable ?? ctx?.selectable.value ?? false)
+const resolvedIsAllSelected = computed(() => props.isAllSelected ?? ctx?.isAllSelected.value ?? false)
+const resolvedSort = computed(() => props.sort ?? (ctx?.sort.value as SortState<T> | null | undefined) ?? null)
+
+function toggleSort(column: TableColumn<T>) {
+  if (!column.sortable) return
+
+  const currentSort = resolvedSort.value
+  const isCurrentColumn = currentSort?.key === column.key
+
+  let newSort: SortState<T> | null = null
+
+  if (!isCurrentColumn) {
+    newSort = { key: column.key, direction: 'asc' }
+  } else if (currentSort?.direction === 'asc') {
+    newSort = { key: column.key, direction: 'desc' }
+  } else {
+    newSort = null
+  }
+
+  emit('update:sort', newSort)
+}
+</script>
+
 <style lang="scss">
+@use '~/assets/stylesheet/components/table/index' as t;
+
 .ui-table {
+  $t: material-map(t.$tokens, 'md-table');
+
   &__row--header {
-    background-color: var(--color-surface-container-low);
+    background-color: g($t, 'header-bg');
   }
 
   &__cell--header {
-    color: var(--color-on-surface-variant);
+    color: g($t, 'header-color');
     white-space: nowrap;
 
-    @include typescale('label-large');
+    @include typescale(g($t, 'header-text-type'));
 
     &.ui-table__cell--sortable {
       cursor: pointer;
       user-select: none;
 
       &:hover {
-        background-color: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+        background-color: g($t, 'header-hover-bg');
       }
     }
   }
@@ -99,12 +113,12 @@ function toggleSort(column: TableColumn<T>) {
   &__header-content {
     display: flex;
     align-items: center;
-    gap: 4rem;
+    gap: g($t, 'header-content-gap');
   }
 
   &__sort-icon {
-    font-size: 16rem;
-    color: var(--color-on-surface);
+    font-size: g($t, 'header-sort-icon-size');
+    color: g($t, 'header-sort-icon-color');
   }
 }
 </style>

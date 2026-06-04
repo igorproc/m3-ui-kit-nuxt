@@ -51,16 +51,11 @@ defineEmits<{
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/navigation-rail' as v;
-
-%active-indicator {
-  .ui-navigation-rail-item__indicator {
-    opacity: 0.08;
-    background-color: var(--color-on-surface);
-  }
-}
+@use '~/assets/stylesheet/components/navigation-rail/index' as t;
 
 .ui-navigation-rail-item {
+  $t: material-map(t.$tokens, 'md-navigation-rail');
+
   position: relative;
   display: block;
   width: 100%;
@@ -69,10 +64,10 @@ defineEmits<{
   border: none;
   background: transparent;
   cursor: pointer;
-  color: v.$item-color;
+  color: g($t, 'item-color');
   transition: all var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
 
-  @include typescale(v.$item-text-type);
+  @include typescale(g($t, 'item-typography'));
 
   &__indicator {
     position: absolute;
@@ -82,7 +77,7 @@ defineEmits<{
     width: 56rem;
     height: 32rem;
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-secondary-container);
+    background-color: g($t, 'item-indicator-color');
     opacity: 0;
     transition: all var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
     z-index: 0;
@@ -101,13 +96,13 @@ defineEmits<{
   }
 
   &__icon {
-    font-size: v.$icon-size;
+    font-size: g($t, 'icon-size');
   }
 
   &__badge {
     position: absolute;
-    top: v.$badge-top;
-    right: v.$badge-right;
+    top: g($t, 'badge-top');
+    right: g($t, 'badge-right');
   }
 
   &__label {
@@ -122,28 +117,28 @@ defineEmits<{
   }
 
   &:hover {
-    color: var(--color-surface-contrast);
+    color: g($t, 'item-hover-color');
 
     .ui-navigation-rail-item__indicator {
-      opacity: 0.08;
-      background-color: var(--color-on-surface);
+      opacity: g($t, 'item-indicator-hover-opacity');
+      background-color: g($t, 'item-indicator-hover-color');
     }
   }
 
   &--active {
-    color: v.$item-active-color;
+    color: g($t, 'item-active-color');
     font-weight: 700;
 
     .ui-navigation-rail-item__indicator {
       opacity: 1;
-      background-color: var(--color-secondary-container);
+      background-color: g($t, 'item-indicator-color');
     }
 
     &:hover {
-      color: v.$item-active-color;
+      color: g($t, 'item-active-color');
 
       .ui-navigation-rail-item__indicator {
-        opacity: 0.12;
+        opacity: g($t, 'item-indicator-active-hover-opacity');
       }
     }
   }
@@ -160,6 +155,7 @@ defineEmits<{
       height: 56rem;
     }
 
+    // stylelint-disable-next-line selector-class-pattern -- fully-written descendant override (can't use `&__` here: `&` is `--expanded`)
     .ui-navigation-rail-item__icon-wrapper {
       top: 28rem;
       left: 40rem;

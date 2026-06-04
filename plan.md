@@ -55,15 +55,15 @@ Legend — effort: **S** small · **M** medium · **L** large.
 ## Phase 2 — Per-component refactors  *(SCSS axis + logic axis together)*
 
 ### Selection / group cluster
-- [ ] **2.1** `tabs` — SCSS legacy→migrate; tab↔panel coordination via `useGroup`/`createContext`; thin view. **(M)**
-- [ ] **2.2** `toolbar` — SCSS migrated (verify); item selection + component-type resolution → `useSelection`/context. **(M)**
-- [ ] **2.3** `radio` — SCSS migrated (verify); radio-group context (`useGroup`) + `useField`; drop manual name wiring. **(M)**
-- [ ] **2.4** `dropdown` — SCSS migrated (verify); `useSelection` (single/multi) + `usePopover`; context for selected-label/chips. **Atomic: finish decomposition** (trigger / panel / option / selected-chips leaves) — currently only half-split. **(M)**
-- [ ] **2.5** `table` — SCSS legacy→migrate; row-selection + sort state via `createContext`/`useSelection` (subs: header, pagination). **(L)**
-- [ ] **2.6** `expansion-panel` — SCSS legacy→migrate; accordion exclusivity via `createContext` group. **(M)**
-- [ ] **2.7** `navigation-bar` — SCSS legacy→migrate; item-selection context + `useLayoutItem`. **(M)**
-- [ ] **2.8** `navigation-rail` — SCSS legacy→migrate; item-selection + expanded context + `useLayoutItem`. **(L)**
-- [ ] **2.9** `navigation-drawer` — SCSS legacy→migrate; thin modal-wrapper cleanup. **(L)**
+- [x] **2.1** `tabs` — SCSS migrated (legacy `_tabs.scss` → nested `tabs/_index.scss` map; old partial deleted). Compound `<MTabs>`/`<MTab>`/`<MTabPanel>` over `createSingle({ mandatory: 'force' })` + `createContext('m3:tabs')` (`app/composables/tabs/useTabs.ts`); thin leaves. **Backward-compat:** flat `items[]` prop auto-renders `<MTab>`s, default content slot kept. **(M)**
+- [x] **2.2** `toolbar` — SCSS verified (unchanged). Opt-in registry selection: `useToolbar` (`app/composables/useToolbar.ts`) builds `createSingle`/`createGroup` only when `v-model`/`multiple` bound, provides `m3:toolbar` ctx; items registered as tickets (id-keyed). **Backward-compat:** with no model, legacy `item.selected` + `emit('select')` flow byte-identical. **(M)**
+- [x] **2.3** `radio` — SCSS verified (unchanged). `<MRadioGroup>` over `createSingle` + `m3:radio-group` ctx (null default, `app/composables/radio/useRadioGroup.ts`); group injects `name`. **Backward-compat:** standalone `<MRadio v-model :path>` (incl. vee-validate path) preserved — form-renderer untouched. **(M)**
+- [x] **2.4** `dropdown` — SCSS verified. Hand-rolled `any` selection replaced by `createSingle`/`createGroup` (typed). **Atomic decomposition finished:** `index.vue` orchestrator + `trigger`/`panel`/`option`/`selected-chips` leaves over `m3:dropdown` ctx; popover kept on `<m-menu>` (its own migration is 2.10). **Backward-compat:** `options[]`/`items[]`/`v-model`/all slots preserved (docs Playgrounds unchanged). **(M)**
+- [x] **2.5** `table` — SCSS migrated (`_table.scss` → `table/_index.scss`). Row-selection routed through `createGroup` keyed by `row.id` (was `JSON.stringify`) via `useTableSelection` + `m3:table` context (header/pagination consume it, props kept). `types.ts` `any`→`unknown`. **Backward-compat:** `selectable`/`v-model:selected-rows`/`v-model:sort`/all slots unchanged. **(L)**
+- [x] **2.6** `expansion-panel` — SCSS migrated. Compound `<MExpansionPanels multiple? mandatory?>` (createGroup when `multiple`, else createSingle exclusive) + `m3:expansion-panel-group` ctx; `<MExpansionPanel>` dual-mode. **Backward-compat:** standalone `<MExpansionPanel v-model>` unchanged. **(M)**
+- [x] **2.7** `navigation-bar` — SCSS migrated. Single-select via `createSingle` (id-keyed) + `m3:navigation-bar` ctx; keeps `useLayoutItem`. **Backward-compat:** `:items`/`v-model` unchanged. **(M)**
+- [x] **2.8** `navigation-rail` — SCSS migrated (shared map used by index + item). `createSingle` selection + `m3:navigation-rail` ctx (carries `expanded`); keeps `useLayoutItem` + expanded sizeToken + `:root` width vars. **Backward-compat:** `:items`/`:expanded`/`v-model` + item prop API unchanged. **(L)**
+- [x] **2.9** `navigation-drawer` — SCSS migrated; `vue-final-modal` engine + all props/slots kept (thin wrapper untouched). **(L)**
 
 ### Popover / overlay cluster
 - [ ] **2.10** `menu` — SCSS legacy→migrate; replace manual scroll/resize/click listeners with `useGlobalListener` + `useClickOutside`; z-index via `useStack`; keep `useMenu` FSM headless. **Atomic: split monolithic `index.vue`** (anchor / surface / item leaves) per slider reference. **(M)**

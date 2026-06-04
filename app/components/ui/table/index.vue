@@ -74,9 +74,12 @@
 </template>
 
 <script setup lang="ts" generic="T extends TableData">
+import { computed, toRef } from 'vue'
 import UiTableHeader from './header/index.vue'
 import UiTablePagination from './pagination/index.vue'
 import type { TableColumn, TableData, SortState } from './types'
+import { useTableSelection } from '~/composables/table/useTableSelection'
+import { provideTableContext } from '~/composables/table/useTableContext'
 
 interface Props {
   columns: TableColumn<T>[]
@@ -107,65 +110,66 @@ const emit = defineEmits<Emits>()
 
 const sortState = defineModel<SortState<T> | null>('sort', { default: null })
 
-const isAllSelected = computed(() => {
-  return props.data.length > 0 && props.data.every(row => isSelected(row))
+const { isSelected, toggleRow, isAllSelected, toggleAll } = useTableSelection<T>({
+  data: () => props.data,
+  selectedRows: () => props.selectedRows,
+  onChange: rows => emit('update:selectedRows', rows),
 })
 
-function isSelected(row: T) {
-  return props.selectedRows.some(r => JSON.stringify(r) === JSON.stringify(row))
-}
-
-function toggleRow(row: T) {
-  const newSelection = isSelected(row)
-    ? props.selectedRows.filter(r => JSON.stringify(r) !== JSON.stringify(row))
-    : [...props.selectedRows, row]
-
-  emit('update:selectedRows', newSelection)
-}
-
-function toggleAll(value: boolean) {
-  emit('update:selectedRows', value ? [...props.data] : [])
-}
+provideTableContext({
+  selectable: toRef(() => props.selectable),
+  isAllSelected,
+  toggleAll,
+  sort: computed({
+    get: () => sortState.value,
+    set: value => (sortState.value = value as SortState<T> | null),
+  }),
+  setSort: value => (sortState.value = value as SortState<T> | null),
+})
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/table' as v;
+@use '~/assets/stylesheet/components/table/index' as t;
 
 .ui-table-container {
+  $t: material-map(t.$tokens, 'md-table');
+
   width: 100%;
   overflow-x: auto;
-  background-color: v.$container-bg;
-  border-radius: v.$container-border-radius;
-  border: 1rem solid v.$container-border-color;
+  background-color: g($t, 'container-bg');
+  border-radius: g($t, 'container-border-radius');
+  border: g($t, 'container-border-width') solid g($t, 'container-border-color');
 }
 
 .ui-table {
+  $t: material-map(t.$tokens, 'md-table');
+
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 
   &__row {
-    border-bottom: 1rem solid v.$row-border-color;
+    border-bottom: g($t, 'row-border-width') solid g($t, 'row-border-color');
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
     &:hover:not(.ui-table__row--header) {
-      background-color: v.$row-hover-bg;
+      background-color: g($t, 'row-hover-bg');
     }
 
     &--selected {
-      background-color: v.$row-selected-bg;
+      background-color: g($t, 'row-selected-bg');
     }
   }
 
   &__cell {
-    padding: v.$cell-padding;
-    color: v.$cell-color;
+    padding: g($t, 'cell-padding');
+    color: g($t, 'cell-color');
 
-    @include typescale(v.$cell-text-type);
+    @include typescale(g($t, 'cell-text-type'));
 
     &--checkbox {
-      width: v.$cell-checkbox-width;
-      padding-inline: v.$cell-checkbox-padding-inline;
+      width: g($t, 'cell-checkbox-width');
+      padding-inline: g($t, 'cell-checkbox-padding-inline');
     }
   }
 }
