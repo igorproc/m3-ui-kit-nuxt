@@ -109,7 +109,7 @@ const filteredCards = computed(() => {
   &__search {
     max-width: 320rem;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       display: none;
     }
   }
@@ -122,7 +122,7 @@ const filteredCards = computed(() => {
     max-width: 1400rem;
     margin: 0 auto;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       padding: 16rem;
       gap: 24rem;
     }
@@ -139,7 +139,7 @@ const filteredCards = computed(() => {
     display: flex;
     align-items: center;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       padding: 32rem 24rem;
     }
   }
@@ -154,7 +154,7 @@ const filteredCards = computed(() => {
 
     @include typescale('display-small');
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       @include typescale('headline-medium');
     }
   }
@@ -186,7 +186,7 @@ const filteredCards = computed(() => {
     grid-template-columns: repeat(auto-fill, minmax(280rem, 1fr));
     gap: 16rem;
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       grid-template-columns: 1fr;
     }
   }

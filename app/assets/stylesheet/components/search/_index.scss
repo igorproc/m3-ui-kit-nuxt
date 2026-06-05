@@ -1,0 +1,55 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SEARCH M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  gap: 8rem,
+  max: (
+    width: 720rem,
+  ),
+  padding: (
+    inline: 16rem,
+  ),
+  min: (
+    height: 56rem,
+  ),
+  bg: (
+    color: var(--color-surface-container-highest),
+  ),
+  text: (
+    color: map.get($theme-color-link, 'on-surface'),
+  ),
+  border: (
+    width: 1rem,
+    color: map.get($theme-color-link, 'outline-variant'),
+  ),
+  input: (
+    padding: (
+      block: 8rem,
+    ),
+    text: (
+      type: 'body-large',
+    ),
+  ),
+  placeholder: (
+    color: map.get($theme-color-link, 'on-surface-variant'),
+  ),
+  icon: (
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    trailing: (
+      size: 40rem,
+    ),
+  ),
+  focused: (
+    border: (
+      width: 2rem,
+      color: map.get($theme-color-link, 'primary'),
+    ),
+  ),
+  disabled: (
+    opacity: 0.38,
+  ),
+);

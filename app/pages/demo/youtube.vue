@@ -84,7 +84,7 @@ const videos = [
     background-color: var(--color-surface);
     border-bottom: 1rem solid var(--color-outline-variant);
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       gap: 8rem;
       padding: 0 8rem;
     }
@@ -110,7 +110,7 @@ const videos = [
 
     @include typescale('title-large');
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       display: none;
     }
   }
@@ -120,7 +120,7 @@ const videos = [
     max-width: 640rem;
     margin: 0 auto;
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       max-width: 100%;
     }
   }
@@ -219,12 +219,12 @@ const videos = [
     gap: 24rem;
     padding: 16rem 24rem;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       padding: 12rem 16rem;
       gap: 16rem;
     }
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       padding: 8rem 12rem;
     }
   }
@@ -248,15 +248,15 @@ const videos = [
     grid-template-columns: repeat(4, 1fr);
     gap: 16rem;
 
-    @media (max-width: 1400px) {
+    @media (width <= 1400px) {
       grid-template-columns: repeat(3, 1fr);
     }
 
-    @media (max-width: 1024px) {
+    @media (width <= 1024px) {
       grid-template-columns: repeat(2, 1fr);
     }
 
-    @media (max-width: 600px) {
+    @media (width <= 600px) {
       grid-template-columns: 1fr;
     }
   }

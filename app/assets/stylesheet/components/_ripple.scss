@@ -23,7 +23,7 @@
     // M3 radial gradient soft edge
     background: radial-gradient(
       closest-side,
-      currentColor max(calc(100% - 70px), 65%),
+      currentcolor max(calc(100% - 70px), 65%),
       transparent 100%
     );
     opacity: 0;

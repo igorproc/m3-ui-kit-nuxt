@@ -344,7 +344,7 @@ const friends = [
     gap: 2rem;
     margin-left: 24rem;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       display: none;
     }
   }
@@ -452,7 +452,7 @@ const friends = [
     gap: 32rem;
     padding: 24rem;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       padding: 16rem;
       gap: 24rem;
     }
@@ -477,7 +477,7 @@ const friends = [
       pointer-events: none;
     }
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       padding: 32rem 24rem;
     }
   }
@@ -500,7 +500,7 @@ const friends = [
 
     @include typescale('headline-medium');
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       @include typescale('headline-small');
     }
   }
@@ -535,7 +535,7 @@ const friends = [
     grid-template-columns: repeat(auto-fill, minmax(240rem, 1fr));
     gap: 12rem;
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       grid-template-columns: 1fr;
     }
   }

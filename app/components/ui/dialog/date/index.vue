@@ -368,7 +368,6 @@ function onConfirm() {
 .ui-date-dialog {
   $prefix-mp: 'md-date-picker-modal-picker';
   $t-mp: material-map(mp.$tokens, $prefix-mp);
-
   $prefix-mi: 'md-date-picker-modal-input';
   $t-mi: material-map(mi.$tokens, $prefix-mi);
 
@@ -401,13 +400,17 @@ function onConfirm() {
 
   &__headline-label {
     margin: 0;
+
     @include apply-typography(g($t-mp, 'header-headline-label-typography'));
+
     color: g($t-mp, 'header-headline-label-color');
   }
 
   &__headline-date {
     margin: 0;
+
     @include apply-typography(g($t-mp, 'header-headline-date-typography'));
+
     color: g($t-mp, 'header-headline-date-color');
 
     &--placeholder {
@@ -450,7 +453,9 @@ function onConfirm() {
     background: none;
     cursor: pointer;
     color: g($t-mp, 'controls-view-toggle-color');
+
     @include apply-typography(g($t-mp, 'controls-view-toggle-typography'));
+
     border-radius: 999rem;
     transition: background-color 0.2s;
 
@@ -506,7 +511,9 @@ function onConfirm() {
     display: flex;
     align-items: center;
     justify-content: center;
+
     @include apply-typography(g($t-mp, 'weekday-typography'));
+
     color: g($t-mp, 'weekday-color');
   }
 
@@ -538,7 +545,9 @@ function onConfirm() {
 
     &-label {
       position: relative;
+
       @include apply-typography(g($t-mp, 'day-typography'));
+
       color: g($t-mp, 'day-color');
       z-index: 1;
     }
@@ -606,7 +615,9 @@ function onConfirm() {
     display: flex;
     align-items: center;
     justify-content: center;
+
     @include apply-typography(g($t-mp, 'year-typography'));
+
     color: g($t-mp, 'year-color');
     transition: background-color 0.2s;
 

@@ -114,7 +114,6 @@ const linkBindings = computed(() => {
   border: none;
   background-color: transparent;
   outline: none;
-
   gap: g($t, 'container-gap');
   min-height: g($t, 'container-height');
   border-radius: g($t, 'container-shape');
@@ -182,6 +181,7 @@ const linkBindings = computed(() => {
 
         &:hover:not(.ui-button--disabled) {
           background-color: g($t, "#{$base}-container-hover-color");
+
           @if $v == 'elevated' {
             box-shadow: g($t, "#{$base}-hover-shadow");
           }
@@ -194,9 +194,11 @@ const linkBindings = computed(() => {
         &.ui-button--disabled {
           background-color: g($t, "#{$base}-container-disabled-color");
           color: g($t, "#{$base}-label-text-disabled-color");
+
           @if $v == 'outlined' {
             border-color: g($t, "#{$base}-outline-disabled-color");
           }
+
           box-shadow: none !important;
         }
       }

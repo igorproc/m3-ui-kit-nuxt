@@ -69,8 +69,6 @@
 </template>
 
 <script setup lang="ts">
-import { useField } from 'vee-validate'
-
 type TextFieldVariant = 'filled' | 'outlined'
 
 interface Props {
@@ -98,29 +96,15 @@ const modelValue = defineModel<string>({ default: '' })
 const disabledModel = defineModel<boolean>('disabled', { default: false })
 const isFocused = defineModel<boolean>('focused', { default: false })
 
-const slots = useSlots()
-
 const fieldId = useId()
 
-const field = props.path ? useField<string>(() => props.path!, undefined) : null
-const value = field ? field.value : ref(modelValue.value)
-const meta = field ? field.meta : reactive({ valid: true })
-const errorMessage = field ? field.errorMessage : ref<string | undefined>(undefined)
-
-watch(
-  value,
-  (next) => {
-    modelValue.value = next ?? ''
-  },
-  { immediate: true },
-)
-
-watch(
-  modelValue,
-  (next) => {
-    value.value = next ?? ''
-  },
-)
+const { errorMessage, meta, onFocus, onBlur } = useTextField({
+  path: props.path,
+  model: modelValue,
+  focused: isFocused,
+  error: () => props.error,
+  externalError: () => props.errorMessage,
+})
 
 const describedBy = computed(() => {
   if (errorMessage.value || props.errorMessage || (props.error && props.helperText)) {
@@ -143,14 +127,6 @@ const controlClasses = computed(() => [
     'ui-text-field__control--disabled': disabledModel.value,
   },
 ])
-
-function onFocus() {
-  isFocused.value = true
-}
-
-function onBlur() {
-  isFocused.value = false
-}
 </script>
 
 <style lang="scss">
@@ -389,6 +365,7 @@ function onBlur() {
 
         &.ui-text-field__control--error {
           border-bottom-color: g($t, 'filled-error-focused-border-bottom-color');
+
           .ui-text-field__label {
             color: g($t, 'filled-error-focused-label-color') !important;
           }
@@ -406,6 +383,7 @@ function onBlur() {
 
         &.ui-text-field__control--error {
           border-color: g($t, 'outlined-error-focused-border-color') !important;
+
           .ui-text-field__label {
             color: g($t, 'outlined-error-focused-label-color') !important;
           }

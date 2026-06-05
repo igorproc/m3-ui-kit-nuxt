@@ -210,13 +210,17 @@ function confirm() {
 
   &__headline-label {
     margin: 0;
+
     @include apply-typography(g($t, 'header-headline-label-typography'));
+
     color: g($t, 'header-headline-label-color');
   }
 
   &__headline-date {
     margin: 0;
+
     @include apply-typography(g($t, 'header-headline-date-typography'));
+
     color: g($t, 'header-headline-date-color');
 
     &--placeholder {
@@ -247,7 +251,9 @@ function confirm() {
     background: none;
     cursor: pointer;
     color: g($t, 'controls-view-toggle-color');
+
     @include apply-typography(g($t, 'controls-view-toggle-typography'));
+
     border-radius: 999rem;
     transition: background-color 0.2s;
 
@@ -301,7 +307,9 @@ function confirm() {
     display: flex;
     align-items: center;
     justify-content: center;
+
     @include apply-typography(g($t, 'weekday-typography'));
+
     color: g($t, 'weekday-color');
   }
 
@@ -333,7 +341,9 @@ function confirm() {
 
     &-label {
       position: relative;
+
       @include apply-typography(g($t, 'day-typography'));
+
       color: g($t, 'day-color');
       z-index: 1;
     }
@@ -401,7 +411,9 @@ function confirm() {
     display: flex;
     align-items: center;
     justify-content: center;
+
     @include apply-typography(g($t, 'year-typography'));
+
     color: g($t, 'year-color');
     transition: background-color 0.2s;
 

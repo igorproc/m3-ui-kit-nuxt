@@ -5,10 +5,8 @@
 $hover-state-layer-opacity: 8%;
 $focus-state-layer-opacity: 12%;
 $pressed-state-layer-opacity: 12%;
-
 $disabled-container-opacity: 12%;
 $disabled-content-opacity: 38%;
-
 $on-surface: map.get($theme-color-link, 'on-surface');
 
 @function extended-fab-scheme($container, $on-container) {

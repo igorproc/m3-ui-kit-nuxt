@@ -201,7 +201,7 @@ $prefix: 'ui-slider-thumb';
       width: g($t, 'tooltip.width');
       height: g($t, 'tooltip.width'); // matches width to make a circle
       background-color: g($t, 'tooltip.background');
-      border-radius: 50% 50% 0 50%; // sharp point at bottom-right
+      border-radius: 50% 50% 0; // sharp point at bottom-right
       transform: rotate(45deg); // rotate to position point at bottom-center
       z-index: -1;
     }
@@ -211,6 +211,7 @@ $prefix: 'ui-slider-thumb';
     position: relative;
     top: -4rem; // raise text inside balloon
     color: g($t, 'tooltip.color');
+
     @include apply-typography(g($t, 'tooltip.typography'));
   }
 
@@ -223,10 +224,7 @@ $prefix: 'ui-slider-thumb';
 
   // Adjust Tooltip for vertical orientation
   &--vertical &__value-label {
-    bottom: auto;
-    left: auto;
-    right: 34rem; // Left side visually
-    top: 50%;
+    inset: 50% 34rem auto auto; // Left side visually
     transform: translateY(-50%) scale(0);
     transform-origin: center right;
 

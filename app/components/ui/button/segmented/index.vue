@@ -114,10 +114,8 @@ function selectItem(val: string | number) {
     height: 100%;
     padding-inline: g($t, 'segment-padding-inline');
     gap: g($t, 'segment-gap');
-
     background-color: g($t, 'unselected-container-color');
     color: g($t, 'unselected-content-color');
-
     border: none;
     border-right: 1rem solid g($t, 'container-outline-color');
     cursor: pointer;

@@ -43,7 +43,6 @@ withDefaults(defineProps<Props>(), {
   position: relative;
   overflow: hidden;
   outline: none;
-
   box-shadow: g($t, 'elevation-resting');
   transition:
     box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),

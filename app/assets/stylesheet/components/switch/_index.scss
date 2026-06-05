@@ -1,0 +1,90 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SWITCH M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  gap: 12rem,
+  label: (
+    color: map.get($theme-color-link, 'on-surface'),
+    text: (
+      type: 'body-medium',
+    ),
+  ),
+  track: (
+    width: 52rem,
+    height: 32rem,
+    bg: (
+      color: var(--color-surface-container-highest),
+    ),
+    border: (
+      color: map.get($theme-color-link, 'outline'),
+      width: 2rem,
+    ),
+  ),
+  thumb: (
+    size: (
+      off: 16rem,
+      on: 24rem,
+      active: 28rem,
+    ),
+    color: (
+      off: map.get($theme-color-link, 'outline'),
+      on: map.get($theme-color-link, 'on-primary'),
+      hover: (
+        off: map.get($theme-color-link, 'on-surface-variant'),
+        on: map.get($theme-color-link, 'primary-container'),
+      ),
+    ),
+  ),
+  state: (
+    layer: (
+      size: 40rem,
+      opacity: (
+        hover: 0.08,
+        active: 0.1,
+      ),
+    ),
+  ),
+  checked: (
+    track: (
+      bg: (
+        color: map.get($theme-color-link, 'primary'),
+      ),
+      border: (
+        color: map.get($theme-color-link, 'primary'),
+      ),
+    ),
+    thumb: (
+      container: (
+        translate: 20rem,
+      ),
+    ),
+  ),
+  disabled: (
+    opacity: 0.38,
+    track: (
+      bg: (
+        color: color-mix(in srgb, #{map.get($theme-color-link, 'surface-variant')} 12%, transparent),
+      ),
+      border: (
+        color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
+      ),
+    ),
+    thumb: (
+      color: map.get($theme-color-link, 'on-surface'),
+    ),
+    checked: (
+      track: (
+        bg: (
+          color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
+        ),
+      ),
+      thumb: (
+        color: map.get($theme-color-link, 'surface'),
+      ),
+    ),
+  ),
+);

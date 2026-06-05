@@ -5,7 +5,7 @@ $tokens: (
   size: 20rem,
   color: map.get($theme-color-link, primary),
   elevation: (
-    shadow: (0 1rem 2rem 0 rgba(0, 0, 0, 0.3), 0 1rem 3rem 1rem rgba(0, 0, 0, 0.15)),
+    shadow: (0 1rem 2rem 0 rgb(0 0 0 / 30%), 0 1rem 3rem 1rem rgb(0 0 0 / 15%)),
   ),
   state: (
     layer: (

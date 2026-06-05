@@ -50,8 +50,11 @@ const state = reactive({
   showMenu: false,
   textFieldVal: '',
   searchVal: '',
+  searchValFilled: 'Wireless headphones',
   checkboxVal: true,
+  checkboxUnchecked: false,
   switchVal: true,
+  switchOff: false,
   radioVal: 'a',
   segmentedVal: ['map'],
   dateVal: null,
@@ -144,8 +147,10 @@ const sections = computed(() => [
     id: 'checkbox',
     title: 'Checkbox',
     variants: [
-      { label: 'Standard', render: () => h(resolveComponent('m-checkbox'), { 'label': 'Accept Terms', 'modelValue': state.checkboxVal, 'onUpdate:modelValue': (v: boolean) => state.checkboxVal = v }) },
+      { label: 'Checked', render: () => h(resolveComponent('m-checkbox'), { 'label': 'Accept Terms', 'modelValue': state.checkboxVal, 'onUpdate:modelValue': (v: boolean) => state.checkboxVal = v }) },
+      { label: 'Unchecked', render: () => h(resolveComponent('m-checkbox'), { 'label': 'Subscribe', 'modelValue': state.checkboxUnchecked, 'onUpdate:modelValue': (v: boolean) => state.checkboxUnchecked = v }) },
       { label: 'Disabled', render: () => h(resolveComponent('m-checkbox'), { label: 'Cannot Select', disabled: true }) },
+      { label: 'Disabled Checked', render: () => h(resolveComponent('m-checkbox'), { label: 'Locked on', disabled: true, modelValue: true }) },
     ],
   },
   {
@@ -319,7 +324,9 @@ const sections = computed(() => [
     id: 'search',
     title: 'Search',
     variants: [
-      { label: 'Standard', render: () => h(resolveComponent('m-search'), { 'placeholder': 'Search...', 'modelValue': state.searchVal, 'onUpdate:modelValue': (v: string) => state.searchVal = v }) },
+      { label: 'Empty', render: () => h(resolveComponent('m-search'), { 'placeholder': 'Search...', 'modelValue': state.searchVal, 'onUpdate:modelValue': (v: string) => state.searchVal = v }) },
+      { label: 'Filled (clear button)', render: () => h(resolveComponent('m-search'), { 'placeholder': 'Search...', 'modelValue': state.searchValFilled, 'onUpdate:modelValue': (v: string) => state.searchValFilled = v }) },
+      { label: 'Disabled', render: () => h(resolveComponent('m-search'), { placeholder: 'Search...', disabled: true, modelValue: 'Cannot edit' }) },
     ],
   },
   {
@@ -335,8 +342,10 @@ const sections = computed(() => [
     id: 'switch',
     title: 'Switch',
     variants: [
-      { label: 'Standard', render: () => h(resolveComponent('m-switch'), { 'label': 'Wi-Fi', 'modelValue': state.switchVal, 'onUpdate:modelValue': (v: boolean) => state.switchVal = v }) },
-      { label: 'Disabled', render: () => h(resolveComponent('m-switch'), { label: 'Bluetooth', modelValue: false, disabled: true }) },
+      { label: 'On', render: () => h(resolveComponent('m-switch'), { 'label': 'Wi-Fi', 'modelValue': state.switchVal, 'onUpdate:modelValue': (v: boolean) => state.switchVal = v }) },
+      { label: 'Off', render: () => h(resolveComponent('m-switch'), { 'label': 'Airplane mode', 'modelValue': state.switchOff, 'onUpdate:modelValue': (v: boolean) => state.switchOff = v }) },
+      { label: 'Disabled Off', render: () => h(resolveComponent('m-switch'), { label: 'Bluetooth', modelValue: false, disabled: true }) },
+      { label: 'Disabled On', render: () => h(resolveComponent('m-switch'), { label: 'Location', modelValue: true, disabled: true }) },
     ],
   },
   {
@@ -361,6 +370,9 @@ const sections = computed(() => [
     variants: [
       { label: 'Filled with Prepend Slot', render: () => h(resolveComponent('m-text-field'), { 'label': 'Username', 'modelValue': state.textFieldVal, 'onUpdate:modelValue': (v: string) => state.textFieldVal = v }, { prepend: () => hIcon(ICONS.person) }) },
       { label: 'Outlined with Append Slot', render: () => h(resolveComponent('m-text-field'), { variant: 'outlined', label: 'Password', type: 'password' }, { append: () => h(resolveComponent('m-button-icon'), { variant: 'text' }, { default: () => hIcon(ICONS.visibility) }) }) },
+      { label: 'Filled with Helper Text', render: () => h(resolveComponent('m-text-field'), { label: 'Email', type: 'email', helperText: 'We will never share your email.' }, { prepend: () => hIcon(ICONS.email) }) },
+      { label: 'Error State', render: () => h(resolveComponent('m-text-field'), { variant: 'outlined', label: 'Email', type: 'email', error: true, errorMessage: 'Enter a valid email address.' }) },
+      { label: 'Disabled', render: () => h(resolveComponent('m-text-field'), { label: 'Disabled field', disabled: true, modelValue: 'Read only' }) },
     ],
   },
   {

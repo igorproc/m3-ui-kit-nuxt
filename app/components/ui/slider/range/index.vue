@@ -102,7 +102,7 @@ $prefix: 'ui-slider-range';
       inset: 0;
       background-image: radial-gradient(
         circle at 2rem center,
-        color-mix(in srgb, var(--color-on-primary, #ffffff) 38%, transparent) 2rem,
+        color-mix(in srgb, var(--color-on-primary, #fff) 38%, transparent) 2rem,
         transparent 2rem
       );
       background-size: calc(100% / var(--ui-slider-tick-count)) 100%;
@@ -118,7 +118,7 @@ $prefix: 'ui-slider-range';
     &::before {
       background-image: radial-gradient(
         circle at center 2rem,
-        color-mix(in srgb, var(--color-on-primary, #ffffff) 38%, transparent) 2rem,
+        color-mix(in srgb, var(--color-on-primary, #fff) 38%, transparent) 2rem,
         transparent 2rem
       );
       background-size: 100% calc(100% / var(--ui-slider-tick-count));

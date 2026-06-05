@@ -265,7 +265,7 @@ const testimonials = [
     justify-content: space-between;
     padding: 0 24rem;
     height: 100%;
-    background: rgba(var(--color-surface-rgb), 0.8);
+    background: rgb(var(--color-surface-rgb), 0.8);
     backdrop-filter: blur(12rem);
     border-bottom: 1rem solid var(--color-outline-variant);
     position: relative;
@@ -279,6 +279,7 @@ const testimonials = [
 
     &-text {
       @include typescale('title-large');
+
       font-weight: 700;
       letter-spacing: -0.5rem;
     }
@@ -289,7 +290,7 @@ const testimonials = [
     align-items: center;
     gap: 32rem;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       display: none;
     }
   }
@@ -298,6 +299,7 @@ const testimonials = [
     text-decoration: none;
     color: var(--color-on-surface-variant);
     transition: color 200ms;
+
     @include typescale('label-large');
 
     &:hover, &--active {
@@ -337,17 +339,19 @@ const testimonials = [
 
     &-title {
       @include typescale('display-large');
+
       margin: 0 0 24rem;
       color: var(--color-on-surface);
       line-height: 1.1;
 
-      @media (max-width: 600px) {
+      @media (width <= 600px) {
         @include typescale('display-medium');
       }
     }
 
     &-subtitle {
       @include typescale('title-medium');
+
       color: var(--color-on-surface-variant);
       margin: 0 0 40rem;
       max-width: 600rem;
@@ -360,7 +364,7 @@ const testimonials = [
       gap: 16rem;
       margin-bottom: 64rem;
 
-      @media (max-width: 480px) {
+      @media (width <= 480px) {
         flex-direction: column;
       }
     }
@@ -380,12 +384,14 @@ const testimonials = [
 
     &-value {
       @include typescale('headline-medium');
+
       color: var(--color-primary);
       font-weight: 700;
     }
 
     &-label {
       @include typescale('label-medium');
+
       color: var(--color-on-surface-variant);
     }
   }
@@ -400,12 +406,14 @@ const testimonials = [
 
   &__section-title {
     @include typescale('headline-large');
+
     text-align: center;
     margin: 0 0 16rem;
   }
 
   &__section-subtitle {
     @include typescale('title-medium');
+
     text-align: center;
     color: var(--color-on-surface-variant);
     margin: 0 0 48rem;
@@ -442,6 +450,7 @@ const testimonials = [
 
   &__feature-title {
     @include typescale('title-large');
+
     margin: 0 0 12rem;
   }
 
@@ -458,6 +467,7 @@ const testimonials = [
 
     &-text {
       @include typescale('body-large');
+
       font-style: italic;
       margin-bottom: 24rem;
     }
@@ -469,11 +479,13 @@ const testimonials = [
 
       strong {
         display: block;
+
         @include typescale('title-medium');
       }
 
       span {
         @include typescale('body-small');
+
         color: var(--color-on-surface-variant);
       }
     }
@@ -487,11 +499,13 @@ const testimonials = [
 
     &-title {
       @include typescale('display-small');
+
       margin-bottom: 16rem;
     }
 
     &-subtitle {
       @include typescale('title-medium');
+
       margin-bottom: 40rem;
     }
 
@@ -515,12 +529,12 @@ const testimonials = [
     max-width: 1200rem;
     margin: 0 auto 32rem;
 
-    @media (max-width: 768px) {
+    @media (width <= 768px) {
       grid-template-columns: repeat(2, 1fr);
       gap: 24rem;
     }
 
-    @media (max-width: 480px) {
+    @media (width <= 480px) {
       grid-template-columns: 1fr;
     }
   }
@@ -533,13 +547,16 @@ const testimonials = [
     h4 {
       margin: 0 0 8rem;
       color: var(--color-on-surface);
+
       @include typescale('title-small');
     }
 
     a {
       color: var(--color-on-surface-variant);
       text-decoration: none;
+
       @include typescale('body-medium');
+
       transition: color 200ms;
 
       &:hover {
@@ -553,6 +570,7 @@ const testimonials = [
     padding-top: 32rem;
     border-top: 1rem solid var(--color-outline-variant);
     color: var(--color-on-surface-variant);
+
     @include typescale('body-small');
   }
 }

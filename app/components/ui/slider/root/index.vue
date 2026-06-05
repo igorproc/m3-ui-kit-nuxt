@@ -56,6 +56,7 @@ $prefix: 'ui-slider-root';
 
   &__label {
     color: g($t, 'label.color');
+
     @include apply-typography(g($t, 'label.typography'));
   }
 }

@@ -51,4 +51,7 @@ export const ICONS = {
   cloud: 'ic:outline-cloud',
   edit: 'ic:outline-edit',
   event: 'ic:outline-event',
+  person: 'ic:outline-person',
+  visibility: 'ic:outline-visibility',
+  visibilityOff: 'ic:outline-visibility-off',
 } as const

@@ -7,9 +7,7 @@
     [data-definition="#{$definition}"][data-pallet="#{$pallet}"] {
       @content;
     }
-  }
-
-  @else {
+  } @else {
     [data-definition="#{$definition}"][data-pallet="#{$pallet}"][data-contrast="#{$contrast}"] {
       @content;
     }
@@ -86,9 +84,7 @@
 
     @if type-of($value)=='map' {
       @include generate-tokens($value, $var-name);
-    }
-
-    @else {
+    } @else {
       --#{$var-name}: #{$value};
     }
   }

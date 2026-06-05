@@ -71,20 +71,24 @@ function onClear() {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/search' as v;
+@use '~/assets/stylesheet/components/search' as t;
 
 .ui-search {
+  $prefix: 'md-search';
+  $t: material-map(t.$tokens, $prefix);
+
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: v.$gap;
+  gap: g($t, 'gap');
   width: 100%;
-  max-width: v.$max-width;
-  padding-inline: v.$padding-inline;
-  min-height: v.$min-height;
-  border-radius: v.$border-radius;
-  background-color: v.$bg-color-default;
-  color: v.$text-color-default;
-  box-shadow: 0 0 0 v.$border-width-default v.$border-color-default;
+  max-width: g($t, 'max-width');
+  padding-inline: g($t, 'padding-inline');
+  min-height: g($t, 'min-height');
+  border-radius: var(--sys-shape-corner-full);
+  background-color: g($t, 'bg-color');
+  color: g($t, 'text-color');
+  box-shadow: 0 0 0 g($t, 'border-width') g($t, 'border-color');
   transition:
     box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -95,13 +99,17 @@ function onClear() {
     border: none;
     outline: none;
     background: transparent;
-    color: v.$text-color-default;
-    padding-block: v.$input-padding-block;
+    color: g($t, 'text-color');
+    padding-block: g($t, 'input-padding-block');
 
-    @include typescale(v.$input-text-type);
+    // Always reserve room for the absolutely-positioned clear button so its
+    // appearance/removal never reflows the input (no CLS).
+    padding-right: calc(#{g($t, 'icon-trailing-size')} + #{g($t, 'gap')});
+
+    @include typescale(g($t, 'input-text-type'));
 
     &::placeholder {
-      color: v.$placeholder-color;
+      color: g($t, 'placeholder-color');
       opacity: 1;
     }
 
@@ -115,11 +123,15 @@ function onClear() {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: v.$icon-color;
+    color: g($t, 'icon-color');
 
     &--trailing {
-      width: v.$trailing-icon-size;
-      height: v.$trailing-icon-size;
+      position: absolute;
+      top: 50%;
+      right: g($t, 'padding-inline');
+      transform: translateY(-50%);
+      width: g($t, 'icon-trailing-size');
+      height: g($t, 'icon-trailing-size');
       border-radius: 999rem;
       border: none;
       background: transparent;
@@ -137,13 +149,13 @@ function onClear() {
   }
 
   &--focused {
-    box-shadow: 0 0 0 v.$focused-border-width v.$focused-border-color;
-    background-color: v.$bg-color-default;
+    box-shadow: 0 0 0 g($t, 'focused-border-width') g($t, 'focused-border-color');
+    background-color: g($t, 'bg-color');
   }
 
   &--empty {
     .ui-search__icon--leading {
-      color: v.$icon-color;
+      color: g($t, 'icon-color');
     }
   }
 
@@ -151,12 +163,12 @@ function onClear() {
     background-color: color-mix(
       in srgb,
       var(--color-on-surface) 4%,
-      v.$bg-color-default
+      g($t, 'bg-color')
     );
   }
 
   &:has(.ui-search__input:disabled) {
-    opacity: v.$disabled-opacity;
+    opacity: g($t, 'disabled-opacity');
     cursor: default;
   }
 }

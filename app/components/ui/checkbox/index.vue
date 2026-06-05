@@ -37,8 +37,10 @@
 </template>
 
 <script setup lang="ts">
-import { useField } from 'vee-validate'
 import { ICONS } from '~~/shared/constants/icons'
+// Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
+// would otherwise shadow the kit composable and break the `{ path, model }` call.
+import { useField } from '~/composables/useField'
 
 interface Props {
   path?: string
@@ -56,6 +58,17 @@ const modelValue = defineModel<boolean>({ default: false })
 
 const fieldId = useId()
 
+// Coerce the synced field value to a strict boolean (the native checkbox
+// contract) without mutating the shared `useField` composable.
+const booleanModel = computed({
+  get: () => modelValue.value,
+  set: (next) => {
+    modelValue.value = Boolean(next)
+  },
+})
+
+const { errorMessage } = useField({ path: props.path, model: booleanModel })
+
 const checkboxClasses = computed(() => [
   {
     'ui-checkbox--checked': modelValue.value,
@@ -63,36 +76,6 @@ const checkboxClasses = computed(() => [
     'ui-checkbox--error': Boolean(errorMessage.value),
   },
 ])
-
-const errorMessage = ref<string | undefined>()
-
-if (props.path) {
-  const field = useField<boolean>(() => props.path as string, undefined)
-  const { value, errorMessage: fieldError } = field
-
-  watch(
-    value,
-    (next) => {
-      modelValue.value = Boolean(next)
-    },
-    { immediate: true },
-  )
-
-  watch(
-    modelValue,
-    (next) => {
-      value.value = Boolean(next)
-    },
-  )
-
-  watch(
-    fieldError,
-    (next) => {
-      errorMessage.value = next || undefined
-    },
-    { immediate: true },
-  )
-}
 </script>
 
 <style lang="scss">

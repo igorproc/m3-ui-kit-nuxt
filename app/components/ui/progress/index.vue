@@ -261,6 +261,7 @@ const linearWavePath = computed(() => {
       stroke-width: 6;
       stroke-linecap: round;
       stroke-linejoin: round;
+
       // In expressive mode, the bar itself is a full-width SVG and we clip its container
     }
 
@@ -380,10 +381,12 @@ const linearWavePath = computed(() => {
     stroke-dasharray: 1, 200;
     stroke-dashoffset: 0;
   }
+
   50% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -35;
   }
+
   100% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -124;

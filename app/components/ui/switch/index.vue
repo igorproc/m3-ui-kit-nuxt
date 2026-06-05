@@ -12,6 +12,7 @@
       :disabled="disabled"
       role="switch"
       :aria-checked="modelValue"
+      :aria-invalid="hasError ? 'true' : undefined"
     >
 
     <span class="ui-switch__track">
@@ -33,6 +34,10 @@
 </template>
 
 <script setup lang="ts">
+// Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
+// would otherwise shadow the kit composable and break the `{ path, model }` call.
+import { useField } from '~/composables/useField'
+
 interface Props {
   path?: string
   label?: string
@@ -49,6 +54,17 @@ const modelValue = defineModel<boolean>({ default: false })
 
 const fieldId = useId()
 
+// Coerce the synced field value to a strict boolean (the native switch
+// contract) without mutating the shared `useField` composable.
+const booleanModel = computed({
+  get: () => modelValue.value,
+  set: (next) => {
+    modelValue.value = Boolean(next)
+  },
+})
+
+const { hasError } = useField({ path: props.path, model: booleanModel })
+
 const switchClasses = computed(() => [
   {
     'ui-switch--checked': modelValue.value,
@@ -58,12 +74,15 @@ const switchClasses = computed(() => [
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/switch' as v;
+@use '~/assets/stylesheet/components/switch' as t;
 
 .ui-switch {
+  $prefix: 'md-switch';
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: center;
-  gap: v.$gap;
+  gap: g($t, 'gap');
   cursor: pointer;
 
   &__input {
@@ -74,11 +93,11 @@ const switchClasses = computed(() => [
 
   &__track {
     position: relative;
-    width: v.$track-width;
-    height: v.$track-height;
+    width: g($t, 'track-width');
+    height: g($t, 'track-height');
     border-radius: var(--sys-shape-corner-full);
-    background-color: v.$track-bg-color;
-    border: v.$track-border-width solid v.$track-border-color;
+    background-color: g($t, 'track-bg-color');
+    border: g($t, 'track-border-width') solid g($t, 'track-border-color');
     box-sizing: border-box;
     transition:
       background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -88,9 +107,9 @@ const switchClasses = computed(() => [
   &__thumb-container {
     position: absolute;
     top: 50%;
-    left: v.$track-border-width;
-    width: v.$thumb-size-on;
-    height: v.$thumb-size-on;
+    left: g($t, 'track-border-width');
+    width: g($t, 'thumb-size-on');
+    height: g($t, 'thumb-size-on');
     transform: translateY(-50%);
     display: flex;
     justify-content: center;
@@ -99,10 +118,10 @@ const switchClasses = computed(() => [
   }
 
   &__thumb {
-    width: v.$thumb-size-off;
-    height: v.$thumb-size-off;
+    width: g($t, 'thumb-size-off');
+    height: g($t, 'thumb-size-off');
     border-radius: var(--sys-shape-corner-full);
-    background-color: v.$thumb-color-off;
+    background-color: g($t, 'thumb-color-off');
     transition:
       width var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
       height var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
@@ -114,8 +133,8 @@ const switchClasses = computed(() => [
     position: absolute;
     top: 50%;
     left: 50%;
-    width: v.$state-layer-size;
-    height: v.$state-layer-size;
+    width: g($t, 'state-layer-size');
+    height: g($t, 'state-layer-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
     background-color: var(--color-on-surface);
@@ -127,50 +146,51 @@ const switchClasses = computed(() => [
   }
 
   &--checked &__track {
-    background-color: v.$checked-track-bg-color;
-    border-color: v.$checked-track-border-color;
+    background-color: g($t, 'checked-track-bg-color');
+    border-color: g($t, 'checked-track-border-color');
   }
 
   &--checked &__thumb-container {
-    transform: translate(v.$checked-thumb-container-translate, -50%);
+    transform: translate(g($t, 'checked-thumb-container-translate'), -50%);
   }
 
   &--checked &__thumb {
-    width: v.$thumb-size-on;
-    height: v.$thumb-size-on;
-    background-color: v.$thumb-color-on;
+    width: g($t, 'thumb-size-on');
+    height: g($t, 'thumb-size-on');
+    background-color: g($t, 'thumb-color-on');
   }
 
   &--checked &__state-layer {
-    background-color: v.$checked-track-bg-color;
+    background-color: g($t, 'checked-track-bg-color');
   }
 
-  &:hover &__state-layer {
-    opacity: v.$state-layer-opacity-hover;
+  // Interaction states never apply while disabled (no thumb grow / state layer).
+  &:not(.ui-switch--disabled):hover &__state-layer {
+    opacity: g($t, 'state-layer-opacity-hover');
     transform: translate(-50%, -50%) scale(1);
   }
 
-  &:hover &__thumb {
-    background-color: v.$thumb-color-hover-off;
+  &:not(.ui-switch--disabled):hover &__thumb {
+    background-color: g($t, 'thumb-color-hover-off');
   }
 
-  &:active &__thumb {
-    width: v.$thumb-size-active;
-    height: v.$thumb-size-active;
+  &:not(.ui-switch--disabled):active &__thumb {
+    width: g($t, 'thumb-size-active');
+    height: g($t, 'thumb-size-active');
   }
 
-  &:active &__state-layer {
-    opacity: v.$state-layer-opacity-active;
+  &:not(.ui-switch--disabled):active &__state-layer {
+    opacity: g($t, 'state-layer-opacity-active');
   }
 
-  &--checked:hover &__thumb {
-    background-color: v.$thumb-color-hover-on;
+  &--checked:not(.ui-switch--disabled):hover &__thumb {
+    background-color: g($t, 'thumb-color-hover-on');
   }
 
   &__label {
-    color: v.$label-color;
+    color: g($t, 'label-color');
 
-    @include typescale(v.$label-text-type);
+    @include typescale(g($t, 'label-text-type'));
   }
 
   /* stylelint-disable no-descending-specificity, selector-class-pattern */
@@ -182,27 +202,27 @@ const switchClasses = computed(() => [
     }
 
     .ui-switch__track {
-      background-color: v.$disabled-track-bg-color;
-      border-color: v.$disabled-track-border-color;
+      background-color: g($t, 'disabled-track-bg-color');
+      border-color: g($t, 'disabled-track-border-color');
     }
 
     .ui-switch__thumb {
-      background-color: v.$disabled-thumb-color;
-      opacity: v.$disabled-opacity;
+      background-color: g($t, 'disabled-thumb-color');
+      opacity: g($t, 'disabled-opacity');
     }
 
     .ui-switch__label {
-      opacity: v.$disabled-opacity;
+      opacity: g($t, 'disabled-opacity');
     }
   }
 
   &--checked.ui-switch--disabled .ui-switch__track {
-    background-color: v.$disabled-checked-track-bg-color;
+    background-color: g($t, 'disabled-checked-track-bg-color');
     border-color: transparent;
   }
 
   &--checked.ui-switch--disabled .ui-switch__thumb {
-    background-color: v.$disabled-checked-thumb-color;
+    background-color: g($t, 'disabled-checked-thumb-color');
     opacity: 1;
   }
   /* stylelint-enable no-descending-specificity, selector-class-pattern */

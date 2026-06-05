@@ -67,7 +67,7 @@ $tokens: (
     ),
     selected: (
       bg: var(--md-sys-color-primary, #6750A4),
-      color: var(--md-sys-color-on-primary, #FFFFFF),
+      color: var(--md-sys-color-on-primary, #FFF),
       hover: (
         bg: color-mix(in srgb, var(--md-sys-color-on-primary) 8%, var(--md-sys-color-primary)),
       ),
@@ -82,7 +82,7 @@ $tokens: (
     ),
     selected: (
       bg: var(--md-sys-color-primary, #6750A4),
-      color: var(--md-sys-color-on-primary, #FFFFFF),
+      color: var(--md-sys-color-on-primary, #FFF),
     ),
     current: (
       color: var(--md-sys-color-primary, #6750A4),

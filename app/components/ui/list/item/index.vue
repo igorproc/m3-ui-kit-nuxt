@@ -166,10 +166,7 @@ const tag = computed(() => {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: g($t, 'padding-between');
-  padding-left: g($t, 'padding-leading');
-  padding-right: g($t, 'padding-trailing');
-  padding-top: g($t, 'padding-top');
-  padding-bottom: g($t, 'padding-bottom');
+  padding: g($t, 'padding-top') g($t, 'padding-trailing') g($t, 'padding-bottom') g($t, 'padding-leading');
   border-radius: g($t, 'shape');
   background-color: g($t, 'container-color');
   border: none;
@@ -201,6 +198,7 @@ const tag = computed(() => {
     .ui-list-item__leading {
       margin-top: 4rem; // align to top for three lines
     }
+
     .ui-list-item__trailing {
       margin-top: 4rem; // align to top for three lines
     }

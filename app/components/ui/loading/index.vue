@@ -115,18 +115,21 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   &--small {
     width: v.$size-small;
     height: v.$size-small;
+
     --ui-loading-thickness: 3rem;
   }
 
   &--medium {
     width: v.$size-medium;
     height: v.$size-medium;
+
     --ui-loading-thickness: 4rem;
   }
 
   &--large {
     width: v.$size-large;
     height: v.$size-large;
+
     --ui-loading-thickness: 5rem;
   }
 
@@ -205,9 +208,11 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   0% {
     transform: rotate(265deg);
   }
+
   50% {
     transform: rotate(130deg);
   }
+
   100% {
     transform: rotate(265deg);
   }
@@ -217,24 +222,31 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   12.5% {
     transform: rotate(135deg);
   }
+
   25% {
     transform: rotate(270deg);
   }
+
   37.5% {
     transform: rotate(405deg);
   }
+
   50% {
     transform: rotate(540deg);
   }
+
   62.5% {
     transform: rotate(675deg);
   }
+
   75% {
     transform: rotate(810deg);
   }
+
   87.5% {
     transform: rotate(945deg);
   }
+
   100% {
     transform: rotate(1080deg);
   }

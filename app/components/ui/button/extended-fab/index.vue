@@ -49,10 +49,8 @@ withDefaults(defineProps<Props>(), {
   position: relative;
   overflow: hidden;
   outline: none;
-
   padding-inline: g($t, 'container-padding-medium');
   gap: g($t, 'container-gap-medium');
-
   box-shadow: g($t, 'container-elevation-resting');
   transition:
     box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),
