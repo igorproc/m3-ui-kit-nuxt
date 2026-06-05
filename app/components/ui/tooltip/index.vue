@@ -33,7 +33,8 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { useStack } from '~/composables/useStack'
+import { useGlobalListener } from '~/composables/useGlobalListener'
 
 interface Props {
   text?: string
@@ -47,12 +48,16 @@ const visible = ref(false)
 const triggerRef = ref<HTMLElement | null>(null)
 const tooltipRef = ref<HTMLElement | null>(null)
 
+// Overlay stacking: keep the tooltip above whatever overlay it annotates.
+const ticket = useStack().register()
+
 const position = ref({ top: 0, left: 0 })
 
 const tooltipStyle = computed(() => ({
   top: `${position.value.top}px`,
   left: `${position.value.left}px`,
   position: 'fixed' as const,
+  zIndex: ticket.zIndex.value,
 }))
 
 const updatePosition = () => {
@@ -79,23 +84,23 @@ const updatePosition = () => {
 
 async function onEnter() {
   visible.value = true
+  ticket.select()
   await nextTick()
   updatePosition()
 }
 
 function onLeave() {
   visible.value = false
+  ticket.unselect()
 }
 
 // Reactively reposition tooltip on scroll/resize when visible
-if (import.meta.client) {
-  useEventListener('scroll', updatePosition, { capture: true, passive: true })
-  useEventListener('resize', updatePosition, { passive: true })
-}
+useGlobalListener('window', 'scroll', updatePosition, { capture: true, passive: true })
+useGlobalListener('window', 'resize', updatePosition, { passive: true })
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/tooltip' as v;
+@use '~/assets/stylesheet/components/tooltip/index' as t;
 
 .ui-tooltip {
   position: relative;
@@ -108,16 +113,17 @@ if (import.meta.client) {
 
 // Teleported content
 .ui-tooltip__content {
-  z-index: v.$z-index;
-  padding: v.$content-padding;
-  border-radius: v.$content-border-radius;
-  background-color: v.$content-bg-color;
-  color: v.$content-color;
+  $t: material-map(t.$tokens, 'md-tooltip');
+
+  padding: g($t, 'content-padding');
+  border-radius: g($t, 'content-border-radius');
+  background-color: g($t, 'content-bg-color');
+  color: g($t, 'content-color');
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: v.$content-shadow;
+  box-shadow: g($t, 'content-shadow');
 
-  @include typescale(v.$content-text-type);
+  @include typescale(g($t, 'content-text-type'));
 }
 
 // Vue Transition

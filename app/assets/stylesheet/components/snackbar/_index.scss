@@ -1,0 +1,48 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SNACKBAR M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  bottom: (
+    offset: 16rem,
+  ),
+  surface: (
+    max: (
+      width: 560rem,
+    ),
+    margin: (
+      inline: 16rem,
+    ),
+    padding: 12rem 16rem,
+    border: (
+      radius: var(--sys-shape-corner-large),
+    ),
+    bg: (
+      color: var(--color-surface),
+    ),
+    color: var(--color-on-surface),
+    shadow: (0 2rem 4rem rgb(0 0 0 / 16%), 0 6rem 12rem rgb(0 0 0 / 12%)),
+    gap: 16rem,
+  ),
+  label: (
+    text: (
+      type: 'body-medium',
+    ),
+  ),
+  action: (
+    padding: 8rem 12rem,
+    border: (
+      radius: var(--sys-shape-corner-small),
+    ),
+    color: var(--color-primary),
+    text: (
+      type: 'label-large',
+    ),
+    hover: (
+      bg: color-mix(in srgb, var(--color-primary) 8%, transparent),
+    ),
+  ),
+);

@@ -4,15 +4,15 @@
     class="ui-sheet-backdrop"
     content-class="ui-sheet"
     overlay-transition="vfm-fade"
-    content-transition="vfm-fade"
+    content-transition="ui-sheet-pop"
+    :content-style="dragContentStyle"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
+    :z-index-fn="zIndexFn"
   >
     <div
+      ref="containerRef"
       class="ui-sheet__container"
-      :style="sheetTransformStyle"
-      @touchend="onTouchEnd"
-      @touchcancel="onTouchCancel"
     >
       <div class="ui-sheet__drag-handle" />
 
@@ -25,8 +25,11 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { useModal } from '~/composables/modal/useModal'
 import type { M3ModalContext } from '~/composables/modal/useModal'
+import { useStack } from '~/composables/useStack'
+import { useDrag } from '~/composables/useDrag'
 
 interface Props {
   clickToClose?: boolean
@@ -44,7 +47,7 @@ const modelValue = defineModel<boolean>({ default: false })
 
 const emit = defineEmits<{
   (e: 'cancel'): void
-  (e: 'confirm', data?: any): void
+  (e: 'confirm', data?: unknown): void
 }>()
 
 const { close } = useModal({
@@ -52,86 +55,118 @@ const { close } = useModal({
   parent: props.parent,
 })
 
-defineExpose({
-  close,
+defineExpose({ close })
+
+// Unified overlay stacking — drive vfm's z-index through the global stack.
+const stackTicket = useStack().register({
+  onDismiss: () => close(),
+  blocking: !props.clickToClose,
 })
 
-const dragState = reactive({
-  startY: 0,
-  currentY: 0,
-  isDragging: false,
+watch(
+  modelValue,
+  (open) => {
+    if (open) stackTicket.select()
+    else stackTicket.unselect()
+  },
+  { immediate: true },
+)
+
+const zIndexFn = () => stackTicket.zIndex.value
+
+// Drag-to-dismiss — vertical, downward only.
+const containerRef = ref<HTMLElement | null>(null)
+const dragOffset = shallowRef(0)
+
+const DISMISS_THRESHOLD = 80
+
+const { isDragging } = useDrag(containerRef, {
+  axis: 'y',
+  onMove: (state) => {
+    dragOffset.value = Math.max(0, state.dy)
+  },
+  onEnd: (state) => {
+    if (state.dy > DISMISS_THRESHOLD) {
+      modelValue.value = false
+    }
+    dragOffset.value = 0
+  },
 })
 
-const sheetTransformStyle = computed(() => {
-  if (!dragState.isDragging) {
+// Apply the drag offset to the actual sheet (vfm content element), not the
+// inner content — so the whole modal follows the finger. While dragging we
+// kill the transition for 1:1 tracking; on release the base transition on
+// `.ui-sheet` animates the snap-back.
+const dragContentStyle = computed(() => {
+  if (!isDragging.value || dragOffset.value === 0) {
     return {}
   }
 
-  const delta = Math.max(0, dragState.currentY - dragState.startY)
-
   return {
-    transform: `translateY(${delta}px)`,
+    transform: `translateY(${dragOffset.value}px)`,
+    transition: 'none',
   }
 })
-
-function onTouchEnd() {
-  if (!dragState.isDragging) {
-    return
-  }
-
-  const delta = dragState.currentY - dragState.startY
-
-  dragState.isDragging = false
-  dragState.startY = 0
-  dragState.currentY = 0
-
-  if (delta > 80) {
-    emit('update:modelValue', false)
-  }
-}
-
-function onTouchCancel() {
-  dragState.isDragging = false
-  dragState.startY = 0
-  dragState.currentY = 0
-}
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/sheet' as v;
+@use '~/assets/stylesheet/components/sheet/index' as t;
 
 .ui-sheet {
+  $prefix: 'md-sheet';
+  $t: material-map(t.$tokens, $prefix);
+
   width: 100%;
-  max-width: v.$max-width;
-  margin-inline: v.$margin-inline;
-  border-radius: v.$border-radius;
-  background-color: v.$bg-color;
-  box-shadow: v.$shadow;
+  max-width: g($t, 'max-width');
+  margin-inline: g($t, 'margin-inline');
+  border-radius: g($t, 'border-radius');
+  background-color: g($t, 'bg-color');
+  box-shadow: g($t, 'shadow');
   overflow: hidden;
+
+  // Base transition drives the drag snap-back; suppressed inline while dragging.
+  transition: transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
 
   &__container {
     display: flex;
     flex-direction: column;
-    gap: v.$container-gap;
-    padding: v.$container-padding;
-    transition: transform var(--sys-motion-duration-medium-2)
-      var(--sys-motion-easing-standard);
+    gap: g($t, 'container-gap');
+    padding: g($t, 'container-padding');
   }
 
   &__drag-handle {
     align-self: center;
-    width: v.$drag-handle-width;
-    height: v.$drag-handle-height;
-    border-radius: v.$drag-handle-radius;
-    background-color: v.$drag-handle-color;
-    margin-bottom: v.$drag-handle-margin-bottom;
+    width: g($t, 'drag-handle-width');
+    height: g($t, 'drag-handle-height');
+    border-radius: g($t, 'drag-handle-radius');
+    background-color: g($t, 'drag-handle-color');
+    margin-bottom: g($t, 'drag-handle-margin-bottom');
   }
 
   &__content {
     display: flex;
     flex-direction: column;
-    gap: v.$content-gap;
-    color: v.$content-color;
+    gap: g($t, 'content-gap');
+    color: g($t, 'content-color');
+  }
+}
+
+// Slide-up enter / slide-down exit for the bottom sheet.
+.ui-sheet-pop {
+  $prefix: 'md-sheet';
+  $t: material-map(t.$tokens, $prefix);
+
+  &-enter-active {
+    transition: transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+  }
+
+  &-leave-active {
+    transition: transform g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+  }
+
+  &-enter-from,
+  &-leave-to {
+    transform: translateY(100%);
   }
 }
 </style>

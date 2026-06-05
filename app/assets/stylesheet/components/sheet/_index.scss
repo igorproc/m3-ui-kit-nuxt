@@ -1,0 +1,51 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SHEET (BOTTOM SHEET) M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  max: (
+    width: 720rem,
+  ),
+  margin: (
+    inline: auto,
+  ),
+  border: (
+    radius: var(--sys-shape-corner-extra-large-top),
+  ),
+  bg: (
+    color: var(--color-sheet-surface),
+  ),
+  shadow: (0 -4rem 8rem 3rem rgb(0 0 0 / 15%), 0 -1rem 3rem rgb(0 0 0 / 30%)),
+  container: (
+    gap: 8rem,
+    padding: (16rem 16rem 24rem),
+  ),
+  drag: (
+    handle: (
+      width: 32rem,
+      height: 4rem,
+      radius: 999rem,
+      color: var(--color-outline-variant),
+      margin: (
+        bottom: 8rem,
+      ),
+    ),
+  ),
+  content: (
+    gap: 16rem,
+    color: var(--color-on-surface),
+  ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-medium-4),
+      easing: var(--sys-motion-easing-emphasized-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-emphasized-accelerate),
+    ),
+  ),
+);

@@ -5,9 +5,10 @@
     class="ui-dialog-backdrop"
     content-class="ui-dialog"
     overlay-transition="vfm-fade"
-    content-transition="vfm-fade"
+    content-transition="ui-dialog-pop"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
+    :z-index-fn="zIndexFn"
   >
     <div class="ui-dialog__container">
       <!-- Icon -->
@@ -44,10 +45,11 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
-import { computed, inject } from 'vue'
+import { computed, inject, watch } from 'vue'
 import type { ComputedRef } from 'vue'
 import { useModal } from '~/composables/modal/useModal'
 import type { M3ModalContext } from '~/composables/modal/useModal'
+import { useStack } from '~/composables/useStack'
 
 interface Props {
   title?: string
@@ -70,7 +72,7 @@ const themeAttrs = computed(() => injectedThemeAttrs?.value ?? {})
 
 const emit = defineEmits<{
   (e: 'cancel'): void
-  (e: 'confirm', data?: any): void
+  (e: 'confirm', data?: unknown): void
 }>()
 
 // Register this modal in the Context API
@@ -79,49 +81,70 @@ const { close } = useModal({
   parent: props.parent,
 })
 
+// Unified overlay stacking — drive vfm's z-index through the global stack.
+const stackTicket = useStack().register({
+  onDismiss: () => close(),
+  blocking: !props.clickToClose,
+})
+
+watch(
+  modelValue,
+  (open) => {
+    if (open) stackTicket.select()
+    else stackTicket.unselect()
+  },
+  { immediate: true },
+)
+
+const zIndexFn = () => stackTicket.zIndex.value
+
 defineExpose({
   close,
 })
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/dialog' as v;
+@use '~/assets/stylesheet/components/dialog/index' as t;
 
 .ui-dialog {
+  $prefix: 'md-dialog';
+  $t: material-map(t.$tokens, $prefix);
+
   display: flex;
   flex-direction: column;
-  max-width: v.$max-width;
-  min-width: v.$min-width;
+  max-width: g($t, 'max-width');
+  min-width: g($t, 'min-width');
   width: fit-content;
-  border-radius: v.$border-radius;
-  background-color: v.$bg-color;
-  color: v.$text-color;
-  box-shadow: v.$shadow;
-  padding: v.$padding;
-  margin: v.$margin;
+  border-radius: g($t, 'border-radius');
+  background-color: g($t, 'bg-color');
+  color: g($t, 'text-color');
+  box-shadow: g($t, 'shadow');
+  padding: g($t, 'padding');
+  margin: g($t, 'margin');
   position: relative;
   overflow: hidden;
+  transform-origin: center;
 
   &__container {
     display: flex;
     flex-direction: column;
-    gap: v.$container-gap;
+    gap: g($t, 'container-gap');
   }
 
   &__icon {
     display: flex;
     justify-content: center;
-    margin-bottom: v.$icon-margin-bottom;
-    color: v.$icon-color;
-    font-size: v.$icon-size;
+    margin-bottom: g($t, 'icon-margin-bottom');
+    color: g($t, 'icon-color');
+    font-size: g($t, 'icon-size');
   }
 
   &__headline {
     margin: 0;
-    color: v.$headline-color;
+    color: g($t, 'headline-color');
     text-align: center;
 
-    @include typescale(v.$headline-text-type);
+    @include typescale(g($t, 'headline-text-type'));
   }
 
   &__icon + &__headline {
@@ -129,16 +152,40 @@ defineExpose({
   }
 
   &__content {
-    color: v.$content-color;
+    color: g($t, 'content-color');
 
-    @include typescale(v.$content-text-type);
+    @include typescale(g($t, 'content-text-type'));
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
-    gap: v.$actions-gap;
-    margin-top: v.$actions-margin-top;
+    gap: g($t, 'actions-gap');
+    margin-top: g($t, 'actions-margin-top');
+  }
+}
+
+// M3 basic-dialog motion: fade + scale. Enter decelerates, exit accelerates.
+.ui-dialog-pop {
+  $prefix: 'md-dialog';
+  $t: material-map(t.$tokens, $prefix);
+
+  &-enter-active {
+    transition:
+      opacity g($t, 'motion-enter-duration') g($t, 'motion-enter-easing'),
+      transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+  }
+
+  &-leave-active {
+    transition:
+      opacity g($t, 'motion-exit-duration') g($t, 'motion-exit-easing'),
+      transform g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+  }
+
+  &-enter-from,
+  &-leave-to {
+    opacity: 0;
+    transform: scale(g($t, 'motion-scale-from'));
   }
 }
 </style>

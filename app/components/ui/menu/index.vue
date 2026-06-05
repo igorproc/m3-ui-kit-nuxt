@@ -23,7 +23,7 @@
           v-if="modelValue"
           class="ui-menu"
           :class="{ 'ui-menu--absolute': absolute }"
-          :style="menu.menuStyle.value"
+          :style="[menu.menuStyle.value, { zIndex: ticket.zIndex.value }]"
           v-bind="$attrs"
         >
           <button
@@ -49,8 +49,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
-import { onClickOutside, useEventListener } from '@vueuse/core'
 import { useMenu } from '~/composables/menu/useMenu'
+import { useStack } from '~/composables/useStack'
+import { useClickOutside } from '~/composables/useClickOutside'
+import { useGlobalListener } from '~/composables/useGlobalListener'
 import type { UiMenuOrigin } from './types'
 
 // Multiple root nodes (anchor + teleport): forward fallthrough attrs (class,
@@ -132,11 +134,23 @@ const requestClose = () => {
   }
 }
 
+// Overlay stacking: derive z-index from activation order instead of a magic
+// number, and dismiss via the shared stack so the topmost overlay closes first.
+const ticket = useStack().register({ onDismiss: requestClose })
+
+watch(modelValue, (val) => {
+  if (val) {
+    ticket.select()
+  } else {
+    ticket.unselect()
+  }
+}, { immediate: true })
+
 // Pass the ref (not its value): the surface is rendered behind a v-if, so it
-// is null at setup. vueuse resolves the element at click time, and ignoring the
-// trigger lets a re-click toggle instead of double-firing (outside-close then
-// the trigger's own open).
-onClickOutside($menu, requestClose, {
+// is null at setup. The composable resolves the element at click time, and
+// ignoring the trigger lets a re-click toggle instead of double-firing
+// (outside-close then the trigger's own open).
+useClickOutside($menu, requestClose, {
   ignore: [() => anchorRef.value?.parentElement],
 })
 
@@ -146,19 +160,18 @@ onMounted(() => {
   }
 })
 
-if (import.meta.client) {
-  useEventListener('scroll', updatePosition, { capture: true, passive: true })
-  useEventListener('resize', updatePosition, { passive: true })
-}
+useGlobalListener('window', 'scroll', updatePosition, { capture: true, passive: true })
+useGlobalListener('window', 'resize', updatePosition, { passive: true })
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/menu' as v;
+@use '~/assets/stylesheet/components/menu/index' as t;
 
 .ui-menu {
+  $t: material-map(t.$tokens, 'md-menu');
+
   position: fixed;
   inset: 0;
-  z-index: v.$z-index;
 
   &__backdrop {
     position: absolute;
@@ -172,14 +185,14 @@ if (import.meta.client) {
 
   &__surface {
     position: absolute;
-    top: v.$surface-top;
-    right: v.$surface-right;
-    min-width: v.$surface-min-width;
-    max-width: v.$surface-max-width;
-    border-radius: v.$surface-border-radius;
-    background-color: v.$surface-bg-color;
-    color: v.$surface-color;
-    box-shadow: v.$surface-shadow;
+    top: g($t, 'surface-top');
+    right: g($t, 'surface-right');
+    min-width: g($t, 'surface-min-width');
+    max-width: g($t, 'surface-max-width');
+    border-radius: g($t, 'surface-border-radius');
+    background-color: g($t, 'surface-bg-color');
+    color: g($t, 'surface-color');
+    box-shadow: g($t, 'surface-shadow');
 
     // Animation properties
     transform-origin: var(--ui-menu-origin);
@@ -188,28 +201,28 @@ if (import.meta.client) {
 
   &__item {
     width: 100%;
-    min-height: v.$item-min-height;
-    padding: v.$item-padding;
+    min-height: g($t, 'item-min-height');
+    padding: g($t, 'item-padding');
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: v.$item-gap;
+    gap: g($t, 'item-gap');
     border: none;
     background: transparent;
     cursor: pointer;
 
-    @include typescale(v.$item-text-type);
+    @include typescale(g($t, 'item-text-type'));
 
-    color: v.$item-text-color;
+    color: g($t, 'item-text-color');
     text-align: left;
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
     &:hover {
-      background-color: v.$item-hover-bg;
+      background-color: g($t, 'item-hover-bg');
     }
 
     &:active {
-      background-color: v.$item-active-bg;
+      background-color: g($t, 'item-active-bg');
     }
   }
 
@@ -218,9 +231,9 @@ if (import.meta.client) {
   }
 
   &__item-shortcut {
-    color: v.$item-shortcut-color;
+    color: g($t, 'item-shortcut-color');
 
-    @include typescale(v.$item-shortcut-type);
+    @include typescale(g($t, 'item-shortcut-type'));
   }
 
   &--absolute {
@@ -231,7 +244,6 @@ if (import.meta.client) {
     // (rect width in the JS fallback, anchor-size() under CSS anchoring).
     width: max-content;
     height: auto;
-    z-index: 10;
 
     .ui-menu__surface {
       position: relative;

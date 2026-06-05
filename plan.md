@@ -23,7 +23,7 @@
 ## Current state (audit)
 
 - **SCSS — already migrated (12):** app-bar, badge, button, checkbox, date-picker, dropdown, list, radio, slider, text-field, time-picker, toolbar.
-- **SCSS — legacy, needs migration (21):** card, chip, dialog, divider, expansion-panel, extended-fab-menu, fab-menu, icon, loading, menu, navigation-bar, navigation-drawer, navigation-rail, progress, search, sheet, snackbar, switch, table, tabs, tooltip.
+- **SCSS — legacy, needs migration (20):** card, chip, dialog, divider, expansion-panel, fab-menu, icon, loading, menu, navigation-bar, navigation-drawer, navigation-rail, progress, search, sheet, snackbar, switch, table, tabs, tooltip.
 - **SCSS — N/A (3):** layout, main, shape.
 
 Legend — effort: **S** small · **M** medium · **L** large.
@@ -66,13 +66,13 @@ Legend — effort: **S** small · **M** medium · **L** large.
 - [x] **2.9** `navigation-drawer` — SCSS migrated; `vue-final-modal` engine + all props/slots kept (thin wrapper untouched). **(L)**
 
 ### Popover / overlay cluster
-- [ ] **2.10** `menu` — SCSS legacy→migrate; replace manual scroll/resize/click listeners with `useGlobalListener` + `useClickOutside`; z-index via `useStack`; keep `useMenu` FSM headless. **Atomic: split monolithic `index.vue`** (anchor / surface / item leaves) per slider reference. **(M)**
-- [ ] **2.11** `tooltip` — SCSS legacy→migrate; extract positioning to `usePopover`; listeners via `useEventListener`. **(S)**
-- [ ] **2.12** `dialog` — SCSS legacy→migrate; modal stacking via `createContext` + `useStack`. **(M)**
-- [ ] **2.13** `snackbar` — SCSS legacy→migrate; thin teleport; z-index via `useStack`. **(M)**
-- [ ] **2.14** `sheet` — SCSS legacy→migrate; drag via `useDrag`; touch listeners via `useEventListener`. **(M)**
-- [ ] **2.15** `fab-menu` — SCSS legacy→migrate; open-state composable (`useFabMenu`) + `useClickOutside`. **(M)**
-- [ ] **2.16** `extended-fab-menu` — SCSS legacy→migrate; reuse `useFabMenu` from 2.15; `useClickOutside`. **(M)**
+- [x] **2.10** `menu` — SCSS migrated (`_menu.scss` → `menu/_index.scss`). `@vueuse` `onClickOutside`/`useEventListener` → kit `useClickOutside` + `useGlobalListener`; z-index via `useStack` (inline `:style`, dropped hardcoded). `useMenu` FSM + in-component measurement kept. **Conservative — single `index.vue` kept; atomic split deferred** (hydration-fragile, per user). Backward-compat: all props/`v-model`/`click-outside`/slot unchanged (dropdown intact). **(M)**
+- [x] **2.11** `tooltip` — SCSS migrated. Kept lightweight bespoke top-center+flip math (NOT forced onto `usePopover`, per user); listeners `@vueuse`→kit `useGlobalListener`; z-index via `useStack`. API unchanged. **(S)**
+- [x] **2.12** `dialog` — SCSS migrated. `useStack` integrated into `vue-final-modal` via `:z-index-fn` (per user); `useModal` context kept; `confirm` `any`→`unknown`. `dialog/date` untouched (uses date-picker SCSS). **(M)**
+- [x] **2.13** `snackbar` — SCSS migrated; thin teleport; z-index via `useStack`. API unchanged. **(M)**
+- [x] **2.14** `sheet` — SCSS migrated. **Dead touch-drag replaced with real `useDrag`** drag-to-dismiss (axis y, threshold 80 → close); `useStack` via `:z-index-fn`; `useModal` kept. API unchanged. **(M)**
+- [x] **2.15** `fab-menu` — SCSS migrated. Extracted `app/composables/useFabMenu.ts` (open/toggle/close/select); `v-click-outside` directive → kit `useClickOutside`. API unchanged. **(M)**
+- [x] **2.16** `extended-fab-menu` — **merged into `fab-menu`** (component deleted). `MFabMenu` is now a dumb wrapper: `#activator` slot (default = FAB; extended FAB goes in the slot) + default content slot (fallback = `items`). Adds `useStack` z-index (lifts the cluster over sticky/fixed chrome; no teleport — decision A), staggered clip-path reveal (unfolds from right, `--ui-fab-stagger` + `$tokens` timings). showcase "Extended FAB Menu" demo now uses the activator slot. **(M)**
 
 ### Form inputs cluster
 - [ ] **2.17** `text-field` — SCSS migrated (verify); extract label-float/variant/error logic to `useTextField` + `useField`; thin view. **Atomic: split monolithic `index.vue`** (input / floating-label / leading+trailing slots / helper-error-text leaves) per slider reference. **(L)**

@@ -1,0 +1,48 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// MENU M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  surface: (
+    top: 72rem,
+    right: 32rem,
+    min: (
+      width: 112rem,
+    ),
+    max: (
+      width: 280rem,
+    ),
+    border: (
+      radius: var(--sys-shape-corner-extra-small, 4rem),
+    ),
+    bg: (
+      color: var(--color-surface-container, var(--color-surface)),
+    ),
+    color: var(--color-on-surface),
+    shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
+  ),
+  item: (
+    min: (
+      height: 48rem,
+    ),
+    padding: 0 12rem,
+    gap: 12rem,
+    text: (
+      color: var(--color-on-surface),
+      type: 'label-large',
+    ),
+    shortcut: (
+      color: var(--color-on-surface-variant),
+      type: 'body-small',
+    ),
+    hover: (
+      bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent),
+    ),
+    active: (
+      bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent),
+    ),
+  ),
+);

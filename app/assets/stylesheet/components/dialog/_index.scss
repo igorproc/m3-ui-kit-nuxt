@@ -1,0 +1,68 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// DIALOG M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  max: (
+    width: 560rem,
+  ),
+  min: (
+    width: 280rem,
+  ),
+  border: (
+    radius: 28rem,
+  ),
+  bg: (
+    color: var(--color-surface),
+  ),
+  text: (
+    color: var(--color-on-surface),
+  ),
+  shadow: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+  padding: 24rem,
+  margin: 16rem,
+  container: (
+    gap: 16rem,
+  ),
+  icon: (
+    margin: (
+      bottom: 16rem,
+    ),
+    color: var(--color-secondary, #625b71),
+    size: 24rem,
+  ),
+  headline: (
+    color: var(--color-on-surface, #1d1b20),
+    text: (
+      type: 'headline-small',
+    ),
+  ),
+  content: (
+    color: var(--color-on-surface-variant, #49454f),
+    text: (
+      type: 'body-medium',
+    ),
+  ),
+  actions: (
+    gap: 8rem,
+    margin: (
+      top: 24rem,
+    ),
+  ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-medium-2),
+      easing: var(--sys-motion-easing-emphasized-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-emphasized-accelerate),
+    ),
+    scale: (
+      from: 0.8,
+    ),
+  ),
+);

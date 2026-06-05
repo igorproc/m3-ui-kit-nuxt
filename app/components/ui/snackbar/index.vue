@@ -6,6 +6,7 @@
         class="ui-snackbar"
         role="status"
         aria-live="polite"
+        :style="{ zIndex: ticket.zIndex.value }"
       >
         <div class="ui-snackbar__surface">
           <p class="ui-snackbar__label">
@@ -29,6 +30,9 @@
 </template>
 
 <script setup lang="ts">
+import { watch } from 'vue'
+import { useStack } from '~/composables/useStack'
+
 interface Props {
   label?: string
   actionLabel?: string
@@ -46,6 +50,17 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<boolean>({ default: false })
 
+// Overlay stacking: derive z-index from activation order instead of a magic number.
+const ticket = useStack().register()
+
+watch(modelValue, (val) => {
+  if (val) {
+    ticket.select()
+  } else {
+    ticket.unselect()
+  }
+}, { immediate: true })
+
 function onAction() {
   emit('action')
   emit('update:modelValue', false)
@@ -53,50 +68,51 @@ function onAction() {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/snackbar' as v;
+@use '~/assets/stylesheet/components/snackbar/index' as t;
 
 .ui-snackbar {
+  $t: material-map(t.$tokens, 'md-snackbar');
+
   position: fixed;
   inset-inline: 0;
-  bottom: v.$bottom-offset;
+  bottom: g($t, 'bottom-offset');
   display: flex;
   justify-content: center;
   pointer-events: none;
-  z-index: v.$z-index;
 
   &__surface {
     pointer-events: auto;
-    max-width: v.$surface-max-width;
-    margin-inline: v.$surface-margin-inline;
-    padding: v.$surface-padding;
-    border-radius: v.$surface-border-radius;
-    background-color: v.$surface-bg-color;
-    color: v.$surface-color;
-    box-shadow: v.$surface-shadow;
+    max-width: g($t, 'surface-max-width');
+    margin-inline: g($t, 'surface-margin-inline');
+    padding: g($t, 'surface-padding');
+    border-radius: g($t, 'surface-border-radius');
+    background-color: g($t, 'surface-bg-color');
+    color: g($t, 'surface-color');
+    box-shadow: g($t, 'surface-shadow');
     display: flex;
     align-items: center;
-    gap: v.$surface-gap;
+    gap: g($t, 'surface-gap');
   }
 
   &__label {
     margin: 0;
 
-    @include typescale(v.$label-text-type);
+    @include typescale(g($t, 'label-text-type'));
   }
 
   &__action {
     border: none;
     background: transparent;
-    padding: v.$action-padding;
-    border-radius: v.$action-border-radius;
+    padding: g($t, 'action-padding');
+    border-radius: g($t, 'action-border-radius');
     cursor: pointer;
 
-    @include typescale(v.$action-text-type);
+    @include typescale(g($t, 'action-text-type'));
 
-    color: v.$action-color;
+    color: g($t, 'action-color');
 
     &:hover {
-      background-color: v.$action-hover-bg;
+      background-color: g($t, 'action-hover-bg');
     }
   }
 }
