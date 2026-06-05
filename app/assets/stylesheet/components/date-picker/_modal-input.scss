@@ -3,7 +3,7 @@
 
 $tokens: (
   container: (
-    bg: var(--md-sys-color-surface-container-high, #ECE6F0),
+    bg: var(--color-surface-container-highest),
     radius: map.get($theme-shape-link, extra-large),
     shadow: var(--sys-elevation-3),
   ),
@@ -12,13 +12,13 @@ $tokens: (
     headline: (
       label: (
         typography: map.get($theme-typography-link, label, medium),
-        color: var(--md-sys-color-on-surface-variant, #49454F),
+        color: map.get($theme-color-link, 'on-surface-variant'),
       ),
       date: (
         typography: map.get($theme-typography-link, headline, large),
-        color: var(--md-sys-color-on-surface, #1D1B20),
+        color: map.get($theme-color-link, 'on-surface'),
         placeholder: (
-          color: var(--md-sys-color-on-surface-variant, #49454F),
+          color: map.get($theme-color-link, 'on-surface-variant'),
         ),
       ),
     ),
