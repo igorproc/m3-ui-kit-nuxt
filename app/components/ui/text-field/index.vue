@@ -75,7 +75,7 @@ interface Props {
   path?: string
   label?: string
   placeholder?: string
-  type?: 'text' | 'email' | 'password'
+  type?: 'text' | 'number' | 'email' | 'password'
   disabled?: boolean
   helperText?: string
   variant?: TextFieldVariant

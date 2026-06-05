@@ -60,8 +60,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onUnmounted } from 'vue'
+import { computed, onScopeDispose, ref } from 'vue'
 import MTimePickerKeyboard from '../keyboard/index.vue'
+import { useGlobalListener } from '~/composables/useGlobalListener'
 
 interface Props {
   label?: string
@@ -143,8 +144,22 @@ const selectorAngle = computed(() => {
   return activeValue.value * 6
 })
 
-// Drag and drop logic
+// Drag and drop logic. Window-level move/up listeners are owned by
+// `useGlobalListener` (subscribed only while dragging) which auto-removes them
+// on scope dispose, so no manual `onUnmounted` cleanup is needed.
 let isDragging = false
+const stops: Array<() => void> = []
+
+function teardownDragListeners() {
+  for (const stop of stops) {
+    stop()
+  }
+  stops.length = 0
+}
+
+// Safety net: drop any in-progress drag listeners if the component unmounts
+// mid-drag (the per-pointerdown subscriptions live outside the setup scope).
+onScopeDispose(teardownDragListeners)
 
 function updateTimeFromEvent(e: MouseEvent | TouchEvent) {
   if (!faceRef.value || !keyboardRef.value) return
@@ -181,43 +196,38 @@ function updateTimeFromEvent(e: MouseEvent | TouchEvent) {
   }
 }
 
-function onDragMove(e: MouseEvent | TouchEvent) {
+function onDragMove(e: Event) {
   if (!isDragging) return
-  if (e.cancelable) e.preventDefault()
-  updateTimeFromEvent(e)
+  const event = e as MouseEvent | TouchEvent
+  if (event.cancelable) event.preventDefault()
+  updateTimeFromEvent(event)
 }
 
 function onPointerDown(e: MouseEvent | TouchEvent) {
   if (e.cancelable && e.type !== 'touchstart') e.preventDefault() // prevent default text selection, except passive touchstart
   isDragging = true
 
-  window.addEventListener('mousemove', onDragMove, { passive: false })
-  window.addEventListener('touchmove', onDragMove, { passive: false })
-  window.addEventListener('mouseup', onPointerUp)
-  window.addEventListener('touchend', onPointerUp)
+  teardownDragListeners()
+  stops.push(
+    useGlobalListener('window', 'mousemove', onDragMove, { passive: false }),
+    useGlobalListener('window', 'touchmove', onDragMove, { passive: false }),
+    useGlobalListener('window', 'mouseup', onPointerUp),
+    useGlobalListener('window', 'touchend', onPointerUp),
+  )
 
   updateTimeFromEvent(e)
 }
 
-function onPointerUp(e: MouseEvent | TouchEvent) {
+function onPointerUp() {
   if (!isDragging) return
   isDragging = false
 
-  window.removeEventListener('mousemove', onDragMove)
-  window.removeEventListener('touchmove', onDragMove)
-  window.removeEventListener('mouseup', onPointerUp)
-  window.removeEventListener('touchend', onPointerUp)
+  teardownDragListeners()
 
   if (activeField.value === 'hours' && keyboardRef.value) {
     keyboardRef.value.activeField = 'minutes'
   }
 }
-onUnmounted(() => {
-  window.removeEventListener('mousemove', onDragMove)
-  window.removeEventListener('touchmove', onDragMove)
-  window.removeEventListener('mouseup', onPointerUp)
-  window.removeEventListener('touchend', onPointerUp)
-})
 </script>
 
 <style lang="scss">
@@ -305,7 +315,7 @@ onUnmounted(() => {
   &__selector {
     position: absolute;
     width: g($t, 'selector-width');
-    height: calc(50% - #{g($t, 'selector-offset')});
+    height: calc(50% - #{g($t, 'selector-offset-base')});
     background-color: g($t, 'selector-color');
     bottom: 50%;
     transform-origin: bottom center;

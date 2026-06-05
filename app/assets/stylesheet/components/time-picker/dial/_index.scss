@@ -22,8 +22,10 @@ $tokens: (
     handle: (
       size: 32rem,
     ),
-    offset: 24rem,
-    offset-inner: 64rem,
+    offset: (
+      base: 24rem,
+      inner: 64rem,
+    ),
     transition: (
       duration: map.get($theme-animation-link, duration, short, 4),
       easing: map.get($theme-animation-link, easing, standard)

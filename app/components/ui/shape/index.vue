@@ -6,7 +6,7 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      :d="currentPath"
+      :d="d"
       fill="currentColor"
       fill-rule="evenodd"
       clip-rule="evenodd"
@@ -15,60 +15,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from 'vue'
-import { interpolate } from 'flubber'
+import { computed } from 'vue'
+import { useShapeMorph } from '~/composables/useShapeMorph'
 import { M3_SHAPES, type M3ShapeName } from '~/assets/icon/shapes'
 
 const props = defineProps<{
   name: M3ShapeName
+  /**
+   * Optional ordered list of shape names this instance cycles through. When
+   * supplied (e.g. by the expressive loading indicator), the morph pre-builds
+   * and memoizes interpolators for every adjacent canonical pair — including
+   * the loop wrap — avoiding a main-thread hitch on the heaviest transition.
+   */
+  sequence?: readonly M3ShapeName[]
 }>()
 
-const currentPath = ref(M3_SHAPES[props.name] || M3_SHAPES['circle'])
+const target = computed(() => M3_SHAPES[props.name] || M3_SHAPES['circle'])
 
-let animationFrameId: number
+const sequence = computed(() =>
+  props.sequence?.map(name => M3_SHAPES[name] || M3_SHAPES['circle']),
+)
 
-watch(() => props.name, (newName, oldName) => {
-  if (newName === oldName || !M3_SHAPES[newName] || !M3_SHAPES[oldName]) {
-    currentPath.value = M3_SHAPES[newName] || M3_SHAPES['circle']
-    return
-  }
-
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId)
-  }
-
-  const startPath = currentPath.value
-  const endPath = M3_SHAPES[newName]
-
-  // Create flubber interpolator for smooth SVG morphing
-  const interpolator = interpolate(startPath, endPath, { maxSegmentLength: 2 })
-
-  let startTime: number | null = null
-  const duration = 600 // 600ms morph duration
-
-  const animate = (timestamp: number) => {
-    if (!startTime) startTime = timestamp
-    const progress = Math.min((timestamp - startTime) / duration, 1)
-
-    // M3 Standard Easing: cubic-bezier(0.2, 0, 0, 1) - Decelerated easing
-    // Approximate with mathematical pow
-    const easeProgress = 1 - Math.pow(1 - progress, 4)
-
-    currentPath.value = interpolator(easeProgress)
-
-    if (progress < 1) {
-      animationFrameId = requestAnimationFrame(animate)
-    }
-  }
-
-  animationFrameId = requestAnimationFrame(animate)
-}, { immediate: true })
-
-onBeforeUnmount(() => {
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId)
-  }
-})
+const { d } = useShapeMorph(target, { duration: 600, sequence })
 </script>
 
 <style lang="scss">

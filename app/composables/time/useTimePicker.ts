@@ -38,13 +38,19 @@ export function useTimePicker(modelValue: Ref<string>, is24h: Ref<boolean> = ref
   watch(
     [hours, minutes, period, is24h],
     () => {
-      let h = clampPart(hours.value, 0, is24h.value ? 23 : 12)
-      const m = clampPart(minutes.value, 0, 59)
+      const hPart = clampPart(hours.value, 0, is24h.value ? 23 : 12)
+      const mPart = clampPart(minutes.value, 0, 59)
 
-      if (h === null || m === null) {
+      // Only blank the model when BOTH parts are empty. If one part is set,
+      // treat the missing one as 0 so a single dial pick (e.g. hour first)
+      // produces a valid time and drives the selector immediately.
+      if (hPart === null && mPart === null) {
         modelValue.value = ''
         return
       }
+
+      let h = hPart ?? 0
+      const m = mPart ?? 0
 
       if (!is24h.value) {
         if (period.value === 'PM' && h < 12) h += 12

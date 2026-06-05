@@ -229,8 +229,9 @@ $prefix: 'ui-slider-thumb';
     transform-origin: center right;
 
     &::before {
-      border-radius: 50% 50% 50% 0; // rotate point to right center
-      transform: rotate(-45deg);
+      top: 50%; // vertically centre the balloon next to the knob
+      border-radius: 50% 50% 0; // sharp corner = bottom-right (same as horizontal)
+      transform: translateY(-50%) rotate(-45deg); // point toward the knob (right)
     }
   }
 
@@ -241,13 +242,8 @@ $prefix: 'ui-slider-thumb';
 
   &--vertical:hover &__value-label,
   &--vertical:focus-visible &__value-label,
-  &--vertical--dragging &__value-label {
+  &--vertical.ui-slider-thumb--dragging &__value-label {
     transform: translateY(-50%) scale(1);
-  }
-
-  // Rotate tooltip text back so it is upright when container is rotated
-  .ui-slider-root--vertical &__value-text {
-    transform: rotate(90deg);
   }
 }
 </style>

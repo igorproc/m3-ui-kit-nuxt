@@ -1,0 +1,17 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// LOADING M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  size: (
+    small: 16rem,
+    medium: 24rem,
+    large: 32rem,
+  ),
+  spinner: (
+    color: map.get($theme-color-link, 'primary'),
+  ),
+);

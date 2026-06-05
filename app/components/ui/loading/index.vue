@@ -24,17 +24,19 @@
     </div>
 
     <!-- M3 Expressive Morphing Shape -->
-    <UiShape
+    <m-shape
       v-else-if="variant === 'expressive'"
-      :name="expressiveSequence[currentShapeIndex]"
       class="ui-loading__expressive"
+      :name="currentShape"
+      :sequence="expressiveSequence"
     />
   </span>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import UiShape from '~/components/ui/shape/index.vue'
+import { computed, ref, watch } from 'vue'
+import { useTimer } from '~/composables/useTimer'
+import MShape from '~/components/ui/shape/index.vue'
 import type { M3ShapeName } from '~/assets/icon/shapes'
 
 type LoadingVariant = 'circular' | 'expressive'
@@ -68,36 +70,27 @@ const expressiveSequence: M3ShapeName[] = [
 ]
 
 const currentShapeIndex = ref(0)
-let shapeInterval: any
 
-const startExpressiveLoop = () => {
-  if (shapeInterval) clearInterval(shapeInterval)
-  shapeInterval = setInterval(() => {
-    currentShapeIndex.value = (currentShapeIndex.value + 1) % expressiveSequence.length
-  }, 1000) // Morph every 1 second
-}
+const currentShape = computed(() =>
+  expressiveSequence[currentShapeIndex.value] ?? 'circle',
+)
 
-watch(() => props.variant, (newVal) => {
-  if (newVal === 'expressive') {
-    startExpressiveLoop()
-  } else if (shapeInterval) {
-    clearInterval(shapeInterval)
+const cycle = useTimer(() => {
+  currentShapeIndex.value
+    = (currentShapeIndex.value + 1) % expressiveSequence.length
+}, { duration: 1000, repeat: true })
+
+watch(() => props.variant, (variant) => {
+  if (variant === 'expressive') {
+    cycle.start()
+  } else {
+    cycle.stop()
   }
-})
-
-onMounted(() => {
-  if (props.variant === 'expressive') {
-    startExpressiveLoop()
-  }
-})
-
-onBeforeUnmount(() => {
-  if (shapeInterval) clearInterval(shapeInterval)
-})
+}, { immediate: true })
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/loading' as v;
+@use '~/assets/stylesheet/components/loading' as t;
 
 $arc-duration: 1333ms;
 $cycle-duration: calc(4 * $arc-duration);
@@ -105,6 +98,9 @@ $linear-rotate-duration: calc($arc-duration * 360 / 306);
 $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
 .ui-loading {
+  $prefix: 'md-loading';
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -113,22 +109,22 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   content-visibility: auto;
 
   &--small {
-    width: v.$size-small;
-    height: v.$size-small;
+    width: g($t, 'size-small');
+    height: g($t, 'size-small');
 
     --ui-loading-thickness: 3rem;
   }
 
   &--medium {
-    width: v.$size-medium;
-    height: v.$size-medium;
+    width: g($t, 'size-medium');
+    height: g($t, 'size-medium');
 
     --ui-loading-thickness: 4rem;
   }
 
   &--large {
-    width: v.$size-large;
-    height: v.$size-large;
+    width: g($t, 'size-large');
+    height: g($t, 'size-large');
 
     --ui-loading-thickness: 5rem;
   }
@@ -146,7 +142,7 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   &--expressive {
     animation: linear infinite ui-loading-linear-rotate;
     animation-duration: 4s; // M3 slow rotation for expressive shapes
-    color: v.$spinner-color;
+    color: g($t, 'spinner-color');
   }
 
   &__spinner,
@@ -159,7 +155,8 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &__expressive {
-    color: var(--color-primary);
+    color: g($t, 'spinner-color');
+    display: block;
   }
 
   // 2. rotate-arc spinner
@@ -184,7 +181,7 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
     border-radius: 50%;
     border: solid var(--ui-loading-thickness);
-    border-color: v.$spinner-color v.$spinner-color transparent transparent;
+    border-color: g($t, 'spinner-color') g($t, 'spinner-color') transparent transparent;
     animation: ui-loading-expand-arc;
     animation-iteration-count: infinite;
     animation-fill-mode: both;

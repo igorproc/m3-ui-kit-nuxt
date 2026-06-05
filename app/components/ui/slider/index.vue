@@ -21,7 +21,7 @@
           :tick-count="tickCount"
           :disabled="disabled"
           :readonly="readonly"
-          orientation="horizontal"
+          :orientation="orientation"
           @pointerdown="onTrackPointerdown"
         >
           <SliderRange
@@ -31,7 +31,7 @@
             :tick-count="tickCount"
             :disabled="disabled"
             :readonly="readonly"
-            orientation="horizontal"
+            :orientation="orientation"
           />
 
           <SliderThumb
@@ -42,7 +42,7 @@
             :show-value="showValue"
             :disabled="disabled"
             :readonly="readonly"
-            orientation="horizontal"
+            :orientation="orientation"
             :aria-orientation="orientation"
             :is-dragging="draggingIndex === idx"
             :value-min="idx > 0 ? (values[idx - 1] ?? min) : min"
@@ -74,6 +74,10 @@ import SliderTrack from './track/index.vue'
 import SliderRange from './range/index.vue'
 import SliderThumb from './thumb/index.vue'
 import SliderHiddenInput from './hidden-input/index.vue'
+import { useDrag } from '~/composables/useDrag'
+import type { DragState } from '~/composables/useDrag'
+import { useGlobalListener } from '~/composables/useGlobalListener'
+import { onScopeDispose } from 'vue'
 
 interface Props {
   min?: number
@@ -108,8 +112,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: number | number[]): void
-  (e: 'change', value: number | number[]): void
+  (e: 'update:modelValue' | 'change', value: number | number[]): void
 }>()
 
 const modelValue = defineModel<number | number[]>({ default: 0 })
@@ -128,45 +131,80 @@ const {
 const trackComponent = ref<{ element: HTMLElement | null } | null>(null)
 const draggingIndex = ref<number | null>(null)
 const dragOffset = ref(0)
-let isListening = false
 let rafId: number | null = null
 
-// --- DOM Pointer Logic ---
-const getPercent = (e: PointerEvent): number => {
-  const el = trackComponent.value?.element
-  if (!el) {
-    return 0
-  }
+// Track rect cached at drag start to avoid a forced reflow
+// (`getBoundingClientRect`) on every pointermove frame. Refreshed only on
+// scroll/resize while a drag is active (see `stopScroll`/`stopResize` below),
+// so the "page scrolls mid-drag" case stays correct without per-frame layout.
+let cachedRect: DOMRect | null = null
+let stopScroll: (() => void) | null = null
+let stopResize: (() => void) | null = null
 
-  // Re-query rect to prevent jumps if the page scrolls or layout shifts during drag
-  const rect = el.getBoundingClientRect()
+const refreshRect = () => {
+  const el = trackComponent.value?.element
+  cachedRect = el ? el.getBoundingClientRect() : null
+}
+
+// --- DOM Pointer Logic ---
+// `useDrag` owns the window-level move/up/cancel subscriptions (only active
+// while dragging) and their cleanup. The pointerdown handlers below set the
+// active thumb index and perform the immediate "click jump"; `useDrag` then
+// drives the live drag via `onMove`/`onEnd`.
+const percentFromRect = (rect: DOMRect, clientX: number, clientY: number): number => {
   const isVertical = props.orientation === 'vertical'
 
   const rawPercent = isVertical
-    ? ((rect.bottom - e.clientY + dragOffset.value) / rect.height) * 100
-    : ((e.clientX - rect.left - dragOffset.value) / rect.width) * 100
+    ? ((rect.bottom - clientY + dragOffset.value) / rect.height) * 100
+    : ((clientX - rect.left - dragOffset.value) / rect.width) * 100
 
   return Math.max(0, Math.min(100, rawPercent))
 }
 
-const onPointerMove = (e: PointerEvent) => {
-  if (draggingIndex.value === null) {
+// Begin tracking the live rect for a drag: cache it now, then keep it fresh on
+// scroll/resize only. Idempotent — safe to call from both pointerdown paths.
+const startRectTracking = () => {
+  refreshRect()
+  if (!stopScroll) {
+    stopScroll = useGlobalListener('window', 'scroll', refreshRect, { passive: true, capture: true })
+  }
+  if (!stopResize) {
+    stopResize = useGlobalListener('window', 'resize', refreshRect, { passive: true })
+  }
+}
+
+const stopRectTracking = () => {
+  stopScroll?.()
+  stopResize?.()
+  stopScroll = null
+  stopResize = null
+  cachedRect = null
+}
+
+const onDragMove = (state: DragState) => {
+  if (draggingIndex.value === null || !cachedRect) {
     return
   }
 
+  const { clientX, clientY } = state.event
+
   if (rafId) {
-    cancelAnimationFrame(rafId)
+    return
   }
 
   rafId = requestAnimationFrame(() => {
-    const percent = getPercent(e)
-    const targetValue = fromPercent(percent)
+    rafId = null
 
-    updateValue(draggingIndex.value!, targetValue)
+    if (draggingIndex.value === null || !cachedRect) {
+      return
+    }
+
+    const percent = percentFromRect(cachedRect, clientX, clientY)
+    updateValue(draggingIndex.value, fromPercent(percent))
   })
 }
 
-const onPointerUp = () => {
+const onDragEnd = () => {
   draggingIndex.value = null
   dragOffset.value = 0
 
@@ -175,28 +213,27 @@ const onPointerUp = () => {
     rafId = null
   }
 
-  cleanupDragListeners()
+  stopRectTracking()
 }
 
-const setupDragListeners = () => {
-  if (isListening) {
-    return
-  }
-
-  document.addEventListener('pointermove', onPointerMove, { passive: true })
-  document.addEventListener('pointerup', onPointerUp, { passive: true })
-  isListening = true
-}
-
-const cleanupDragListeners = () => {
-  document.removeEventListener('pointermove', onPointerMove)
-  document.removeEventListener('pointerup', onPointerUp)
-
-  isListening = false
-}
-
+// Safety net: drop a pending rAF if the component unmounts mid-drag (the
+// scroll/resize subscriptions self-clean via `useGlobalListener`'s scope hook).
 onScopeDispose(() => {
-  cleanupDragListeners()
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+})
+
+// Bound to the track element: its pointerdown subscribes the window move/up
+// listeners. `isDragging` only flips on the first move (threshold 0), so a pure
+// click never triggers `onMove`/`onEnd` — the immediate jump is owned by the
+// pointerdown handlers below.
+useDrag(() => trackComponent.value?.element ?? null, {
+  axis: () => (props.orientation === 'vertical' ? 'y' : 'x'),
+  disabled: () => props.disabled || props.readonly,
+  onMove: onDragMove,
+  onEnd: onDragEnd,
 })
 
 const onThumbPointerdown = (index: number, event: PointerEvent, thumbElement?: HTMLElement) => {
@@ -205,7 +242,6 @@ const onThumbPointerdown = (index: number, event: PointerEvent, thumbElement?: H
   }
 
   event.preventDefault()
-  event.stopPropagation()
 
   if (thumbElement) {
     const rect = thumbElement.getBoundingClientRect()
@@ -218,11 +254,18 @@ const onThumbPointerdown = (index: number, event: PointerEvent, thumbElement?: H
   }
 
   draggingIndex.value = index
-  setupDragListeners()
+  startRectTracking()
 }
 
 const onTrackPointerdown = (e: PointerEvent) => {
   if (props.disabled || props.readonly || e.button) {
+    return
+  }
+
+  // A thumb press bubbles here too; let `onThumbPointerdown` own it so we don't
+  // re-jump the nearest thumb to the press location.
+  const target = e.target as HTMLElement | null
+  if (target?.closest('.ui-slider-thumb')) {
     return
   }
 
@@ -231,6 +274,8 @@ const onTrackPointerdown = (e: PointerEvent) => {
     return
   }
 
+  // Single rect read for the click-jump; `onThumbPointerdown` re-caches it for
+  // the drag that follows (dragOffset is 0 here since there is no thumb press).
   const rect = el.getBoundingClientRect()
   const isVertical = props.orientation === 'vertical'
 
@@ -293,7 +338,8 @@ const onThumbKeydown = (index: number, e: KeyboardEvent) => {
     box-sizing: border-box;
   }
 
-  // Adjust for vertical orientation
+  // Vertical orientation: real axis-aligned geometry (no rotate hack), so
+  // getBoundingClientRect() returns a correct upright rect for drag math.
   &.ui-slider-root--vertical {
     .ui-slider__wrapper {
       height: 200rem; // Default vertical height
@@ -301,10 +347,8 @@ const onThumbKeydown = (index: number, e: KeyboardEvent) => {
     }
 
     .ui-slider__container {
-      width: 200rem;
-      transform: rotate(-90deg) translate(-100%, 0);
-      transform-origin: left top;
-      margin: 0;
+      width: 48rem;
+      height: 100%;
     }
   }
 }

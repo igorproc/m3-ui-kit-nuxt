@@ -1,0 +1,36 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// PROGRESS M3 COMPONENT TOKENS
+// Aligned with Material 3 Specifications
+// ==========================================
+
+$tokens: (
+  linear: (
+    height: (
+      small: 2rem,
+      medium: 4rem,
+      large: 8rem,
+    ),
+    track: (
+      color: map.get($theme-color-link, 'secondary-container'),
+    ),
+    bar: (
+      color: map.get($theme-color-link, 'primary'),
+    ),
+  ),
+  circular: (
+    size: (
+      small: 24rem,
+      medium: 40rem,
+      large: 48rem,
+    ),
+    track: (
+      color: map.get($theme-color-link, 'secondary-container'),
+    ),
+    spinner: (
+      color: map.get($theme-color-link, 'primary'),
+    ),
+  ),
+);

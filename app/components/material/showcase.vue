@@ -41,6 +41,8 @@ const state = reactive({
   sliderValContinuous: 50,
   sliderValDiscrete: 20,
   sliderValRange: [20, 80],
+  sliderValVertical: 40,
+  sliderValVerticalRange: [25, 75],
   dropdownValFilled: 'option1',
   dropdownValOutlined: 'option2',
   dropdownValMultiple: ['option1', 'option3'],
@@ -58,7 +60,9 @@ const state = reactive({
   radioVal: 'a',
   segmentedVal: ['map'],
   dateVal: null,
+  dateValConstrained: null,
   timeVal: null,
+  timeVal12h: null,
   expansionVal: 0,
   tabsVal: 'tab1',
 })
@@ -74,6 +78,11 @@ const fabItems = [
   { label: 'Settings', icon: ICONS.settings },
   { label: 'Delete', icon: ICONS.close },
 ]
+
+// Fixed bounds for the constrained date-picker demo (captured once at setup —
+// `useDatePicker` reads min/max non-reactively).
+const dateMin = new Date('2002-01-01')
+const dateMax = new Date()
 
 // -----------------------------------------------------------------------------
 // Render Helpers
@@ -97,6 +106,18 @@ const hActivator = (label: string, key: OverlayKey, variant: string = 'filled', 
   if (iconName) slots.prepend = () => hIcon(iconName)
   return h(resolveComponent('m-button'), { variant, onClick: () => (state[key] = true) }, slots)
 }
+
+// Render an M3 shape sized + tinted via its wrapper (shape inherits currentColor).
+const hShape = (name: string, color: string = 'var(--color-primary)') =>
+  h('div', { style: `width: 72rem; height: 72rem; color: ${color};` }, [
+    h(resolveComponent('m-shape'), { name }),
+  ])
+
+// Wrap a vertical slider in a fixed-height column so it lays out and isn't clipped.
+const hVerticalSlider = (props: Record<string, unknown>) =>
+  h('div', { style: 'height: 200rem; display: flex; justify-content: center;' }, [
+    h(resolveComponent('m-slider'), props),
+  ])
 
 // -----------------------------------------------------------------------------
 // Configuration (Items for v-for)
@@ -167,6 +188,7 @@ const sections = computed(() => [
     title: 'Date Picker',
     variants: [
       { label: 'Standard', render: () => h(resolveComponent('m-date-picker'), { 'label': 'Select Date', 'modelValue': state.dateVal, 'onUpdate:modelValue': (v: any) => state.dateVal = v }) },
+      { label: 'Constrained (2002 → Today)', render: () => h(resolveComponent('m-date-picker'), { 'label': 'Birth date', 'minDate': dateMin, 'maxDate': dateMax, 'modelValue': state.dateValConstrained, 'onUpdate:modelValue': (v: any) => state.dateValConstrained = v }) },
     ],
   },
   {
@@ -297,8 +319,25 @@ const sections = computed(() => [
     id: 'loading',
     title: 'Loading',
     variants: [
-      { label: 'Circular', render: () => h(resolveComponent('m-loading'), { size: 'medium' }) },
-      { label: 'Expressive', render: () => h(resolveComponent('m-loading'), { variant: 'expressive', size: 'medium' }) },
+      { label: 'Circular Small', render: () => h(resolveComponent('m-loading'), { size: 'small' }) },
+      { label: 'Circular Medium', render: () => h(resolveComponent('m-loading'), { size: 'medium' }) },
+      { label: 'Circular Large', render: () => h(resolveComponent('m-loading'), { size: 'large' }) },
+      { label: 'Expressive Medium', render: () => h(resolveComponent('m-loading'), { variant: 'expressive', size: 'medium' }) },
+      { label: 'Expressive Large', render: () => h(resolveComponent('m-loading'), { variant: 'expressive', size: 'large' }) },
+    ],
+  },
+  {
+    id: 'shape',
+    title: 'Shape',
+    variants: [
+      { label: 'Flower', render: () => hShape('flower') },
+      { label: 'Heart', render: () => hShape('heart', 'var(--color-warn)') },
+      { label: 'Sunny', render: () => hShape('sunny', 'var(--color-accent)') },
+      { label: 'Hexagon', render: () => hShape('hexagon') },
+      { label: 'Pentagon', render: () => hShape('pentagon', 'var(--color-accent)') },
+      { label: '7-Sided Cookie', render: () => hShape('7SidedCookie') },
+      { label: '4-Leaf Clover', render: () => hShape('4LeafClover', 'var(--color-accent)') },
+      { label: 'Pill', render: () => hShape('pill', 'var(--color-warn)') },
     ],
   },
   {
@@ -307,7 +346,12 @@ const sections = computed(() => [
     variants: [
       { label: 'Linear Determinate', render: () => h(resolveComponent('m-progress'), { variant: 'linear', value: 45, style: 'width: 200rem;' }) },
       { label: 'Linear Indeterminate', render: () => h(resolveComponent('m-progress'), { variant: 'linear', indeterminate: true, style: 'width: 200rem;' }) },
+      { label: 'Linear Expressive', render: () => h(resolveComponent('m-progress'), { variant: 'linear', value: 60, expressive: true, style: 'width: 200rem;' }) },
+      { label: 'Linear Small', render: () => h(resolveComponent('m-progress'), { variant: 'linear', value: 50, size: 'small', style: 'width: 200rem;' }) },
       { label: 'Circular Determinate', render: () => h(resolveComponent('m-progress'), { variant: 'circular', value: 75 }) },
+      { label: 'Circular Indeterminate', render: () => h(resolveComponent('m-progress'), { variant: 'circular', indeterminate: true }) },
+      { label: 'Circular Expressive', render: () => h(resolveComponent('m-progress'), { variant: 'circular', value: 65, expressive: true }) },
+      { label: 'Circular Large', render: () => h(resolveComponent('m-progress'), { variant: 'circular', value: 50, size: 'large' }) },
     ],
   },
   {
@@ -336,6 +380,9 @@ const sections = computed(() => [
       { label: 'Continuous', render: () => h(resolveComponent('m-slider'), { 'showValue': true, 'label': 'Continuous', 'modelValue': state.sliderValContinuous, 'onUpdate:modelValue': (v: number) => state.sliderValContinuous = v }) },
       { label: 'Discrete', render: () => h(resolveComponent('m-slider'), { 'discrete': true, 'step': 10, 'showValue': true, 'label': 'Discrete', 'modelValue': state.sliderValDiscrete, 'onUpdate:modelValue': (v: number) => state.sliderValDiscrete = v }) },
       { label: 'Range', render: () => h(resolveComponent('m-slider'), { 'range': true, 'showValue': true, 'label': 'Range', 'modelValue': state.sliderValRange, 'onUpdate:modelValue': (v: number[]) => state.sliderValRange = v }) },
+      { label: 'Vertical', render: () => hVerticalSlider({ 'orientation': 'vertical', 'showValue': true, 'modelValue': state.sliderValVertical, 'onUpdate:modelValue': (v: number) => state.sliderValVertical = v }) },
+      { label: 'Vertical Range', render: () => hVerticalSlider({ 'orientation': 'vertical', 'range': true, 'showValue': true, 'modelValue': state.sliderValVerticalRange, 'onUpdate:modelValue': (v: number[]) => state.sliderValVerticalRange = v }) },
+      { label: 'Disabled', render: () => h(resolveComponent('m-slider'), { label: 'Disabled', disabled: true, showValue: true, modelValue: 30 }) },
     ],
   },
   {
@@ -379,7 +426,8 @@ const sections = computed(() => [
     id: 'time-picker',
     title: 'Time Picker',
     variants: [
-      { label: 'Standard', render: () => h(resolveComponent('m-time-picker'), { 'label': 'Set Time', 'modelValue': state.timeVal, 'onUpdate:modelValue': (v: any) => state.timeVal = v }) },
+      { label: '24-hour', render: () => h(resolveComponent('m-time-picker'), { 'label': 'Set Time', 'modelValue': state.timeVal, 'onUpdate:modelValue': (v: any) => state.timeVal = v }) },
+      { label: '12-hour', render: () => h(resolveComponent('m-time-picker'), { 'label': 'Set Time', 'is24h': false, 'modelValue': state.timeVal12h, 'onUpdate:modelValue': (v: any) => state.timeVal12h = v }) },
     ],
   },
   {

@@ -1,149 +1,67 @@
 <template>
   <div class="ui-date-picker">
-    <header class="ui-date-picker__header">
-      <div class="ui-date-picker__headline">
-        <p class="ui-date-picker__headline-label">
-          {{ headlineLabel }}
-        </p>
-
-        <p
-          class="ui-date-picker__headline-date"
-          :class="{ 'ui-date-picker__headline-date--placeholder': !modelValue }"
-        >
-          {{ selectedLabel }}
-        </p>
-      </div>
-
-      <div class="ui-date-picker__controls">
-        <div class="ui-date-picker__month-selector">
-          <button
-            type="button"
-            class="ui-date-picker__view-toggle"
-            @click="toggleView"
-          >
-            {{ currentMonthYearLabel }}
-            <m-icon
-              :name="view === 'calendar' ? ICONS.arrowDropDown : ICONS.arrowDropUp"
-              class="ui-date-picker__view-toggle-icon"
-            />
-          </button>
-
-          <div
-            v-if="view === 'calendar'"
-            class="ui-date-picker__month-arrows"
-          >
-            <button
-              type="button"
-              class="ui-date-picker__icon-button"
-              aria-label="Previous month"
-              @click="goToPreviousMonth"
-            >
-              <m-icon :name="ICONS.chevronLeft" />
-            </button>
-
-            <button
-              type="button"
-              class="ui-date-picker__icon-button"
-              aria-label="Next month"
-              @click="goToNextMonth"
-            >
-              <m-icon :name="ICONS.chevronRight" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <DatePickerHeaderNav
+      :headline-label="headlineLabel"
+      :selected-label="selectedLabel"
+      :month-year-label="currentMonthYearLabel"
+      :view="view"
+      :placeholder="!modelValue"
+      :can-go-prev="canGoPrev"
+      :can-go-next="canGoNext"
+      @toggle="toggleView"
+      @prev="goToPreviousMonth"
+      @next="goToNextMonth"
+    />
 
     <div class="ui-date-picker__content">
       <transition
         name="ui-date-picker-fade"
         mode="out-in"
       >
-        <!-- Calendar View -->
-        <div
+        <DatePickerDayGrid
           v-if="view === 'calendar'"
           key="calendar"
-          class="ui-date-picker__calendar"
-        >
-          <div class="ui-date-picker__weekdays">
-            <span
-              v-for="weekday in weekdayLabels"
-              :key="weekday"
-              class="ui-date-picker__weekday"
-            >
-              {{ weekday }}
-            </span>
-          </div>
+          :weekdays="weekdayLabels"
+          :days="days"
+          @select="onSelect"
+        />
 
-          <div class="ui-date-picker__grid">
-            <button
-              v-for="day in days"
-              :key="day.key"
-              type="button"
-              class="ui-date-picker__day"
-              :class="{
-                'ui-date-picker__day--outside': !day.inCurrentMonth,
-                'ui-date-picker__day--today': day.isToday,
-                'ui-date-picker__day--selected': day.isSelected,
-              }"
-              :aria-label="day.ariaLabel"
-              @click="onSelect(day.date)"
-            >
-              <span class="ui-date-picker__day-state" />
-              <span class="ui-date-picker__day-label">
-                {{ day.label }}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Year View -->
-        <div
+        <DatePickerYearGrid
           v-else
           key="year"
-          ref="yearGrid"
-          class="ui-date-picker__year-grid"
-        >
-          <button
-            v-for="year in years"
-            :key="year"
-            type="button"
-            class="ui-date-picker__year"
-            :class="{
-              'ui-date-picker__year--selected': year === displayDate.year(),
-              'ui-date-picker__year--current': year === today.year(),
-            }"
-            @click="onSelectYear(year)"
-          >
-            <span class="ui-date-picker__year-label">
-              {{ year }}
-            </span>
-          </button>
-        </div>
+          ref="yearGridRef"
+          :years="years"
+          :selected-year="displayDate.year()"
+          :current-year="today.year()"
+          @select="onSelectYear"
+        />
       </transition>
     </div>
 
     <footer class="ui-date-picker__footer">
-      <m-button
+      <MButton
         variant="text"
         @click="$emit('cancel')"
       >
         Cancel
-      </m-button>
-      <m-button
+      </MButton>
+      <MButton
         variant="text"
         @click="confirm"
       >
         OK
-      </m-button>
+      </MButton>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { ICONS } from '~~/shared/constants/icons'
+import { computed, ref, watch } from 'vue'
 import { useDatePicker } from '~/composables/date'
+import DatePickerHeaderNav from './header-nav/index.vue'
+import DatePickerDayGrid from './day-grid/index.vue'
+import DatePickerYearGrid from './year-grid/index.vue'
+import MButton from '~/components/ui/button/index.vue'
 
 interface Props {
   headline?: string
@@ -170,12 +88,24 @@ const {
   weekdayLabels,
   days,
   years,
+  canGoPrev,
+  canGoNext,
   toggleView,
   goToPreviousMonth,
   goToNextMonth,
   onSelect,
   onSelectYear,
-} = useDatePicker(modelValue)
+} = useDatePicker(modelValue, {
+  minDate: props.minDate,
+  maxDate: props.maxDate,
+})
+
+// Bridge the year-grid leaf's root element into the composable's `yearGrid`
+// ref so its scroll-into-view on view toggle keeps working.
+const yearGridRef = ref<{ element: HTMLElement | null } | null>(null)
+watch(yearGridRef, (comp) => {
+  yearGrid.value = comp?.element ?? null
+})
 
 const headlineLabel = computed(() => props.headline)
 
@@ -357,6 +287,15 @@ function confirm() {
 
   &__day--outside {
     opacity: g($t, 'day-disabled-opacity');
+  }
+
+  &__day--disabled {
+    opacity: g($t, 'day-disabled-opacity');
+    cursor: default;
+
+    // `pointer-events: none` suppresses the hover state entirely, so no
+    // hover-background reset is needed.
+    pointer-events: none;
   }
 
   &__day--today &__day-label {
