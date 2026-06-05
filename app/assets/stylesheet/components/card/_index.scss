@@ -13,23 +13,23 @@ $tokens: (
   title: (type: 'title-medium'),
   subtitle: (
     type: 'body-medium',
-    color: var(--color-surface-variant-contrast),
+    color: map.get($theme-color-link, 'on-surface-variant'),
   ),
   content: (type: 'body-medium'),
 
   elevated: (
-    bg: var(--color-surface-container-low, var(--color-surface)),
+    bg: map.get($theme-color-link, 'surface-container-low'),
     shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
     hover: (shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
   ),
   filled: (
-    bg: var(--color-surface-container-highest, var(--color-surface-variant)),
+    bg: map.get($theme-color-link, 'surface-container-highest'),
     shadow: none,
     hover: (shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
   ),
   outlined: (
-    bg: var(--color-surface),
-    border: (color: var(--color-outline-variant)),
+    bg: map.get($theme-color-link, 'surface'),
+    border: (color: map.get($theme-color-link, 'outline-variant')),
     shadow: none,
     hover: (shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
   ),

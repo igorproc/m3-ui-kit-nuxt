@@ -109,7 +109,7 @@ const hActivator = (label: string, key: OverlayKey, variant: string = 'filled', 
 }
 
 // Render an M3 shape sized + tinted via its wrapper (shape inherits currentColor).
-const hShape = (name: string, color: string = 'var(--color-primary)') =>
+const hShape = (name: string, color: string = 'var(--md-sys-color-primary)') =>
   h('div', { style: `width: 72rem; height: 72rem; color: ${color};` }, [
     h(resolveComponent('m-shape'), { name }),
   ])
@@ -158,7 +158,7 @@ const sections = computed(() => [
         label: 'Elevated with Slots',
         render: () => h(resolveComponent('m-card'), { variant: 'elevated' }, {
           header: () => h('div', { style: 'padding: 16rem 16rem 0; font-weight: 500;' }, 'Card Title'),
-          default: () => h('div', { style: 'padding: 16rem; color: var(--color-on-surface-variant);' }, 'This is the main content slot of the card.'),
+          default: () => h('div', { style: 'padding: 16rem; color: var(--md-sys-color-on-surface-variant);' }, 'This is the main content slot of the card.'),
           actions: () => h('div', { style: 'padding: 8rem 16rem; display: flex; justify-content: flex-end;' }, [hBtn('Cancel', 'text'), hBtn('Save', 'filled')]),
         }),
       },
@@ -302,7 +302,7 @@ const sections = computed(() => [
     variants: [
       {
         label: 'List with Item Slots',
-        render: () => h(resolveComponent('m-list'), { style: 'width: 300rem; border: 1rem solid var(--color-outline-variant); border-radius: 8rem;' }, {
+        render: () => h(resolveComponent('m-list'), { style: 'width: 300rem; border: 1rem solid var(--md-sys-color-outline-variant); border-radius: 8rem;' }, {
           default: () => [
             h(resolveComponent('m-list-item'), { headline: 'Item 1', supportingText: 'Detailed description' }, {
               leading: () => hIcon(ICONS.folder),
@@ -512,14 +512,14 @@ const sections = computed(() => [
     justify-content: center;
     padding: 32rem;
     min-height: 120rem;
-    background-color: var(--color-surface-container);
+    background-color: map.get($theme-color-link, 'surface-container');
   }
 
   &__preview-label {
     @include typescale('label-medium');
 
     padding: 12rem 16rem;
-    background-color: var(--color-surface-container);
+    background-color: map.get($theme-color-link, 'surface-container');
     color: map.get($theme-color-link, 'on-surface-variant');
     border-top: 1rem solid map.get($theme-color-link, 'outline-variant');
     text-align: center;

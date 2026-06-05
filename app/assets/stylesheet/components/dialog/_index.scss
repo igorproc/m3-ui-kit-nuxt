@@ -16,10 +16,10 @@ $tokens: (
     radius: 28rem,
   ),
   bg: (
-    color: var(--color-surface),
+    color: map.get($theme-color-link, 'surface'),
   ),
   text: (
-    color: var(--color-on-surface),
+    color: map.get($theme-color-link, 'on-surface'),
   ),
   shadow: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
   padding: 24rem,
@@ -31,17 +31,17 @@ $tokens: (
     margin: (
       bottom: 16rem,
     ),
-    color: var(--color-secondary, #625b71),
+    color: map.get($theme-color-link, 'secondary'),
     size: 24rem,
   ),
   headline: (
-    color: var(--color-on-surface, #1d1b20),
+    color: map.get($theme-color-link, 'on-surface'),
     text: (
       type: 'headline-small',
     ),
   ),
   content: (
-    color: var(--color-on-surface-variant, #49454f),
+    color: map.get($theme-color-link, 'on-surface-variant'),
     text: (
       type: 'body-medium',
     ),

@@ -17,23 +17,23 @@ $tokens: (
       inline: 8rem,
     ),
     shape: var(--sys-shape-corner-large),
-    color: var(--color-surface),
-    shadow: 0 0 0 1rem color-mix(in srgb, var(--color-outline-variant) 40%, transparent),
+    color: map.get($theme-color-link, 'surface'),
+    shadow: 0 0 0 1rem color-mix(in srgb, #{map.get($theme-color-link, 'outline-variant')} 40%, transparent),
     gap: 8rem,
     text: (
-      color: var(--color-surface-variant-contrast),
+      color: map.get($theme-color-link, 'on-surface-variant'),
     ),
   ),
   item: (
-    color: var(--color-on-surface-variant),
+    color: map.get($theme-color-link, 'on-surface-variant'),
     active: (
-      color: var(--color-primary),
+      color: map.get($theme-color-link, 'primary'),
     ),
     typography: 'label-small',
     indicator: (
-      color: var(--color-secondary-container),
+      color: map.get($theme-color-link, 'secondary-container'),
       hover: (
-        color: var(--color-on-surface),
+        color: map.get($theme-color-link, 'on-surface'),
         opacity: 0.08,
       ),
       active: (
@@ -43,7 +43,7 @@ $tokens: (
       ),
     ),
     hover: (
-      color: var(--color-surface-contrast),
+      color: map.get($theme-color-link, 'on-surface'),
     ),
   ),
   icon: (

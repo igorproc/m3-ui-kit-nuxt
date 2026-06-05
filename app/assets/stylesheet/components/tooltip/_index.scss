@@ -13,9 +13,9 @@ $tokens: (
       radius: var(--sys-shape-corner-small),
     ),
     bg: (
-      color: var(--color-on-surface),
+      color: map.get($theme-color-link, 'on-surface'),
     ),
-    color: var(--color-surface-variant),
+    color: map.get($theme-color-link, 'surface-variant'),
     shadow: (0 2rem 4rem rgb(0 0 0 / 15%)),
     text: (
       type: 'body-small',

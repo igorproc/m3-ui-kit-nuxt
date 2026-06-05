@@ -178,6 +178,7 @@ const getPropsForItem = (item: ToolbarItem) => {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/toolbar' as t;
 
 .ui-toolbar {
@@ -195,7 +196,7 @@ const getPropsForItem = (item: ToolbarItem) => {
     background-color: g($t, 'standard-container-color');
     border-radius: g($t, 'standard-container-shape');
 
-    $shadow-color: var(--color-shadow, #000);
+    $shadow-color: map.get($theme-color-link, 'shadow');
 
     box-shadow:
       0 g($t, 'standard-container-elevation-umbra-y') g($t, 'standard-container-elevation-umbra-blur') g($t, 'standard-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-umbra-opacity'), transparent),
@@ -212,7 +213,7 @@ const getPropsForItem = (item: ToolbarItem) => {
     background-color: g($t, 'baseline-container-color');
     border-radius: g($t, 'baseline-container-shape');
 
-    $shadow-color: var(--color-shadow, #000);
+    $shadow-color: map.get($theme-color-link, 'shadow');
 
     box-shadow:
       0 g($t, 'baseline-container-elevation-umbra-y') g($t, 'baseline-container-elevation-umbra-blur') g($t, 'baseline-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-umbra-opacity'), transparent),

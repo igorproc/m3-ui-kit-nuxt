@@ -17,7 +17,7 @@ $tokens: (
     width: 52rem,
     height: 32rem,
     bg: (
-      color: var(--color-surface-container-highest),
+      color: map.get($theme-color-link, 'surface-container-highest'),
     ),
     border: (
       color: map.get($theme-color-link, 'outline'),

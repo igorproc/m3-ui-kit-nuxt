@@ -26,7 +26,7 @@ $tokens: (
     map.get($theme-color-link, 'on-secondary-container')),
   tertiary: fab-scheme(map.get($theme-color-link, 'tertiary-container'),
     map.get($theme-color-link, 'on-tertiary-container')),
-  surface: fab-scheme(var(--md-sys-color-surface-container-low, map.get($theme-color-link, 'surface-variant')),
+  surface: fab-scheme(map.get($theme-color-link, 'surface-container-low'),
     map.get($theme-color-link, 'primary')),
 
   // Sizes

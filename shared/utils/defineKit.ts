@@ -1,13 +1,11 @@
 import {
   argbFromHex,
-  hexFromArgb,
   Hct,
   SchemeTonalSpot,
   SchemeMonochrome,
   SchemeVibrant,
   SchemeNeutral,
   SchemeFidelity,
-  themeFromSourceColor,
 } from '@material/material-color-utilities'
 import type { MaterialKitOptions, TTheme } from '../types/kit'
 

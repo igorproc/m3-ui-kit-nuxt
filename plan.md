@@ -104,6 +104,18 @@ Legend — effort: **S** small · **M** medium · **L** large.
 
 ## Phase 3 — Verification & cleanup
 
+<!-- Theme-roles sweep (2026-06-05, user-driven): user fixed the theme-assembly logic so the build now
+emits ALL late-M3 roles. `$theme-color-link` (abstracts/_variables.scss) extended with surface-container
+lowest/low/high/highest, surface-dim/bright, primary/secondary/tertiary `-dim`+`-fixed`+`-fixed-dim`+
+`on-*-fixed`+`on-*-fixed-variant`, error-dim. Then a 2-agent sweep (A=scss partials, B=.vue) converted
+EVERY component `var(--color-*)` / raw `var(--md-sys-color-*)` → `map.get($theme-color-link,'role')`
+(alias→role: accent→secondary, warn→error, *-contrast→on-*, sheet-surface→surface-container-high, else
+1:1), dropping all CSS fallbacks. ~100 conversions across ~34 files + button/fab missed-file fixup. JS
+render strings in showcase.vue use canonical `var(--md-sys-color-*)` (map.get impossible in JS). grep
+`var(--color-` in components = now empty. 0 new lint errors (same 7 pre-existing BEM). See
+[[styling-system]] updated COLOR-ROLE CONVENTION. -->
+
+
 - [x] **3.1** Sweep done 2026-06-05: **runtime `--custom-properties` for component colors fully eliminated** — the dead `--variables`/`generate-tokens` machinery (only badge had a vestigial class, only list-item emitted unconsumed `--md-list-item-*`) removed: `--variables` classes dropped from badge+list-item, `&.--variables{generate-tokens}` block removed, `generate-tokens` mixin deleted from `abstracts/_mixins.scss`, `$use-variables` param+branch removed from `material-map` (`abstracts/_functions.scss`; `$prefix` kept for positional call-site compat). grep confirms 0 refs to `--variables`/`generate-tokens`/`use-variables`. No local color/state `$var` outside token maps (migrations 2.27–2.30 cleaned the last flat per-component maps; only structural `_ripple.scss` remains). **(M)**
 - [x] **3.2** Confirmed 2026-06-05: **zero raw `addEventListener`/`removeEventListener`/`setInterval` in any `.vue`**. Only two `onMounted` (global-container dynamic CSS import; menu DOM positioning) — both browser-API, not data-loading. **(S)**
 - [~] **3.3** 2026-06-05: `npm run lint` (eslint) = **0 errors** (fixed 3 `isNaN`→`Number.isNaN` in `dialog/date/index.vue:322`; remaining are acceptable `any`/jsdoc WARNINGS). `npm run test` = **green (1/1)**. `npm run lint:style`: cleaned the safe pre-existing legacy (13 empty `//` comments in `base/_typography.scss` → blank lines; `app-bar` leading-underscore `@use '…/app-bar/_index'` → `/app-bar/index`), **21 → 7 errors**. Remaining 7 are BEM `selector-class-pattern` renames left as legacy debt per user (risky template+style renames, out of cluster): `pages/demo/youtube.vue` ×2, `app-bar/index.vue` ×4 (223/227/242/246), `list/item/index.vue:246` `__trailing-supporting`. **(M)**

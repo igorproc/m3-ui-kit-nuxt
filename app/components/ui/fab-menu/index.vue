@@ -152,6 +152,7 @@ useClickOutside(rootRef, () => close())
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/fab-menu/index' as t;
 
 .ui-fab-menu {
@@ -303,11 +304,11 @@ useClickOutside(rootRef, () => close())
     }
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, #{g($t, 'item-bg-color')});
+      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 8%, #{g($t, 'item-bg-color')});
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-on-surface) 12%, #{g($t, 'item-bg-color')});
+      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, #{g($t, 'item-bg-color')});
     }
   }
 }

@@ -144,6 +144,7 @@ if (!group && props.path) {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/radio/index' as t;
 
 .ui-radio {
@@ -154,7 +155,7 @@ if (!group && props.path) {
   align-items: center;
   gap: g($t, 'container-gap');
   cursor: pointer;
-  color: var(--color-on-surface);
+  color: map.get($theme-color-link, 'on-surface');
 
   &__input {
     position: absolute;
@@ -190,7 +191,7 @@ if (!group && props.path) {
     height: g($t, 'container-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: map.get($theme-color-link, 'on-surface');
     opacity: 0;
     pointer-events: none;
     transition:

@@ -106,6 +106,8 @@ function handleItemClick(item: UiSplitMenuItem) {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
+
 .ui-split-button {
   display: inline-flex;
   flex-direction: column;
@@ -130,7 +132,7 @@ function handleItemClick(item: UiSplitMenuItem) {
     padding-inline: 4rem !important; // Narrower for the icon
 
     // Add separator if it's a filled/tonal/elevated button
-    border-left: 1rem solid color-mix(in srgb, var(--color-surface) 30%, transparent) !important;
+    border-left: 1rem solid color-mix(in srgb, #{map.get($theme-color-link, 'surface')} 30%, transparent) !important;
 
     .ui-button__label {
       display: none; // Hide label, we only show icon

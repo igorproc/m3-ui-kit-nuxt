@@ -115,6 +115,7 @@ function confirm() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/date-picker/docked' as t;
 
 .ui-date-picker {
@@ -336,7 +337,7 @@ function confirm() {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: var(--color-outline-variant);
+      background: map.get($theme-color-link, 'outline-variant');
       border-radius: 4rem;
     }
   }

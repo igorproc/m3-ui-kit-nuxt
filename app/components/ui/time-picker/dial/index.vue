@@ -231,6 +231,7 @@ function onPointerUp() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/time-picker/dial/_index' as t;
 
 .ui-time-picker-dial {
@@ -275,13 +276,13 @@ function onPointerUp() {
   }
 
   &__label {
-    color: var(--color-on-surface-variant);
+    color: map.get($theme-color-link, 'on-surface-variant');
 
     @include typescale('label-large');
   }
 
   &__helper {
-    color: var(--color-on-surface-variant);
+    color: map.get($theme-color-link, 'on-surface-variant');
 
     @include typescale('body-small');
   }

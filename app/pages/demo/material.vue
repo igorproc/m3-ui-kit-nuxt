@@ -97,9 +97,11 @@ const filteredCards = computed(() => {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
+
 .demo-material {
-  background-color: var(--color-background);
-  color: var(--color-background-contrast);
+  background-color: map.get($theme-color-link, 'background');
+  color: map.get($theme-color-link, 'on-background');
 
   &__menu-btn {
     min-width: auto;
@@ -131,10 +133,10 @@ const filteredCards = computed(() => {
   &__hero {
     background: linear-gradient(
       135deg,
-      var(--color-primary-container) 0%,
-      var(--color-accent-container) 100%
+      #{map.get($theme-color-link, 'primary-container')} 0%,
+      #{map.get($theme-color-link, 'secondary-container')} 100%
     );
-    border-radius: var(--sys-shape-corner-extra-large, 28rem);
+    border-radius: map.get($theme-shape-link, 'extra-large');
     padding: 64rem 48rem;
     display: flex;
     align-items: center;
@@ -150,7 +152,7 @@ const filteredCards = computed(() => {
 
   &__hero-title {
     margin: 0 0 16rem;
-    color: var(--color-primary-container-contrast);
+    color: map.get($theme-color-link, 'on-primary-container');
 
     @include typescale('display-small');
 
@@ -161,7 +163,7 @@ const filteredCards = computed(() => {
 
   &__hero-subtitle {
     margin: 0 0 32rem;
-    color: var(--color-primary-container-contrast);
+    color: map.get($theme-color-link, 'on-primary-container');
     opacity: 0.8;
 
     @include typescale('body-large');
@@ -178,7 +180,7 @@ const filteredCards = computed(() => {
     gap: 8rem;
     flex-wrap: wrap;
     padding-bottom: 8rem;
-    border-bottom: 1rem solid var(--color-outline-variant);
+    border-bottom: 1rem solid map.get($theme-color-link, 'outline-variant');
   }
 
   &__grid {
@@ -202,16 +204,16 @@ const filteredCards = computed(() => {
     justify-content: center;
     width: 48rem;
     height: 48rem;
-    border-radius: var(--sys-shape-corner-medium, 12rem);
-    background-color: var(--color-primary-container);
-    color: var(--color-primary-container-contrast);
+    border-radius: map.get($theme-shape-link, 'medium');
+    background-color: map.get($theme-color-link, 'primary-container');
+    color: map.get($theme-color-link, 'on-primary-container');
     margin-bottom: 12rem;
     font-size: 24rem;
   }
 
   &__card-desc {
     margin: 0;
-    color: var(--color-surface-variant-contrast);
+    color: map.get($theme-color-link, 'on-surface-variant');
 
     @include typescale('body-medium');
   }

@@ -101,6 +101,7 @@ defineExpose({ activeField, hours, minutes, period })
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/time-picker/keyboard/_index' as t;
 
 .ui-time-picker-keyboard {
@@ -190,7 +191,7 @@ defineExpose({ activeField, hours, minutes, period })
     flex-direction: column;
     height: g($t, 'field-height');
     border-radius: g($t, 'field-shape');
-    border: 1rem solid var(--color-outline);
+    border: 1rem solid map.get($theme-color-link, 'outline');
     overflow: hidden;
     margin-bottom: 22rem; // offset label
 

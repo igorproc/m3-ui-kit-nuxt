@@ -12,9 +12,9 @@ $tokens: (
       width: 360rem,
     ),
     padding: 16rem,
-    color: var(--color-surface),
+    color: map.get($theme-color-link, 'surface'),
     text: (
-      color: var(--color-on-surface),
+      color: map.get($theme-color-link, 'on-surface'),
     ),
     shadow: (0 0 16rem rgb(0 0 0 / 24%), 0 0 32rem rgb(0 0 0 / 20%)),
     shape: (

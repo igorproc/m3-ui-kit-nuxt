@@ -7,10 +7,10 @@ $pressed-state-layer-opacity: 12%;
 $disabled-content-opacity: 38%;
 
 // M3 Standard Colors (Fallback to hex if variables are missing)
-$on-surface: var(--color-on-surface, #1C1B1F);
-$outline: var(--color-outline, #79747E);
-$selected-container: var(--md-sys-color-secondary-container, #E8DEF8);
-$selected-on-container: var(--md-sys-color-on-secondary-container, #4A4458);
+$on-surface: map.get($theme-color-link, 'on-surface');
+$outline: map.get($theme-color-link, 'outline');
+$selected-container: map.get($theme-color-link, 'secondary-container');
+$selected-on-container: map.get($theme-color-link, 'on-secondary-container');
 $tokens: (
   container: (
     height: 40rem,

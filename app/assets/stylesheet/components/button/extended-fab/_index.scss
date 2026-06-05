@@ -65,18 +65,18 @@ $tokens: (
   // Schemes
   primary: extended-fab-scheme(
     map.get($theme-color-link, 'primary-container'),
-    var(--color-primary-container-contrast, $on-surface)
+    map.get($theme-color-link, 'on-primary-container')
   ),
   secondary: extended-fab-scheme(
     map.get($theme-color-link, 'secondary-container'),
-    var(--color-accent-container-contrast, $on-surface)
+    map.get($theme-color-link, 'on-secondary-container')
   ),
   tertiary: extended-fab-scheme(
-    var(--md-sys-color-tertiary-container, #e2e7b0),
-    var(--md-sys-color-on-tertiary-container, #454a21)
+    map.get($theme-color-link, 'tertiary-container'),
+    map.get($theme-color-link, 'on-tertiary-container')
   ),
   surface: extended-fab-scheme(
-    var(--color-surface-container-high, map.get($theme-color-link, 'surface-variant')),
+    map.get($theme-color-link, 'surface-container-high'),
     map.get($theme-color-link, 'primary')
   ),
 

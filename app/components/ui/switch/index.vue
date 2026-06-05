@@ -74,6 +74,7 @@ const switchClasses = computed(() => [
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/switch' as t;
 
 .ui-switch {
@@ -137,7 +138,7 @@ const switchClasses = computed(() => [
     height: g($t, 'state-layer-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: map.get($theme-color-link, 'on-surface');
     opacity: 0;
     pointer-events: none;
     transition:

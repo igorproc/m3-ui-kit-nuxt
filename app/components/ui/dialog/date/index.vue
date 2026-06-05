@@ -350,6 +350,7 @@ function onConfirm() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/date-picker/modal-picker' as mp;
 @use '~/assets/stylesheet/components/date-picker/modal-input' as mi;
 
@@ -361,7 +362,7 @@ function onConfirm() {
   justify-content: center;
   align-items: center;
   z-index: z('dialog');
-  background-color: var(--color-scrim);
+  background-color: map.get($theme-color-link, 'scrim');
   opacity: 1;
 }
 
@@ -601,7 +602,7 @@ function onConfirm() {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: var(--color-outline-variant);
+      background: map.get($theme-color-link, 'outline-variant');
       border-radius: 4rem;
     }
   }

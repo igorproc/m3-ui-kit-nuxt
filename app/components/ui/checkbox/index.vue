@@ -79,6 +79,7 @@ const checkboxClasses = computed(() => [
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/checkbox/index' as t;
 
 .ui-checkbox {
@@ -89,7 +90,7 @@ const checkboxClasses = computed(() => [
   align-items: center;
   gap: g($t, 'container-gap');
   cursor: pointer;
-  color: var(--color-on-surface);
+  color: map.get($theme-color-link, 'on-surface');
 
   &__input {
     position: absolute;
@@ -133,7 +134,7 @@ const checkboxClasses = computed(() => [
     height: g($t, 'container-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: map.get($theme-color-link, 'on-surface');
     opacity: 0;
     pointer-events: none;
     transition:

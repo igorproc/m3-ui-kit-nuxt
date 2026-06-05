@@ -71,6 +71,7 @@ function onClear() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/search' as t;
 
 .ui-search {
@@ -141,7 +142,7 @@ function onClear() {
       &:hover {
         background-color: color-mix(
           in srgb,
-          var(--color-on-surface) 8%,
+          #{map.get($theme-color-link, 'on-surface')} 8%,
           transparent
         );
       }
@@ -162,7 +163,7 @@ function onClear() {
   &:hover {
     background-color: color-mix(
       in srgb,
-      var(--color-on-surface) 4%,
+      #{map.get($theme-color-link, 'on-surface')} 4%,
       g($t, 'bg-color')
     );
   }
