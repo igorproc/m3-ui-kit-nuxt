@@ -1,0 +1,36 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  padding: 16rem,
+  gap: 12rem,
+  radius: var(--sys-shape-corner-medium),
+  border: (width: 1rem),
+
+  hover: (opacity: 8%),
+  state: (layer: (color: map.get($theme-color-link, 'on-surface'))),
+
+  title: (type: 'title-medium'),
+  subtitle: (
+    type: 'body-medium',
+    color: var(--color-surface-variant-contrast),
+  ),
+  content: (type: 'body-medium'),
+
+  elevated: (
+    bg: var(--color-surface-container-low, var(--color-surface)),
+    shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
+    hover: (shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+  ),
+  filled: (
+    bg: var(--color-surface-container-highest, var(--color-surface-variant)),
+    shadow: none,
+    hover: (shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+  ),
+  outlined: (
+    bg: var(--color-surface),
+    border: (color: var(--color-outline-variant)),
+    shadow: none,
+    hover: (shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+  ),
+);

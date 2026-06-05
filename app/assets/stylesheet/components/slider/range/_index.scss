@@ -9,4 +9,7 @@ $tokens: (
   background: (
     color: map.get($theme-color-link, primary),
   ),
+  tickmarks: (
+    color: color-mix(in srgb, map.get($theme-color-link, on-primary) 38%, transparent),
+  ),
 );

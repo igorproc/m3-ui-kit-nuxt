@@ -1,6 +1,6 @@
 <template>
   <span
-    class="ui-badge --variables"
+    class="ui-badge"
     :class="badgeClasses"
     role="status"
     aria-live="polite"

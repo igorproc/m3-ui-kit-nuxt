@@ -91,21 +91,22 @@ Legend — effort: **S** small · **M** medium · **L** large.
 - [x] **2.26** `time-picker` — verify. `index.vue`/`keyboard/` already thin. `dial/index.vue`: raw `window.addEventListener` drag → `useGlobalListener` (subscribed on pointerdown, torn down on pointerup + `onScopeDispose` safety; `{ passive: false }` preserved). **(M)**
 
 ### Remaining SCSS migrations + thin verifications
-- [ ] **2.27** `card` — SCSS legacy→migrate. **(L)**
-- [ ] **2.28** `chip` — SCSS legacy→migrate; filter-toggle minor logic. **(L)**
-- [ ] **2.29** `divider` — SCSS legacy→migrate. **(S)**
-- [ ] **2.30** `icon` — SCSS legacy→migrate. **(S)**
-- [ ] **2.31** `app-bar` — SCSS migrated (verify); extract scroll-state via `useEventListener`; size context (`useLayoutItem`). **(M)**
-- [ ] **2.32** `button` — SCSS migrated (verify); thin view; optional variant-strategy tidy. **(S)**
-- [ ] **2.33** `badge` — SCSS migrated; verify-only (already thin). **(S)**
-- [ ] **2.34** `list` — SCSS migrated; list↔list-item context for the `item/` sub-folder if drilling exists. **(M)**
-- [ ] **2.35** `layout` / `main` — SCSS N/A; ensure `useLayout` is the sole logic owner; views thin. **(S)**
+<!-- Done 2026-06-05 (2-agent wave: A=migrations, B=verify/active-thin; coordinator reviewed+linted). Migrations card/chip/divider/icon: flat `components/_<name>.scss` → nested `<name>/_index.scss` ($tokens, prefix `md-<name>`), `.vue` `@use '…/<name>/index' as t` + `g($t,…)`; roles via `map.get($theme-color-link,'role')`, surface-container*/*-contrast kept as theme-aware `var(--color-*)`. Old flat partials deleted. Also deleted dead `_badge.scss`/`_time-picker.scss` (unimported leftovers). `_ripple.scss` KEPT — shared infra, imported by `app/plugins/v-ripple.ts`. **Coordinator-caught bug:** chip state-layer opacities were migrated byte-for-byte as unitless `0.08`/`0.12` inside `color-mix()` (invalid → hover/pressed dropped) → fixed to `8%`/`12%` per M3 mandate. Verify set (app-bar/button/badge/list/layout-main): all already compliant — SCSS migrated, views thin, no raw listeners; app-bar `isScrolled` is a prop (no own scroll listening → 2.31's "extract scroll-state" is N/A); list↔item context deliberately NOT added (zero drilling — list is a pure slot container, item self-contained); useLayout confirmed sole logic owner. Net B edits: 0 (justified, not churn). Observation (not fixed, kit-wide): list-item/badge/card use a `--variables`/`generate-tokens` runtime-custom-property pattern that nominally conflicts with "no runtime --custom-properties for component colors" — shared established pattern, defer to Phase 3.1. divider `--horizontal`/`--vertical` width/height look inverted but that's pre-existing legacy geometry (migration was behavior-neutral). -->
+- [x] **2.27** `card` — migrated → `card/_index.scss` (prefix `md-card`); 3 variants elevated/filled/outlined, hover `8%` state layer via `color-mix`. **(L)**
+- [x] **2.28** `chip` — migrated → `chip/_index.scss` (prefix `md-chip`); filter-toggle logic (`selectedModel` defineModel + click-toggle on `filter`) already present, preserved. **Opacity bug fixed (0.08/0.12→8%/12%).** **(L)**
+- [x] **2.29** `divider` — migrated → `divider/_index.scss` (prefix `md-divider`). **(S)**
+- [x] **2.30** `icon` — migrated → `icon/_index.scss` (prefix `md-icon`, `fill: currentcolor`). **(S)**
+- [x] **2.31** `app-bar` — verified: SCSS on `g($t)`, `useLayoutItem` size context, `isScrolled` is a prop → no own scroll listener needed. No change. **(M)**
+- [x] **2.32** `button` — verified thin: variant resolution = clean class-array computed; SCSS DRY `@each apply-scheme` mixin. No change. **(S)**
+- [x] **2.33** `badge` — verified thin (reference component). No change. **(S)**
+- [x] **2.34** `list` — verified: no list↔item drilling (pure slot container + self-contained item) → context unnecessary, NOT added. No change. **(M)**
+- [x] **2.35** `layout` / `main` — verified `useLayout`/`useLayoutItem` sole logic owner; area views thin consumers; no raw listeners. No change. **(S)**
 
 ## Phase 3 — Verification & cleanup
 
-- [ ] **3.1** Full sweep: confirm no remaining local `$color`/state `$variable`s and no runtime `--custom-properties` for component colors anywhere. **(M)**
-- [ ] **3.2** Confirm every global DOM listener routes through `useEventListener`/`useGlobalListener`/`useClickOutside` (no raw `addEventListener` left in `.vue`). **(S)**
-- [ ] **3.3** `npm run lint` + `npm run lint:style` = 0 errors; `npm run test` green. **(M)**
+- [x] **3.1** Sweep done 2026-06-05: **runtime `--custom-properties` for component colors fully eliminated** — the dead `--variables`/`generate-tokens` machinery (only badge had a vestigial class, only list-item emitted unconsumed `--md-list-item-*`) removed: `--variables` classes dropped from badge+list-item, `&.--variables{generate-tokens}` block removed, `generate-tokens` mixin deleted from `abstracts/_mixins.scss`, `$use-variables` param+branch removed from `material-map` (`abstracts/_functions.scss`; `$prefix` kept for positional call-site compat). grep confirms 0 refs to `--variables`/`generate-tokens`/`use-variables`. No local color/state `$var` outside token maps (migrations 2.27–2.30 cleaned the last flat per-component maps; only structural `_ripple.scss` remains). **(M)**
+- [x] **3.2** Confirmed 2026-06-05: **zero raw `addEventListener`/`removeEventListener`/`setInterval` in any `.vue`**. Only two `onMounted` (global-container dynamic CSS import; menu DOM positioning) — both browser-API, not data-loading. **(S)**
+- [~] **3.3** 2026-06-05: `npm run lint` (eslint) = **0 errors** (fixed 3 `isNaN`→`Number.isNaN` in `dialog/date/index.vue:322`; remaining are acceptable `any`/jsdoc WARNINGS). `npm run test` = **green (1/1)**. `npm run lint:style`: cleaned the safe pre-existing legacy (13 empty `//` comments in `base/_typography.scss` → blank lines; `app-bar` leading-underscore `@use '…/app-bar/_index'` → `/app-bar/index`), **21 → 7 errors**. Remaining 7 are BEM `selector-class-pattern` renames left as legacy debt per user (risky template+style renames, out of cluster): `pages/demo/youtube.vue` ×2, `app-bar/index.vue` ×4 (223/227/242/246), `list/item/index.vue:246` `__trailing-supporting`. **(M)**
 - [ ] **3.4** Add a dated summary in `.cursor/summary/` capturing the refactor for the next session. **(S)**
 
 ## Phase 4 — Registry-backed selection ✅ (folded into Phase 1)

@@ -16,12 +16,12 @@ $tokens: (
       width: 280rem,
     ),
     border: (
-      radius: var(--sys-shape-corner-extra-small, 4rem),
+      radius: map.get($theme-shape-link, 'extra-small'),
     ),
     bg: (
       color: var(--color-surface-container, var(--color-surface)),
     ),
-    color: var(--color-on-surface),
+    color: map.get($theme-color-link, 'on-surface'),
     shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
   ),
   item: (
@@ -31,18 +31,18 @@ $tokens: (
     padding: 0 12rem,
     gap: 12rem,
     text: (
-      color: var(--color-on-surface),
+      color: map.get($theme-color-link, 'on-surface'),
       type: 'label-large',
     ),
     shortcut: (
-      color: var(--color-on-surface-variant),
+      color: map.get($theme-color-link, 'on-surface-variant'),
       type: 'body-small',
     ),
     hover: (
-      bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 8%, transparent),
     ),
     active: (
-      bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
     ),
   ),
 );

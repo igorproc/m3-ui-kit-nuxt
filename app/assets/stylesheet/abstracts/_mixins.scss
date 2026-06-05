@@ -77,15 +77,3 @@
     letter-spacing: map.get($type-map, 'letter-spacing');
   }
 }
-
-@mixin generate-tokens($tokens, $token-prefix: '') {
-  @each $key, $value in $tokens {
-    $var-name: if(sass($token-prefix == ""): $key; else: "#{$token-prefix}-#{$key}");
-
-    @if type-of($value)=='map' {
-      @include generate-tokens($value, $var-name);
-    } @else {
-      --#{$var-name}: #{$value};
-    }
-  }
-}

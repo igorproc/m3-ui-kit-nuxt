@@ -28,9 +28,13 @@ const resolvedName = computed(() => {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/icon' as v;
+@use '~/assets/stylesheet/components/icon/index' as t;
+
+$prefix: 'md-icon';
 
 .ui-icon {
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -43,7 +47,7 @@ const resolvedName = computed(() => {
   :deep(svg) {
     width: 1em;
     height: 1em;
-    fill: v.$fill;
+    fill: g($t, 'fill');
   }
 }
 </style>

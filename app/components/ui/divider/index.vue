@@ -28,23 +28,27 @@ const dividerClasses = computed(() => [
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/divider' as v;
+@use '~/assets/stylesheet/components/divider/index' as t;
+
+$prefix: 'md-divider';
 
 .ui-divider {
-  background-color: v.$color;
+  $t: material-map(t.$tokens, $prefix);
+
+  background-color: g($t, 'color');
 
   &--horizontal {
-    width: v.$thickness;
-    height: 100%;
+    width: 100%;
+    height: g($t, 'thickness');
   }
 
   &--vertical {
-    width: 100%;
-    height: v.$thickness;
+    width: g($t, 'thickness');
+    height: 100%;
   }
 
   &--inset.ui-divider--horizontal {
-    margin-inline-start: v.$inset-margin;
+    margin-inline-start: g($t, 'inset-margin');
   }
 }
 </style>

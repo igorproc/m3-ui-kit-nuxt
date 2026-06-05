@@ -42,6 +42,7 @@ const state = reactive({
   sliderValDiscrete: 20,
   sliderValRange: [20, 80],
   sliderValVertical: 40,
+  sliderValVerticalDiscrete: 30,
   sliderValVerticalRange: [25, 75],
   dropdownValFilled: 'option1',
   dropdownValOutlined: 'option2',
@@ -127,9 +128,9 @@ const sections = computed(() => [
     id: 'badge',
     title: 'Badge',
     variants: [
-      { label: 'Small (Dot)', render: () => h(resolveComponent('m-badge'), { dot: true }, { default: () => hIcon(ICONS.info, 'font-size: 24rem;') }) },
-      { label: 'Large (Value)', render: () => h(resolveComponent('m-badge'), { value: 3 }, { default: () => hIcon(ICONS.info, 'font-size: 24rem;') }) },
-      { label: 'Max Value (99+)', render: () => h(resolveComponent('m-badge'), { value: 999, max: 99 }, { default: () => hIcon(ICONS.info, 'font-size: 24rem;') }) },
+      { label: 'Small (Dot)', render: () => h(resolveComponent('m-badge'), { dot: true }) },
+      { label: 'Large (Value)', render: () => h(resolveComponent('m-badge'), { value: 3 }) },
+      { label: 'Max Value (99+)', render: () => h(resolveComponent('m-badge'), { value: 999, max: 99 }) },
     ],
   },
   {
@@ -331,13 +332,13 @@ const sections = computed(() => [
     title: 'Shape',
     variants: [
       { label: 'Flower', render: () => hShape('flower') },
-      { label: 'Heart', render: () => hShape('heart', 'var(--color-warn)') },
-      { label: 'Sunny', render: () => hShape('sunny', 'var(--color-accent)') },
+      { label: 'Heart', render: () => hShape('heart', 'var(--md-sys-color-error)') },
+      { label: 'Sunny', render: () => hShape('sunny', 'var(--md-sys-color-secondary)') },
       { label: 'Hexagon', render: () => hShape('hexagon') },
-      { label: 'Pentagon', render: () => hShape('pentagon', 'var(--color-accent)') },
+      { label: 'Pentagon', render: () => hShape('pentagon', 'var(--md-sys-color-secondary)') },
       { label: '7-Sided Cookie', render: () => hShape('7SidedCookie') },
-      { label: '4-Leaf Clover', render: () => hShape('4LeafClover', 'var(--color-accent)') },
-      { label: 'Pill', render: () => hShape('pill', 'var(--color-warn)') },
+      { label: '4-Leaf Clover', render: () => hShape('4LeafClover', 'var(--md-sys-color-secondary)') },
+      { label: 'Pill', render: () => hShape('pill', 'var(--md-sys-color-error)') },
     ],
   },
   {
@@ -375,14 +376,22 @@ const sections = computed(() => [
   },
   {
     id: 'slider',
-    title: 'Slider',
+    title: 'Slider — Horizontal',
     variants: [
       { label: 'Continuous', render: () => h(resolveComponent('m-slider'), { 'showValue': true, 'label': 'Continuous', 'modelValue': state.sliderValContinuous, 'onUpdate:modelValue': (v: number) => state.sliderValContinuous = v }) },
       { label: 'Discrete', render: () => h(resolveComponent('m-slider'), { 'discrete': true, 'step': 10, 'showValue': true, 'label': 'Discrete', 'modelValue': state.sliderValDiscrete, 'onUpdate:modelValue': (v: number) => state.sliderValDiscrete = v }) },
       { label: 'Range', render: () => h(resolveComponent('m-slider'), { 'range': true, 'showValue': true, 'label': 'Range', 'modelValue': state.sliderValRange, 'onUpdate:modelValue': (v: number[]) => state.sliderValRange = v }) },
-      { label: 'Vertical', render: () => hVerticalSlider({ 'orientation': 'vertical', 'showValue': true, 'modelValue': state.sliderValVertical, 'onUpdate:modelValue': (v: number) => state.sliderValVertical = v }) },
-      { label: 'Vertical Range', render: () => hVerticalSlider({ 'orientation': 'vertical', 'range': true, 'showValue': true, 'modelValue': state.sliderValVerticalRange, 'onUpdate:modelValue': (v: number[]) => state.sliderValVerticalRange = v }) },
       { label: 'Disabled', render: () => h(resolveComponent('m-slider'), { label: 'Disabled', disabled: true, showValue: true, modelValue: 30 }) },
+    ],
+  },
+  {
+    id: 'slider',
+    title: 'Slider — Vertical',
+    variants: [
+      { label: 'Continuous', render: () => hVerticalSlider({ 'orientation': 'vertical', 'showValue': true, 'modelValue': state.sliderValVertical, 'onUpdate:modelValue': (v: number) => state.sliderValVertical = v }) },
+      { label: 'Discrete', render: () => hVerticalSlider({ 'orientation': 'vertical', 'discrete': true, 'step': 10, 'showValue': true, 'modelValue': state.sliderValVerticalDiscrete, 'onUpdate:modelValue': (v: number) => state.sliderValVerticalDiscrete = v }) },
+      { label: 'Range', render: () => hVerticalSlider({ 'orientation': 'vertical', 'range': true, 'showValue': true, 'modelValue': state.sliderValVerticalRange, 'onUpdate:modelValue': (v: number[]) => state.sliderValVerticalRange = v }) },
+      { label: 'Disabled', render: () => hVerticalSlider({ orientation: 'vertical', disabled: true, showValue: true, modelValue: 30 }) },
     ],
   },
   {
@@ -441,6 +450,8 @@ const sections = computed(() => [
 </script>
 
 <style lang="scss">
+@use 'sass:map';
+
 .demo-material {
   &__showcase {
     display: flex;
@@ -451,7 +462,7 @@ const sections = computed(() => [
 
   &__section-title {
     margin: 0;
-    color: var(--color-primary-container-contrast);
+    color: map.get($theme-color-link, 'on-primary-container');
 
     @include typescale('headline-large');
   }
@@ -464,11 +475,11 @@ const sections = computed(() => [
 
   &__showcase-subtitle {
     margin: 0;
-    color: var(--color-on-surface-variant);
+    color: map.get($theme-color-link, 'on-surface-variant');
 
     @include typescale('title-large');
 
-    border-bottom: 1rem solid var(--color-outline-variant);
+    border-bottom: 1rem solid map.get($theme-color-link, 'outline-variant');
     padding-bottom: 8rem;
   }
 
@@ -480,9 +491,9 @@ const sections = computed(() => [
   }
 
   &__preview-container {
-    border: 1rem solid var(--color-outline-variant);
-    border-radius: var(--sys-shape-corner-medium, 12rem);
-    background-color: var(--color-surface);
+    border: 1rem solid map.get($theme-color-link, 'outline-variant');
+    border-radius: map.get($theme-shape-link, 'medium');
+    background-color: map.get($theme-color-link, 'surface');
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -501,7 +512,7 @@ const sections = computed(() => [
     justify-content: center;
     padding: 32rem;
     min-height: 120rem;
-    background-color: var(--color-surface-container-lowest);
+    background-color: var(--color-surface-container);
   }
 
   &__preview-label {
@@ -509,8 +520,8 @@ const sections = computed(() => [
 
     padding: 12rem 16rem;
     background-color: var(--color-surface-container);
-    color: var(--color-on-surface-variant);
-    border-top: 1rem solid var(--color-outline-variant);
+    color: map.get($theme-color-link, 'on-surface-variant');
+    border-top: 1rem solid map.get($theme-color-link, 'outline-variant');
     text-align: center;
   }
 }

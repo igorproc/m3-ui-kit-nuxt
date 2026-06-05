@@ -112,7 +112,7 @@ $prefix: 'ui-slider-track';
     &::before {
       content: '';
       position: absolute;
-      inset: 0;
+      inset: 0 4rem;
       background-image: radial-gradient(
         circle at 2rem center,
         g($t, 'tickmarks.color') 2rem,
@@ -129,6 +129,7 @@ $prefix: 'ui-slider-track';
     bottom: 0;
 
     &::before {
+      inset: 4rem 0;
       background-image: radial-gradient(
         circle at center 2rem,
         g($t, 'tickmarks.color') 2rem,

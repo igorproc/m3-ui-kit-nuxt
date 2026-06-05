@@ -164,7 +164,7 @@ const dynamicGridStyles = computed(() => {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/app-bar/_index' as *;
+@use '~/assets/stylesheet/components/app-bar/index' as *;
 
 .ui-app-bar {
   $prefix: 'ui-app-bar';

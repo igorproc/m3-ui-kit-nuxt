@@ -2,7 +2,7 @@
   <component
     :is="tag"
     v-ripple="isInteractive && !disabled"
-    class="ui-list-item --variables"
+    class="ui-list-item"
     :class="{
       'ui-list-item--interactive': isInteractive,
       'ui-list-item--disabled': disabled,
@@ -157,10 +157,6 @@ const tag = computed(() => {
 .ui-list-item {
   $prefix: 'md-list-item';
   $t: material-map(t.$tokens, $prefix);
-
-  &.--variables {
-    @include generate-tokens(t.$tokens, $prefix);
-  }
 
   display: grid;
   grid-template-columns: auto 1fr auto;

@@ -10,10 +10,10 @@
       #leading
     >
       <slot name="leading">
-        <m-loading
+        <m-icon
           v-if="selected"
-          variant="expressive"
-          size="small"
+          :name="ICONS.check"
+          class="ui-dropdown-item__check"
         />
       </slot>
     </template>
@@ -30,6 +30,9 @@
 </template>
 
 <script setup lang="ts">
+import { ICONS } from '~~/shared/constants/icons'
+import MIcon from '~/components/ui/icon/index.vue'
+
 interface Props {
   selected?: boolean
 }

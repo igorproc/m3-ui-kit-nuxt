@@ -319,7 +319,7 @@ function onTextInput(val: string) {
   const m = Number.parseInt(parts[1], 10)
   const y = Number.parseInt(parts[2], 10)
 
-  if (isNaN(d) || isNaN(m) || isNaN(y)) {
+  if (Number.isNaN(d) || Number.isNaN(m) || Number.isNaN(y)) {
     inputError.value = 'Invalid date format'
     return
   }

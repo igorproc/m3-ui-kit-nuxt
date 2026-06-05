@@ -61,15 +61,19 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/card' as v;
+@use '~/assets/stylesheet/components/card/index' as t;
+
+$prefix: 'md-card';
 
 .ui-card {
+  $t: material-map(t.$tokens, $prefix);
+
   display: flex;
   flex-direction: column;
-  gap: v.$gap;
-  padding: v.$padding;
-  border-radius: v.$border-radius;
-  border-width: v.$border-width;
+  gap: g($t, 'gap');
+  padding: g($t, 'padding');
+  border-radius: g($t, 'radius');
+  border-width: g($t, 'border-width');
   border-style: solid;
   border-color: transparent;
   background-color: var(--color-surface);
@@ -82,42 +86,42 @@ withDefaults(defineProps<Props>(), {
     transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
   &--elevated {
-    background-color: v.$elevated-bg;
+    background-color: g($t, 'elevated-bg');
     border-color: transparent;
-    box-shadow: v.$elevated-shadow;
+    box-shadow: g($t, 'elevated-shadow');
 
     &:hover {
-      background-color: color-mix(in srgb, v.$state-layer-color v.$hover-opacity, v.$elevated-bg);
-      box-shadow: v.$elevated-hover-shadow;
+      background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'elevated-bg')});
+      box-shadow: g($t, 'elevated-hover-shadow');
     }
   }
 
   &--filled {
-    background-color: v.$filled-bg;
+    background-color: g($t, 'filled-bg');
     border-color: transparent;
-    box-shadow: v.$filled-shadow;
+    box-shadow: g($t, 'filled-shadow');
 
     &:hover {
-      background-color: color-mix(in srgb, v.$state-layer-color v.$hover-opacity, v.$filled-bg);
-      box-shadow: v.$filled-hover-shadow;
+      background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'filled-bg')});
+      box-shadow: g($t, 'filled-hover-shadow');
     }
   }
 
   &--outlined {
-    background-color: v.$outlined-bg;
-    border-color: v.$outlined-border-color;
-    box-shadow: v.$outlined-shadow;
+    background-color: g($t, 'outlined-bg');
+    border-color: g($t, 'outlined-border-color');
+    box-shadow: g($t, 'outlined-shadow');
 
     &:hover {
-      background-color: color-mix(in srgb, v.$state-layer-color v.$hover-opacity, v.$outlined-bg);
-      box-shadow: v.$outlined-hover-shadow;
+      background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'outlined-bg')});
+      box-shadow: g($t, 'outlined-hover-shadow');
     }
   }
 
   &__media {
     overflow: hidden;
-    margin: calc(v.$padding * -1) calc(v.$padding * -1) 0; // Full width media
-    border-radius: v.$border-radius v.$border-radius 0 0;
+    margin: calc(#{g($t, 'padding')} * -1) calc(#{g($t, 'padding')} * -1) 0; // Full width media
+    border-radius: g($t, 'radius') g($t, 'radius') 0 0;
 
     img {
       display: block;
@@ -136,20 +140,20 @@ withDefaults(defineProps<Props>(), {
   &__title {
     margin: 0;
 
-    @include typescale(v.$title-text-type);
+    @include typescale(g($t, 'title-type'));
   }
 
   &__subtitle {
     margin: 0;
-    color: v.$subtitle-color;
+    color: g($t, 'subtitle-color');
 
-    @include typescale(v.$subtitle-text-type);
+    @include typescale(g($t, 'subtitle-type'));
   }
 
   &__content {
     flex: 1 1 auto;
 
-    @include typescale(v.$content-text-type);
+    @include typescale(g($t, 'content-type'));
   }
 
   &__actions {

@@ -1,0 +1,8 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  color: map.get($theme-color-link, 'outline-variant'),
+  thickness: 1rem,
+  inset: (margin: 16rem),
+);

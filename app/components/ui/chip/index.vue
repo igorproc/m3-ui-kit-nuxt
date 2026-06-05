@@ -63,19 +63,23 @@ function onClick() {
 </script>
 
 <style lang="scss">
-@use '~/assets/stylesheet/components/chip' as v;
+@use '~/assets/stylesheet/components/chip/index' as t;
+
+$prefix: 'md-chip';
 
 .ui-chip {
+  $t: material-map(t.$tokens, $prefix);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: v.$gap;
-  min-height: v.$height;
-  padding-inline: v.$padding-inline;
-  border-radius: v.$radius;
-  border: v.$border-width solid transparent;
-  background-color: v.$bg-color-default;
-  color: v.$text-color-variant;
+  gap: g($t, 'gap');
+  min-height: g($t, 'height');
+  padding-inline: g($t, 'padding-inline');
+  border-radius: g($t, 'radius');
+  border: g($t, 'border-width') solid transparent;
+  background-color: g($t, 'bg-color-default');
+  color: g($t, 'text-color-variant');
   cursor: pointer;
   outline: none;
   text-decoration: none;
@@ -86,14 +90,14 @@ function onClick() {
     box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-  @include typescale(v.$text-type);
+  @include typescale(g($t, 'text-type'));
 
   &__icon,
   &__trailing {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: v.$icon-size;
+    font-size: g($t, 'icon-size');
   }
 
   &__label {
@@ -103,11 +107,11 @@ function onClick() {
   }
 
   &:hover:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-hover, v.$bg-color-default);
+    background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-default')});
   }
 
   &:active:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-active, v.$bg-color-default);
+    background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-active')}, #{g($t, 'bg-color-default')});
     transform: translateY(1rem);
   }
 
@@ -115,41 +119,41 @@ function onClick() {
   &--filter,
   &--input {
     background-color: transparent;
-    border-color: v.$border-color-default;
-    color: v.$text-color-default;
+    border-color: g($t, 'border-color-default');
+    color: g($t, 'text-color-default');
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-hover, transparent);
+      background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-hover')}, transparent);
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-active, transparent);
+      background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-active')}, transparent);
     }
   }
 
   &--suggestion {
-    background-color: v.$bg-color-suggestion;
+    background-color: g($t, 'bg-color-suggestion');
     border-color: transparent;
-    box-shadow: v.$suggestion-shadow;
+    box-shadow: g($t, 'suggestion-shadow');
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) v.$state-layer-opacity-hover, v.$bg-color-suggestion);
+      background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-suggestion')});
     }
   }
 
   &--selected {
-    background-color: v.$bg-color-selected;
-    color: v.$text-color-selected;
+    background-color: g($t, 'bg-color-selected');
+    color: g($t, 'text-color-selected');
     border-color: transparent;
 
     &:hover {
-      background-color: color-mix(in srgb, v.$text-color-selected v.$state-layer-opacity-hover, v.$bg-color-selected);
+      background-color: color-mix(in srgb, #{g($t, 'text-color-selected')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-selected')});
     }
   }
 
   &--disabled {
     cursor: default;
-    opacity: v.$disabled-opacity;
+    opacity: g($t, 'disabled-opacity');
     pointer-events: none;
   }
 }

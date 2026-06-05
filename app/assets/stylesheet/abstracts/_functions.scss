@@ -38,18 +38,17 @@
   @return math.div(strip-unit($bp), 100);
 }
 
-@function material-map($tokens, $prefix, $current-path: '', $use-variables: false) {
+@function material-map($tokens, $prefix, $current-path: '') {
   $result: ();
 
   @each $key, $value in $tokens {
     $new-path: if(sass($current-path == ''): $key; else: '#{$current-path}-#{$key}');
 
     @if meta.type-of($value) == 'map' {
-      $inner-map: material-map($value, $prefix, $new-path, $use-variables);
+      $inner-map: material-map($value, $prefix, $new-path);
       $result: map.merge($result, ($key: $inner-map));
     } @else {
-      $val: if(sass($use-variables): var(--#{$prefix}-#{$new-path}, #{$value}); else: $value);
-      $result: map.merge($result, ($key: $val));
+      $result: map.merge($result, ($key: $value));
     }
   }
 

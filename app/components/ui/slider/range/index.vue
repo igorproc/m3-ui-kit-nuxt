@@ -38,21 +38,29 @@ const props = withDefaults(defineProps<Props>(), {
 
 const cssVars = computed(() => {
   const isVertical = props.orientation === 'vertical'
+  const span = props.end - props.start
+
+  // Unitless start/span let the inner tickmarks element re-derive the FULL track
+  // width from its `span%` container, so the active dot grid lands exactly on the
+  // inactive track grid (the range's `overflow:hidden` clips it to the fill).
+  const shared = {
+    '--ui-slider-range-start': props.start,
+    '--ui-slider-range-span': span,
+    '--ui-slider-tick-count': props.tickCount,
+  }
 
   if (isVertical) {
     return {
-      'bottom': `${props.start}%`,
-      'height': `${props.end - props.start}%`,
-      '--ui-slider-range-start-raw': `${props.start}%`,
-      '--ui-slider-tick-count': props.tickCount,
+      ...shared,
+      bottom: `${props.start}%`,
+      height: `${span}%`,
     }
   }
 
   return {
-    'left': `${props.start}%`,
-    'width': `${props.end - props.start}%`,
-    '--ui-slider-range-start-raw': `${props.start}%`,
-    '--ui-slider-tick-count': props.tickCount,
+    ...shared,
+    left: `${props.start}%`,
+    width: `${span}%`,
   }
 })
 </script>
@@ -88,21 +96,25 @@ $prefix: 'ui-slider-range';
     opacity: 0.38;
   }
 
-  // Active tickmarks inside range container
+  // Active tickmarks inside range container. The element spans the FULL track
+  // (range is `span%` of it → width = 100% * 100/span) and is re-anchored to the
+  // track origin (left = -start/span), so the dot grid is identical to the
+  // inactive track grid; the range's `overflow:hidden` clips it to the fill.
   &__tickmarks {
     position: absolute;
-    left: calc(-1 * var(--ui-slider-range-start-raw));
-    width: 100vw;
-    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--ui-slider-range-start) / var(--ui-slider-range-span) * -100%);
+    width: calc(100% * 100 / var(--ui-slider-range-span));
     pointer-events: none;
 
     &::before {
       content: '';
       position: absolute;
-      inset: 0;
+      inset: 0 4rem;
       background-image: radial-gradient(
         circle at 2rem center,
-        color-mix(in srgb, var(--color-on-primary, #fff) 38%, transparent) 2rem,
+        g($t, 'tickmarks.color') 2rem,
         transparent 2rem
       );
       background-size: calc(100% / var(--ui-slider-tick-count)) 100%;
@@ -110,15 +122,15 @@ $prefix: 'ui-slider-range';
   }
 
   &--vertical &__tickmarks {
-    left: 0;
-    bottom: calc(-1 * var(--ui-slider-range-start-raw));
-    width: 100%;
-    height: 100vh;
+    inset: auto 0 calc(var(--ui-slider-range-start) / var(--ui-slider-range-span) * -100%);
+    width: auto;
+    height: calc(100% * 100 / var(--ui-slider-range-span));
 
     &::before {
+      inset: 4rem 0;
       background-image: radial-gradient(
         circle at center 2rem,
-        color-mix(in srgb, var(--color-on-primary, #fff) 38%, transparent) 2rem,
+        g($t, 'tickmarks.color') 2rem,
         transparent 2rem
       );
       background-size: 100% calc(100% / var(--ui-slider-tick-count));
