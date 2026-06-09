@@ -1,36 +1,54 @@
-<script setup lang="ts">
-// Layout Aside area component
-interface Props {
-  position?: 'left' | 'right'
-  sizeToken?: string
-  order?: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  position: 'left',
-  sizeToken: undefined,
-  order: undefined,
-})
-
-const area = computed(() => props.position)
-
-const { layoutItemStyles } = useLayoutItem({
-  id: `layout-aside-${props.position}`,
-  area,
-  sizeToken: computed(() => props.sizeToken),
-  order: props.order,
-})
-
-// Provide area context for children
-provideLayoutArea(area)
-</script>
-
 <template>
   <aside
     class="m-layout-aside"
-    :class="`m-layout-aside--${position}`"
+    :class="[
+      `m-layout-aside--${side}`,
+      { 'm-layout-aside--sticky': sticky },
+    ]"
     :style="layoutItemStyles"
   >
     <slot />
   </aside>
 </template>
+
+<script setup lang="ts">
+// Боковая зона лейаута. Мульти-инстанс (auto-id), порядок задаёт DOM:
+// кто раньше — тот владеет углом. По умолчанию тянется с контентом,
+// sticky прижимает к viewport с высотой 100dvh − insets
+interface Props {
+  /** Логические start/end предпочтительны; left/right — legacy-алиасы */
+  position?: 'left' | 'right' | 'start' | 'end'
+  sizeToken?: string
+  /** Прижать к viewport (высота между прибитыми краями, скролл внутри) */
+  sticky?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  position: 'start',
+  sizeToken: undefined,
+  sticky: false,
+})
+
+const side = computed<'start' | 'end'>(() => {
+  if (props.position === 'left') return 'start'
+  if (props.position === 'right') return 'end'
+  return props.position
+})
+
+const { layoutItemStyles } = useLayoutItem({
+  kind: side,
+  sizeToken: computed(() => props.sizeToken),
+  sticky: computed(() => props.sticky),
+})
+</script>
+
+<style lang="scss">
+.m-layout-aside {
+  min-height: 0;
+
+  &--sticky {
+    overflow-y: auto;
+    z-index: z(aside);
+  }
+}
+</style>

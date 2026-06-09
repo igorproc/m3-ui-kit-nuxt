@@ -4,8 +4,9 @@
     :class="[
       `ui-app-bar--${variant}`,
       {
-        'ui-app-bar--scrolled': isScrolled,
+        'ui-app-bar--scrolled': scrolled,
         'ui-app-bar--with-subtitle': hasSubtitle,
+        'ui-app-bar--anchored': isLayoutChild,
       },
     ]"
     :style="[
@@ -63,6 +64,9 @@ interface Props {
   title?: string
   subtitle?: string
   variant?: AppBarVariant
+  /** Прибить к верху, когда app-bar — прямой ребёнок m-layout */
+  sticky?: boolean
+  /** @deprecated принудительный override — elevate теперь автоматический (по скроллу лейаута) */
   isScrolled?: boolean
 }
 
@@ -70,6 +74,7 @@ const props = withDefaults(defineProps<Props>(), {
   title: '',
   subtitle: '',
   variant: 'center-aligned',
+  sticky: true,
   isScrolled: false,
 })
 
@@ -77,6 +82,22 @@ const slots = useSlots()
 
 const hasSubtitle = computed(() => {
   return !!props.subtitle || !!slots.subtitle
+})
+
+// Auto-elevate: внутри лейаута — общий windowY контекстной зоны (покрывает скролл
+// документа и скролл main в full-height); вне лейаута — собственный слушатель
+const layoutZone = useLayoutZone()
+const fallbackY = ref(0)
+
+if (!layoutZone) {
+  useGlobalListener('window', 'scroll', () => {
+    fallbackY.value = window.scrollY
+  }, { passive: true })
+}
+
+const scrolled = computed(() => {
+  if (props.isScrolled) return true
+  return (layoutZone ? layoutZone.windowY.value : fallbackY.value) > 0
 })
 
 // Self-register in layout system with correct CSS variable token resolved in SCSS
@@ -94,9 +115,11 @@ const sizeToken = computed(() => {
   }
 })
 
-const { layoutItemStyles } = useLayoutItem({
-  id: 'app-bar',
+// Первый уровень m-layout → top-зона; внутри m-layout-header → вклад высоты в зону
+const { layoutItemStyles, isLayoutChild } = useLayoutItem({
+  kind: 'top',
   sizeToken,
+  sticky: computed(() => props.sticky),
 })
 
 // Dynamic grid template layout based on variant and active slots
@@ -251,6 +274,10 @@ const dynamicGridStyles = computed(() => {
   &--scrolled {
     background-color: g($t, 'container-scrolled-color');
     box-shadow: g($t, 'container-scrolled-shadow');
+  }
+
+  &--anchored {
+    z-index: z(header);
   }
 
   &__nav {

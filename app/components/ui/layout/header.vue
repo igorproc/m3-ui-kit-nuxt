@@ -1,28 +1,3 @@
-<script setup lang="ts">
-// Layout Header area component
-interface Props {
-  sticky?: boolean
-  sizeToken?: string
-  order?: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  sticky: true,
-  sizeToken: undefined,
-  order: undefined,
-})
-
-const { layoutItemStyles } = useLayoutItem({
-  id: 'layout-header',
-  area: 'header',
-  sizeToken: computed(() => props.sizeToken),
-  order: props.order,
-})
-
-// Provide area context for children (like m-app-bar)
-provideLayoutArea('header')
-</script>
-
 <template>
   <header
     class="m-layout-header"
@@ -33,11 +8,31 @@ provideLayoutArea('header')
   </header>
 </template>
 
+<script setup lang="ts">
+// Верхняя зона лейаута. Мульти-инстанс (auto-id): каждый header — своя строка
+// сетки, порядок задаёт DOM. Размер — явный sizeToken или вклад детей
+// (m-app-bar / m-system-bar внутри)
+interface Props {
+  /** Прибить к верху viewport (строка грида резервирует место) */
+  sticky?: boolean
+  sizeToken?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  sticky: true,
+  sizeToken: undefined,
+})
+
+const { layoutItemStyles } = useLayoutItem({
+  kind: 'top',
+  sizeToken: computed(() => props.sizeToken),
+  sticky: computed(() => props.sticky),
+})
+</script>
+
 <style lang="scss">
 .m-layout-header {
   &--sticky {
-    position: sticky;
-    top: 0;
     z-index: z(header);
   }
 }

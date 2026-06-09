@@ -1,0 +1,24 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SYSTEM BAR (m3-like thin status bar)
+// ==========================================
+
+$tokens: (
+  container: (
+    height: 24rem,
+    color: map.get($theme-color-link, 'surface-container-highest'),
+    text: (
+      color: map.get($theme-color-link, 'on-surface-variant'),
+    ),
+    padding: (
+      inline: 8rem,
+    ),
+    gap: 8rem,
+    typography: 'label-small',
+  ),
+  icon: (
+    size: 16rem,
+  ),
+);

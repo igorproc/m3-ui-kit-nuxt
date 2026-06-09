@@ -1,6 +1,7 @@
 <template>
   <nav
     class="ui-navigation-bar"
+    :class="{ 'ui-navigation-bar--anchored': isLayoutChild }"
     :style="layoutItemStyles"
   >
     <button
@@ -52,10 +53,12 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Self-register in layout system as footer area
-const { layoutItemStyles } = useLayoutItem({
-  id: 'navigation-bar',
-  area: 'footer',
+// Первый уровень m-layout → bottom-зона (прибит к низу, M3 nav bar всегда виден);
+// высота — токеном, иначе sticky-низу нечем зарезервировать строку грида
+const { layoutItemStyles, isLayoutChild } = useLayoutItem({
+  kind: 'bottom',
+  sizeToken: '--ui-navigation-bar-height',
+  sticky: true,
 })
 
 const modelValue = defineModel<string | null>({ default: null })
@@ -125,9 +128,14 @@ function onSelect(id: string) {
 .ui-navigation-bar {
   $t: material-map(t.$tokens, 'md-navigation-bar');
 
+  @at-root :root {
+    --ui-navigation-bar-height: #{g($t, 'container-height')};
+  }
+
   display: flex;
   justify-content: space-around;
   align-items: center;
+  height: var(--ui-navigation-bar-height);
   padding-inline: g($t, 'container-padding-inline');
   padding-block: g($t, 'container-padding-block');
   border-radius: g($t, 'container-shape');
@@ -178,6 +186,10 @@ function onSelect(id: string) {
 
   &__item--active {
     color: g($t, 'item-active-color');
+  }
+
+  &--anchored {
+    z-index: z(header);
   }
 }
 </style>

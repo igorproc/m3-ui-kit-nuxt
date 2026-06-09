@@ -7,6 +7,7 @@ const { progress } = useLoadingIndicator({ throttle: 0, duration: 5e100 })
     <core-global-container />
 
     <m-progress
+      v-if="progress"
       :value="progress"
       class="app-common-scope__indicator"
     />

@@ -1,6 +1,6 @@
 <template>
   <m-layout class="layout-youtube">
-    <m-layout-header>
+    <m-layout-header size-token="--ui-app-bar-height-small">
       <div class="demo-youtube__header">
         <div class="demo-youtube__header-start">
           <m-button
@@ -41,7 +41,10 @@
       </div>
     </m-layout-header>
 
-    <m-layout-aside position="left">
+    <m-layout-aside
+      position="left"
+      :size-token="isMobile ? undefined : sidebarSizeToken"
+    >
       <div
         v-if="!isMobile"
         class="demo-youtube__sidebar"
@@ -111,23 +114,13 @@ const sidebarExpanded = ref(true)
 const activeSidebarItem = ref('home')
 const mobileNav = ref('home')
 
-useLayoutItem({
-  id: 'youtube-header',
-  area: 'header',
-  sizeToken: '--ui-app-bar-height-small',
-})
-
+// Размеры зон — пропсами зон в шаблоне (бывшие top-level useLayoutItem-вызовы
+// были мёртвым кодом: над лейаут-компонентом нет m-layout-предка)
 const sidebarSizeToken = computed(() =>
   sidebarExpanded.value
     ? '--ui-navigation-rail-width-expanded'
     : '--ui-navigation-rail-width',
 )
-
-useLayoutItem({
-  id: 'youtube-sidebar',
-  area: 'left',
-  sizeToken: sidebarSizeToken,
-})
 
 function toggleSidebar() {
   sidebarExpanded.value = !sidebarExpanded.value

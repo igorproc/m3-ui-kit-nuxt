@@ -50,10 +50,12 @@ const sizeToken = computed(() =>
     : '--ui-navigation-rail-width',
 )
 
+// Первый уровень m-layout → start-зона (прижат sticky); внутри m-layout-aside —
+// вклад ширины в зону (раскрытие меняет токен → грид анимируется)
 const { layoutItemStyles } = useLayoutItem({
-  id: 'navigation-rail',
-  area: 'left',
+  kind: 'start',
   sizeToken,
+  sticky: true,
 })
 
 const modelValue = defineModel<string | null>({ default: null })
@@ -141,9 +143,12 @@ function onSelect(id: string) {
   color: g($t, 'container-text-color');
   transition: width var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
   overflow: hidden;
+
+  // Вложенный в зону случай (m-layout-aside): прижат с учётом прибитых краёв
+  // лейаута; на первом уровне inline-стили движка точнее и переопределяют это
   position: sticky;
-  top: 0;
-  height: 100dvh;
+  top: var(--m3-layout-inset-top, 0);
+  height: calc(100dvh - var(--m3-layout-inset-top, 0px));
   z-index: z(aside);
 
   &__list {

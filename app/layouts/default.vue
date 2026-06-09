@@ -28,26 +28,22 @@
       </m-app-bar>
     </m-layout-header>
 
-    <m-layout-aside position="left">
-      <m-navigation-rail
-        v-if="!isMobile"
-        v-model="activeNav"
-        :items="navItems"
-        :expanded="drawerExpanded"
-      />
-    </m-layout-aside>
+    <m-navigation-rail
+      v-if="!isMobile"
+      v-model="activeNav"
+      :items="navItems"
+      :expanded="drawerExpanded"
+    />
 
     <m-layout-main>
       <slot />
     </m-layout-main>
 
-    <m-layout-footer>
-      <m-navigation-bar
-        v-if="isMobile"
-        v-model="activeNav"
-        :items="navItems"
-      />
-    </m-layout-footer>
+    <m-navigation-bar
+      v-if="isMobile"
+      v-model="activeNav"
+      :items="navItems"
+    />
   </m-layout>
 </template>
 
