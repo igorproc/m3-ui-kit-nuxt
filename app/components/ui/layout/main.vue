@@ -1,6 +1,7 @@
 <template>
   <main
     class="m-layout-main"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
@@ -10,7 +11,7 @@
 <script setup lang="ts">
 // Контентная зона — остаточный прямоугольник после выкраивания краёв.
 // В full-height-режиме скроллится сама (overflow-y: auto)
-const { layoutItemStyles } = useLayoutItem({ kind: 'main' })
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({ kind: 'main' })
 </script>
 
 <style lang="scss">

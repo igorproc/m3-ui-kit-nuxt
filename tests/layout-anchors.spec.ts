@@ -8,8 +8,10 @@ import MLayoutMain from '../app/components/ui/layout/main.vue'
 import MAppBar from '../app/components/ui/app-bar/index.vue'
 import { useLayoutZone } from '../app/composables/useLayout'
 
-// useHead в тестовой среде не пишет в document.head (генерация CSS покрыта
-// юнитами carve), поэтому интеграцию проверяем по inline-стилям и реестру зоны
+// useHead в тестовой среде не пишет в document.head, поэтому генерацию CSS
+// (sticky/fixed-правила, display: none вне диапазона) покрывают юниты carve;
+// здесь проверяем интеграцию: data-m3-zone (селектор generated-правил),
+// inline grid-area и live-реестр контекстной зоны
 const Probe = defineComponent({
   setup() {
     const zone = useLayoutZone()
@@ -17,17 +19,21 @@ const Probe = defineComponent({
     return () => h('div', {
       'data-testid': 'probe',
       'data-items': JSON.stringify(
-        zone?.items.map(item => ({ kind: item.kind, size: item.size ?? null })) ?? [],
+        zone?.items.map(item => ({
+          kind: item.kind,
+          size: item.size ?? null,
+          sticky: item.sticky ?? false,
+        })) ?? [],
       ),
     })
   },
 })
 
 const probeItems = (wrapper: { find: (sel: string) => { attributes: (name: string) => string | undefined } }) =>
-  JSON.parse(wrapper.find('[data-testid="probe"]').attributes('data-items') ?? '[]') as { kind: string, size: string | null }[]
+  JSON.parse(wrapper.find('[data-testid="probe"]').attributes('data-items') ?? '[]') as { kind: string, size: string | null, sticky: boolean }[]
 
 describe('multi-instance zones & sticky anchors', () => {
-  it('two sized headers stack: fixed bars, second offset by the first', async () => {
+  it('two sized headers register as sticky top zones with zone attributes', async () => {
     const wrapper = await mountSuspended(defineComponent({
       render: () => h(MLayout, () => [
         h(MLayoutHeader, { sizeToken: '--h1' }),
@@ -39,19 +45,17 @@ describe('multi-instance zones & sticky anchors', () => {
     const headers = wrapper.findAll('header')
     expect(headers).toHaveLength(2)
 
-    const first = headers[0]!.element as HTMLElement
-    const second = headers[1]!.element as HTMLElement
-    const id2 = second.style.gridArea
-
-    // top-зоны с размером прибиваются fixed (sticky в строке точной высоты не работает)
-    expect(first.style.position).toBe('fixed')
-    expect(second.style.position).toBe('fixed')
-    expect(second.style.insetBlockStart).toBe(`var(--m3-layout-${id2}-top, 0px)`)
+    // data-m3-zone — селектор generated sticky-правил; имя = grid-area
+    for (const header of headers) {
+      const el = header.element as HTMLElement
+      expect(header.attributes('data-m3-zone')).toBeTruthy()
+      expect(header.attributes('data-m3-zone')).toBe(el.style.gridArea)
+    }
 
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--h1)' },
-      { kind: 'top', size: 'var(--h2)' },
-      { kind: 'main', size: null },
+      { kind: 'top', size: 'var(--h1)', sticky: true },
+      { kind: 'top', size: 'var(--h2)', sticky: true },
+      { kind: 'main', size: null, sticky: false },
     ])
   })
 
@@ -67,12 +71,12 @@ describe('multi-instance zones & sticky anchors', () => {
     const el = bar.element as HTMLElement
 
     expect(el.style.gridArea).toBeTruthy()
-    expect(el.style.position).toBe('fixed')
+    expect(bar.attributes('data-m3-zone')).toBe(el.style.gridArea)
     expect(bar.classes()).toContain('ui-app-bar--anchored')
 
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)' },
-      { kind: 'main', size: null },
+      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'main', size: null, sticky: false },
     ])
   })
 
@@ -85,20 +89,22 @@ describe('multi-instance zones & sticky anchors', () => {
     }))
 
     const bar = wrapper.find('.ui-app-bar')
-    const header = wrapper.find('header').element as HTMLElement
+    const header = wrapper.find('header')
 
     expect((bar.element as HTMLElement).style.gridArea).toBeFalsy()
+    expect(bar.attributes('data-m3-zone')).toBeUndefined()
     expect(bar.classes()).not.toContain('ui-app-bar--anchored')
-    // зона получила размер из вклада app-bar → прибита и резервирует строку
-    expect(header.style.position).toBe('fixed')
+    expect(header.attributes('data-m3-zone')).toBeTruthy()
 
+    // зона получила размер из вклада app-bar — реестр отдаёт его live-геттером,
+    // поэтому generated-CSS прибьёт header и зарезервирует строку и на SSR
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)' },
-      { kind: 'main', size: null },
+      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'main', size: null, sticky: false },
     ])
   })
 
-  it('sticky aside pins with viewport-clamped height; default aside stays in flow', async () => {
+  it('asides register their side and sticky intent for the css generator', async () => {
     const wrapper = await mountSuspended(defineComponent({
       render: () => h(MLayout, () => [
         h(MLayoutAside, { sizeToken: '--w', sticky: true }),
@@ -108,22 +114,17 @@ describe('multi-instance zones & sticky anchors', () => {
     }))
 
     const asides = wrapper.findAll('aside')
-    const stickyEl = asides[0]!.element as HTMLElement
-    const plainEl = asides[1]!.element as HTMLElement
-    const id = stickyEl.style.gridArea
+    expect(asides[0]!.attributes('data-m3-zone')).toBeTruthy()
+    expect(asides[1]!.attributes('data-m3-zone')).toBeTruthy()
 
-    expect(stickyEl.style.position).toBe('sticky')
-    expect(stickyEl.style.alignSelf).toBe('start')
-    expect(stickyEl.style.insetBlockStart).toBe(`var(--m3-layout-${id}-top, 0px)`)
-    // height: calc(100dvh − insets) тоже выставляется, но happy-dom отбрасывает
-    // calc()+var() в height при валидации — в браузере свойство применяется
-
-    expect(plainEl.style.position).toBe('')
-
-    expect(probeItems(wrapper).map(item => item.kind)).toEqual(['start', 'end', 'main'])
+    expect(probeItems(wrapper)).toEqual([
+      { kind: 'start', size: 'var(--w)', sticky: true },
+      { kind: 'end', size: 'var(--w2)', sticky: false },
+      { kind: 'main', size: null, sticky: false },
+    ])
   })
 
-  it('sizeless sticky top zone degrades to in-flow (cannot reserve the row)', async () => {
+  it('sizeless sticky top zone stays in flow (no inline position, area assigned)', async () => {
     const wrapper = await mountSuspended(defineComponent({
       render: () => h(MLayout, () => [
         h(MLayoutHeader),
@@ -131,8 +132,13 @@ describe('multi-instance zones & sticky anchors', () => {
       ]),
     }))
 
-    const header = wrapper.find('header').element as HTMLElement
-    expect(header.style.position).toBe('')
-    expect(header.style.gridArea).toBeTruthy()
+    const header = wrapper.find('header')
+    const el = header.element as HTMLElement
+
+    // позиционирование живёт в generated-CSS; для безразмерной зоны правило
+    // не эмитится (юнит buildLayoutCss) — инлайн в любом случае только grid-area
+    expect(el.style.position).toBe('')
+    expect(el.style.gridArea).toBeTruthy()
+    expect(header.attributes('data-m3-zone')).toBe(el.style.gridArea)
   })
 })

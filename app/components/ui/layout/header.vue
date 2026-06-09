@@ -2,6 +2,7 @@
   <header
     class="m-layout-header"
     :class="{ 'm-layout-header--sticky': sticky }"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
@@ -23,7 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
   sizeToken: undefined,
 })
 
-const { layoutItemStyles } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   kind: 'top',
   sizeToken: computed(() => props.sizeToken),
   sticky: computed(() => props.sticky),

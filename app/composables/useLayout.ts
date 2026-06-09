@@ -37,12 +37,9 @@ import { useEventListener } from './useEventListener'
 import { useGlobalListener } from './useGlobalListener'
 import {
   KIND_BY_AREA,
+  ZONE_ATTR,
   buildLayoutCss,
-  carve,
-  filterByRange,
-  itemInsetVar,
   sanitizeAreaName,
-  sizeVar,
 } from './layout/carve'
 import type { CarveItem, LayoutKind } from './layout/carve'
 import { createLayoutRegistry } from './layout/registry'
@@ -176,6 +173,9 @@ export function createLayout(layoutId: string) {
   const tabletMin = breakpoints['tablet-xs']
   const desktopMin = breakpoints['desktop-xs']
 
+  // Резолвится ПОСЛЕ рендера всего дерева (head-payload): размеры из вкладов
+  // детей уже собраны — реестр отдаёт их live-геттерами, поэтому SSR-CSS
+  // содержит и size-переменные, и sticky-правила без клиентского JS
   const css = computed(() => {
     const carveItems: CarveItem[] = items.map(item => ({
       id: item.id,
@@ -184,21 +184,10 @@ export function createLayout(layoutId: string) {
       sticky: item.sticky,
     }))
 
-    const sizeDecls: Record<string, string> = {}
-    for (const item of carveItems) {
-      if (item.size) sizeDecls[sizeVar(item.id)] = item.size
-    }
-
-    return buildLayoutCss(layoutId, sizeDecls, [
-      { result: carve(filterByRange(carveItems, 'mobile')) },
-      {
-        media: `only screen and (min-width: ${tabletMin}px) and (max-width: ${desktopMin - 1}px)`,
-        result: carve(filterByRange(carveItems, 'tablet')),
-      },
-      {
-        media: `only screen and (min-width: ${desktopMin}px)`,
-        result: carve(filterByRange(carveItems, 'desktop')),
-      },
+    return buildLayoutCss(layoutId, carveItems, [
+      { range: 'mobile', itemsMedia: `only screen and (max-width: ${tabletMin - 1}px)` },
+      { range: 'tablet', media: `only screen and (min-width: ${tabletMin}px) and (max-width: ${desktopMin - 1}px)` },
+      { range: 'desktop', media: `only screen and (min-width: ${desktopMin}px)` },
     ])
   })
 
@@ -234,7 +223,7 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
   const sizeExpr = computed(() => normalizeSize(unref(options.sizeToken)))
 
   if (!layout) {
-    return { layoutItemStyles: noStyles, isLayoutChild: false }
+    return { layoutItemStyles: noStyles, layoutItemAttrs: noStyles, isLayoutChild: false }
   }
 
   const isFirstLevel = options.force === true || instance?.parent?.uid === layout.uid
@@ -245,7 +234,7 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     if (host) {
       onScopeDispose(host.contribute(sizeExpr))
     }
-    return { layoutItemStyles: noStyles, isLayoutChild: false }
+    return { layoutItemStyles: noStyles, layoutItemAttrs: noStyles, isLayoutChild: false }
   }
 
   const kindRef = computed<LayoutKind>(() => {
@@ -285,19 +274,22 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
 
   const getEl = () => (instance?.proxy?.$el as Element | null) ?? null
 
+  // Live-геттеры: реестр всегда отдаёт АКТУАЛЬНЫЕ kind/size/sticky. Критично
+  // для SSR: вклады детей появляются после setup родителя, watchEffect на
+  // сервере не отработает — а css-computed резолвится в самом конце и через
+  // геттеры видит финальные значения (и реактивно трекает их на клиенте)
   const snapshot = (): LayoutItem => ({
     id: idRef.value,
-    kind: kindRef.value,
-    size: effectiveSize.value,
-    sticky: unref(options.sticky) || undefined,
+    get kind() { return kindRef.value },
+    get size() { return effectiveSize.value },
+    get sticky() { return unref(options.sticky) || undefined },
   })
 
   // Синхронная регистрация — SSR собирает грид при рендере
-  // (watchEffect на сервере не отработает)
   let lastId = idRef.value
   layout.register(snapshot(), getEl)
 
-  // Обновления на клиенте (смена sizeToken, kind, вкладов детей)
+  // Смена id (явный проп) требует перерегистрации; остальное живёт геттерами
   watchEffect(() => {
     const next = snapshot()
 
@@ -315,56 +307,33 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     layout.unregister(lastId)
   })
 
-  let warnedSizelessSticky = false
+  // Sticky-позиционирование НЕ инлайнится: оно зависит от effectiveSize, а
+  // вклады детей на момент рендера элемента родителя ещё не собраны (SSR отдал
+  // бы бар без position). Правила эмитит buildLayoutCss в generated-CSS по
+  // селектору data-атрибута — инлайн несёт только grid-area
+  const layoutItemStyles = computed<Record<string, string>>(() => ({ gridArea: idRef.value }))
+  const layoutItemAttrs = computed<Record<string, string>>(() => ({ [ZONE_ATTR]: idRef.value }))
 
-  /**
-   * Sticky-позиционирование (план §2.6):
-   * - top/bottom: containing block грид-итема = его grid area, и в строке точной
-   *   высоты sticky двигаться некуда → прибиваем `position: fixed`, а строка грида
-   *   резервирует место через size-переменную (ноль CLS). Требует размер: без него
-   *   строка схлопнется — деградируем в поток с dev-warning.
-   * - start/end: колонка тянется на высоту контента → обычный sticky со смещением
-   *   и высотой из per-item insets (не-sticky низ в вычитание не входит).
-   */
-  const layoutItemStyles = computed<Record<string, string>>(() => {
-    const id = idRef.value
-    const styles: Record<string, string> = { gridArea: id }
+  if (import.meta.dev) {
+    let warnedSizelessSticky = false
 
-    if (!unref(options.sticky)) return styles
+    // После mount вклады детей точно собраны (дети маунтятся раньше родителя) —
+    // безразмерная прибитая зона верха/низа осталась в потоке осознанно
+    onMounted(() => watchEffect(() => {
+      if (warnedSizelessSticky || !unref(options.sticky)) return
 
-    const kind = kindRef.value
-    const top = `var(${itemInsetVar(id, 'top')}, 0px)`
-    const bottom = `var(${itemInsetVar(id, 'bottom-sticky')}, 0px)`
+      const kind = kindRef.value
+      if (kind !== 'top' && kind !== 'bottom') return
+      if (effectiveSize.value) return
 
-    if (kind === 'top' || kind === 'bottom') {
-      if (!effectiveSize.value) {
-        if (import.meta.dev && !warnedSizelessSticky) {
-          warnedSizelessSticky = true
-          console.warn(
-            `[m-layout] Sticky ${kind} zone "${id}" has no size (sizeToken or child contribution) — the grid row cannot reserve space for a fixed bar, rendering in-flow.`,
-          )
-        }
-        return styles
-      }
+      warnedSizelessSticky = true
+      console.warn(
+        `[m-layout] Sticky ${kind} zone "${idRef.value}" has no size (sizeToken or child contribution) — the grid row cannot reserve space for a fixed bar, rendering in-flow.`,
+      )
+    }))
+  }
 
-      styles.position = 'fixed'
-      styles[kind === 'top' ? 'insetBlockStart' : 'insetBlockEnd'] = kind === 'top' ? top : bottom
-      styles.insetInlineStart = `var(${itemInsetVar(id, 'start')}, 0px)`
-      styles.insetInlineEnd = `var(${itemInsetVar(id, 'end')}, 0px)`
-      return styles
-    }
-
-    if (kind === 'start' || kind === 'end') {
-      styles.position = 'sticky'
-      styles.alignSelf = 'start'
-      styles.insetBlockStart = top
-      styles.height = `calc(100dvh - ${top} - ${bottom})`
-    }
-
-    return styles
-  })
-
-  return { layoutItemStyles, isLayoutChild: true }
+  return { layoutItemStyles, layoutItemAttrs, isLayoutChild: true }
 }
 
 /**

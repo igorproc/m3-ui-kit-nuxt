@@ -13,6 +13,12 @@
 import { reactive, toRaw } from 'vue'
 import type { LayoutKind } from './carve'
 
+/**
+ * `kind`/`size`/`sticky` may be live getters (`useLayoutItem` registers
+ * getter-backed snapshots): every read returns the current value, so the css
+ * computed sees children contributions even on SSR, where no `watchEffect`
+ * re-registration happens.
+ */
 export interface LayoutItem {
   id: string
   kind: LayoutKind

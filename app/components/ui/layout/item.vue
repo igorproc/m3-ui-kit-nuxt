@@ -1,6 +1,7 @@
 <template>
   <div
     class="m-layout-item"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
@@ -23,7 +24,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const { layoutItemStyles } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   id: props.id,
   kind: computed(() => props.kind),
   area: props.area,

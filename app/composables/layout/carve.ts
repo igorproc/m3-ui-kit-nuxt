@@ -63,11 +63,21 @@ export interface CarveResult {
   totals: { top: string, right: string, bottom: string, left: string }
 }
 
-export interface RangeCss {
+export interface RangeSpec {
+  range: DeviceRange
   /** Media query without the `@media` prefix; absent → base (mobile-first) block. */
   media?: string
-  result: CarveResult
+  /**
+   * Media for per-item rules (sticky positioning, out-of-range hiding). MUST be
+   * bounded on both sides for the base range — `display: none` from an
+   * unbounded block would leak onto desktop (unlike the grid templates, it is
+   * not overridden by the later @media blocks).
+   */
+  itemsMedia?: string
 }
+
+/** Attribute selecting a registered zone element (set by `useLayoutItem`). */
+export const ZONE_ATTR = 'data-m3-zone'
 
 const MAIN_TRACK = 'minmax(0, 1fr)'
 
@@ -202,26 +212,67 @@ export function carve(items: CarveItem[]): CarveResult {
 }
 
 /**
- * Assembles the per-layout `<style>` payload: base (mobile-first) block with
- * item size vars + one block per device range with grid templates and insets.
+ * Sticky declarations for a zone (план §2.6). Emitted into the generated CSS —
+ * NOT inline: a zone sized by children contributions resolves its size only
+ * after the whole tree has rendered (head payload), while the parent's inline
+ * style is computed before the children's setup, so SSR/no-JS would miss it.
+ *
+ * - top/bottom: containing block грид-итема = его grid area, и в строке точной
+ *   высоты sticky двигаться некуда → прибиваем `position: fixed`, а строка
+ *   грида резервирует место size-переменной (ноль CLS). Без размера строке
+ *   нечего резервировать — правило не эмитится, зона остаётся в потоке.
+ * - start/end: колонка тянется на высоту контента → обычный sticky со
+ *   смещением и высотой из per-item insets.
  */
-export function buildLayoutCss(
-  layoutId: string,
-  sizeDecls: Record<string, string>,
-  ranges: RangeCss[],
-): string {
+function stickyDecls(item: CarveItem): string[] | null {
+  if (!item.sticky) return null
+
+  const top = `var(${itemInsetVar(item.id, 'top')}, 0px)`
+  const bottomSticky = `var(${itemInsetVar(item.id, 'bottom-sticky')}, 0px)`
+
+  if (item.kind === 'top' || item.kind === 'bottom') {
+    if (!item.size) return null
+
+    return [
+      'position: fixed;',
+      item.kind === 'top' ? `inset-block-start: ${top};` : `inset-block-end: ${bottomSticky};`,
+      `inset-inline-start: var(${itemInsetVar(item.id, 'start')}, 0px);`,
+      `inset-inline-end: var(${itemInsetVar(item.id, 'end')}, 0px);`,
+    ]
+  }
+
+  if (item.kind === 'start' || item.kind === 'end') {
+    return [
+      'position: sticky;',
+      'align-self: start;',
+      `inset-block-start: ${top};`,
+      `height: calc(100dvh - ${top} - ${bottomSticky});`,
+    ]
+  }
+
+  return null
+}
+
+/**
+ * Assembles the per-layout `<style>` payload. Per device range:
+ * - `#<layoutId>` rule — size vars (base block), insets, grid templates;
+ * - per-item rules (`#<layoutId> > [data-m3-zone="<id>"]`) — sticky
+ *   positioning and `display: none` for zones filtered out of the range
+ *   (otherwise they would become implicit tracks and break the grid).
+ */
+export function buildLayoutCss(layoutId: string, items: CarveItem[], ranges: RangeSpec[]): string {
   const blocks: string[] = []
 
-  ranges.forEach((range, index) => {
+  ranges.forEach((spec, index) => {
+    const visible = filterByRange(items, spec.range)
+    const { grid, insets, totals } = carve(visible)
     const lines: string[] = []
 
     if (index === 0) {
-      for (const [name, value] of Object.entries(sizeDecls)) {
-        lines.push(`${name}: ${value};`)
+      for (const item of items) {
+        if (item.size) lines.push(`${sizeVar(item.id)}: ${item.size};`)
       }
     }
-
-    const { grid, insets, totals } = range.result
 
     lines.push(`--m3-layout-inset-top: ${totals.top};`)
     lines.push(`--m3-layout-inset-right: ${totals.right};`)
@@ -239,8 +290,29 @@ export function buildLayoutCss(
     lines.push(`grid-template-columns: ${grid.columns};`)
     lines.push(`grid-template-rows: ${grid.rows};`)
 
-    const rule = `#${layoutId} {\n  ${lines.join('\n  ')}\n}`
-    blocks.push(range.media ? `@media ${range.media} {\n${rule}\n}` : rule)
+    const rootRule = `#${layoutId} {\n  ${lines.join('\n  ')}\n}`
+    blocks.push(spec.media ? `@media ${spec.media} {\n${rootRule}\n}` : rootRule)
+
+    const itemRules: string[] = []
+    const visibleIds = new Set(visible.map(item => item.id))
+
+    for (const item of items) {
+      const selector = `#${layoutId} > [${ZONE_ATTR}="${item.id}"]`
+
+      if (!visibleIds.has(item.id)) {
+        itemRules.push(`${selector} {\n  display: none;\n}`)
+        continue
+      }
+
+      const decls = stickyDecls(item)
+      if (decls) itemRules.push(`${selector} {\n  ${decls.join('\n  ')}\n}`)
+    }
+
+    if (itemRules.length) {
+      const media = spec.itemsMedia ?? spec.media
+      const payload = itemRules.join('\n')
+      blocks.push(media ? `@media ${media} {\n${payload}\n}` : payload)
+    }
   })
 
   return blocks.join('\n\n')

@@ -295,6 +295,16 @@ m-responsive. Песочница `/demo/grid`. Тесты 48/48. `ui/grid/` уд
 youtube.vue/DocsSidebar/useBreakpoint зачищены, roadmap отмечен, m-row gap пофикшен
 (явный gap из --m-container-gutter). **Фича завершена**; deprecated-шимы — до major.
 
+### Пост-фикс — SSR/no-JS sticky — ✅ готово (2026-06-10)
+Баг-репорт владельца: sticky header без JS не имел position/top. Корень: sticky жил в
+inline-стилях, а размер из вкладов детей при SSR-рендере родителя ещё неизвестен (inline
+вычисляется до setup детей; watchEffect на сервере не пере-регистрирует). Фикс:
+позиционирование + скрытие вне диапазона (`display: none`, закрыт wart implicit-track)
+эмитятся в generated-CSS по `#<layoutId> > [data-m3-zone="<id>"]`; реестр отдаёт
+kind/size/sticky live-геттерами; inline — только grid-area. Mobile-правила per-item —
+в ограниченной с обеих сторон media (иначе display:none протёк бы на десктоп).
+Итог: `.cursor/summary/auto-layout-ssr-sticky-fix_2026-06-10.md`. Тесты 53/53.
+
 ### (изначальный план фазы F)
 1. Переписать `kit/docs/layout.md` (сейчас описывает несуществующую padding-модель).
 2. Миграция существующих `layouts/` + demo-страниц на новый API; удалить deprecated-ветки.

@@ -2,6 +2,7 @@
   <nav
     class="ui-navigation-bar"
     :class="{ 'ui-navigation-bar--anchored': isLayoutChild }"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <button
@@ -55,7 +56,7 @@ const props = defineProps<Props>()
 
 // Первый уровень m-layout → bottom-зона (прибит к низу, M3 nav bar всегда виден);
 // высота — токеном, иначе sticky-низу нечем зарезервировать строку грида
-const { layoutItemStyles, isLayoutChild } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
   kind: 'bottom',
   sizeToken: '--ui-navigation-bar-height',
   sticky: true,

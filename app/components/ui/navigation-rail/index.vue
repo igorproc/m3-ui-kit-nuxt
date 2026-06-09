@@ -2,6 +2,7 @@
   <nav
     class="ui-navigation-rail"
     :class="{ 'ui-navigation-rail--expanded': isExpanded }"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <div class="ui-navigation-rail__list">
@@ -52,7 +53,7 @@ const sizeToken = computed(() =>
 
 // Первый уровень m-layout → start-зона (прижат sticky); внутри m-layout-aside —
 // вклад ширины в зону (раскрытие меняет токен → грид анимируется)
-const { layoutItemStyles } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   kind: 'start',
   sizeToken,
   sticky: true,
@@ -145,7 +146,8 @@ function onSelect(id: string) {
   overflow: hidden;
 
   // Вложенный в зону случай (m-layout-aside): прижат с учётом прибитых краёв
-  // лейаута; на первом уровне inline-стили движка точнее и переопределяют это
+  // лейаута; на первом уровне generated-правило движка (#id > [data-m3-zone])
+  // специфичнее и переопределяет это per-item оффсетами
   position: sticky;
   top: var(--m3-layout-inset-top, 0);
   height: calc(100dvh - var(--m3-layout-inset-top, 0px));

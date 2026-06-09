@@ -2,6 +2,7 @@
   <div
     class="ui-system-bar"
     :class="{ 'ui-system-bar--anchored': isLayoutChild }"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
@@ -19,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   sticky: true,
 })
 
-const { layoutItemStyles, isLayoutChild } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
   kind: 'top',
   sizeToken: '--ui-system-bar-height',
   sticky: computed(() => props.sticky),

@@ -9,6 +9,7 @@
         'ui-app-bar--anchored': isLayoutChild,
       },
     ]"
+    v-bind="layoutItemAttrs"
     :style="[
       layoutItemStyles,
       dynamicGridStyles,
@@ -116,7 +117,7 @@ const sizeToken = computed(() => {
 })
 
 // Первый уровень m-layout → top-зона; внутри m-layout-header → вклад высоты в зону
-const { layoutItemStyles, isLayoutChild } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
   kind: 'top',
   sizeToken,
   sticky: computed(() => props.sticky),

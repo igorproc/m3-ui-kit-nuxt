@@ -4,10 +4,11 @@ import {
   carve,
   cssSum,
   filterByRange,
+  itemInsetVar,
   sanitizeAreaName,
   sizeVar,
 } from '../app/composables/layout/carve'
-import type { CarveItem, LayoutKind } from '../app/composables/layout/carve'
+import type { CarveItem, LayoutKind, RangeSpec } from '../app/composables/layout/carve'
 
 const item = (id: string, kind: LayoutKind, size?: string, sticky?: boolean): CarveItem =>
   ({ id, kind, size, sticky })
@@ -208,18 +209,17 @@ describe('sanitizeAreaName', () => {
 })
 
 describe('buildLayoutCss', () => {
-  it('emits the base block with size vars and media blocks per range', () => {
-    const items = [item('header', 'top', 'var(--h)'), item('content', 'main')]
-    const result = carve(items)
+  const RANGES: RangeSpec[] = [
+    { range: 'mobile', itemsMedia: 'only screen and (max-width: 767px)' },
+    { range: 'tablet', media: 'only screen and (min-width: 768px) and (max-width: 1199px)' },
+    { range: 'desktop', media: 'only screen and (min-width: 1200px)' },
+  ]
 
+  it('emits the base block with size vars and media blocks per range', () => {
     const css = buildLayoutCss(
       'm-layout-test',
-      { [sizeVar('header')]: 'var(--h)' },
-      [
-        { result },
-        { media: 'only screen and (min-width: 768px) and (max-width: 1199px)', result },
-        { media: 'only screen and (min-width: 1200px)', result },
-      ],
+      [item('header', 'top', 'var(--h)'), item('content', 'main')],
+      RANGES,
     )
 
     expect(css).toContain('#m-layout-test {')
@@ -229,5 +229,71 @@ describe('buildLayoutCss', () => {
     expect(css).toContain('grid-template-areas: "header" "content";')
     expect(css).toContain('--m3-layout-inset-top: var(--m3-layout-header-size, 0px);')
     expect(css).toContain('--m3-layout-content-top: var(--m3-layout-header-size, 0px);')
+  })
+
+  it('pins a sized sticky top zone with fixed + per-item insets (no inline, no JS)', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('sb', 'top', 'var(--sb)', true), item('ab', 'top', 'var(--ab)', true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).toContain('#lid > [data-m3-zone="ab"] {')
+    expect(css).toContain('position: fixed;')
+    expect(css).toContain(`inset-block-start: var(${itemInsetVar('ab', 'top')}, 0px);`)
+    expect(css).toContain(`inset-inline-start: var(${itemInsetVar('ab', 'start')}, 0px);`)
+  })
+
+  it('pins a sized sticky bottom zone via inset-block-end', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('nav', 'bottom', 'var(--n)', true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).toContain('#lid > [data-m3-zone="nav"] {')
+    expect(css).toContain(`inset-block-end: var(${itemInsetVar('nav', 'bottom-sticky')}, 0px);`)
+  })
+
+  it('sizeless sticky top zone emits no position rule (degrades in-flow)', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('header', 'top', undefined, true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).not.toContain('position: fixed')
+  })
+
+  it('sticky side zone gets real sticky with viewport-clamped height', () => {
+    const top = `var(${itemInsetVar('nav', 'top')}, 0px)`
+    const bottom = `var(${itemInsetVar('nav', 'bottom-sticky')}, 0px)`
+
+    const css = buildLayoutCss(
+      'lid',
+      [item('nav', 'start', 'var(--n)', true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).toContain('#lid > [data-m3-zone="nav"] {')
+    expect(css).toContain('position: sticky;')
+    expect(css).toContain('align-self: start;')
+    expect(css).toContain(`height: calc(100dvh - ${top} - ${bottom});`)
+  })
+
+  it('zones filtered out of a range are hidden inside the BOUNDED range media', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('nav', 'start'), item('content', 'main')],
+      RANGES,
+    )
+
+    // моб. диапазон ограничен с обеих сторон — display: none не протекает выше
+    expect(css).toContain(
+      '@media only screen and (max-width: 767px) {\n#lid > [data-m3-zone="nav"] {\n  display: none;\n}\n}',
+    )
+
+    const desktopBlock = css.slice(css.indexOf('min-width: 1200px'))
+    expect(desktopBlock).not.toContain('display: none')
   })
 })

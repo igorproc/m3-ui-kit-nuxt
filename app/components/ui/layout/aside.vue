@@ -5,6 +5,7 @@
       `m-layout-aside--${side}`,
       { 'm-layout-aside--sticky': sticky },
     ]"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
@@ -35,7 +36,7 @@ const side = computed<'start' | 'end'>(() => {
   return props.position
 })
 
-const { layoutItemStyles } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   kind: side,
   sizeToken: computed(() => props.sizeToken),
   sticky: computed(() => props.sticky),
