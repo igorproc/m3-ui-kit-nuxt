@@ -13,6 +13,8 @@ export interface MNavigationRailItem {
 export const mNavigationRailProps = {
   items: { type: Array as PropType<MNavigationRailItem[]>, default: () => [] },
   expanded: { type: Boolean, default: false },
+  // Accessible name for the <nav> landmark.
+  ariaLabel: { type: String as PropType<string>, default: 'Primary' },
 }
 
 export type MNavigationRailProps = ExtractPublicPropTypes<typeof mNavigationRailProps>

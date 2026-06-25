@@ -9,6 +9,7 @@
     <div class="ui-table__pagination-actions">
       <m-button
         variant="text"
+        aria-label="Previous page"
         :disabled="currentPage === 1"
         @click="$emit('update:currentPage', currentPage - 1)"
       >
@@ -17,6 +18,7 @@
 
       <m-button
         variant="text"
+        aria-label="Next page"
         :disabled="isLastPage"
         @click="$emit('update:currentPage', currentPage + 1)"
       >

@@ -8,6 +8,7 @@
     :type="type"
     :to="to"
     :tag="tag"
+    :aria-label="ariaLabel"
   >
     <span class="ui-icon-button__content">
       <slot />

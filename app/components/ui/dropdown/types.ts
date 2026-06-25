@@ -1,5 +1,15 @@
-import type { ComputedRef } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
 import type { UiMenuOrigin } from '~/components/ui/menu/types'
+
+/** Registration handle returned to an option leaf for ARIA + active-state wiring. */
+export interface DropdownOptionTicket {
+  /** Stable DOM id for the option (target of `aria-activedescendant`). */
+  id: string
+  /** Whether this option is the active (virtually focused) descendant. */
+  isActive: ComputedRef<boolean>
+  /** Detach the option from the keyboard-navigation registry. */
+  unregister: () => void
+}
 
 /** A simple value/label pair fed through the `options` prop. */
 export interface DropdownOption {
@@ -45,4 +55,16 @@ export interface DropdownContext {
   remove: (entry: DropdownEntry) => void
   /** Whether an entry is currently selected. */
   isSelected: (entry: DropdownEntry) => boolean
+  /** Stable id for the listbox panel (combobox `aria-controls` target). */
+  listboxId: string
+  /** Id of the active descendant, or `undefined` when none is active. */
+  activeDescendant: ComputedRef<string | undefined>
+  /** Register an option leaf for keyboard navigation + active-state tracking. */
+  registerOption: (entry: DropdownEntry, el: Ref<HTMLElement | null>) => DropdownOptionTicket
+  /** Open the popover (no-op if disabled). */
+  open: () => void
+  /** Keyboard handler bound to the focusable combobox trigger. */
+  onTriggerKeydown: (event: KeyboardEvent) => void
+  /** Register the combobox element so focus can be returned to it on close. */
+  setTriggerEl: (el: HTMLElement | null) => void
 }

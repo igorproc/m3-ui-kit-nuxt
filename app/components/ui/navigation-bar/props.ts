@@ -12,6 +12,8 @@ export interface MNavigationBarItem {
 
 export const mNavigationBarProps = {
   items: { type: Array as PropType<MNavigationBarItem[]>, default: () => [] },
+  // Accessible name for the <nav> landmark.
+  ariaLabel: { type: String as PropType<string>, default: 'Primary' },
 }
 
 export type MNavigationBarProps = ExtractPublicPropTypes<typeof mNavigationBarProps>

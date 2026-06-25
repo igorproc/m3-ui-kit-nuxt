@@ -1,5 +1,6 @@
 <template>
   <m-dropdown-item
+    :entry="option"
     :selected="ctx.isSelected(option)"
     @click="ctx.select(option)"
   >

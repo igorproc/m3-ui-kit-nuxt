@@ -26,10 +26,9 @@
           :style="[menu.menuStyle.value, { zIndex: ticket.zIndex.value }]"
           v-bind="$attrs"
         >
-          <button
+          <div
             v-if="!absolute"
             class="ui-menu__backdrop"
-            type="button"
             aria-hidden="true"
             @click="requestClose"
           />
@@ -38,6 +37,8 @@
             ref="$menu"
             class="ui-menu__surface"
             role="menu"
+            tabindex="-1"
+            @keydown="onSurfaceKeydown"
           >
             <slot />
           </div>
@@ -97,10 +98,91 @@ const updatePosition = () => {
   })
 }
 
+// --- Menu keyboard navigation (APG menu pattern) --------------------------
+// Items are slotted by the consumer (typically `<button class="ui-menu__item">`).
+// On open we promote them to `role="menuitem"`, make them roving-tabbable, and
+// move focus to the first one; Arrow/Home/End move focus, Esc/Tab close.
+// When the menu hosts another composite widget (e.g. the dropdown's
+// `role="listbox"`), that consumer owns keyboard/focus — the menu must not
+// promote items or steal focus.
+const hostsForeignWidget = (): boolean =>
+  !!$menu.value?.querySelector('[role="listbox"], [role="option"]')
+
+const getMenuItems = (): HTMLElement[] => {
+  const surface = $menu.value
+  if (!surface || hostsForeignWidget()) return []
+
+  const nodes = surface.querySelectorAll<HTMLElement>('[role="menuitem"], button')
+  return Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.getAttribute('aria-disabled') !== 'true')
+}
+
+const prepareMenuItems = (): HTMLElement[] => {
+  const items = getMenuItems()
+  items.forEach((el, index) => {
+    if (!el.hasAttribute('role')) el.setAttribute('role', 'menuitem')
+    el.tabIndex = index === 0 ? 0 : -1
+  })
+  return items
+}
+
+const focusItemAt = (items: HTMLElement[], index: number) => {
+  items.forEach((el, i) => {
+    el.tabIndex = i === index ? 0 : -1
+  })
+  items[index]?.focus()
+}
+
+const getTriggerEl = (): HTMLElement | null => anchorRef.value?.parentElement ?? null
+
+const closeAndRestoreFocus = () => {
+  const trigger = getTriggerEl()
+  menu.close()
+  nextTick(() => trigger?.focus())
+}
+
+const onSurfaceKeydown = (event: KeyboardEvent) => {
+  const items = getMenuItems()
+
+  switch (event.key) {
+    case 'ArrowDown': {
+      event.preventDefault()
+      if (!items.length) return
+      const current = items.findIndex(el => el === document.activeElement)
+      focusItemAt(items, current < 0 ? 0 : (current + 1) % items.length)
+      break
+    }
+    case 'ArrowUp': {
+      event.preventDefault()
+      if (!items.length) return
+      const current = items.findIndex(el => el === document.activeElement)
+      focusItemAt(items, current <= 0 ? items.length - 1 : current - 1)
+      break
+    }
+    case 'Home':
+      event.preventDefault()
+      if (items.length) focusItemAt(items, 0)
+      break
+    case 'End':
+      event.preventDefault()
+      if (items.length) focusItemAt(items, items.length - 1)
+      break
+    case 'Escape':
+      event.preventDefault()
+      closeAndRestoreFocus()
+      break
+    case 'Tab':
+      event.preventDefault()
+      closeAndRestoreFocus()
+      break
+  }
+}
+
 watch(modelValue, async (val) => {
   if (val) {
     await nextTick()
     updatePosition()
+    const items = prepareMenuItems()
+    items[0]?.focus()
   }
 })
 
@@ -164,9 +246,6 @@ useGlobalListener('window', 'resize', updatePosition, { passive: true })
   &__backdrop {
     position: absolute;
     inset: 0;
-    border: none;
-    padding: 0;
-    margin: 0;
     background: transparent;
     cursor: default;
   }

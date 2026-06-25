@@ -9,6 +9,8 @@
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
     :z-index-fn="zIndexFn"
+    :aria-labelledby="title ? headlineId : undefined"
+    :aria-label="title ? undefined : 'Dialog'"
   >
     <div class="ui-dialog__container">
       <!-- Icon -->
@@ -22,6 +24,7 @@
       <!-- Headline -->
       <h2
         v-if="title"
+        :id="headlineId"
         class="ui-dialog__headline"
       >
         {{ title }}
@@ -66,6 +69,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const modelValue = defineModel<boolean>({ default: false })
+
+// Associate the headline with the dialog root (vue-final-modal already emits
+// role="dialog" + aria-modal="true"; this supplies its accessible name).
+const headlineId = useId()
 
 const injectedThemeAttrs = inject<ComputedRef<Record<string, string | undefined>> | null>('theme-attrs', null)
 const themeAttrs = computed(() => injectedThemeAttrs?.value ?? {})

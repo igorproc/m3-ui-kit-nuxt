@@ -6,10 +6,13 @@
     :content-transition="contentTransition"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
+    :aria-labelledby="$slots.header ? headerId : undefined"
+    :aria-label="$slots.header ? undefined : 'Navigation drawer'"
     @update:model-value="onUpdateModelValue"
   >
     <header
       v-if="$slots.header"
+      :id="headerId"
       class="ui-navigation-drawer__header"
     >
       <slot name="header" />
@@ -32,6 +35,10 @@ const emit = defineEmits<{
 }>()
 
 const modelValue = defineModel<boolean>({ default: false })
+
+// vue-final-modal already emits role="dialog" + aria-modal="true"; supply the
+// accessible name from the header slot when present.
+const headerId = useId()
 
 const overlayTransition = 'vfm-fade'
 const contentTransition = computed(() =>

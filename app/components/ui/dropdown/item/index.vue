@@ -1,8 +1,15 @@
 <template>
   <m-list-item
+    :id="ticket?.id"
+    ref="itemRef"
     class="ui-dropdown-item"
-    :class="{ 'ui-dropdown-item--selected': selected }"
+    :class="{
+      'ui-dropdown-item--selected': selected,
+      'ui-dropdown-item--active': ticket?.isActive.value,
+    }"
     :interactive="true"
+    role="option"
+    :aria-selected="selected"
     v-bind="$attrs"
   >
     <template
@@ -30,14 +37,35 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onBeforeUnmount, ref } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
+import { useDropdownContext } from '../context'
+import type { DropdownEntry, DropdownOptionTicket } from '../types'
 import MIcon from '~/components/ui/icon/index.vue'
 
 interface Props {
   selected?: boolean
+  /** Source entry, supplied when rendered via the dropdown's option/items paths. */
+  entry?: DropdownEntry
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const ctx = useDropdownContext()
+
+const itemRef = ref<ComponentPublicInstance | null>(null)
+const itemEl = computed<HTMLElement | null>(() => (itemRef.value?.$el as HTMLElement | null) ?? null)
+
+// Only entries with a resolvable identity join the keyboard-navigation registry
+// (the dropdown's option/items paths pass `entry`; bare manual items don't).
+let ticketHandle: DropdownOptionTicket | null = null
+if (props.entry !== undefined) {
+  ticketHandle = ctx.registerOption(props.entry, itemEl)
+  onBeforeUnmount(() => ticketHandle?.unregister())
+}
+
+const ticket = ticketHandle
 </script>
 
 <style lang="scss">
@@ -54,6 +82,12 @@ defineProps<Props>()
 
   @include typescale(g($t, 'typography'));
 
+  // Virtual focus (aria-activedescendant): real focus stays on the combobox,
+  // so mirror the hover emphasis to show the active option during keyboard nav.
+  &--active {
+    background-color: g($t, 'hover-bg');
+  }
+
   &--selected {
     background-color: g($t, 'selected-bg');
     color: g($t, 'selected-color');
@@ -69,7 +103,8 @@ defineProps<Props>()
       border-radius: 0 4rem 4rem 0;
     }
 
-    &:hover {
+    &:hover,
+    &.ui-dropdown-item--active {
       background-color: g($t, 'hover-selected-bg');
     }
   }

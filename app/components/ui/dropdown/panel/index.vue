@@ -8,7 +8,12 @@
     @update:model-value="onUpdate"
     @click-outside="ctx.close"
   >
-    <m-list class="ui-dropdown__list">
+    <m-list
+      :id="ctx.listboxId"
+      class="ui-dropdown__list"
+      role="listbox"
+      :aria-multiselectable="ctx.multiple.value || undefined"
+    >
       <slot />
     </m-list>
   </m-menu>

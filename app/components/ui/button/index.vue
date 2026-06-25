@@ -70,6 +70,7 @@ const linkBindings = computed(() => (isLink.value && props.to ? { to: props.to }
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/button/_index' as t;
 
 .ui-button {
@@ -102,6 +103,14 @@ const linkBindings = computed(() => (isLink.value && props.to ? { to: props.to }
     border-color g($t, 'state-duration') g($t, 'state-easing'),
     transform g($t, 'state-duration') g($t, 'state-easing');
 
+  // Keyboard focus ring (restores the visible indicator removed by
+  // `outline: none`). Color comes from the theme, not a hardcoded hex.
+  // Covers the whole family — icon/fab/segmented/split inherit `.ui-button`.
+  &:focus-visible {
+    outline: 2rem solid map.get($theme-color-link, 'secondary');
+    outline-offset: 2rem;
+  }
+
   &__label {
     display: inline-flex;
     align-items: center;
@@ -121,7 +130,7 @@ const linkBindings = computed(() => (isLink.value && props.to ? { to: props.to }
   &__spinner {
     width: g($t, 'icon-size');
     height: g($t, 'icon-size');
-    border: 2rem solid currentColor;
+    border: 2rem solid currentcolor;
     border-top-color: transparent;
     border-radius: 50%;
     animation: ui-button-spin 0.6s linear infinite;

@@ -76,7 +76,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
   &__spinner {
     width: g($t, 'icon-size-md');
     height: g($t, 'icon-size-md');
-    border: 2rem solid currentColor;
+    border: 2rem solid currentcolor;
     border-top-color: transparent;
     border-radius: 50%;
     animation: ui-extended-fab-spin 0.6s linear infinite;

@@ -1,27 +1,33 @@
 <template>
   <nav
+    ref="navEl"
     class="ui-navigation-rail"
     :class="{ 'ui-navigation-rail--expanded': isExpanded }"
+    :aria-label="ariaLabel"
     v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
+    @keydown="onKeydown"
   >
     <div class="ui-navigation-rail__list">
       <m-navigation-rail-item
-        v-for="item in items"
+        v-for="(item, index) in items"
         :key="item.id"
         :active="item.id === selectedValue"
         :icon="item.icon"
         :label="item.label"
         :badge="item.badge"
         :expanded="isExpanded"
+        :aria-current="item.id === selectedValue ? 'page' : undefined"
+        :tabindex="rovingIndex === index ? 0 : -1"
         @select="onSelect(item.id)"
+        @focus="rovingIndex = index"
       />
     </div>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideNavigationRailContext } from '~/composables/navigation/useNavigationRail'
 import type { ID } from '~~/shared/types/registry'
@@ -105,6 +111,56 @@ provideNavigationRailContext({
 function onSelect(id: string) {
   const ticketId = ticketIds.get(id)
   if (ticketId !== undefined) single.select(ticketId)
+}
+
+// --- Roving focus (APG: arrow keys move between destinations) -------------
+const navEl = ref<HTMLElement | null>(null)
+const rovingIndex = ref(0)
+
+// Keep the tabbable item in sync with the selected destination.
+watch(
+  selectedValue,
+  (value) => {
+    const idx = props.items.findIndex(item => item.id === value)
+    if (idx >= 0) rovingIndex.value = idx
+  },
+  { immediate: true },
+)
+
+function focusItem(index: number) {
+  rovingIndex.value = index
+  nextTick(() => {
+    const buttons = navEl.value?.querySelectorAll<HTMLButtonElement>('.ui-navigation-rail-item')
+    buttons?.[index]?.focus()
+  })
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const count = props.items.length
+  if (count === 0) return
+
+  let next = rovingIndex.value
+  switch (event.key) {
+    case 'ArrowDown':
+    case 'ArrowRight':
+      next = (rovingIndex.value + 1) % count
+      break
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      next = (rovingIndex.value - 1 + count) % count
+      break
+    case 'Home':
+      next = 0
+      break
+    case 'End':
+      next = count - 1
+      break
+    default:
+      return
+  }
+
+  event.preventDefault()
+  focusItem(next)
 }
 </script>
 

@@ -1,6 +1,7 @@
 <template>
   <component
     :is="tag"
+    ref="rootRef"
     v-ripple="isInteractive && !disabled"
     class="ui-list-item"
     :class="{
@@ -10,7 +11,11 @@
       [`ui-list-item--lines-${computedLines}`]: true,
     }"
     :disabled="disabled"
+    :role="a11yRole"
+    :tabindex="a11yTabindex"
+    :aria-disabled="emulatesButton && disabled ? 'true' : undefined"
     v-bind="bindings"
+    @keydown="onKeydown"
   >
     <div
       v-if="$slots.leading || leadingIcon"
@@ -78,7 +83,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, useSlots } from 'vue'
+import { computed, defineAsyncComponent, ref, useSlots } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { mListItemProps } from './props'
 
 const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
@@ -87,9 +93,37 @@ const props = defineProps(mListItemProps)
 
 const slots = useSlots()
 
+const rootRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
+
 const isInteractive = computed(() => {
   return props.interactive || props.tag === 'button' || props.tag === 'a' || !!props.to
 })
+
+// Native interactive elements (button/a/NuxtLink) already provide role,
+// focusability and Enter/Space semantics. A bare interactive `div` must
+// emulate the button role so AT and keyboard users get the same affordance.
+const emulatesButton = computed(() =>
+  isInteractive.value && !props.to && props.tag !== 'button' && props.tag !== 'a',
+)
+
+const a11yRole = computed(() => (emulatesButton.value ? 'button' : undefined))
+const a11yTabindex = computed(() => {
+  if (!emulatesButton.value) return undefined
+  return props.disabled ? -1 : 0
+})
+
+function onKeydown(event: KeyboardEvent) {
+  if (!emulatesButton.value || props.disabled) return
+  if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return
+
+  event.preventDefault()
+
+  const el = rootRef.value instanceof HTMLElement
+    ? rootRef.value
+    : (rootRef.value as ComponentPublicInstance | null)?.$el as HTMLElement | undefined
+
+  el?.click()
+}
 
 const computedLines = computed(() => {
   if (props.lines !== 'auto') {

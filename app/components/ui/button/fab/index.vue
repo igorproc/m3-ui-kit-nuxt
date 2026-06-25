@@ -13,6 +13,7 @@
     ]"
     :disabled="isDisabled"
     :aria-busy="loading ? 'true' : undefined"
+    :aria-label="ariaLabel"
   >
     <span
       v-if="loading"
@@ -38,6 +39,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/button/fab' as t;
 
 .ui-fab {
@@ -57,6 +59,12 @@ const isDisabled = computed(() => props.disabled || props.loading)
     box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),
     background-color g($t, 'motion-duration') g($t, 'motion-easing');
 
+  // Keyboard focus ring — theme color, not a hardcoded hex.
+  &:focus-visible {
+    outline: 2rem solid map.get($theme-color-link, 'secondary');
+    outline-offset: 2rem;
+  }
+
   &__icon {
     position: relative;
     z-index: 1;
@@ -69,7 +77,7 @@ const isDisabled = computed(() => props.disabled || props.loading)
   &__spinner {
     position: relative;
     z-index: 1;
-    border: 2rem solid currentColor;
+    border: 2rem solid currentcolor;
     border-top-color: transparent;
     border-radius: 50%;
     animation: ui-fab-spin 0.6s linear infinite;

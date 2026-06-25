@@ -24,10 +24,16 @@
           >
             {{ labelOf(item) }}
             <template #trailing>
-              <m-icon
-                :name="ICONS.close"
+              <button
+                type="button"
+                class="ui-dropdown__remove"
+                :aria-label="removeLabel(item)"
                 @click.stop="ctx.remove(item)"
-              />
+                @keydown.enter.stop
+                @keydown.space.stop
+              >
+                <m-icon :name="ICONS.close" />
+              </button>
             </template>
           </m-chip>
         </slot>
@@ -47,8 +53,36 @@ const ctx = useDropdownContext()
 
 const labelOf = (item: DropdownEntry): string => (item as DropdownItem).label ?? ''
 
+const removeLabel = (item: DropdownEntry): string => {
+  const label = labelOf(item)
+  return label ? `Remove ${label}` : 'Remove'
+}
+
 const keyOf = (item: DropdownEntry, index: number): string | number => {
   const entry = item as DropdownOption & DropdownItem
   return (entry.value as string | number | undefined) ?? entry.id ?? index
 }
 </script>
+
+<style lang="scss">
+@use 'sass:map';
+
+.ui-dropdown__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: map.get($theme-shape-link, full);
+  outline: none;
+
+  &:focus-visible {
+    outline: 2rem solid map.get($theme-color-link, secondary);
+    outline-offset: 2rem;
+  }
+}
+</style>

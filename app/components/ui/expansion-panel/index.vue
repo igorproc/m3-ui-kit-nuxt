@@ -7,9 +7,11 @@
     }"
   >
     <button
+      :id="headerId"
       type="button"
       class="ui-expansion-panel__header"
       :aria-expanded="isOpen"
+      :aria-controls="regionId"
       :disabled="disabled"
       @click="toggle"
     >
@@ -31,7 +33,10 @@
     </button>
 
     <div
+      :id="regionId"
       class="ui-expansion-panel__content-wrapper"
+      role="region"
+      :aria-labelledby="headerId"
       :aria-hidden="!isOpen"
     >
       <div class="ui-expansion-panel__content-inner">
@@ -59,6 +64,10 @@ const group = useExpansionPanelGroupContext()
 // using its own `v-model`.
 const generatedValue = useId()
 const panelValue = computed(() => props.value ?? generatedValue)
+
+// ARIA wiring: header labels the content region, region is controlled by header.
+const headerId = useId()
+const regionId = useId()
 
 if (group) {
   const ticket = group.register({

@@ -25,8 +25,17 @@ export const makeMButtonProps = propsFactory({
 /** Base `<MButton>` props (default `variant: 'filled'`). */
 export const mButtonProps = makeMButtonProps()
 
-/** `<MIconButton>` props — icon buttons default to the `text` variant. */
-export const mIconButtonProps = makeMButtonProps({ variant: 'text' })
+/**
+ * `<MIconButton>` props — icon buttons default to the `text` variant.
+ *
+ * `ariaLabel` supplies the accessible name an icon-only control needs (the
+ * glyph carries no text). It can also be passed through as a native
+ * `aria-label` fallthrough attribute.
+ */
+export const mIconButtonProps = {
+  ...makeMButtonProps({ variant: 'text' }),
+  ariaLabel: { type: String as PropType<string>, default: undefined },
+}
 
 export type MButtonProps = ExtractPublicPropTypes<typeof mButtonProps>
 export type MIconButtonProps = ExtractPublicPropTypes<typeof mIconButtonProps>

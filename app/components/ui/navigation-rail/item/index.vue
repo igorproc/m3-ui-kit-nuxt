@@ -13,7 +13,7 @@
     <span class="ui-navigation-rail-item__icon-wrapper">
       <m-icon
         class="ui-navigation-rail-item__icon"
-        :name="icon"
+        :name="icon ?? ''"
         aria-hidden="true"
       />
 
