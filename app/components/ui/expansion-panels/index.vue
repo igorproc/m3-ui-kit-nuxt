@@ -36,9 +36,12 @@ interface PanelSelection {
   apply: (values: unknown[]) => void
 }
 
+// `reactive: true` keeps the ticket collection (and `sel.size`) reactive so the
+// model->selection watch re-applies once slotted panels register — fixes a
+// preset v-model not opening its panel at mount.
 const sel = (props.multiple
-  ? createGroup<{ value: PanelValue }>()
-  : createSingle<{ value: PanelValue }>({ mandatory: () => props.mandatory })) as unknown as PanelSelection
+  ? createGroup<{ value: PanelValue }>({ reactive: true })
+  : createSingle<{ value: PanelValue }>({ mandatory: () => props.mandatory, reactive: true })) as unknown as PanelSelection
 
 const modelAsArray = computed(() => {
   const value = modelValue.value

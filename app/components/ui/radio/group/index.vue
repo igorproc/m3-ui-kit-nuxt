@@ -25,8 +25,13 @@ const groupDisabled = computed(() => props.disabled)
 
 const errorMessage = ref<string | undefined>()
 
+// `reactive: true` makes the ticket collection (and `sel.size`) reactive, so the
+// model<->selection watch below re-fires when child <MRadio>s register and the
+// initial v-model value is applied to the matching radio. Without it the
+// collection is a plain Map and a preset value never selects its radio.
 const sel = createSingle<{ value: RadioValue, disabled?: boolean }>({
   mandatory: () => props.mandatory,
+  reactive: true,
 })
 
 watch(

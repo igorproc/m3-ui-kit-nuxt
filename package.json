@@ -13,7 +13,6 @@
     ".": "./nuxt.config.ts",
     "./defineKit": "./shared/utils/defineKit.ts",
     "./types": "./shared/types/props.ts",
-    "./shared": "./shared",
     "./package.json": "./package.json"
   },
   "files": [
