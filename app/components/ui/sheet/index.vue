@@ -27,21 +27,11 @@
 import { VueFinalModal } from 'vue-final-modal'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { useModal } from '~/composables/modal/useModal'
-import type { M3ModalContext } from '~/composables/modal/useModal'
 import { useStack } from '~/composables/useStack'
 import { useDrag } from '~/composables/useDrag'
+import { mSheetProps } from './props'
 
-interface Props {
-  clickToClose?: boolean
-  escToClose?: boolean
-  parent?: M3ModalContext | null
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  clickToClose: true,
-  escToClose: true,
-  parent: undefined,
-})
+const props = defineProps(mSheetProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 

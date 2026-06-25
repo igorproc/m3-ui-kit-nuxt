@@ -2,7 +2,7 @@
   <div
     class="ui-app-bar"
     :class="[
-      `ui-app-bar--${variant}`,
+      `ui-app-bar--${type}`,
       {
         'ui-app-bar--scrolled': scrolled,
         'ui-app-bar--with-subtitle': hasSubtitle,
@@ -57,27 +57,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, readonly, ref, useSlots } from 'vue'
+import { computed, ref, useSlots } from 'vue'
+import { mAppBarProps } from './props'
 
-type AppBarVariant = 'center-aligned' | 'small' | 'medium' | 'large'
-
-interface Props {
-  title?: string
-  subtitle?: string
-  variant?: AppBarVariant
-  /** Прибить к верху, когда app-bar — прямой ребёнок m-layout */
-  sticky?: boolean
-  /** @deprecated принудительный override — elevate теперь автоматический (по скроллу лейаута) */
-  isScrolled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  title: '',
-  subtitle: '',
-  variant: 'center-aligned',
-  sticky: true,
-  isScrolled: false,
-})
+const props = defineProps(mAppBarProps)
 
 const slots = useSlots()
 
@@ -103,7 +86,7 @@ const scrolled = computed(() => {
 
 // Self-register in layout system with correct CSS variable token resolved in SCSS
 const sizeToken = computed(() => {
-  switch (props.variant) {
+  switch (props.type) {
     case 'small':
       return '--ui-app-bar-height-small'
     case 'medium':
@@ -144,7 +127,7 @@ const dynamicGridStyles = computed(() => {
 
   const gridTemplateColumns = columns.length > 0 ? columns.join(' ') : '1fr'
 
-  if (props.variant === 'medium' || props.variant === 'large') {
+  if (props.type === 'medium' || props.type === 'large') {
     // Two-row layout:
     // Row 1: nav (left), space (center), actions (right)
     // Row 2: title spanning across

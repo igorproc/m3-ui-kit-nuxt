@@ -78,41 +78,12 @@ import { useDrag } from '~/composables/useDrag'
 import type { DragState } from '~/composables/useDrag'
 import { useGlobalListener } from '~/composables/useGlobalListener'
 import { onScopeDispose } from 'vue'
+import { mSliderProps } from './props'
 
-interface Props {
-  min?: number
-  max?: number
-  step?: number
-  label?: string
-  showValue?: boolean
-  discrete?: boolean
-  range?: boolean
-  orientation?: 'horizontal' | 'vertical'
-  disabled?: boolean
-  readonly?: boolean
-  name?: string
-  ariaLabelStart?: string
-  ariaLabelEnd?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  min: 0,
-  max: 100,
-  step: 1,
-  label: '',
-  showValue: false,
-  discrete: false,
-  range: false,
-  orientation: 'horizontal',
-  disabled: false,
-  readonly: false,
-  name: undefined,
-  ariaLabelStart: '',
-  ariaLabelEnd: '',
-})
+const props = defineProps(mSliderProps)
 
 const emit = defineEmits<{
-  (e: 'update:modelValue' | 'change', value: number | number[]): void
+  (e: 'update:modelValue', value: number | number[]): void
 }>()
 
 const modelValue = defineModel<number | number[]>({ default: 0 })

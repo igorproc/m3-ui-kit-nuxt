@@ -27,24 +27,14 @@
 </template>
 
 <script setup lang="ts">
-type ChipVariant = 'assist' | 'filter' | 'input' | 'suggestion'
+import { mChipProps } from './props'
 
-interface Props {
-  variant?: ChipVariant
-  selected?: boolean
-  disabled?: boolean
-}
+const props = defineProps(mChipProps)
 
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'assist',
-  selected: false,
-  disabled: false,
-})
-
-const selectedModel = defineModel<boolean>('selected', { default: false })
+const selectedModel = defineModel<boolean>({ default: false })
 
 const chipClasses = computed(() => [
-  `ui-chip--${props.variant}`,
+  `ui-chip--${props.type}`,
   {
     'ui-chip--selected': selectedModel.value,
     'ui-chip--disabled': props.disabled,
@@ -56,7 +46,7 @@ function onClick() {
     return
   }
 
-  if (props.variant === 'filter') {
+  if (props.type === 'filter') {
     selectedModel.value = !selectedModel.value
   }
 }

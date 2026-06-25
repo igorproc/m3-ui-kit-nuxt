@@ -44,13 +44,9 @@
 <script setup lang="ts">
 import type { Dayjs } from 'dayjs'
 import type { DayCell } from '~/composables/date'
+import { mDatePickerDayGridProps } from './props'
 
-interface Props {
-  weekdays: string[]
-  days: DayCell[]
-}
-
-defineProps<Props>()
+defineProps(mDatePickerDayGridProps)
 
 const emit = defineEmits<{
   (e: 'select', date: Dayjs): void

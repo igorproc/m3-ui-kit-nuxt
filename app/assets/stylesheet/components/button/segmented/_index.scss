@@ -6,11 +6,19 @@ $hover-state-layer-opacity: 8%;
 $pressed-state-layer-opacity: 12%;
 $disabled-content-opacity: 38%;
 
-// M3 Standard Colors (Fallback to hex if variables are missing)
+// M3 Standard Colors
 $on-surface: map.get($theme-color-link, 'on-surface');
 $outline: map.get($theme-color-link, 'outline');
-$selected-container: map.get($theme-color-link, 'secondary-container');
-$selected-on-container: map.get($theme-color-link, 'on-secondary-container');
+
+// Selected-segment scheme for one MD3 role (`<role>-container` fill).
+@function segmented-selected($container, $on-container) {
+  @return (container: (color: $container,
+      hover: (color: color-mix(in srgb, $on-container $hover-state-layer-opacity, $container)),
+      pressed: (color: color-mix(in srgb, $on-container $pressed-state-layer-opacity, $container)),
+    ),
+    content: (color: $on-container));
+}
+
 $tokens: (
   container: (
     height: 40rem,
@@ -39,16 +47,17 @@ $tokens: (
       disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
     )
   ),
-  
+
+  // Selected scheme per MD3 color role
   selected: (
-    container: (
-      color: $selected-container,
-      hover: (color: color-mix(in srgb, $selected-on-container $hover-state-layer-opacity, $selected-container)),
-      pressed: (color: color-mix(in srgb, $selected-on-container $pressed-state-layer-opacity, $selected-container)),
-    ),
-    content: (
-      color: $selected-on-container,
-    )
+    primary: segmented-selected(map.get($theme-color-link, 'primary-container'),
+      map.get($theme-color-link, 'on-primary-container')),
+    secondary: segmented-selected(map.get($theme-color-link, 'secondary-container'),
+      map.get($theme-color-link, 'on-secondary-container')),
+    tertiary: segmented-selected(map.get($theme-color-link, 'tertiary-container'),
+      map.get($theme-color-link, 'on-tertiary-container')),
+    error: segmented-selected(map.get($theme-color-link, 'error-container'),
+      map.get($theme-color-link, 'on-error-container')),
   ),
 
   icon: (

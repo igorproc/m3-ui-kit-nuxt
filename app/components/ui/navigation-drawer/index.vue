@@ -23,20 +23,9 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
+import { mNavigationDrawerProps } from './props'
 
-interface Props {
-  side?: 'left' | 'right'
-  clickToClose?: boolean
-  escToClose?: boolean
-  containerClass?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  side: 'left',
-  clickToClose: true,
-  escToClose: true,
-  containerClass: undefined,
-})
+const props = defineProps(mNavigationDrawerProps)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void

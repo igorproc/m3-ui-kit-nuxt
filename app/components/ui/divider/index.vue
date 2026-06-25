@@ -8,22 +8,13 @@
 </template>
 
 <script setup lang="ts">
-type DividerOrientation = 'horizontal' | 'vertical'
-type DividerVariant = 'full' | 'inset'
+import { mDividerProps } from './props'
 
-interface Props {
-  orientation?: DividerOrientation
-  variant?: DividerVariant
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  orientation: 'horizontal',
-  variant: 'full',
-})
+const props = defineProps(mDividerProps)
 
 const dividerClasses = computed(() => [
   `ui-divider--${props.orientation}`,
-  `ui-divider--${props.variant}`,
+  { 'ui-divider--inset': props.inset },
 ])
 </script>
 

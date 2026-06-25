@@ -45,19 +45,9 @@
 </template>
 
 <script setup lang="ts">
-type CardVariant = 'elevated' | 'filled' | 'outlined'
+import { mCardProps } from './props'
 
-interface Props {
-  title?: string
-  subtitle?: string
-  variant?: CardVariant
-}
-
-withDefaults(defineProps<Props>(), {
-  title: '',
-  subtitle: '',
-  variant: 'elevated',
-})
+defineProps(mCardProps)
 </script>
 
 <style lang="scss">

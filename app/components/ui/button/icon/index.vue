@@ -4,6 +4,7 @@
     :variant="variant"
     :color="color"
     :disabled="disabled"
+    :loading="loading"
     :type="type"
     :to="to"
     :tag="tag"
@@ -16,29 +17,9 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/button/index.vue'
+import { mIconButtonProps } from '../props'
 
-import type { NuxtLinkProps } from '#app'
-
-type ButtonTag = 'button' | 'link'
-type ButtonVariant = 'elevated' | 'filled' | 'outlined' | 'text' | 'tonal'
-type ButtonColor = 'primary' | 'accent' | 'warn'
-
-interface Props {
-  tag?: ButtonTag
-  variant?: ButtonVariant
-  color?: ButtonColor
-  disabled?: boolean
-  type?: 'button' | 'submit' | 'reset'
-  to?: NuxtLinkProps['to']
-}
-
-withDefaults(defineProps<Props>(), {
-  tag: 'button',
-  variant: 'text',
-  color: 'primary',
-  disabled: false,
-  type: 'button',
-})
+defineProps(mIconButtonProps)
 </script>
 
 <style lang="scss">

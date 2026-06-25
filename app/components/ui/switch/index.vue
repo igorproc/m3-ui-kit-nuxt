@@ -37,18 +37,9 @@
 // Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
 // would otherwise shadow the kit composable and break the `{ path, model }` call.
 import { useField } from '~/composables/useField'
+import { mSwitchProps } from './props'
 
-interface Props {
-  path?: string
-  label?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: undefined,
-  label: undefined,
-  disabled: false,
-})
+const props = defineProps(mSwitchProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 

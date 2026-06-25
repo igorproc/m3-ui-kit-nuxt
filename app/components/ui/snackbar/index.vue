@@ -32,19 +32,11 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { useStack } from '~/composables/useStack'
+import { mSnackbarProps } from './props'
 
-interface Props {
-  label?: string
-  actionLabel?: string
-}
-
-withDefaults(defineProps<Props>(), {
-  label: '',
-  actionLabel: '',
-})
+defineProps(mSnackbarProps)
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
   (e: 'action'): void
 }>()
 
@@ -63,7 +55,7 @@ watch(modelValue, (val) => {
 
 function onAction() {
   emit('action')
-  emit('update:modelValue', false)
+  modelValue.value = false
 }
 </script>
 

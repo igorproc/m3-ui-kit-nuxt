@@ -35,21 +35,9 @@ import { createSingle } from '~/composables/registry/createSingle'
 import { provideTabsContext } from '~/composables/tabs/useTabs'
 import type { TabValue } from '~/composables/tabs/useTabs'
 import MTab from './tab/index.vue'
+import { mTabsProps } from './props'
 
-interface TabItem {
-  value: TabValue
-  label: string
-  icon?: string
-  disabled?: boolean
-}
-
-interface Props {
-  items?: TabItem[]
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  items: undefined,
-})
+defineProps(mTabsProps)
 
 const modelValue = defineModel<TabValue | null>({ default: null })
 

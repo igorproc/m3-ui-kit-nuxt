@@ -25,22 +25,9 @@ import { computed, watch } from 'vue'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideNavigationRailContext } from '~/composables/navigation/useNavigationRail'
 import type { ID } from '~~/shared/types/registry'
+import { mNavigationRailProps } from './props'
 
-interface NavigationRailItem {
-  id: string
-  icon: string
-  label: string
-  badge?: number
-}
-
-interface Props {
-  items: NavigationRailItem[]
-  expanded?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  expanded: false,
-})
+const props = defineProps(mNavigationRailProps)
 
 const isExpanded = computed(() => props.expanded)
 

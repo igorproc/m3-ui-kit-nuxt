@@ -13,20 +13,9 @@ import { useField } from 'vee-validate'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideRadioGroupContext } from '~/composables/radio/useRadioGroup'
 import type { RadioValue } from '~/composables/radio/useRadioGroup'
+import { mRadioGroupProps } from './props'
 
-interface Props {
-  name?: string
-  path?: string
-  disabled?: boolean
-  mandatory?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  name: undefined,
-  path: undefined,
-  disabled: false,
-  mandatory: false,
-})
+const props = defineProps(mRadioGroupProps)
 
 const modelValue = defineModel<RadioValue | undefined>({ default: undefined })
 

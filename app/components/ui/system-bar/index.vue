@@ -12,13 +12,9 @@
 <script setup lang="ts">
 // Тонкий статус-бар (m3-like, аналог v-system-bar). Первый уровень m-layout →
 // top-зона; внутри m-layout-header — вклад высоты (стек с m-app-bar суммируется)
-interface Props {
-  sticky?: boolean
-}
+import { mSystemBarProps } from './props'
 
-const props = withDefaults(defineProps<Props>(), {
-  sticky: true,
-})
+const props = defineProps(mSystemBarProps)
 
 const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
   kind: 'top',

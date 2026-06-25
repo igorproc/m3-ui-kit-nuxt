@@ -41,18 +41,9 @@ import { ICONS } from '~~/shared/constants/icons'
 // Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
 // would otherwise shadow the kit composable and break the `{ path, model }` call.
 import { useField } from '~/composables/useField'
+import { mCheckboxProps } from './props'
 
-interface Props {
-  path?: string
-  label?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: undefined,
-  label: undefined,
-  disabled: false,
-})
+const props = defineProps(mCheckboxProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 

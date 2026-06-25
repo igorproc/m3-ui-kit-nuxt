@@ -33,21 +33,10 @@
 <script setup lang="ts">
 import { nextTick, onScopeDispose, ref, watch } from 'vue'
 import { useTabsContext } from '~/composables/tabs/useTabs'
-import type { TabValue } from '~/composables/tabs/useTabs'
 import MIcon from '~/components/ui/icon/index.vue'
+import type { MTabProps } from './props'
 
-interface Props {
-  value: TabValue
-  label?: string
-  icon?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  label: undefined,
-  icon: undefined,
-  disabled: false,
-})
+const props = withDefaults(defineProps<MTabProps>(), { disabled: false })
 
 const ctx = useTabsContext()
 

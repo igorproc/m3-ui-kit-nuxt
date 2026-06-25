@@ -1,31 +1,40 @@
 <template>
   <button
-    v-ripple="!disabled"
+    v-ripple="!isDisabled"
     class="ui-fab"
     :class="[
       `ui-fab--${color}`,
+      `ui-fab--${variant}`,
       `ui-fab--${size}`,
+      {
+        'ui-fab--disabled': isDisabled,
+        'ui-fab--loading': loading,
+      },
     ]"
-    :disabled="disabled"
+    :disabled="isDisabled"
+    :aria-busy="loading ? 'true' : undefined"
   >
-    <span class="ui-fab__icon">
+    <span
+      v-if="loading"
+      class="ui-fab__spinner"
+      aria-hidden="true"
+    />
+    <span
+      v-else
+      class="ui-fab__icon"
+    >
       <slot />
     </span>
   </button>
 </template>
 
 <script setup lang="ts">
-interface Props {
-  color?: 'primary' | 'surface' | 'secondary' | 'tertiary'
-  size?: 'small' | 'medium' | 'large'
-  disabled?: boolean
-}
+import { computed } from 'vue'
+import { mFabProps } from './props'
 
-withDefaults(defineProps<Props>(), {
-  color: 'primary',
-  size: 'medium',
-  disabled: false,
-})
+const props = defineProps(mFabProps)
+
+const isDisabled = computed(() => props.disabled || props.loading)
 </script>
 
 <style lang="scss">
@@ -57,25 +66,45 @@ withDefaults(defineProps<Props>(), {
     transition: color g($t, 'motion-duration') g($t, 'motion-easing');
   }
 
+  &__spinner {
+    position: relative;
+    z-index: 1;
+    border: 2rem solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ui-fab-spin 0.6s linear infinite;
+  }
+
+  // Applies one variant's surface treatment for the active scheme.
+  @mixin apply-surface($scheme, $variant) {
+    $base: '#{$scheme}-#{$variant}';
+
+    background-color: g($t, '#{$base}-container-color');
+    color: g($t, '#{$base}-icon-color');
+
+    &:hover:not(.ui-fab--disabled) {
+      background-color: g($t, '#{$base}-container-hover-color');
+    }
+
+    &:focus-visible:not(.ui-fab--disabled),
+    &:active:not(.ui-fab--disabled) {
+      background-color: g($t, '#{$base}-container-pressed-color');
+    }
+
+    &.ui-fab--disabled {
+      background-color: g($t, '#{$base}-container-disabled-color');
+      color: g($t, '#{$base}-icon-disabled-color');
+    }
+  }
+
+  // Cross every MD3 role with every surface variant for DRY application.
   @mixin apply-scheme($scheme) {
-    background-color: g($t, '#{$scheme}-container-color');
-    color: g($t, '#{$scheme}-icon-color');
+    $variants: ('filled', 'tonal');
 
-    &:hover {
-      background-color: g($t, '#{$scheme}-container-hover-color');
-    }
-
-    &:focus-visible {
-      background-color: g($t, '#{$scheme}-container-pressed-color');
-    }
-
-    &:active {
-      background-color: g($t, '#{$scheme}-container-pressed-color');
-    }
-
-    &:disabled {
-      background-color: g($t, '#{$scheme}-container-disabled-color');
-      color: g($t, '#{$scheme}-icon-disabled-color');
+    @each $v in $variants {
+      &.ui-fab--#{$v} {
+        @include apply-surface($scheme, $v);
+      }
     }
   }
 
@@ -87,32 +116,44 @@ withDefaults(defineProps<Props>(), {
     .ui-fab__icon {
       font-size: g($t, '#{$size}-icon-size');
     }
+
+    .ui-fab__spinner {
+      width: g($t, '#{$size}-icon-size');
+      height: g($t, '#{$size}-icon-size');
+    }
   }
 
-  // Schemes
+  // Schemes (MD3 color roles)
   &--primary { @include apply-scheme('primary'); }
   &--secondary { @include apply-scheme('secondary'); }
   &--tertiary { @include apply-scheme('tertiary'); }
-  &--surface { @include apply-scheme('surface'); }
+  &--error { @include apply-scheme('error'); }
 
   // Sizes
-  &--small { @include apply-size('small'); }
-  &--medium { @include apply-size('medium'); }
-  &--large { @include apply-size('large'); }
+  &--sm { @include apply-size('sm'); }
+  &--md { @include apply-size('md'); }
+  &--lg { @include apply-size('lg'); }
 
   // Interactions
-  &:hover {
+  &:hover:not(.ui-fab--disabled) {
     box-shadow: g($t, 'elevation-hover');
   }
 
-  &:active {
+  &:active:not(.ui-fab--disabled) {
     box-shadow: g($t, 'elevation-pressed');
   }
 
-  &:disabled {
+  &--disabled,
+  &--loading {
     box-shadow: none;
     cursor: default;
     pointer-events: none;
+  }
+}
+
+@keyframes ui-fab-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

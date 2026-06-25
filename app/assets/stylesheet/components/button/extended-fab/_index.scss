@@ -3,13 +3,14 @@
 
 // Material 3 State Opacities
 $hover-state-layer-opacity: 8%;
-$focus-state-layer-opacity: 12%;
 $pressed-state-layer-opacity: 12%;
 $disabled-container-opacity: 12%;
 $disabled-content-opacity: 38%;
 $on-surface: map.get($theme-color-link, 'on-surface');
+$surface-container: map.get($theme-color-link, 'surface-container-high');
 
-@function extended-fab-scheme($container, $on-container) {
+// One surface treatment for a (variant, scheme) pair.
+@function extended-fab-surface($container, $on-container) {
   @return (
     container: (
       color: $container,
@@ -24,28 +25,37 @@ $on-surface: map.get($theme-color-link, 'on-surface');
   );
 }
 
+// A full MD3 role: `filled` = role container; `tonal` = surface container
+// tinted by the role (replaces the legacy `color: surface`).
+@function extended-fab-scheme($role, $container, $on-container) {
+  @return (
+    filled: extended-fab-surface($container, $on-container),
+    tonal: extended-fab-surface($surface-container, $role)
+  );
+}
+
 $tokens: (
   // Geometry
   container: (
     height: (
-      small: 40rem,
-      medium: 56rem,
-      large: 96rem
+      sm: 40rem,
+      md: 56rem,
+      lg: 96rem
     ),
     shape: (
-      small: 12rem,
-      medium: 16rem,
-      large: 28rem
+      sm: 12rem,
+      md: 16rem,
+      lg: 28rem
     ),
     padding: (
-      small: 12rem,
-      medium: 16rem,
-      large: 24rem
+      sm: 12rem,
+      md: 16rem,
+      lg: 24rem
     ),
     gap: (
-      small: 8rem,
-      medium: 12rem,
-      large: 16rem
+      sm: 8rem,
+      md: 12rem,
+      lg: 16rem
     ),
     elevation: (
       resting: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
@@ -56,28 +66,32 @@ $tokens: (
 
   icon: (
     size: (
-      small: 20rem,
-      medium: 24rem,
-      large: 36rem
+      sm: 20rem,
+      md: 24rem,
+      lg: 36rem
     )
   ),
 
-  // Schemes
+  // Schemes (MD3 roles) — each with filled + tonal variants
   primary: extended-fab-scheme(
+    map.get($theme-color-link, 'primary'),
     map.get($theme-color-link, 'primary-container'),
     map.get($theme-color-link, 'on-primary-container')
   ),
   secondary: extended-fab-scheme(
+    map.get($theme-color-link, 'secondary'),
     map.get($theme-color-link, 'secondary-container'),
     map.get($theme-color-link, 'on-secondary-container')
   ),
   tertiary: extended-fab-scheme(
+    map.get($theme-color-link, 'tertiary'),
     map.get($theme-color-link, 'tertiary-container'),
     map.get($theme-color-link, 'on-tertiary-container')
   ),
-  surface: extended-fab-scheme(
-    map.get($theme-color-link, 'surface-container-high'),
-    map.get($theme-color-link, 'primary')
+  error: extended-fab-scheme(
+    map.get($theme-color-link, 'error'),
+    map.get($theme-color-link, 'error-container'),
+    map.get($theme-color-link, 'on-error-container')
   ),
 
   // Motion

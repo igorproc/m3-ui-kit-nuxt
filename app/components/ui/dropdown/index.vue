@@ -55,41 +55,19 @@
   </div>
 </template>
 
-<script setup lang="ts" generic="T extends DropdownItem">
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { UiMenuOrigin } from '~/components/ui/menu/types'
 import { createSingle } from '~/composables/registry/createSingle'
 import { createGroup } from '~/composables/registry/createGroup'
 import { provideDropdownContext } from './context'
 import type { DropdownContext, DropdownEntry, DropdownItem, DropdownOption } from './types'
+import { mDropdownProps } from './props'
 import DropdownTrigger from './trigger/index.vue'
 import DropdownPanel from './panel/index.vue'
 import DropdownOptionRow from './option/index.vue'
 import DropdownSelectedChips from './selected-chips/index.vue'
 
-interface Props {
-  path?: string
-  label?: string
-  placeholder?: string
-  options?: DropdownOption[]
-  items?: T[]
-  disabled?: boolean
-  variant?: 'filled' | 'outlined'
-  menuOrigin?: UiMenuOrigin
-  multiple?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: '',
-  label: '',
-  placeholder: '',
-  options: () => [],
-  items: () => [],
-  disabled: false,
-  variant: 'filled',
-  menuOrigin: 'top left',
-  multiple: false,
-})
+const props = defineProps(mDropdownProps)
 
 const modelValue = defineModel<unknown>()
 const isOpen = ref(false)

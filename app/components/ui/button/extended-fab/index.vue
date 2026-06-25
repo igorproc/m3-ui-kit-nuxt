@@ -1,15 +1,26 @@
 <template>
   <button
-    v-ripple="!disabled"
+    v-ripple="!isDisabled"
     class="ui-extended-fab"
     :class="[
       `ui-extended-fab--${color}`,
+      `ui-extended-fab--${variant}`,
       `ui-extended-fab--${size}`,
+      {
+        'ui-extended-fab--disabled': isDisabled,
+        'ui-extended-fab--loading': loading,
+      },
     ]"
-    :disabled="disabled"
+    :disabled="isDisabled"
+    :aria-busy="loading ? 'true' : undefined"
   >
     <span
-      v-if="$slots.prepend"
+      v-if="loading"
+      class="ui-extended-fab__spinner"
+      aria-hidden="true"
+    />
+    <span
+      v-else-if="$slots.prepend"
       class="ui-extended-fab__icon"
     >
       <slot name="prepend" />
@@ -21,17 +32,12 @@
 </template>
 
 <script setup lang="ts">
-interface Props {
-  color?: 'primary' | 'surface' | 'secondary' | 'tertiary'
-  size?: 'small' | 'medium' | 'large'
-  disabled?: boolean
-}
+import { computed } from 'vue'
+import { mExtendedFabProps } from './props'
 
-withDefaults(defineProps<Props>(), {
-  color: 'primary',
-  size: 'medium',
-  disabled: false,
-})
+const props = defineProps(mExtendedFabProps)
+
+const isDisabled = computed(() => props.disabled || props.loading)
 </script>
 
 <style lang="scss">
@@ -49,8 +55,8 @@ withDefaults(defineProps<Props>(), {
   position: relative;
   overflow: hidden;
   outline: none;
-  padding-inline: g($t, 'container-padding-medium');
-  gap: g($t, 'container-gap-medium');
+  padding-inline: g($t, 'container-padding-md');
+  gap: g($t, 'container-gap-md');
   box-shadow: g($t, 'container-elevation-resting');
   transition:
     box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),
@@ -59,32 +65,52 @@ withDefaults(defineProps<Props>(), {
   @include typescale('label-large');
 
   &__icon,
-  &__label {
+  &__label,
+  &__spinner {
     position: relative;
     z-index: 1;
     display: inline-flex;
     align-items: center;
   }
 
+  &__spinner {
+    width: g($t, 'icon-size-md');
+    height: g($t, 'icon-size-md');
+    border: 2rem solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ui-extended-fab-spin 0.6s linear infinite;
+  }
+
+  // Applies one variant's surface treatment for the active scheme.
+  @mixin apply-surface($scheme, $variant) {
+    $base: '#{$scheme}-#{$variant}';
+
+    background-color: g($t, '#{$base}-container-color');
+    color: g($t, '#{$base}-content-color');
+
+    &:hover:not(.ui-extended-fab--disabled) {
+      background-color: g($t, '#{$base}-container-hover-color');
+    }
+
+    &:focus-visible:not(.ui-extended-fab--disabled),
+    &:active:not(.ui-extended-fab--disabled) {
+      background-color: g($t, '#{$base}-container-pressed-color');
+    }
+
+    &.ui-extended-fab--disabled {
+      background-color: g($t, '#{$base}-container-disabled-color');
+      color: g($t, '#{$base}-content-disabled-color');
+    }
+  }
+
   @mixin apply-scheme($scheme) {
-    background-color: g($t, '#{$scheme}-container-color');
-    color: g($t, '#{$scheme}-content-color');
+    $variants: ('filled', 'tonal');
 
-    &:hover {
-      background-color: g($t, '#{$scheme}-container-hover-color');
-    }
-
-    &:focus-visible {
-      background-color: g($t, '#{$scheme}-container-pressed-color');
-    }
-
-    &:active {
-      background-color: g($t, '#{$scheme}-container-pressed-color');
-    }
-
-    &:disabled {
-      background-color: g($t, '#{$scheme}-container-disabled-color');
-      color: g($t, '#{$scheme}-content-disabled-color');
+    @each $v in $variants {
+      &.ui-extended-fab--#{$v} {
+        @include apply-surface($scheme, $v);
+      }
     }
   }
 
@@ -97,32 +123,44 @@ withDefaults(defineProps<Props>(), {
     .ui-extended-fab__icon {
       font-size: g($t, 'icon-size-#{$size}');
     }
+
+    .ui-extended-fab__spinner {
+      width: g($t, 'icon-size-#{$size}');
+      height: g($t, 'icon-size-#{$size}');
+    }
   }
 
-  // Schemes
+  // Schemes (MD3 color roles)
   &--primary { @include apply-scheme('primary'); }
   &--secondary { @include apply-scheme('secondary'); }
   &--tertiary { @include apply-scheme('tertiary'); }
-  &--surface { @include apply-scheme('surface'); }
+  &--error { @include apply-scheme('error'); }
 
   // Sizes
-  &--small { @include apply-size('small'); }
-  &--medium { @include apply-size('medium'); }
-  &--large { @include apply-size('large'); }
+  &--sm { @include apply-size('sm'); }
+  &--md { @include apply-size('md'); }
+  &--lg { @include apply-size('lg'); }
 
   // Interactions
-  &:hover {
+  &:hover:not(.ui-extended-fab--disabled) {
     box-shadow: g($t, 'container-elevation-hover');
   }
 
-  &:active {
+  &:active:not(.ui-extended-fab--disabled) {
     box-shadow: g($t, 'container-elevation-pressed');
   }
 
-  &:disabled {
+  &--disabled,
+  &--loading {
     box-shadow: none;
     cursor: default;
     pointer-events: none;
+  }
+}
+
+@keyframes ui-extended-fab-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

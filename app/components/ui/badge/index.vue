@@ -17,17 +17,9 @@
 </template>
 
 <script setup lang="ts">
-interface Props {
-  value?: string | number
-  max?: number
-  dot?: boolean
-}
+import { mBadgeProps } from './props'
 
-const props = withDefaults(defineProps<Props>(), {
-  value: undefined,
-  max: 99,
-  dot: false,
-})
+const props = defineProps(mBadgeProps)
 
 const displayValue = computed(() => {
   if (props.dot) {

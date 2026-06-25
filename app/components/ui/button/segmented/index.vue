@@ -1,14 +1,17 @@
 <template>
-  <div class="ui-segmented-button">
+  <div
+    class="ui-segmented-button"
+    :class="`ui-segmented-button--${color}`"
+  >
     <button
       v-for="item in items"
       :key="item.value"
-      v-ripple="!item.disabled"
+      v-ripple="!isItemDisabled(item)"
       class="ui-segmented-button__segment"
       :class="{
         'ui-segmented-button__segment--selected': isSelected(item.value),
       }"
-      :disabled="item.disabled"
+      :disabled="isItemDisabled(item)"
       @click="selectItem(item.value)"
     >
       <span
@@ -43,33 +46,24 @@
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core'
 import UiIcon from '~/components/ui/icon/index.vue'
+import { mSegmentedProps } from './props'
+import type { MSegmentedItem, MSegmentedModelValue } from './props'
 
-export interface UiSegmentedItem {
-  label?: string
-  icon?: string
-  value: string | number
-  disabled?: boolean
-}
+// Re-exported for backwards compatibility with existing imports.
+export type { MSegmentedItem } from './props'
 
-interface Props {
-  items: UiSegmentedItem[]
-  modelValue?: string | number | (string | number)[]
-  multiple?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  modelValue: undefined,
-  multiple: false,
-})
+const props = defineProps(mSegmentedProps)
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number | (string | number)[]): void
+  (e: 'update:modelValue', value: MSegmentedModelValue): void
 }>()
 
 const value = useVModel(props, 'modelValue', emit, {
   passive: true,
   deep: true,
 })
+
+const isItemDisabled = (item: MSegmentedItem) => props.disabled || !!item.disabled
 
 function isSelected(val: string | number) {
   if (props.multiple && Array.isArray(value.value)) {
@@ -139,25 +133,33 @@ function selectItem(val: string | number) {
       background-color: g($t, 'unselected-container-pressed-color');
     }
 
-    &--selected {
-      background-color: g($t, 'selected-container-color');
-      color: g($t, 'selected-content-color');
-
-      &:hover {
-        background-color: g($t, 'selected-container-hover-color');
-      }
-
-      &:active {
-        background-color: g($t, 'selected-container-pressed-color');
-      }
-    }
-
     &:disabled {
       color: g($t, 'unselected-content-disabled-color');
       cursor: default;
       pointer-events: none;
     }
   }
+
+  // Selected-segment scheme per MD3 color role.
+  @mixin apply-selected($scheme) {
+    .ui-segmented-button__segment--selected {
+      background-color: g($t, 'selected-#{$scheme}-container-color');
+      color: g($t, 'selected-#{$scheme}-content-color');
+
+      &:hover {
+        background-color: g($t, 'selected-#{$scheme}-container-hover-color');
+      }
+
+      &:active {
+        background-color: g($t, 'selected-#{$scheme}-container-pressed-color');
+      }
+    }
+  }
+
+  &--primary { @include apply-selected('primary'); }
+  &--secondary { @include apply-selected('secondary'); }
+  &--tertiary { @include apply-selected('tertiary'); }
+  &--error { @include apply-selected('error'); }
 
   &__icon {
     font-size: g($t, 'icon-size');

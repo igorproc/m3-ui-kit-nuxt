@@ -35,14 +35,9 @@
 import { ref, computed, nextTick } from 'vue'
 import { useStack } from '~/composables/useStack'
 import { useGlobalListener } from '~/composables/useGlobalListener'
+import { mTooltipProps } from './props'
 
-interface Props {
-  text?: string
-}
-
-withDefaults(defineProps<Props>(), {
-  text: '',
-})
+defineProps(mTooltipProps)
 
 const visible = ref(false)
 const triggerRef = ref<HTMLElement | null>(null)

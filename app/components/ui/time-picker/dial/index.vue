@@ -63,18 +63,9 @@
 import { computed, onScopeDispose, ref } from 'vue'
 import MTimePickerKeyboard from '../keyboard/index.vue'
 import { useGlobalListener } from '~/composables/useGlobalListener'
+import { mTimePickerDialProps } from '../props'
 
-interface Props {
-  label?: string
-  helperText?: string
-  is24h?: boolean
-  layout?: 'vertical' | 'horizontal'
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  is24h: true,
-  layout: 'vertical',
-})
+const props = defineProps(mTimePickerDialProps)
 
 const modelValue = defineModel<string>({ default: '' })
 const keyboardRef = ref<InstanceType<typeof MTimePickerKeyboard> | null>(null)

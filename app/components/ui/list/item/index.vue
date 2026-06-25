@@ -79,39 +79,11 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, useSlots } from 'vue'
-import type { NuxtLinkProps } from '#app'
+import { mListItemProps } from './props'
 
 const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
 
-interface Props {
-  headline?: string
-  supportingText?: string
-  overline?: string
-  leadingIcon?: string
-  trailingIcon?: string
-  trailingSupportingText?: string
-  tag?: string
-  to?: NuxtLinkProps['to']
-  disabled?: boolean
-  interactive?: boolean
-  selected?: boolean
-  lines?: 1 | 2 | 3 | 'auto'
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  tag: 'div',
-  headline: '',
-  supportingText: '',
-  overline: '',
-  leadingIcon: '',
-  trailingIcon: '',
-  trailingSupportingText: '',
-  to: undefined,
-  disabled: false,
-  interactive: false,
-  selected: false,
-  lines: 'auto',
-})
+const props = defineProps(mListItemProps)
 
 const slots = useSlots()
 

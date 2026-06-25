@@ -154,13 +154,84 @@ The kit uses viewport-aware scaling: `html { font-size: calc(1vw / root-scale(bp
 
 ## 🚀 Getting Started
 
-### Installation
-```bash
-# Install dependencies
-npm install
+### Consuming the kit (Nuxt layer)
 
-# Prepare Nuxt types (auto-imports, build artifacts)
-npm run postinstall
+The kit is a **Nuxt 4 layer** (not a Nuxt module). You consume it through `extends`, in one of three ways — pick whichever fits your workflow.
+
+**1 — Copy the files as a local layer**
+```bash
+# copy the kit/ directory into your repo (e.g. ./vendor/ui-kit)
+```
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  extends: ['./vendor/ui-kit'],
+})
+```
+
+**2 — Install via npm (git or file — registry not required)**
+```bash
+npm i @primetime/ui-kit            # from a registry, if published
+npm i github:igorproc/m3-ui-kit-nuxt   # straight from git
+npm i @primetime/ui-kit@file:../kit    # local path (monorepo / side-by-side)
+```
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  // `install: true` lets Nuxt install the layer's own dependencies
+  extends: [['@primetime/ui-kit', { install: true }]],
+})
+```
+
+**3 — Native Nuxt git extends (no install step — Nuxt fetches via giget)**
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  extends: ['github:igorproc/m3-ui-kit-nuxt#main'],
+})
+```
+
+### Required configuration
+
+The theme engine needs a `materialKit` config. Import the typed helper from the `./defineKit` subpath:
+
+```ts
+// nuxt.config.ts
+import { defineMaterialKit } from '@primetime/ui-kit/defineKit'
+
+export default defineNuxtConfig({
+  extends: [['@primetime/ui-kit', { install: true }]],
+  materialKit: defineMaterialKit({
+    themes: [{ key: 'm3', name: 'M3 Baseline', color: '#6750A4' }],
+    cookie: { theme: { definition: 'md-def', pallete: 'md-pal', contrast: 'md-con' } },
+  }),
+})
+```
+
+Public prop types are available from the `./types` subpath:
+```ts
+import type { MColor, MVariant } from '@primetime/ui-kit/types'
+```
+
+### Required infrastructure (overlays & modals)
+
+Overlay components (`MDialog`, `MMenu`, `MSnackbar`, …) teleport into a host and use `vue-final-modal`. If you provide your **own** `app.vue`, mount the kit's overlay scope inside it:
+
+```vue
+<!-- app/app.vue -->
+<template>
+  <div>
+    <div id="ui-overlay-host" class="ui-overlay-host" />
+    <NuxtLayout><NuxtPage /></NuxtLayout>
+    <client-only><core-scope /></client-only>
+  </div>
+</template>
+```
+
+### Local development (working on the kit itself)
+```bash
+npm install
+npm run postinstall   # nuxt prepare — generates types & theme SCSS
 ```
 
 ### Commands
@@ -342,25 +413,22 @@ console.log(result) // should not be null/undefined
 kit/
 ├── app/
 │   ├── components/
-│   │   ├── ui/              # Public library components
-│   │   ├── material/        # Material Design showcase
-│   │   └── [other]/
+│   │   ├── ui/              # Public library components (<MButton>, …)
+│   │   └── core/            # Overlay/modals infrastructure (core-scope)
 │   ├── composables/         # Vue 3 Composition API utilities
 │   ├── assets/stylesheet/   # Token system + styling
 │   ├── modules/
 │   │   └── kit/
-│   │       └── module.ts    # Theme color generation
-│   ├── layouts/
-│   ├── pages/
+│   │       └── module.ts    # Theme color generation (build-time SCSS)
 │   ├── plugins/
-│   ├── store/               # Pinia (theme, app state)
-│   └── nuxt.config.ts       # Layer + module config
+│   ├── store/               # Pinia (theme state)
+│   └── app.vue              # Root: overlay host + page outlet (for consumers)
 ├── shared/
 │   ├── constants/
-│   ├── types/
-│   └── utils/
+│   ├── types/               # Public prop types (props.ts) + kit config types
+│   └── utils/               # propsFactory, props/, defineKit, …
+├── nuxt.config.ts           # Layer entry (package "." export)
 ├── tests/                   # Vitest + Playwright
-├── plan.md                  # Roadmap & issue tracking
 └── CLAUDE.md                # Development guide
 ```
 
@@ -379,7 +447,7 @@ kit/
 
 ## 📄 License
 
-This project is proprietary and confidential. All rights reserved.
+MIT — see [LICENSE](./LICENSE).
 
 ---
 

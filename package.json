@@ -1,7 +1,34 @@
 {
-  "name": "ui",
+  "name": "@primetime/ui-kit",
+  "version": "1.0.0-alpha.0",
   "type": "module",
-  "private": true,
+  "description": "PrimeTime UI Kit — a Nuxt 4 layer & Material Design 3 component library (zero-runtime SCSS tokens).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igorproc/m3-ui-kit-nuxt.git"
+  },
+  "main": "./nuxt.config.ts",
+  "exports": {
+    ".": "./nuxt.config.ts",
+    "./defineKit": "./shared/utils/defineKit.ts",
+    "./types": "./shared/types/props.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "app",
+    "shared",
+    "public",
+    "nuxt.config.ts",
+    "tsconfig.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.scss",
+    "**/*.css",
+    "**/*.vue"
+  ],
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",

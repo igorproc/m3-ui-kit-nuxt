@@ -46,22 +46,10 @@
 <script setup lang="ts">
 import { computed, onScopeDispose, useId } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
+import { mExpansionPanelProps } from './props'
 import { useExpansionPanelGroupContext } from '~/composables/expansion-panel/useExpansionPanelGroup'
-import type { PanelValue } from '~/composables/expansion-panel/useExpansionPanelGroup'
 
-interface Props {
-  value?: PanelValue
-  title?: string
-  description?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  value: undefined,
-  title: '',
-  description: '',
-  disabled: false,
-})
+const props = defineProps(mExpansionPanelProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 

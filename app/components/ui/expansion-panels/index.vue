@@ -9,6 +9,7 @@ import { computed, watch } from 'vue'
 import type { ComputedRef } from 'vue'
 import { createGroup } from '~/composables/registry/createGroup'
 import { createSingle } from '~/composables/registry/createSingle'
+import { mExpansionPanelsProps } from './props'
 import {
   provideExpansionPanelGroupContext,
 } from '~/composables/expansion-panel/useExpansionPanelGroup'
@@ -19,17 +20,7 @@ import type {
 import type { GroupTicket } from '~/composables/registry/createGroup'
 import type { ID } from '~~/shared/types/registry'
 
-interface Props {
-  /** Allow multiple panels open at once. @default false (exclusive accordion). */
-  multiple?: boolean
-  /** Keep at least one panel open (exclusive mode only). @default false */
-  mandatory?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  multiple: false,
-  mandatory: false,
-})
+const props = defineProps(mExpansionPanelsProps)
 
 // Open value(s): an array when `multiple`, a single value/undefined otherwise.
 const modelValue = defineModel<PanelValue | PanelValue[] | undefined>({ default: undefined })

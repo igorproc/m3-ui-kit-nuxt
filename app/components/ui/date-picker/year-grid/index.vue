@@ -25,14 +25,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { mDatePickerYearGridProps } from './props'
 
-interface Props {
-  years: number[]
-  selectedYear: number
-  currentYear: number
-}
-
-defineProps<Props>()
+defineProps(mDatePickerYearGridProps)
 
 const emit = defineEmits<{
   (e: 'select', year: number): void

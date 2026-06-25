@@ -23,7 +23,6 @@
         <m-badge
           v-if="item.badge != null && item.badge > 0"
           class="ui-navigation-bar__badge"
-          variant="standard"
           :value="item.badge"
         />
       </span>
@@ -40,19 +39,9 @@ import { computed, watch } from 'vue'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideNavigationBarContext } from '~/composables/navigation/useNavigationBar'
 import type { ID } from '~~/shared/types/registry'
+import { mNavigationBarProps } from './props'
 
-interface NavigationItem {
-  id: string
-  icon: string
-  label: string
-  badge?: number
-}
-
-interface Props {
-  items: NavigationItem[]
-}
-
-const props = defineProps<Props>()
+const props = defineProps(mNavigationBarProps)
 
 // Первый уровень m-layout → bottom-зона (прибит к низу, M3 nav bar всегда виден);
 // высота — токеном, иначе sticky-низу нечем зарезервировать строку грида

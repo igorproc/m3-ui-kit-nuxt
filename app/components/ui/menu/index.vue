@@ -53,25 +53,13 @@ import { useMenu } from '~/composables/menu/useMenu'
 import { useStack } from '~/composables/useStack'
 import { useClickOutside } from '~/composables/useClickOutside'
 import { useGlobalListener } from '~/composables/useGlobalListener'
-import type { UiMenuOrigin } from './types'
+import { mMenuProps } from './props'
 
 // Multiple root nodes (anchor + teleport): forward fallthrough attrs (class,
 // etc.) explicitly onto the surface wrapper instead of letting Vue warn.
 defineOptions({ inheritAttrs: false })
 
-interface Props {
-  closeOnBackdrop?: boolean
-  absolute?: boolean
-  origin?: UiMenuOrigin
-  matchWidth?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  closeOnBackdrop: true,
-  absolute: false,
-  origin: 'top left',
-  matchWidth: false,
-})
+const props = defineProps(mMenuProps)
 
 const emit = defineEmits<{
   (e: 'click-outside'): void

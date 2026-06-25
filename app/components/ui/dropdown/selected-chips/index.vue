@@ -18,7 +18,7 @@
           :remove="() => ctx.remove(item)"
         >
           <m-chip
-            variant="input"
+            type="input"
             class="ui-dropdown__chip"
             @click.stop
           >

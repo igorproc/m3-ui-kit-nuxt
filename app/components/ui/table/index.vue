@@ -93,8 +93,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'update:selectedRows', payload: [rows: T[]]): void
-  (e: 'update:currentPage', payload: [page: number]): void
+  (e: 'update:selectedRows', rows: T[]): void
+  (e: 'update:currentPage', page: number): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
