@@ -44,6 +44,7 @@ export interface UseFieldReturn<T> {
 /** Inert, always-valid meta used when no `path` is provided. */
 function createInertMeta<T>(): FieldMeta<T> {
   return {
+    required: false,
     touched: false,
     dirty: false,
     valid: true,

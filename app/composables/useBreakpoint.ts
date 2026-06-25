@@ -18,7 +18,7 @@ export function useBreakpoint() {
       .sort((a, b) => a.value - b.value)
   })
 
-  const toCamelCase = (str: string) => str.replace(/-([a-z])/g, g => g[1].toUpperCase())
+  const toCamelCase = (str: string) => str.replace(/-([a-z])/g, g => (g[1] ?? '').toUpperCase())
 
   const is = computed(() => {
     const sorted = sortedBreakpoints.value
@@ -27,6 +27,7 @@ export function useBreakpoint() {
 
     for (let i = 0; i < sorted.length; i++) {
       const bp = sorted[i]
+      if (!bp) continue
       const prevBp = sorted[i - 1]
 
       const isGreaterThanPrev = prevBp ? currentWidth > prevBp.value : true

@@ -54,7 +54,7 @@ const errorMessage = ref<string | undefined>()
 const group = useRadioGroupContext()
 
 // Grouped mode registers a ticket; standalone mode leaves this `null`.
-let ticket: SingleTicket<{ value: MRadioValue, disabled?: boolean }> | null = null
+let ticket: SingleTicket | null = null
 
 if (group) {
   ticket = group.register({

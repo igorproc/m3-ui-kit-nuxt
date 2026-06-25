@@ -77,7 +77,7 @@ export function useTableSelection<T extends TableData>(options: UseTableSelectio
     if (!unchanged) options.onChange(next)
   })
 
-  const selectedIds = computed(() => group.selectedValues.value)
+  const selectedIds = computed(() => group.selectedValues.value as Set<T['id']>)
 
   function isSelected(row: T): boolean {
     return selectedIds.value.has(row.id)

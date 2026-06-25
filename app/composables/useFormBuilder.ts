@@ -163,7 +163,7 @@ export function useFormBuilder<TValues extends Record<string, unknown> = Record<
     },
     (ctx) => {
       if (options.onValidationError) {
-        options.onValidationError(ctx.errors)
+        options.onValidationError(ctx.errors as Parameters<NonNullable<typeof options.onValidationError>>[0])
       }
     },
   )

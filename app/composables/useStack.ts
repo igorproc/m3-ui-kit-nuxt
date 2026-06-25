@@ -21,7 +21,7 @@
  * // bind :style="{ zIndex: ticket.zIndex.value }"
  * ```
  */
-import { computed, getCurrentScope, onScopeDispose, reactive, shallowRef, toRef } from 'vue'
+import { computed, getCurrentScope, onScopeDispose, shallowRef, toRef } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 
 export interface StackTicketInput {
@@ -79,7 +79,9 @@ let uid = 0
 export function createStack(options: StackOptions = {}): StackContext {
   const { baseZIndex = 2000, increment = 10 } = options
 
-  const tickets = reactive(new Map<string, StackTicket>())
+  // Plain Map — ticket fields are ComputedRefs and must NOT be unwrapped (a
+  // `reactive` Map would deep-unwrap them); reactivity is driven by `order`.
+  const tickets = new Map<string, StackTicket>()
   // Selection order — index in this array drives the z-index.
   const order = shallowRef<string[]>([])
 

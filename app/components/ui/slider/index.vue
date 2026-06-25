@@ -25,8 +25,8 @@
           @pointerdown="onTrackPointerdown"
         >
           <SliderRange
-            :start="activeRange.start"
-            :end="activeRange.end"
+            :start="activeRange.start ?? 0"
+            :end="activeRange.end ?? 0"
             :discrete="discrete"
             :tick-count="tickCount"
             :disabled="disabled"

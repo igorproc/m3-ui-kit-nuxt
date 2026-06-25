@@ -1,4 +1,5 @@
 import { THEME_DEFINITIONS, THEME_CONTRASTS, THEME_COOKIE_OPTIONS } from '~~/shared/constants/theme'
+import type { TTheme } from '~~/shared/types/kit'
 
 export const useThemeStore = defineStore('themeStore', () => {
   const config = useRuntimeConfig().public.materialKit
@@ -11,7 +12,7 @@ export const useThemeStore = defineStore('themeStore', () => {
 
   const allowedDefinitions = Object.values(THEME_DEFINITIONS)
   const allowedContrasts = Object.values(THEME_CONTRASTS)
-  const availableThemes = computed(() => config.themes || [])
+  const availableThemes = computed(() => (config.themes ?? []) as TTheme[])
   const allowedPalettes = computed(() => availableThemes.value.map(t => t.key))
 
   // State proxies with validation

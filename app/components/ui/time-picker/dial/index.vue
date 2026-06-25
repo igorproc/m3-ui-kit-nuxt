@@ -156,8 +156,9 @@ function updateTimeFromEvent(e: MouseEvent | TouchEvent) {
   if (!faceRef.value || !keyboardRef.value) return
 
   const rect = faceRef.value.getBoundingClientRect()
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  const touch = 'touches' in e ? e.touches[0] : null
+  const clientX = touch ? touch.clientX : (e as MouseEvent).clientX
+  const clientY = touch ? touch.clientY : (e as MouseEvent).clientY
   const cx = rect.left + rect.width / 2
   const cy = rect.top + rect.height / 2
   const dx = clientX - cx

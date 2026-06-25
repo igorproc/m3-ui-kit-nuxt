@@ -90,7 +90,7 @@
           >
             {{ currentMonthYearLabel }}
             <m-icon
-              :name="view === 'calendar' ? ICONS.arrowDropDown : ICONS.arrowDropUp"
+              :name="ICONS.arrowDropUp"
               class="ui-date-dialog__view-toggle-icon"
             />
           </button>
@@ -315,9 +315,9 @@ function onTextInput(val: string) {
     return
   }
 
-  const d = Number.parseInt(parts[0], 10)
-  const m = Number.parseInt(parts[1], 10)
-  const y = Number.parseInt(parts[2], 10)
+  const d = Number.parseInt(parts[0] ?? '', 10)
+  const m = Number.parseInt(parts[1] ?? '', 10)
+  const y = Number.parseInt(parts[2] ?? '', 10)
 
   if (Number.isNaN(d) || Number.isNaN(m) || Number.isNaN(y)) {
     inputError.value = 'Invalid date format'
