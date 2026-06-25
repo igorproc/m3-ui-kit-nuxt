@@ -7,7 +7,7 @@
  * `disabled` comes from the shared `makeStateProps` (single source of truth).
  */
 import type { ExtractPublicPropTypes } from 'vue'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 
 export const mSearchProps = {
   ...makeStateProps(),

@@ -5,7 +5,7 @@
  * are slider-specific value/geometry/a11y props.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeReadonlyProps, makeStateProps } from '#shared/utils/props'
+import { makeReadonlyProps, makeStateProps } from '~~/shared/utils/props'
 
 export type MSliderOrientation = 'horizontal' | 'vertical'
 

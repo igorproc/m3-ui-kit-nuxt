@@ -17,7 +17,7 @@ runtime CSS-переменных для цветов/состояний — ре
 1. **Co-located `props.ts`**. Для компонента создай `props.ts` рядом с `index.vue`:
    ```ts
    import type { ExtractPublicPropTypes, PropType } from 'vue'
-   import { makeColorProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+   import { makeColorProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
    export const mXProps = {
      ...makeStateProps(),            // disabled + loading — где применимо
      // ...makeColorProps(), makeVariantProps(), makeSizeProps(), makeReadonlyProps()

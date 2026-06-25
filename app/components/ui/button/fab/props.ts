@@ -7,7 +7,7 @@
  * color-enum is gone: the low-emphasis look is now `variant: 'tonal'`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 /** FAB props — defaults to the filled (role-container) surface. */
 export const mFabProps = {

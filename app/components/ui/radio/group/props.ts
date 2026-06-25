@@ -5,7 +5,7 @@
  * to forms and `mandatory` enforces a non-empty selection.
  */
 import type { ExtractPublicPropTypes } from 'vue'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 
 const { disabled } = makeStateProps()
 

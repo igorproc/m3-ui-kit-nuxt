@@ -6,7 +6,7 @@
  * `loading`) is taken from the shared state contract.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 
 export type MChipType = 'assist' | 'filter' | 'input' | 'suggestion'
 

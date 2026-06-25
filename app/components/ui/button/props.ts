@@ -6,8 +6,8 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
-import { propsFactory } from '#shared/utils/propsFactory'
-import { makeColorProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+import { propsFactory } from '~~/shared/utils/propsFactory'
+import { makeColorProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 export type MButtonTag = 'button' | 'link'
 export type MButtonType = 'button' | 'submit' | 'reset'

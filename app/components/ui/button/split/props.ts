@@ -3,7 +3,7 @@
  * with the split-button's own `items` list.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeColorProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+import { makeColorProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 export interface UiSplitMenuItem {
   label: string

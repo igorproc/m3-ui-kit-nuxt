@@ -8,7 +8,7 @@
  * dial leaf reuse the shared subset without the root-only `mode` prop.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { propsFactory } from '#shared/utils/propsFactory'
+import { propsFactory } from '~~/shared/utils/propsFactory'
 
 export type MTimePickerMode = 'dial' | 'keyboard'
 export type MTimePickerLayout = 'vertical' | 'horizontal'

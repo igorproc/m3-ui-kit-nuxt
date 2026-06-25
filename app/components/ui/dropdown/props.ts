@@ -6,7 +6,7 @@
  * a genuine MD3 surface subset, so it keeps the `variant` name.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 import type { UiMenuOrigin } from '~/components/ui/menu/types'
 import type { DropdownItem, DropdownOption } from './types'
 

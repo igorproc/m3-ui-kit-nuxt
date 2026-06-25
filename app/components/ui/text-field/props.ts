@@ -9,7 +9,7 @@
  * and `readonly` comes from `makeReadonlyProps`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeReadonlyProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+import { makeReadonlyProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 export type MTextFieldType = 'text' | 'number' | 'email' | 'password'
 export type MTextFieldVariant = 'filled' | 'outlined'

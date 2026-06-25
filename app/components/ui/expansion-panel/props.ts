@@ -5,7 +5,7 @@
  * contract stays uniform across the library.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 import type { PanelValue } from '~/composables/expansion-panel/useExpansionPanelGroup'
 
 export const mExpansionPanelProps = {

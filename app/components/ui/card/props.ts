@@ -5,7 +5,7 @@
  * resolved here so the SFC receives a plain imported props object.
  */
 import type { ExtractPublicPropTypes } from 'vue'
-import { makeVariantProps } from '#shared/utils/props'
+import { makeVariantProps } from '~~/shared/utils/props'
 
 /** `<MCard>` props — defaults to the MD3 `elevated` surface style. */
 export const mCardProps = {

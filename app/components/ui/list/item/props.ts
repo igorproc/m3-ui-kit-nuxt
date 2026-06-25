@@ -6,7 +6,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 
 export type MListItemLines = 1 | 2 | 3 | 'auto'
 

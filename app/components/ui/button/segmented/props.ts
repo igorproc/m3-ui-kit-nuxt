@@ -7,7 +7,7 @@
  * out of scope here (separate phase) — only the public prop surface is unified.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeColorProps, makeStateProps } from '#shared/utils/props'
+import { makeColorProps, makeStateProps } from '~~/shared/utils/props'
 
 export interface MSegmentedItem {
   label?: string

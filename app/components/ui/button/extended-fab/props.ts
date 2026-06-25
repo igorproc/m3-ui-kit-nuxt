@@ -6,7 +6,7 @@
  * 'tonal'` instead.
  */
 import type { ExtractPublicPropTypes } from 'vue'
-import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 /** Extended FAB props — defaults to the filled (role-container) surface. */
 export const mExtendedFabProps = {

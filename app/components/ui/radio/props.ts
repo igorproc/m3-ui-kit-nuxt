@@ -5,7 +5,7 @@
  * (form name/value/path + label).
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeStateProps } from '#shared/utils/props'
+import { makeStateProps } from '~~/shared/utils/props'
 
 export type MRadioValue = string | number
 

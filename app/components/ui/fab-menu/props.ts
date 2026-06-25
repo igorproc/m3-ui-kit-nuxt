@@ -7,7 +7,7 @@
  * the low-emphasis activator is now `variant: 'tonal'`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '#shared/utils/props'
+import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 export interface MFabMenuItem {
   label?: string
