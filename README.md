@@ -203,7 +203,7 @@ export default defineNuxtConfig({
   extends: [['@primetime/ui-kit', { install: true }]],
   materialKit: defineMaterialKit({
     themes: [{ key: 'm3', name: 'M3 Baseline', color: '#6750A4' }],
-    cookie: { theme: { definition: 'md-def', pallete: 'md-pal', contrast: 'md-con' } },
+    cookie: { theme: { definition: 'md-def', palette: 'md-pal', contrast: 'md-con' } },
   }),
 })
 ```

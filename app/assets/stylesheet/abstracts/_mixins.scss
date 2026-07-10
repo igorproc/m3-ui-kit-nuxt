@@ -2,13 +2,13 @@
 @use 'sass:map';
 @use 'variables' as *;
 
-@mixin theme-definition($definition, $pallet, $contrast: null) {
+@mixin theme-definition($definition, $palette, $contrast: null) {
   @if not $contrast {
-    [data-definition="#{$definition}"][data-pallet="#{$pallet}"] {
+    [data-definition="#{$definition}"][data-palette="#{$palette}"] {
       @content;
     }
   } @else {
-    [data-definition="#{$definition}"][data-pallet="#{$pallet}"][data-contrast="#{$contrast}"] {
+    [data-definition="#{$definition}"][data-palette="#{$palette}"][data-contrast="#{$contrast}"] {
       @content;
     }
   }

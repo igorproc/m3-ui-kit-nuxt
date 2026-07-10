@@ -8,12 +8,12 @@ export const useThemeStore = defineStore('themeStore', () => {
   // Cookies
   const definitionCookie = useCookie<string>(cookieKeys.definition, { default: () => THEME_DEFINITIONS.LIGHT, ...THEME_COOKIE_OPTIONS })
   const contrastCookie = useCookie<string>(cookieKeys.contrast, { default: () => THEME_CONTRASTS.MEDIUM, ...THEME_COOKIE_OPTIONS })
-  const paletteCookie = useCookie<string>(cookieKeys.pallete, { default: () => '_m3-fallback', ...THEME_COOKIE_OPTIONS })
+  const paletteCookie = useCookie<string>(cookieKeys.palette, { default: () => '_m3-fallback', ...THEME_COOKIE_OPTIONS })
 
   const allowedDefinitions = Object.values(THEME_DEFINITIONS)
   const allowedContrasts = Object.values(THEME_CONTRASTS)
   const availableThemes = computed(() => (config.themes ?? []) as TTheme[])
-  const allowedPalettes = computed(() => availableThemes.value.map(t => t.key))
+  const allowedPalettes = computed(() => ['_m3-fallback', ...availableThemes.value.map(t => t.key)])
 
   // State proxies with validation
   const definition = computed({
@@ -74,7 +74,7 @@ export const useThemeStore = defineStore('themeStore', () => {
   useHead({
     htmlAttrs: {
       'data-definition': definition,
-      'data-pallet': palette,
+      'data-palette': palette,
       'data-contrast': contrast,
     },
   })
