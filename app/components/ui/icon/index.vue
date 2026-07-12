@@ -8,11 +8,9 @@
 </template>
 
 <script setup lang="ts">
-interface Props {
-  name: string
-}
+import { mIconProps } from './props'
 
-const props = defineProps<Props>()
+const props = defineProps(mIconProps)
 
 const resolvedName = computed(() => {
   if (!props.name) {
