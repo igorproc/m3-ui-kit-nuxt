@@ -81,7 +81,7 @@ export function useMenu(model: Ref<boolean>, options: UseMenuOptions) {
         '--ui-menu-origin': origin,
       }
       if (options.matchWidth()) {
-        style.width = 'anchor-size(width)'
+        style.width = 'fit-content'
       }
       return style
     }

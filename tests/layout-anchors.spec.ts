@@ -29,6 +29,19 @@ const Probe = defineComponent({
   },
 })
 
+const DocsHeaderWrapper = defineComponent({
+  render: () => h(MAppBar, { title: 'Docs header' }),
+})
+
+const NestedWrapper = defineComponent({
+  props: { depth: { type: Number, required: true } },
+  setup(props) {
+    return () => props.depth > 0
+      ? h(NestedWrapper, { depth: props.depth - 1 })
+      : h(MAppBar, { title: 'Nested header' })
+  },
+})
+
 const probeItems = (wrapper: { find: (sel: string) => { attributes: (name: string) => string | undefined } }) =>
   JSON.parse(wrapper.find('[data-testid="probe"]').attributes('data-items') ?? '[]') as { kind: string, size: string | null, sticky: boolean }[]
 
@@ -80,6 +93,23 @@ describe('multi-instance zones & sticky anchors', () => {
     ])
   })
 
+  it('app-bar registers through a shallow transparent component wrapper', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      render: () => h(MLayout, () => [
+        h(DocsHeaderWrapper),
+        h(MLayoutMain, () => h(Probe)),
+      ]),
+    }))
+
+    const bar = wrapper.find('.ui-app-bar')
+    expect(bar.attributes('data-m3-zone')).toBeTruthy()
+    expect(bar.classes()).toContain('ui-app-bar--anchored')
+    expect(probeItems(wrapper)).toEqual([
+      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'main', size: null, sticky: false },
+    ])
+  })
+
   it('app-bar inside m-layout-header contributes its height to the zone instead', async () => {
     const wrapper = await mountSuspended(defineComponent({
       render: () => h(MLayout, () => [
@@ -100,6 +130,21 @@ describe('multi-instance zones & sticky anchors', () => {
     // поэтому generated-CSS прибьёт header и зарезервирует строку и на SSR
     expect(probeItems(wrapper)).toEqual([
       { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'main', size: null, sticky: false },
+    ])
+  })
+
+  it('does not register through more than three component ancestors', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      render: () => h(MLayout, () => [
+        h(NestedWrapper, { depth: 3 }),
+        h(MLayoutMain, () => h(Probe)),
+      ]),
+    }))
+
+    const bar = wrapper.find('.ui-app-bar')
+    expect(bar.attributes('data-m3-zone')).toBeUndefined()
+    expect(probeItems(wrapper)).toEqual([
       { kind: 'main', size: null, sticky: false },
     ])
   })

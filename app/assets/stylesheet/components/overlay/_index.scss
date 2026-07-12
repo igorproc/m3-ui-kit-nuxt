@@ -1,0 +1,11 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+// Zero-runtime tokens for the `<MOverlay>` scrim. Motion/geometry belong to the
+// consuming dialog/sheet/menu, so only the scrim role + opacity live here.
+$tokens: (
+  scrim: (
+    color: map.get($theme-color-link, 'scrim'),
+    opacity: 32%,
+  ),
+);

@@ -22,6 +22,20 @@ export type MVariant = 'elevated' | 'filled' | 'tonal' | 'outlined' | 'text'
 /** Component size scale. */
 export type MSize = 'sm' | 'md' | 'lg'
 
+/**
+ * MD3 corner-shape scale. Mirrors the `$theme-shape-link` SCSS map
+ * (`--sys-shape-corner-*`); used by passive surfaces like `<MSurface>`.
+ */
+export type MShape
+  = 'none'
+    | 'extra-small'
+    | 'small'
+    | 'medium'
+    | 'large'
+    | 'extra-large'
+    | 'extra-large-top'
+    | 'full'
+
 /** `color` prop contract. */
 export interface ColorProps {
   color?: MColor

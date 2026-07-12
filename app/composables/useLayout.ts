@@ -210,9 +210,30 @@ export interface UseLayoutItemOptions {
 }
 
 /**
- * Item-level: layout-aware components self-register when they are direct
- * children of `<m-layout>`; nested ones contribute their size to the hosting
- * zone; outside a layout everything degrades to a no-op.
+ * Transparent feature wrappers (for example, a docs header component) should
+ * not make a layout-aware child lose its owning `<m-layout>`. The lookup is
+ * deliberately shallow: deeper UI is ordinary page content, not a layout zone.
+ *
+ * A direct child is one ancestor hop; `MLayout → DocsHeader → MAppBar` is two.
+ */
+const MAX_LAYOUT_OWNER_ANCESTOR_HOPS = 3
+
+function hasLayoutOwner(instance: ReturnType<typeof getCurrentInstance>, layoutUid: number) {
+  let ancestor = instance?.parent
+
+  for (let hops = 1; ancestor && hops <= MAX_LAYOUT_OWNER_ANCESTOR_HOPS; hops++) {
+    if (ancestor.uid === layoutUid) return true
+    ancestor = ancestor.parent
+  }
+
+  return false
+}
+
+/**
+ * Item-level: layout-aware components self-register when their owning
+ * `<m-layout>` is within three transparent component ancestors. Nested items
+ * inside an existing layout host contribute their size to that zone instead;
+ * outside a layout everything degrades to a no-op.
  */
 export function useLayoutItem(options: UseLayoutItemOptions = {}) {
   const layout = useLayoutContext()
@@ -226,11 +247,13 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     return { layoutItemStyles: noStyles, layoutItemAttrs: noStyles, isLayoutChild: false }
   }
 
-  const isFirstLevel = options.force === true || instance?.parent?.uid === layout.uid
+  // A host wins over shallow owner discovery. This prevents a nested app bar
+  // from registering a second top zone below MLayoutHeader/MLayoutMain.
+  const isLayoutChild = !host && (options.force === true || hasLayoutOwner(instance, layout.uid))
 
-  if (!isFirstLevel) {
-    // Глубже первого уровня: отдаём свой размер хост-зоне
-    // (например m-app-bar внутри m-layout-header задаёт высоту строки header)
+  if (!isLayoutChild) {
+    // Inside an existing zone, donate size to its host (for example, an
+    // MAppBar inside MLayoutHeader). Other deeply nested UI stays a no-op.
     if (host) {
       onScopeDispose(host.contribute(sizeExpr))
     }

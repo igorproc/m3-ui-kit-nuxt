@@ -1,26 +1,9 @@
 <script lang="ts" setup>
-const { progress } = useLoadingIndicator({ throttle: 0, duration: 5e100 })
+// Client-only modal runtime host. Loading presentation is intentionally NOT
+// rendered here: it belongs to the <MApp> `loading` slot (see app.md). Without
+// a slot, no progress UI is drawn.
 </script>
 
 <template>
-  <section class="app-common-scope">
-    <core-global-container />
-
-    <m-progress
-      v-if="progress"
-      :value="progress"
-      class="app-common-scope__indicator"
-    />
-  </section>
+  <core-global-container />
 </template>
-
-<style lang="scss">
-.app-common-scope {
-  & &__indicator {
-    position: fixed;
-    top: 0;
-    z-index: z('dialog');
-    background-color: transparent;
-  }
-}
-</style>

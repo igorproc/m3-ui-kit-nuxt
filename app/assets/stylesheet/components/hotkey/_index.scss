@@ -1,0 +1,26 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+// Zero-runtime M3 tokens for `<MHotkey>`. Supporting-information styling, not a
+// physical-keyboard skin: keycaps use surface/on-surface-variant/outline roles.
+$tokens: (
+  container: (gap: 4rem),
+  key: (
+    min-width: 20rem,
+    padding-block: 1rem,
+    padding-inline: 4rem,
+    radius: var(--sys-shape-corner-extra-small),
+    typography: 'label-small',
+    enabled: (
+      color: map.get($theme-color-link, 'on-surface-variant'),
+      bg: map.get($theme-color-link, 'surface-container-high'),
+      border: map.get($theme-color-link, 'outline-variant'),
+    ),
+    pressed: (
+      color: map.get($theme-color-link, 'on-secondary-container'),
+      bg: map.get($theme-color-link, 'secondary-container'),
+    ),
+    disabled: (color: map.get($theme-color-link, 'on-surface')),
+  ),
+  separator: (color: map.get($theme-color-link, 'on-surface-variant')),
+);
