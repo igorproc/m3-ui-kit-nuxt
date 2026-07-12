@@ -17,8 +17,11 @@ export const makeMButtonProps = propsFactory({
   ...makeColorProps(),
   ...makeVariantProps(),
   ...makeStateProps(),
+  /** Root behavior: native button or Nuxt link. */
   tag: { type: String as PropType<MButtonTag>, default: 'button' },
+  /** Native button type when `tag` is `button`. */
   type: { type: String as PropType<MButtonType>, default: 'button' },
+  /** Nuxt route destination when `tag` is `link`. */
   to: { type: [String, Object] as PropType<NuxtLinkProps['to']>, default: undefined },
 })
 

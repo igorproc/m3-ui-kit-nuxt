@@ -16,11 +16,13 @@ import type { MColor, MSize, MVariant } from '../../types/props'
 
 /** `color` — MD3 color role (`primary | secondary | tertiary | error`). */
 export const makeColorProps = propsFactory({
+  /** Semantic Material color role used by the component scheme. */
   color: { type: String as PropType<MColor>, default: 'primary' },
 })
 
 /** `variant` — MD3 surface style. Override the default per family (e.g. `'text'`). */
 export const makeVariantProps = propsFactory({
+  /** Material surface treatment that controls the component emphasis. */
   variant: { type: String as PropType<MVariant>, default: 'filled' },
 })
 
@@ -31,7 +33,9 @@ export const makeSizeProps = propsFactory({
 
 /** `disabled` + `loading` — shared action states. */
 export const makeStateProps = propsFactory({
+  /** Prevents interaction and applies the disabled visual state. */
   disabled: { type: Boolean, default: false },
+  /** Replaces content with progress feedback and prevents interaction. */
   loading: { type: Boolean, default: false },
 })
 
