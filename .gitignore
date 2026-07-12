@@ -27,3 +27,4 @@ logs
 .cursor/temp
 .agent
 .planning
+graphify-out
