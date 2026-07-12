@@ -28,6 +28,7 @@ export const makeVariantProps = propsFactory({
 
 /** `size` — component size scale. */
 export const makeSizeProps = propsFactory({
+  /** Component size on the shared small, medium, and large scale. */
   size: { type: String as PropType<MSize>, default: 'md' },
 })
 

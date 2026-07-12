@@ -37,6 +37,7 @@ export const mButtonProps = makeMButtonProps()
  */
 export const mIconButtonProps = {
   ...makeMButtonProps({ variant: 'text' }),
+  /** Accessible name required by the icon-only button. */
   ariaLabel: { type: String as PropType<string>, default: undefined },
 }
 

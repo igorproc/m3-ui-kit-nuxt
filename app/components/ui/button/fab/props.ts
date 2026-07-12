@@ -15,8 +15,7 @@ export const mFabProps = {
   ...makeVariantProps({ variant: 'filled' }),
   ...makeSizeProps(),
   ...makeStateProps(),
-  // Accessible name for the icon-only control (can also be supplied via a
-  // native `aria-label` fallthrough attribute).
+  /** Accessible name required by the icon-only FAB. */
   ariaLabel: { type: String as PropType<string>, default: undefined },
 }
 

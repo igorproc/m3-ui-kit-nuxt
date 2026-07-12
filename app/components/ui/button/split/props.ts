@@ -16,6 +16,7 @@ export const mSplitButtonProps = {
   ...makeColorProps(),
   ...makeVariantProps(),
   ...makeStateProps(),
+  /** Secondary actions shown in the attached menu. */
   items: { type: Array as PropType<UiSplitMenuItem[]>, default: () => [] },
 }
 

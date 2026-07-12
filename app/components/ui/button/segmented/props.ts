@@ -22,8 +22,11 @@ export type MSegmentedModelValue = string | number | (string | number)[]
 export const mSegmentedProps = {
   ...makeColorProps({ color: 'secondary' }),
   ...makeStateProps(),
+  /** Segments displayed by the single- or multi-select group. */
   items: { type: Array as PropType<MSegmentedItem[]>, default: () => [] },
+  /** Currently selected segment value or values. */
   modelValue: { type: [String, Number, Array] as PropType<MSegmentedModelValue>, default: undefined },
+  /** Enables selecting more than one segment. */
   multiple: { type: Boolean, default: false },
 }
 
