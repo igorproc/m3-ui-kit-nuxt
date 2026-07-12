@@ -57,27 +57,10 @@ import { ref } from 'vue'
 import UiButton from '~/components/ui/button/index.vue'
 import UiIcon from '~/components/ui/icon/index.vue'
 import UiMenu from '~/components/ui/menu/index.vue'
+import { mSplitButtonProps } from './props'
+import type { UiSplitMenuItem } from './props'
 
-export interface UiSplitMenuItem {
-  label: string
-  icon?: string
-  value?: string | number
-  action?: () => void
-}
-
-interface Props {
-  variant?: 'elevated' | 'filled' | 'outlined' | 'text' | 'tonal'
-  color?: 'primary' | 'accent' | 'warn'
-  disabled?: boolean
-  items?: UiSplitMenuItem[]
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'filled',
-  color: 'primary',
-  disabled: false,
-  items: () => [],
-})
+const props = defineProps(mSplitButtonProps)
 
 const emit = defineEmits<{
   (e: 'click' | 'dropdown'): void
@@ -106,6 +89,8 @@ function handleItemClick(item: UiSplitMenuItem) {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
+
 .ui-split-button {
   display: inline-flex;
   flex-direction: column;
@@ -130,7 +115,7 @@ function handleItemClick(item: UiSplitMenuItem) {
     padding-inline: 4rem !important; // Narrower for the icon
 
     // Add separator if it's a filled/tonal/elevated button
-    border-left: 1rem solid color-mix(in srgb, var(--color-surface) 30%, transparent) !important;
+    border-left: 1rem solid color-mix(in srgb, #{map.get($theme-color-link, 'surface')} 30%, transparent) !important;
 
     .ui-button__label {
       display: none; // Hide label, we only show icon

@@ -1,6 +1,7 @@
 <template>
   <main
     class="m-layout-main"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
@@ -8,21 +9,9 @@
 </template>
 
 <script setup lang="ts">
-interface Props {
-  order?: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  order: undefined,
-})
-
-const { layoutItemStyles } = useLayoutItem({
-  id: 'layout-main',
-  area: 'main',
-  order: props.order,
-})
-
-provideLayoutArea('main')
+// Контентная зона — остаточный прямоугольник после выкраивания краёв.
+// В full-height-режиме скроллится сама (overflow-y: auto)
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({ kind: 'main' })
 </script>
 
 <style lang="scss">

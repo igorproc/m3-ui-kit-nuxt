@@ -2,7 +2,7 @@
   <span
     class="ui-loading"
     :class="[
-      `ui-loading--${variant}`,
+      `ui-loading--${type}`,
       `ui-loading--${size}`,
       { 'ui-loading--inline': inline },
     ]"
@@ -11,7 +11,7 @@
   >
     <!-- Classic Circular Spinner -->
     <div
-      v-if="variant === 'circular'"
+      v-if="type === 'circular'"
       class="ui-loading__spinner"
     >
       <div class="ui-loading__left">
@@ -25,7 +25,7 @@
 
     <!-- M3 Expressive Morphing Shape -->
     <m-shape
-      v-else-if="variant === 'expressive'"
+      v-else-if="type === 'expressive'"
       class="ui-loading__expressive"
       :name="currentShape"
       :sequence="expressiveSequence"
@@ -37,24 +37,10 @@
 import { computed, ref, watch } from 'vue'
 import { useTimer } from '~/composables/useTimer'
 import MShape from '~/components/ui/shape/index.vue'
+import { mLoadingProps } from './props'
 import type { M3ShapeName } from '~/assets/icon/shapes'
 
-type LoadingVariant = 'circular' | 'expressive'
-type LoadingSize = 'small' | 'medium' | 'large'
-
-interface Props {
-  variant?: LoadingVariant
-  size?: LoadingSize
-  inline?: boolean
-  ariaLabel?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'circular',
-  size: 'medium',
-  inline: false,
-  ariaLabel: 'Loading',
-})
+const props = defineProps(mLoadingProps)
 
 // Sequence of shapes for the Expressive Loading Indicator
 const expressiveSequence: M3ShapeName[] = [
@@ -80,8 +66,8 @@ const cycle = useTimer(() => {
     = (currentShapeIndex.value + 1) % expressiveSequence.length
 }, { duration: 1000, repeat: true })
 
-watch(() => props.variant, (variant) => {
-  if (variant === 'expressive') {
+watch(() => props.type, (type) => {
+  if (type === 'expressive') {
     cycle.start()
   } else {
     cycle.stop()

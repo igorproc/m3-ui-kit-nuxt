@@ -1,25 +1,35 @@
-<script setup lang="ts">
-// Generic wrapper for custom content that needs to be positioned in the layout grid
-interface Props {
-  id: string
-  area?: LayoutArea
-  sizeToken?: string
-}
-
-const props = defineProps<Props>()
-
-const { layoutItemStyles } = useLayoutItem({
-  id: props.id,
-  area: props.area,
-  sizeToken: props.sizeToken,
-})
-</script>
-
 <template>
   <div
     class="m-layout-item"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
   >
     <slot />
   </div>
 </template>
+
+<script setup lang="ts">
+// Универсальная зона для кастомного контента в гриде лейаута.
+// `force` — escape-hatch: регистрируется даже если parent-check не прошёл
+// (например внутри renderless-обёртки вроде Transition)
+interface Props {
+  id?: string
+  kind?: LayoutKind
+  /** @deprecated v1 — use `kind` */
+  area?: LayoutArea
+  sizeToken?: string
+  sticky?: boolean
+  force?: boolean
+}
+
+const props = defineProps<Props>()
+
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
+  id: props.id,
+  kind: computed(() => props.kind),
+  area: props.area,
+  sizeToken: computed(() => props.sizeToken),
+  sticky: computed(() => props.sticky),
+  force: props.force,
+})
+</script>

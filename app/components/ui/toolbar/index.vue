@@ -42,33 +42,16 @@ import { computed, defineAsyncComponent, watch } from 'vue'
 import { provideToolbarContext, useToolbar } from '~/composables/useToolbar'
 import type { ToolbarModel, ToolbarValue } from '~/composables/useToolbar'
 import type { ID } from '~~/shared/types/registry'
+import { mToolbarProps } from './props'
+import type { MToolbarItem } from './props'
 
 const UiButtonIcon = defineAsyncComponent(() => import('~/components/ui/button/icon/index.vue'))
 const UiButton = defineAsyncComponent(() => import('~/components/ui/button/index.vue'))
 
-export interface ToolbarItem {
-  id: string
-  icon?: string
-  label?: string
-  selected?: boolean
-  disabled?: boolean
-  component?: unknown
-  [key: string]: unknown
-}
+/** @deprecated use `MToolbarItem` from `./props` */
+export type ToolbarItem = MToolbarItem
 
-interface Props {
-  items?: ToolbarItem[]
-  layout?: 'horizontal' | 'vertical'
-  variant?: 'standard' | 'baseline'
-  multiple?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  items: () => [],
-  layout: 'horizontal',
-  variant: 'standard',
-  multiple: false,
-})
+const props = defineProps(mToolbarProps)
 
 const emit = defineEmits<{
   (e: 'select', item: ToolbarItem): void
@@ -120,7 +103,7 @@ if (toolbar) watch(() => props.items, syncTickets, { immediate: true, deep: true
 
 const toolbarClasses = computed(() => [
   `ui-toolbar--layout-${props.layout}`,
-  `ui-toolbar--variant-${props.variant}`,
+  `ui-toolbar--type-${props.type}`,
 ])
 
 // Selected state for an item: registry-driven when a model is bound, otherwise
@@ -178,6 +161,7 @@ const getPropsForItem = (item: ToolbarItem) => {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/toolbar' as t;
 
 .ui-toolbar {
@@ -190,12 +174,12 @@ const getPropsForItem = (item: ToolbarItem) => {
   gap: 8rem;
   transition: all 0.2s ease;
 
-  // Variants
-  &--variant-standard {
+  // Types
+  &--type-standard {
     background-color: g($t, 'standard-container-color');
     border-radius: g($t, 'standard-container-shape');
 
-    $shadow-color: var(--color-shadow, #000);
+    $shadow-color: map.get($theme-color-link, 'shadow');
 
     box-shadow:
       0 g($t, 'standard-container-elevation-umbra-y') g($t, 'standard-container-elevation-umbra-blur') g($t, 'standard-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-umbra-opacity'), transparent),
@@ -208,11 +192,11 @@ const getPropsForItem = (item: ToolbarItem) => {
     display: inline-flex;
   }
 
-  &--variant-baseline {
+  &--type-baseline {
     background-color: g($t, 'baseline-container-color');
     border-radius: g($t, 'baseline-container-shape');
 
-    $shadow-color: var(--color-shadow, #000);
+    $shadow-color: map.get($theme-color-link, 'shadow');
 
     box-shadow:
       0 g($t, 'baseline-container-elevation-umbra-y') g($t, 'baseline-container-elevation-umbra-blur') g($t, 'baseline-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-umbra-opacity'), transparent),

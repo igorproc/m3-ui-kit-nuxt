@@ -1,13 +1,11 @@
 import {
   argbFromHex,
-  hexFromArgb,
   Hct,
   SchemeTonalSpot,
   SchemeMonochrome,
   SchemeVibrant,
   SchemeNeutral,
   SchemeFidelity,
-  themeFromSourceColor,
 } from '@material/material-color-utilities'
 import type { MaterialKitOptions, TTheme } from '../types/kit'
 
@@ -26,7 +24,9 @@ export const generateScheme = (data: TTheme) => {
   const argb = argbFromHex(data.color)
   const sourceHct = Hct.fromInt(argb)
 
-  switch (data?.preset || '') {
+  const preset = 'preset' in data ? data.preset : undefined
+
+  switch (preset || '') {
     case 'monochrome':
       // Chroma принудительно обнуляется (0.0), чистый серый/черный/белый контраст (Стиль Gemini)
       lightScheme = new SchemeMonochrome(sourceHct, false, 0.0)

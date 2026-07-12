@@ -35,7 +35,8 @@
         :type="type"
         :name="path"
         :placeholder="placeholder"
-        :disabled="disabledModel"
+        :disabled="disabled"
+        :readonly="readonly"
         :aria-invalid="!meta.valid || props.error || !!props.errorMessage"
         :aria-describedby="describedBy"
         @focus="onFocus"
@@ -69,31 +70,11 @@
 </template>
 
 <script setup lang="ts">
-type TextFieldVariant = 'filled' | 'outlined'
+import { mTextFieldProps } from './props'
 
-interface Props {
-  path?: string
-  label?: string
-  placeholder?: string
-  type?: 'text' | 'number' | 'email' | 'password'
-  disabled?: boolean
-  helperText?: string
-  variant?: TextFieldVariant
-  error?: boolean
-  errorMessage?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: undefined,
-  type: 'text',
-  disabled: false,
-  variant: 'filled',
-  error: false,
-  errorMessage: undefined,
-})
+const props = defineProps(mTextFieldProps)
 
 const modelValue = defineModel<string>({ default: '' })
-const disabledModel = defineModel<boolean>('disabled', { default: false })
 const isFocused = defineModel<boolean>('focused', { default: false })
 
 const fieldId = useId()
@@ -124,7 +105,7 @@ const controlClasses = computed(() => [
     'ui-text-field__control--focused': isFocused.value,
     'ui-text-field__control--populated': !!modelValue.value,
     'ui-text-field__control--error': props.error || !!props.errorMessage || !meta.valid,
-    'ui-text-field__control--disabled': disabledModel.value,
+    'ui-text-field__control--disabled': props.disabled,
   },
 ])
 </script>

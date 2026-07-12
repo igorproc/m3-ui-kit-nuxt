@@ -1,17 +1,23 @@
 <template>
   <component
     :is="componentTag"
-    v-ripple="!disabled"
+    v-ripple="!isDisabled"
     class="ui-button"
     :class="buttonClasses"
     v-bind="linkBindings"
-    :type="type"
-    :disabled="disabled"
-    :aria-disabled="isLink && disabled ? 'true' : undefined"
-    :tabindex="isLink && disabled ? -1 : undefined"
+    :type="componentTag === 'button' ? type : undefined"
+    :disabled="componentTag === 'button' ? isDisabled : undefined"
+    :aria-disabled="isLink && isDisabled ? 'true' : undefined"
+    :aria-busy="loading ? 'true' : undefined"
+    :tabindex="isLink && isDisabled ? -1 : undefined"
   >
     <span
-      v-if="$slots.prepend"
+      v-if="loading"
+      class="ui-button__spinner"
+      aria-hidden="true"
+    />
+    <span
+      v-else-if="$slots.prepend"
       class="ui-button__icon ui-button__icon--prepend"
     >
       <slot name="prepend" />
@@ -31,45 +37,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
-import type { NuxtLinkProps } from '#app'
+import { computed, defineAsyncComponent, useSlots } from 'vue'
+import { mButtonProps } from './props'
 
-type ButtonTag = 'button' | 'link'
-type ButtonVariant = 'elevated' | 'filled' | 'outlined' | 'text' | 'tonal'
-type ButtonColor = 'primary' | 'accent' | 'warn'
-
-interface Props {
-  tag?: ButtonTag
-  variant?: ButtonVariant
-  color?: ButtonColor
-  disabled?: boolean
-  type?: 'button' | 'submit' | 'reset'
-  to?: NuxtLinkProps['to']
-}
-
-const props = withDefaults(
-  defineProps<Props>(),
-  {
-    tag: 'button',
-    variant: 'filled',
-    color: 'primary',
-    disabled: false,
-    type: 'button',
-  },
-)
+const props = defineProps(mButtonProps)
 
 const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
 
 const isLink = computed(() => props.tag === 'link')
+const isDisabled = computed(() => props.disabled || props.loading)
 
-const componentTag = computed(() => {
-  const map: Record<ButtonTag, string | ReturnType<typeof defineAsyncComponent>> = {
-    button: 'button',
-    link: NuxtLink,
-  }
-
-  return map[props.tag] || map.button
-})
+const componentTag = computed(() => (isLink.value ? NuxtLink : 'button'))
 
 const slots = useSlots()
 const hasPrepend = computed(() => !!slots.prepend)
@@ -80,23 +58,19 @@ const buttonClasses = computed(() => [
   `ui-button--${props.variant}`,
   `ui-button--${props.color}`,
   {
-    'ui-button--disabled': props.disabled,
-    'ui-button--has-prepend': hasPrepend.value,
+    'ui-button--disabled': isDisabled.value,
+    'ui-button--loading': props.loading,
+    'ui-button--has-prepend': hasPrepend.value && !props.loading,
     'ui-button--has-append': hasAppend.value,
     'ui-button--icon-only': !hasDefault.value && (hasPrepend.value || hasAppend.value),
   },
 ])
 
-const linkBindings = computed(() => {
-  if (isLink.value && props.to) {
-    return { to: props.to }
-  }
-
-  return {}
-})
+const linkBindings = computed(() => (isLink.value && props.to ? { to: props.to } : {}))
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/button/_index' as t;
 
 .ui-button {
@@ -129,6 +103,14 @@ const linkBindings = computed(() => {
     border-color g($t, 'state-duration') g($t, 'state-easing'),
     transform g($t, 'state-duration') g($t, 'state-easing');
 
+  // Keyboard focus ring (restores the visible indicator removed by
+  // `outline: none`). Color comes from the theme, not a hardcoded hex.
+  // Covers the whole family — icon/fab/segmented/split inherit `.ui-button`.
+  &:focus-visible {
+    outline: 2rem solid map.get($theme-color-link, 'secondary');
+    outline-offset: 2rem;
+  }
+
   &__label {
     display: inline-flex;
     align-items: center;
@@ -142,6 +124,16 @@ const linkBindings = computed(() => {
     justify-content: center;
     font-size: g($t, 'icon-size');
     line-height: 0;
+    z-index: 1;
+  }
+
+  &__spinner {
+    width: g($t, 'icon-size');
+    height: g($t, 'icon-size');
+    border: 2rem solid currentcolor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: ui-button-spin 0.6s linear infinite;
     z-index: 1;
   }
 
@@ -205,21 +197,36 @@ const linkBindings = computed(() => {
     }
   }
 
-  // ПРИМЕНЕНИЕ СХЕМ
+  // ПРИМЕНЕНИЕ СХЕМ (MD3 color roles)
   @include apply-scheme('primary');
 
-  &--accent {
-    @include apply-scheme('accent');
+  &--secondary {
+    @include apply-scheme('secondary');
   }
 
-  &--warn {
-    @include apply-scheme('warn');
+  &--tertiary {
+    @include apply-scheme('tertiary');
+  }
+
+  &--error {
+    @include apply-scheme('error');
   }
 
   // STATE
   &--disabled {
     cursor: default;
     pointer-events: none;
+  }
+
+  &--loading {
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+@keyframes ui-button-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

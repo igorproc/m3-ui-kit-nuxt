@@ -12,20 +12,9 @@
 <script setup lang="ts">
 import MTimePickerKeyboard from './keyboard/index.vue'
 import MTimePickerDial from './dial/index.vue'
+import { mTimePickerProps } from './props'
 
-interface Props {
-  label?: string
-  helperText?: string
-  mode?: 'dial' | 'keyboard'
-  is24h?: boolean
-  layout?: 'vertical' | 'horizontal'
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  mode: 'dial', // default mode for M3 Time Picker
-  is24h: true,
-  layout: 'vertical',
-})
+const props = defineProps(mTimePickerProps)
 
 const modelValue = defineModel<string>({ default: '' })
 

@@ -3,7 +3,7 @@
 
 $tokens: (
   container: (
-    bg: var(--color-surface-container-highest),
+    bg: map.get($theme-color-link, 'surface-container-highest'),
     radius: map.get($theme-shape-link, extra-large),
     shadow: var(--sys-elevation-3),
   ),

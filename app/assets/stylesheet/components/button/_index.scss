@@ -29,13 +29,19 @@ $tokens: (
     map.get($theme-color-link, on-primary-container),
     map.get($theme-color-link, outline)),
 
-  accent: m3-button-scheme(map.get($theme-color-link, secondary),
+  secondary: m3-button-scheme(map.get($theme-color-link, secondary),
     map.get($theme-color-link, on-secondary),
     map.get($theme-color-link, secondary-container),
     map.get($theme-color-link, on-secondary-container),
     color-mix(in srgb, map.get($theme-color-link, secondary) 50%, transparent)),
 
-  warn: m3-button-scheme(map.get($theme-color-link, error),
+  tertiary: m3-button-scheme(map.get($theme-color-link, tertiary),
+    map.get($theme-color-link, on-tertiary),
+    map.get($theme-color-link, tertiary-container),
+    map.get($theme-color-link, on-tertiary-container),
+    color-mix(in srgb, map.get($theme-color-link, tertiary) 50%, transparent)),
+
+  error: m3-button-scheme(map.get($theme-color-link, error),
     map.get($theme-color-link, on-error),
     map.get($theme-color-link, error-container),
     map.get($theme-color-link, on-error-container),

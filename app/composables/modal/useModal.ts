@@ -13,7 +13,7 @@
  * })
  * ```
  */
-import type { Ref } from 'vue'
+import type { Component, Ref } from 'vue'
 import { useModal as useVfmModal } from 'vue-final-modal'
 import { createContext } from '~~/shared/utils/createContext'
 
@@ -49,7 +49,9 @@ export function useModal(options?: {
     ? options.parent
     : useModalContext()
 
-  const children = ref<M3ModalContext[]>([])
+  // Cast guards against Vue's deep `UnwrapRef` expanding the self-referential
+  // `M3ModalContext` (its `children` is itself a `Ref`) into a structural type.
+  const children = ref<M3ModalContext[]>([]) as unknown as Ref<M3ModalContext[]>
 
   const id = options?.id || Math.random().toString(36).substring(2, 9)
 
@@ -116,7 +118,7 @@ export function openModal<T = unknown>(
     let resolved = false
 
     const { open, close, destroy } = useVfmModal({
-      component,
+      component: component as Component,
       attrs: {
         ...props,
         'parent': parentContext, // Explicitly pass parent context to the dynamically rendered component

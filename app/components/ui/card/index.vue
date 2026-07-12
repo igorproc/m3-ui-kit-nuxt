@@ -45,22 +45,13 @@
 </template>
 
 <script setup lang="ts">
-type CardVariant = 'elevated' | 'filled' | 'outlined'
+import { mCardProps } from './props'
 
-interface Props {
-  title?: string
-  subtitle?: string
-  variant?: CardVariant
-}
-
-withDefaults(defineProps<Props>(), {
-  title: '',
-  subtitle: '',
-  variant: 'elevated',
-})
+defineProps(mCardProps)
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/card/index' as t;
 
 $prefix: 'md-card';
@@ -76,8 +67,8 @@ $prefix: 'md-card';
   border-width: g($t, 'border-width');
   border-style: solid;
   border-color: transparent;
-  background-color: var(--color-surface);
-  color: var(--color-surface-contrast);
+  background-color: map.get($theme-color-link, 'surface');
+  color: map.get($theme-color-link, 'on-surface');
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 8%);
   transition:
     box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),

@@ -1,15 +1,23 @@
 <template>
   <nav
+    ref="navEl"
     class="ui-navigation-bar"
+    :class="{ 'ui-navigation-bar--anchored': isLayoutChild }"
+    :aria-label="ariaLabel"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
+    @keydown="onKeydown"
   >
     <button
-      v-for="item in items"
+      v-for="(item, index) in items"
       :key="item.id"
       type="button"
       class="ui-navigation-bar__item"
       :class="{ 'ui-navigation-bar__item--active': item.id === selectedValue }"
+      :aria-current="item.id === selectedValue ? 'page' : undefined"
+      :tabindex="rovingIndex === index ? 0 : -1"
       @click="onSelect(item.id)"
+      @focus="rovingIndex = index"
     >
       <span class="ui-navigation-bar__icon-wrapper">
         <m-icon
@@ -21,7 +29,6 @@
         <m-badge
           v-if="item.badge != null && item.badge > 0"
           class="ui-navigation-bar__badge"
-          variant="standard"
           :value="item.badge"
         />
       </span>
@@ -34,28 +41,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideNavigationBarContext } from '~/composables/navigation/useNavigationBar'
 import type { ID } from '~~/shared/types/registry'
+import { mNavigationBarProps } from './props'
 
-interface NavigationItem {
-  id: string
-  icon: string
-  label: string
-  badge?: number
-}
+const props = defineProps(mNavigationBarProps)
 
-interface Props {
-  items: NavigationItem[]
-}
-
-const props = defineProps<Props>()
-
-// Self-register in layout system as footer area
-const { layoutItemStyles } = useLayoutItem({
-  id: 'navigation-bar',
-  area: 'footer',
+// Первый уровень m-layout → bottom-зона (прибит к низу, M3 nav bar всегда виден);
+// высота — токеном, иначе sticky-низу нечем зарезервировать строку грида
+const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
+  kind: 'bottom',
+  sizeToken: '--ui-navigation-bar-height',
+  sticky: true,
 })
 
 const modelValue = defineModel<string | null>({ default: null })
@@ -117,6 +116,56 @@ function onSelect(id: string) {
   const ticketId = ticketIds.get(id)
   if (ticketId !== undefined) single.select(ticketId)
 }
+
+// --- Roving focus (APG: arrow keys move between destinations) -------------
+const navEl = ref<HTMLElement | null>(null)
+const rovingIndex = ref(0)
+
+// Keep the tabbable item in sync with the selected destination.
+watch(
+  selectedValue,
+  (value) => {
+    const idx = props.items.findIndex(item => item.id === value)
+    if (idx >= 0) rovingIndex.value = idx
+  },
+  { immediate: true },
+)
+
+function focusItem(index: number) {
+  rovingIndex.value = index
+  nextTick(() => {
+    const buttons = navEl.value?.querySelectorAll<HTMLButtonElement>('.ui-navigation-bar__item')
+    buttons?.[index]?.focus()
+  })
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const count = props.items.length
+  if (count === 0) return
+
+  let next = rovingIndex.value
+  switch (event.key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+      next = (rovingIndex.value + 1) % count
+      break
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      next = (rovingIndex.value - 1 + count) % count
+      break
+    case 'Home':
+      next = 0
+      break
+    case 'End':
+      next = count - 1
+      break
+    default:
+      return
+  }
+
+  event.preventDefault()
+  focusItem(next)
+}
 </script>
 
 <style lang="scss">
@@ -125,9 +174,14 @@ function onSelect(id: string) {
 .ui-navigation-bar {
   $t: material-map(t.$tokens, 'md-navigation-bar');
 
+  @at-root :root {
+    --ui-navigation-bar-height: #{g($t, 'container-height')};
+  }
+
   display: flex;
   justify-content: space-around;
   align-items: center;
+  height: var(--ui-navigation-bar-height);
   padding-inline: g($t, 'container-padding-inline');
   padding-block: g($t, 'container-padding-block');
   border-radius: g($t, 'container-shape');
@@ -178,6 +232,10 @@ function onSelect(id: string) {
 
   &__item--active {
     color: g($t, 'item-active-color');
+  }
+
+  &--anchored {
+    z-index: z(header);
   }
 }
 </style>

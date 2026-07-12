@@ -13,12 +13,18 @@
       <th
         v-for="column in columns"
         :key="String(column.key)"
+        scope="col"
         class="ui-table__cell ui-table__cell--header"
         :class="{ 'ui-table__cell--sortable': column.sortable }"
         :style="{ width: column.width }"
-        @click="toggleSort(column)"
+        :aria-sort="column.sortable ? ariaSortFor(column) : undefined"
       >
-        <div class="ui-table__header-content">
+        <button
+          v-if="column.sortable"
+          type="button"
+          class="ui-table__header-content ui-table__header-sort"
+          @click="toggleSort(column)"
+        >
           <slot
             :name="`header-${String(column.key)}`"
             :column="column"
@@ -26,10 +32,21 @@
             {{ column.label }}
           </slot>
           <m-icon
-            v-if="column.sortable && resolvedSort?.key === column.key"
+            v-if="resolvedSort?.key === column.key"
             :name="resolvedSort.direction === 'asc' ? ICONS.arrowUpward : ICONS.arrowDownward"
             class="ui-table__sort-icon"
           />
+        </button>
+        <div
+          v-else
+          class="ui-table__header-content"
+        >
+          <slot
+            :name="`header-${String(column.key)}`"
+            :column="column"
+          >
+            {{ column.label }}
+          </slot>
         </div>
       </th>
     </tr>
@@ -63,6 +80,13 @@ const ctx = useTableContext()
 const resolvedSelectable = computed(() => props.selectable ?? ctx?.selectable.value ?? false)
 const resolvedIsAllSelected = computed(() => props.isAllSelected ?? ctx?.isAllSelected.value ?? false)
 const resolvedSort = computed(() => props.sort ?? (ctx?.sort.value as SortState<T> | null | undefined) ?? null)
+
+function ariaSortFor(column: TableColumn<T>): 'ascending' | 'descending' | 'none' {
+  const currentSort = resolvedSort.value
+  if (currentSort?.key !== column.key) return 'none'
+
+  return currentSort.direction === 'asc' ? 'ascending' : 'descending'
+}
 
 function toggleSort(column: TableColumn<T>) {
   if (!column.sortable) return
@@ -101,7 +125,6 @@ function toggleSort(column: TableColumn<T>) {
     @include typescale(g($t, 'header-text-type'));
 
     &.ui-table__cell--sortable {
-      cursor: pointer;
       user-select: none;
 
       &:hover {
@@ -114,6 +137,19 @@ function toggleSort(column: TableColumn<T>) {
     display: flex;
     align-items: center;
     gap: g($t, 'header-content-gap');
+  }
+
+  &__header-sort {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    text-align: inherit;
+    font: inherit;
+    letter-spacing: inherit;
   }
 
   &__sort-icon {

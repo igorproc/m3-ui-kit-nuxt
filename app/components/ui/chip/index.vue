@@ -27,24 +27,14 @@
 </template>
 
 <script setup lang="ts">
-type ChipVariant = 'assist' | 'filter' | 'input' | 'suggestion'
+import { mChipProps } from './props'
 
-interface Props {
-  variant?: ChipVariant
-  selected?: boolean
-  disabled?: boolean
-}
+const props = defineProps(mChipProps)
 
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'assist',
-  selected: false,
-  disabled: false,
-})
-
-const selectedModel = defineModel<boolean>('selected', { default: false })
+const selectedModel = defineModel<boolean>({ default: false })
 
 const chipClasses = computed(() => [
-  `ui-chip--${props.variant}`,
+  `ui-chip--${props.type}`,
   {
     'ui-chip--selected': selectedModel.value,
     'ui-chip--disabled': props.disabled,
@@ -56,13 +46,14 @@ function onClick() {
     return
   }
 
-  if (props.variant === 'filter') {
+  if (props.type === 'filter') {
     selectedModel.value = !selectedModel.value
   }
 }
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/chip/index' as t;
 
 $prefix: 'md-chip';
@@ -107,11 +98,11 @@ $prefix: 'md-chip';
   }
 
   &:hover:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-default')});
+    background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-default')});
   }
 
   &:active:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-active')}, #{g($t, 'bg-color-default')});
+    background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-active')}, #{g($t, 'bg-color-default')});
     transform: translateY(1rem);
   }
 
@@ -123,11 +114,11 @@ $prefix: 'md-chip';
     color: g($t, 'text-color-default');
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-hover')}, transparent);
+      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, transparent);
     }
 
     &:active {
-      background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-active')}, transparent);
+      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-active')}, transparent);
     }
   }
 
@@ -137,7 +128,7 @@ $prefix: 'md-chip';
     box-shadow: g($t, 'suggestion-shadow');
 
     &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-suggestion')});
+      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-suggestion')});
     }
   }
 

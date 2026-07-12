@@ -8,8 +8,8 @@
 $tokens: (
   base: (
     bg: (
-      default: var(--color-surface),
-      expanded: var(--color-surface-container-low),
+      default: map.get($theme-color-link, 'surface'),
+      expanded: map.get($theme-color-link, 'surface-container-low'),
     ),
     border: (
       radius: var(--sys-shape-corner-medium),
@@ -25,13 +25,13 @@ $tokens: (
     ),
     padding: 12rem 24rem,
     text: (
-      color: var(--color-on-surface),
+      color: map.get($theme-color-link, 'on-surface'),
     ),
     hover: (
-      bg: color-mix(in srgb, var(--color-on-surface) 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 8%, transparent),
     ),
     active: (
-      bg: color-mix(in srgb, var(--color-on-surface) 12%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
     ),
     content: (
       gap: 4rem,
@@ -42,8 +42,8 @@ $tokens: (
       size: 24rem,
     ),
     color: (
-      default: var(--color-on-surface-variant),
-      active: var(--color-primary),
+      default: map.get($theme-color-link, 'on-surface-variant'),
+      active: map.get($theme-color-link, 'primary'),
     ),
   ),
   content: (
@@ -52,12 +52,12 @@ $tokens: (
       bottom: 24rem,
     ),
     text: (
-      color: var(--color-on-surface-variant),
+      color: map.get($theme-color-link, 'on-surface-variant'),
     ),
   ),
   description: (
     text: (
-      color: var(--color-on-surface-variant),
+      color: map.get($theme-color-link, 'on-surface-variant'),
     ),
   ),
   typography: (

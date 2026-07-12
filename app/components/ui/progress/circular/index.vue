@@ -42,25 +42,9 @@
 
 <script setup lang="ts">
 import { useProgress } from '~/composables/progress/useProgress'
-import type { ProgressSize } from '~/composables/progress/useProgress'
+import { mProgressLeafProps } from '../props'
 
-interface Props {
-  value?: number
-  indeterminate?: boolean
-  size?: ProgressSize
-  showTrack?: boolean
-  ariaLabel?: string
-  expressive?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  value: 0,
-  indeterminate: false,
-  size: 'medium',
-  showTrack: true,
-  ariaLabel: 'Progress',
-  expressive: false,
-})
+const props = defineProps(mProgressLeafProps)
 
 const {
   clampedValue,

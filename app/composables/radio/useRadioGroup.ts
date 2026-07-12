@@ -10,7 +10,7 @@
  */
 import type { ComputedRef } from 'vue'
 import { createContext } from '~~/shared/utils/createContext'
-import type { SingleContext } from '~/composables/registry/createSingle'
+import type { SingleContext, SingleTicket, SingleTicketInput } from '~/composables/registry/createSingle'
 
 export type RadioValue = string | number
 
@@ -22,7 +22,7 @@ export interface RadioGroupContext {
   /** Resolved value of the checked radio. */
   selectedValue: ComputedRef<RadioValue | undefined>
   /** Register a radio ticket in the single-selection instance. */
-  register: SingleContext['register']
+  register(ticket?: Partial<SingleTicketInput<RadioValue>>): SingleTicket<SingleTicketInput<RadioValue>>
   /** Unregister a radio ticket by id. */
   unregister: SingleContext['unregister']
   /** Select a ticket by id. */

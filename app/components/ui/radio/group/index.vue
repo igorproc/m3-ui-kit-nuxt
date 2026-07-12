@@ -13,20 +13,9 @@ import { useField } from 'vee-validate'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideRadioGroupContext } from '~/composables/radio/useRadioGroup'
 import type { RadioValue } from '~/composables/radio/useRadioGroup'
+import { mRadioGroupProps } from './props'
 
-interface Props {
-  name?: string
-  path?: string
-  disabled?: boolean
-  mandatory?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  name: undefined,
-  path: undefined,
-  disabled: false,
-  mandatory: false,
-})
+const props = defineProps(mRadioGroupProps)
 
 const modelValue = defineModel<RadioValue | undefined>({ default: undefined })
 
@@ -36,8 +25,13 @@ const groupDisabled = computed(() => props.disabled)
 
 const errorMessage = ref<string | undefined>()
 
+// `reactive: true` makes the ticket collection (and `sel.size`) reactive, so the
+// model<->selection watch below re-fires when child <MRadio>s register and the
+// initial v-model value is applied to the matching radio. Without it the
+// collection is a plain Map and a preset value never selects its radio.
 const sel = createSingle<{ value: RadioValue, disabled?: boolean }>({
   mandatory: () => props.mandatory,
+  reactive: true,
 })
 
 watch(

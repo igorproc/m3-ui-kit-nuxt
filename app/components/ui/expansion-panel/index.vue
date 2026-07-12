@@ -7,9 +7,11 @@
     }"
   >
     <button
+      :id="headerId"
       type="button"
       class="ui-expansion-panel__header"
       :aria-expanded="isOpen"
+      :aria-controls="regionId"
       :disabled="disabled"
       @click="toggle"
     >
@@ -31,7 +33,10 @@
     </button>
 
     <div
+      :id="regionId"
       class="ui-expansion-panel__content-wrapper"
+      role="region"
+      :aria-labelledby="headerId"
       :aria-hidden="!isOpen"
     >
       <div class="ui-expansion-panel__content-inner">
@@ -46,22 +51,10 @@
 <script setup lang="ts">
 import { computed, onScopeDispose, useId } from 'vue'
 import { ICONS } from '~~/shared/constants/icons'
+import { mExpansionPanelProps } from './props'
 import { useExpansionPanelGroupContext } from '~/composables/expansion-panel/useExpansionPanelGroup'
-import type { PanelValue } from '~/composables/expansion-panel/useExpansionPanelGroup'
 
-interface Props {
-  value?: PanelValue
-  title?: string
-  description?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  value: undefined,
-  title: '',
-  description: '',
-  disabled: false,
-})
+const props = defineProps(mExpansionPanelProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 
@@ -71,6 +64,10 @@ const group = useExpansionPanelGroupContext()
 // using its own `v-model`.
 const generatedValue = useId()
 const panelValue = computed(() => props.value ?? generatedValue)
+
+// ARIA wiring: header labels the content region, region is controlled by header.
+const headerId = useId()
+const regionId = useId()
 
 if (group) {
   const ticket = group.register({

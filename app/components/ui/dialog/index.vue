@@ -1,55 +1,58 @@
 <template>
-  <vue-final-modal
+  <MOverlay
     v-model="modelValue"
-    v-bind="themeAttrs"
-    class="ui-dialog-backdrop"
-    content-class="ui-dialog"
-    overlay-transition="vfm-fade"
-    content-transition="ui-dialog-pop"
-    :click-to-close="clickToClose"
-    :esc-to-close="escToClose"
-    :z-index-fn="zIndexFn"
+    mode="modal"
+    :close-on-outside="clickToClose"
+    :close-on-escape="escToClose"
+    transition="ui-dialog-pop"
   >
-    <div class="ui-dialog__container">
-      <!-- Icon -->
-      <div
-        v-if="$slots.icon"
-        class="ui-dialog__icon"
-      >
-        <slot name="icon" />
-      </div>
+    <div
+      class="ui-dialog"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="title ? headlineId : undefined"
+      :aria-label="title ? undefined : 'Dialog'"
+    >
+      <div class="ui-dialog__container">
+        <!-- Icon -->
+        <div
+          v-if="$slots.icon"
+          class="ui-dialog__icon"
+        >
+          <slot name="icon" />
+        </div>
 
-      <!-- Headline -->
-      <h2
-        v-if="title"
-        class="ui-dialog__headline"
-      >
-        {{ title }}
-      </h2>
+        <!-- Headline -->
+        <h2
+          v-if="title"
+          :id="headlineId"
+          class="ui-dialog__headline"
+        >
+          {{ title }}
+        </h2>
 
-      <!-- Supporting Text -->
-      <div class="ui-dialog__content">
-        <slot />
-      </div>
+        <!-- Supporting Text -->
+        <div class="ui-dialog__content">
+          <slot />
+        </div>
 
-      <!-- Actions -->
-      <div
-        v-if="$slots.actions"
-        class="ui-dialog__actions"
-      >
-        <slot name="actions" />
+        <!-- Actions -->
+        <div
+          v-if="$slots.actions"
+          class="ui-dialog__actions"
+        >
+          <slot name="actions" />
+        </div>
       </div>
     </div>
-  </vue-final-modal>
+  </MOverlay>
 </template>
 
 <script setup lang="ts">
-import { VueFinalModal } from 'vue-final-modal'
-import { computed, inject, watch } from 'vue'
-import type { ComputedRef } from 'vue'
+import { useId } from 'vue'
+import MOverlay from '~/components/ui/overlay/index.vue'
 import { useModal } from '~/composables/modal/useModal'
 import type { M3ModalContext } from '~/composables/modal/useModal'
-import { useStack } from '~/composables/useStack'
 
 interface Props {
   title?: string
@@ -67,36 +70,20 @@ const props = withDefaults(defineProps<Props>(), {
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const injectedThemeAttrs = inject<ComputedRef<Record<string, string | undefined>> | null>('theme-attrs', null)
-const themeAttrs = computed(() => injectedThemeAttrs?.value ?? {})
+// Supplies the dialog's accessible name (MDialog now owns role="dialog" +
+// aria-modal; stacking, scrim, scroll lock and focus come from <MOverlay>).
+const headlineId = useId()
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'cancel'): void
   (e: 'confirm', data?: unknown): void
 }>()
 
-// Register this modal in the Context API
+// Register in the modal Context API for programmatic ($modals) close cascades.
 const { close } = useModal({
   visible: modelValue,
   parent: props.parent,
 })
-
-// Unified overlay stacking — drive vfm's z-index through the global stack.
-const stackTicket = useStack().register({
-  onDismiss: () => close(),
-  blocking: !props.clickToClose,
-})
-
-watch(
-  modelValue,
-  (open) => {
-    if (open) stackTicket.select()
-    else stackTicket.unselect()
-  },
-  { immediate: true },
-)
-
-const zIndexFn = () => stackTicket.zIndex.value
 
 defineExpose({
   close,
@@ -165,27 +152,36 @@ defineExpose({
   }
 }
 
-// M3 basic-dialog motion: fade + scale. Enter decelerates, exit accelerates.
+// M3 basic-dialog motion: the <MOverlay> root fades the scrim (opacity) while
+// the nested `.ui-dialog` scales — one transition, differentiated by targeting
+// the child (mirrors the menu pattern). Enter decelerates, exit accelerates.
 .ui-dialog-pop {
   $prefix: 'md-dialog';
   $t: material-map(t.$tokens, $prefix);
 
   &-enter-active {
-    transition:
-      opacity g($t, 'motion-enter-duration') g($t, 'motion-enter-easing'),
-      transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+    transition: opacity g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+
+    .ui-dialog {
+      transition: transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+    }
   }
 
   &-leave-active {
-    transition:
-      opacity g($t, 'motion-exit-duration') g($t, 'motion-exit-easing'),
-      transform g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+    transition: opacity g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+
+    .ui-dialog {
+      transition: transform g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+    }
   }
 
   &-enter-from,
   &-leave-to {
     opacity: 0;
-    transform: scale(g($t, 'motion-scale-from'));
+
+    .ui-dialog {
+      transform: scale(g($t, 'motion-scale-from'));
+    }
   }
 }
 </style>

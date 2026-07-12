@@ -11,13 +11,13 @@
  */
 import type { ComputedRef } from 'vue'
 import { createContext } from '~~/shared/utils/createContext'
-import type { SingleContext } from '~/composables/registry/createSingle'
+import type { SingleContext, SingleTicket, SingleTicketInput } from '~/composables/registry/createSingle'
 
 export type NavigationValue = string
 
 export interface NavigationBarContext {
   /** Register a destination ticket in the single-selection instance. */
-  register: SingleContext['register']
+  register(ticket?: Partial<SingleTicketInput<NavigationValue>>): SingleTicket<SingleTicketInput<NavigationValue>>
   /** Unregister a ticket by id. */
   unregister: SingleContext['unregister']
   /** Select a ticket by id. */

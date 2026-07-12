@@ -37,18 +37,9 @@
 // Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
 // would otherwise shadow the kit composable and break the `{ path, model }` call.
 import { useField } from '~/composables/useField'
+import { mSwitchProps } from './props'
 
-interface Props {
-  path?: string
-  label?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: undefined,
-  label: undefined,
-  disabled: false,
-})
+const props = defineProps(mSwitchProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 
@@ -74,6 +65,7 @@ const switchClasses = computed(() => [
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/switch' as t;
 
 .ui-switch {
@@ -137,7 +129,7 @@ const switchClasses = computed(() => [
     height: g($t, 'state-layer-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: map.get($theme-color-link, 'on-surface');
     opacity: 0;
     pointer-events: none;
     transition:

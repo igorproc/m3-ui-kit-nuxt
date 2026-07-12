@@ -5,6 +5,18 @@
 // FAB MENU M3 COMPONENT TOKENS
 // ==========================================
 
+$hover-opacity: 8%;
+$pressed-opacity: 12%;
+$on-surface: map.get($theme-color-link, 'on-surface');
+
+// Drawer-item pill scheme for one MD3 role (`<role>-container` fill).
+@function fab-menu-item-scheme($container, $on-container) {
+  @return (bg: (color: $container),
+    text: (color: $on-container),
+    hover: (color: color-mix(in srgb, $on-surface $hover-opacity, $container)),
+    pressed: (color: color-mix(in srgb, $on-surface $pressed-opacity, $container)));
+}
+
 $tokens: (
   icon: (
     size: 24rem,
@@ -17,15 +29,22 @@ $tokens: (
   list: (
     gap: 16rem,
   ),
+
+  // Drawer-item pill scheme per MD3 color role
+  item-scheme: (
+    primary: fab-menu-item-scheme(map.get($theme-color-link, 'primary-container'),
+      map.get($theme-color-link, 'on-primary-container')),
+    secondary: fab-menu-item-scheme(map.get($theme-color-link, 'secondary-container'),
+      map.get($theme-color-link, 'on-secondary-container')),
+    tertiary: fab-menu-item-scheme(map.get($theme-color-link, 'tertiary-container'),
+      map.get($theme-color-link, 'on-tertiary-container')),
+    error: fab-menu-item-scheme(map.get($theme-color-link, 'error-container'),
+      map.get($theme-color-link, 'on-error-container')),
+  ),
+
   item: (
     gap: 16rem,
-    bg: (
-      color: var(--color-primary-container),
-    ),
-    text: (
-      color: var(--color-primary-container-contrast, var(--color-on-surface)),
-      type: 'label-large',
-    ),
+    type: 'label-large',
     border: (
       radius: 16rem,
     ),

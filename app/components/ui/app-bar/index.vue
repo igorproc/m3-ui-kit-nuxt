@@ -2,12 +2,14 @@
   <div
     class="ui-app-bar"
     :class="[
-      `ui-app-bar--${variant}`,
+      `ui-app-bar--${type}`,
       {
-        'ui-app-bar--scrolled': isScrolled,
+        'ui-app-bar--scrolled': scrolled,
         'ui-app-bar--with-subtitle': hasSubtitle,
+        'ui-app-bar--anchored': isLayoutChild,
       },
     ]"
+    v-bind="layoutItemAttrs"
     :style="[
       layoutItemStyles,
       dynamicGridStyles,
@@ -55,23 +57,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, readonly, ref, useSlots } from 'vue'
+import { computed, ref, useSlots } from 'vue'
+import { mAppBarProps } from './props'
 
-type AppBarVariant = 'center-aligned' | 'small' | 'medium' | 'large'
-
-interface Props {
-  title?: string
-  subtitle?: string
-  variant?: AppBarVariant
-  isScrolled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  title: '',
-  subtitle: '',
-  variant: 'center-aligned',
-  isScrolled: false,
-})
+const props = defineProps(mAppBarProps)
 
 const slots = useSlots()
 
@@ -79,9 +68,25 @@ const hasSubtitle = computed(() => {
   return !!props.subtitle || !!slots.subtitle
 })
 
+// Auto-elevate: внутри лейаута — общий windowY контекстной зоны (покрывает скролл
+// документа и скролл main в full-height); вне лейаута — собственный слушатель
+const layoutZone = useLayoutZone()
+const fallbackY = ref(0)
+
+if (!layoutZone) {
+  useGlobalListener('window', 'scroll', () => {
+    fallbackY.value = window.scrollY
+  }, { passive: true })
+}
+
+const scrolled = computed(() => {
+  if (props.isScrolled) return true
+  return (layoutZone ? layoutZone.windowY.value : fallbackY.value) > 0
+})
+
 // Self-register in layout system with correct CSS variable token resolved in SCSS
 const sizeToken = computed(() => {
-  switch (props.variant) {
+  switch (props.type) {
     case 'small':
       return '--ui-app-bar-height-small'
     case 'medium':
@@ -94,9 +99,11 @@ const sizeToken = computed(() => {
   }
 })
 
-const { layoutItemStyles } = useLayoutItem({
-  id: 'app-bar',
+// Первый уровень m-layout → top-зона; внутри m-layout-header → вклад высоты в зону
+const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
+  kind: 'top',
   sizeToken,
+  sticky: computed(() => props.sticky),
 })
 
 // Dynamic grid template layout based on variant and active slots
@@ -120,7 +127,7 @@ const dynamicGridStyles = computed(() => {
 
   const gridTemplateColumns = columns.length > 0 ? columns.join(' ') : '1fr'
 
-  if (props.variant === 'medium' || props.variant === 'large') {
+  if (props.type === 'medium' || props.type === 'large') {
     // Two-row layout:
     // Row 1: nav (left), space (center), actions (right)
     // Row 2: title spanning across
@@ -251,6 +258,10 @@ const dynamicGridStyles = computed(() => {
   &--scrolled {
     background-color: g($t, 'container-scrolled-color');
     box-shadow: g($t, 'container-scrolled-shadow');
+  }
+
+  &--anchored {
+    z-index: z(header);
   }
 
   &__nav {

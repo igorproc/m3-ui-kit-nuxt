@@ -12,14 +12,14 @@ $tokens: (
     color: (
       variant: map.get($theme-color-link, 'on-surface-variant'),
       default: map.get($theme-color-link, 'on-surface'),
-      selected: var(--color-primary-container-contrast, var(--color-on-primary-container)),
+      selected: map.get($theme-color-link, 'on-primary-container'),
     ),
   ),
   bg: (
     color: (
-      default: var(--color-surface-container-highest),
-      suggestion: var(--color-surface-container-low, var(--color-surface)),
-      selected: var(--color-secondary-container, var(--color-primary-container)),
+      default: map.get($theme-color-link, 'surface-container-highest'),
+      suggestion: map.get($theme-color-link, 'surface-container-low'),
+      selected: map.get($theme-color-link, 'secondary-container'),
     ),
   ),
   border: (

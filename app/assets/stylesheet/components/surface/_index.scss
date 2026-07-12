@@ -1,0 +1,30 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+// Zero-runtime M3 tokens for the passive `<MSurface>` primitive. Each preset
+// binds a semantic surface color role and elevation together. `outlined` adds
+// an outline-variant hairline. Corner shape is resolved from the canonical
+// `$theme-shape-link` scale in the SFC, so it is not duplicated here.
+$tokens: (
+  plain: (
+    container: (color: map.get($theme-color-link, 'surface')),
+    elevation: none,
+  ),
+  filled: (
+    container: (color: map.get($theme-color-link, 'surface-container')),
+    elevation: none,
+  ),
+  elevated: (
+    container: (color: map.get($theme-color-link, 'surface-container-low')),
+    // MD3 elevation level 1.
+    elevation: (0 1rem 2rem 0 rgb(0 0 0 / 30%), 0 1rem 3rem 1rem rgb(0 0 0 / 15%)),
+  ),
+  outlined: (
+    container: (color: map.get($theme-color-link, 'surface')),
+    outline: (
+      color: map.get($theme-color-link, 'outline-variant'),
+      width: 1rem,
+    ),
+    elevation: none,
+  ),
+);

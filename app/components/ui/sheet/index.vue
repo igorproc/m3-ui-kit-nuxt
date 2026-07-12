@@ -1,78 +1,53 @@
 <template>
-  <vue-final-modal
+  <MOverlay
     v-model="modelValue"
-    class="ui-sheet-backdrop"
-    content-class="ui-sheet"
-    overlay-transition="vfm-fade"
-    content-transition="ui-sheet-pop"
-    :content-style="dragContentStyle"
-    :click-to-close="clickToClose"
-    :esc-to-close="escToClose"
-    :z-index-fn="zIndexFn"
+    mode="modal"
+    :close-on-outside="clickToClose"
+    :close-on-escape="escToClose"
+    transition="ui-sheet-pop"
   >
     <div
-      ref="containerRef"
-      class="ui-sheet__container"
+      class="ui-sheet"
+      :style="dragContentStyle"
     >
-      <div class="ui-sheet__drag-handle" />
+      <div
+        ref="containerRef"
+        class="ui-sheet__container"
+      >
+        <div class="ui-sheet__drag-handle" />
 
-      <div class="ui-sheet__content">
-        <slot />
+        <div class="ui-sheet__content">
+          <slot />
+        </div>
       </div>
     </div>
-  </vue-final-modal>
+  </MOverlay>
 </template>
 
 <script setup lang="ts">
-import { VueFinalModal } from 'vue-final-modal'
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
+import MOverlay from '~/components/ui/overlay/index.vue'
 import { useModal } from '~/composables/modal/useModal'
-import type { M3ModalContext } from '~/composables/modal/useModal'
-import { useStack } from '~/composables/useStack'
 import { useDrag } from '~/composables/useDrag'
+import { mSheetProps } from './props'
 
-interface Props {
-  clickToClose?: boolean
-  escToClose?: boolean
-  parent?: M3ModalContext | null
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  clickToClose: true,
-  escToClose: true,
-  parent: undefined,
-})
+const props = defineProps(mSheetProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'cancel'): void
   (e: 'confirm', data?: unknown): void
 }>()
 
+// Stacking, scrim, scroll lock and focus come from <MOverlay>; keep the modal
+// Context registration for programmatic ($modals) close cascades.
 const { close } = useModal({
   visible: modelValue,
   parent: props.parent,
 })
 
 defineExpose({ close })
-
-// Unified overlay stacking — drive vfm's z-index through the global stack.
-const stackTicket = useStack().register({
-  onDismiss: () => close(),
-  blocking: !props.clickToClose,
-})
-
-watch(
-  modelValue,
-  (open) => {
-    if (open) stackTicket.select()
-    else stackTicket.unselect()
-  },
-  { immediate: true },
-)
-
-const zIndexFn = () => stackTicket.zIndex.value
 
 // Drag-to-dismiss — vertical, downward only.
 const containerRef = ref<HTMLElement | null>(null)
@@ -116,6 +91,8 @@ const dragContentStyle = computed(() => {
   $prefix: 'md-sheet';
   $t: material-map(t.$tokens, $prefix);
 
+  // Bottom-align inside the centered <MOverlay> panel.
+  align-self: flex-end;
   width: 100%;
   max-width: g($t, 'max-width');
   margin-inline: g($t, 'margin-inline');
@@ -151,22 +128,35 @@ const dragContentStyle = computed(() => {
   }
 }
 
-// Slide-up enter / slide-down exit for the bottom sheet.
+// Slide-up enter / slide-down exit: the <MOverlay> root fades the scrim while
+// the nested `.ui-sheet` translates (one transition, child-targeted).
 .ui-sheet-pop {
   $prefix: 'md-sheet';
   $t: material-map(t.$tokens, $prefix);
 
   &-enter-active {
-    transition: transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+    transition: opacity g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+
+    .ui-sheet {
+      transition: transform g($t, 'motion-enter-duration') g($t, 'motion-enter-easing');
+    }
   }
 
   &-leave-active {
-    transition: transform g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+    transition: opacity g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+
+    .ui-sheet {
+      transition: transform g($t, 'motion-exit-duration') g($t, 'motion-exit-easing');
+    }
   }
 
   &-enter-from,
   &-leave-to {
-    transform: translateY(100%);
+    opacity: 0;
+
+    .ui-sheet {
+      transform: translateY(100%);
+    }
   }
 }
 </style>

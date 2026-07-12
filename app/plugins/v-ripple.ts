@@ -46,8 +46,10 @@ const calculate = (e: RippleEvent, el: HTMLElement, value: RippleOptions = {}) =
     const offset = el.getBoundingClientRect()
     const target = isTouchEvent(e) ? e.touches[e.touches.length - 1] : e
 
-    localX = target.clientX - offset.left
-    localY = target.clientY - offset.top
+    if (target) {
+      localX = target.clientX - offset.left
+      localY = target.clientY - offset.top
+    }
   }
 
   const maxDim = Math.max(el.clientWidth, el.clientHeight)

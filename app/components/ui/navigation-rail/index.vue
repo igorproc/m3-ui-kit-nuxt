@@ -1,45 +1,39 @@
 <template>
   <nav
+    ref="navEl"
     class="ui-navigation-rail"
     :class="{ 'ui-navigation-rail--expanded': isExpanded }"
+    :aria-label="ariaLabel"
+    v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
+    @keydown="onKeydown"
   >
     <div class="ui-navigation-rail__list">
       <m-navigation-rail-item
-        v-for="item in items"
+        v-for="(item, index) in items"
         :key="item.id"
         :active="item.id === selectedValue"
         :icon="item.icon"
         :label="item.label"
         :badge="item.badge"
         :expanded="isExpanded"
+        :aria-current="item.id === selectedValue ? 'page' : undefined"
+        :tabindex="rovingIndex === index ? 0 : -1"
         @select="onSelect(item.id)"
+        @focus="rovingIndex = index"
       />
     </div>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { createSingle } from '~/composables/registry/createSingle'
 import { provideNavigationRailContext } from '~/composables/navigation/useNavigationRail'
 import type { ID } from '~~/shared/types/registry'
+import { mNavigationRailProps } from './props'
 
-interface NavigationRailItem {
-  id: string
-  icon: string
-  label: string
-  badge?: number
-}
-
-interface Props {
-  items: NavigationRailItem[]
-  expanded?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  expanded: false,
-})
+const props = defineProps(mNavigationRailProps)
 
 const isExpanded = computed(() => props.expanded)
 
@@ -50,10 +44,12 @@ const sizeToken = computed(() =>
     : '--ui-navigation-rail-width',
 )
 
-const { layoutItemStyles } = useLayoutItem({
-  id: 'navigation-rail',
-  area: 'left',
+// Первый уровень m-layout → start-зона (прижат sticky); внутри m-layout-aside —
+// вклад ширины в зону (раскрытие меняет токен → грид анимируется)
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
+  kind: 'start',
   sizeToken,
+  sticky: true,
 })
 
 const modelValue = defineModel<string | null>({ default: null })
@@ -116,6 +112,56 @@ function onSelect(id: string) {
   const ticketId = ticketIds.get(id)
   if (ticketId !== undefined) single.select(ticketId)
 }
+
+// --- Roving focus (APG: arrow keys move between destinations) -------------
+const navEl = ref<HTMLElement | null>(null)
+const rovingIndex = ref(0)
+
+// Keep the tabbable item in sync with the selected destination.
+watch(
+  selectedValue,
+  (value) => {
+    const idx = props.items.findIndex(item => item.id === value)
+    if (idx >= 0) rovingIndex.value = idx
+  },
+  { immediate: true },
+)
+
+function focusItem(index: number) {
+  rovingIndex.value = index
+  nextTick(() => {
+    const buttons = navEl.value?.querySelectorAll<HTMLButtonElement>('.ui-navigation-rail-item')
+    buttons?.[index]?.focus()
+  })
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const count = props.items.length
+  if (count === 0) return
+
+  let next = rovingIndex.value
+  switch (event.key) {
+    case 'ArrowDown':
+    case 'ArrowRight':
+      next = (rovingIndex.value + 1) % count
+      break
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      next = (rovingIndex.value - 1 + count) % count
+      break
+    case 'Home':
+      next = 0
+      break
+    case 'End':
+      next = count - 1
+      break
+    default:
+      return
+  }
+
+  event.preventDefault()
+  focusItem(next)
+}
 </script>
 
 <style lang="scss">
@@ -141,9 +187,13 @@ function onSelect(id: string) {
   color: g($t, 'container-text-color');
   transition: width var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
   overflow: hidden;
+
+  // Вложенный в зону случай (m-layout-aside): прижат с учётом прибитых краёв
+  // лейаута; на первом уровне generated-правило движка (#id > [data-m3-zone])
+  // специфичнее и переопределяет это per-item оффсетами
   position: sticky;
-  top: 0;
-  height: 100dvh;
+  top: var(--m3-layout-inset-top, 0);
+  height: calc(100dvh - var(--m3-layout-inset-top, 0px));
   z-index: z(aside);
 
   &__list {

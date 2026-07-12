@@ -1,0 +1,16 @@
+@use 'sass:map';
+@use '../../abstracts/functions' as *;
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  root: (
+    background: map.get($theme-color-link, background),
+    color: map.get($theme-color-link, on-background),
+    min-height: 100dvh,
+  ),
+  overlay: (
+    host: (
+      z-index: 9999,
+    ),
+  ),
+);

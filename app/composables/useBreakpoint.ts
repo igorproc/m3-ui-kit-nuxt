@@ -1,24 +1,16 @@
 import { computed } from 'vue'
 import { useRuntimeConfig } from '#app'
 import { DEFAULT_BREAKPOINTS, type BreakpointKey } from '~~/shared/constants/breakpoints'
+import { resolveBreakpoints } from '~~/shared/utils/resolveBreakpoints'
 
 export function useBreakpoint() {
   const { width } = useSSRWindowSize()
   const runtimeConfig = useRuntimeConfig()
 
-  const customBreakpoints = runtimeConfig.public?.materialKit?.breakpoints || {}
+  const customBreakpoints = (runtimeConfig.public?.materialKit?.breakpoints || {}) as Partial<Record<BreakpointKey, string | number>>
 
-  const breakpoints = computed(() => {
-    const merged = { ...DEFAULT_BREAKPOINTS }
-
-    for (const key in customBreakpoints) {
-      const customValue = customBreakpoints[key as BreakpointKey]
-      if (customValue) {
-        merged[key as BreakpointKey] = Number.parseInt(customValue as string, 10) || DEFAULT_BREAKPOINTS[key as BreakpointKey]
-      }
-    }
-    return merged
-  })
+  // Единый merge с лейаут-движком (createLayout) — shared/utils/resolveBreakpoints
+  const breakpoints = computed(() => resolveBreakpoints(customBreakpoints))
 
   const sortedBreakpoints = computed(() => {
     return Object.entries(breakpoints.value)
@@ -26,7 +18,7 @@ export function useBreakpoint() {
       .sort((a, b) => a.value - b.value)
   })
 
-  const toCamelCase = (str: string) => str.replace(/-([a-z])/g, g => g[1].toUpperCase())
+  const toCamelCase = (str: string) => str.replace(/-([a-z])/g, g => (g[1] ?? '').toUpperCase())
 
   const is = computed(() => {
     const sorted = sortedBreakpoints.value
@@ -35,6 +27,7 @@ export function useBreakpoint() {
 
     for (let i = 0; i < sorted.length; i++) {
       const bp = sorted[i]
+      if (!bp) continue
       const prevBp = sorted[i - 1]
 
       const isGreaterThanPrev = prevBp ? currentWidth > prevBp.value : true

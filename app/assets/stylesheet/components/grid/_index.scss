@@ -1,0 +1,70 @@
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:meta';
+@use '../../abstracts/forward.scss' as *;
+@use '~material-kit-config' as cfg;
+
+// ==========================================
+// GRID SYSTEM (m-container / m-row / m-col)
+// ==========================================
+// SCSS-first: вся адаптивность — статические @media-блоки, сгенерированные из
+// $breakpoints (конфиг $material-kit-breakpoints переопределяет дефолты).
+// Mobile-first: ключ активируется с min-width = его значению; классы больших
+// брейкпоинтов эмитятся позже и выигрывают каскадом при равной специфичности.
+// Пороги строго в px: rem в @media резолвится от initial 16px, а не от
+// fluid-скейла «1rem = 1px».
+
+$max-columns: 12;
+
+// M3 layout defaults: 4 колонки (compact) / 8 (medium) / 12 (expanded+),
+// маржины и гаттеры 16dp (compact) / 24dp (medium+)
+$tokens: (
+  columns: (
+    mobile-xs: 4,
+    tablet-xs: 8,
+    desktop-xs: 12,
+  ),
+  gutter: (
+    mobile-xs: 16rem,
+    tablet-xs: 24rem,
+  ),
+  margin: (
+    mobile-xs: 16rem,
+    tablet-xs: 24rem,
+  ),
+  max-width: (
+    desktop-xs: 1200rem,
+    desktop: 1600rem,
+  ),
+);
+
+// Возрастающий порядок ключей — порядок эмиссии классов (mobile-first каскад)
+$bp-order: mobile-xs, mobile, tablet-xs, tablet, desktop-xs, desktop;
+$grid-breakpoints: map.merge($breakpoints, cfg.$material-kit-breakpoints);
+
+@function bp-min($key) {
+  $value: map.get($grid-breakpoints, $key);
+
+  @if not $value {
+    @error 'Unknown breakpoint key: #{$key}';
+  }
+
+  @if meta.type-of($value) == 'number' and math.is-unitless($value) and $value != 0 {
+    $value: $value * 1px;
+  }
+
+  @return $value;
+}
+
+/// Mobile-first обёртка: порог 0 → стили без медиа, иначе min-width
+@mixin bp-up($key) {
+  $min: bp-min($key);
+
+  @if $min == 0 {
+    @content;
+  } @else {
+    @media only screen and (min-width: $min) {
+      @content;
+    }
+  }
+}

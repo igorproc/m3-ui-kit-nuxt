@@ -1,0 +1,45 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+// Zero-runtime tokens for the MColorPicker family (root + private leaves). The
+// chosen color itself is only ever an inline CSS value/gradient, never a token.
+$tokens: (
+  root: (
+    width: 280rem,
+    gap: 16rem,
+    padding: 16rem,
+    radius: var(--sys-shape-corner-large),
+    surface: map.get($theme-color-link, 'surface-container-high'),
+    color: map.get($theme-color-link, 'on-surface'),
+    elevation: (0 1rem 2rem 0 rgb(0 0 0 / 30%), 0 1rem 3rem 1rem rgb(0 0 0 / 15%)),
+  ),
+  canvas: (
+    height: 160rem,
+    radius: var(--sys-shape-corner-medium),
+    thumb: (size: 14rem, border: map.get($theme-color-link, 'surface')),
+  ),
+  slider: (
+    height: 14rem,
+    radius: var(--sys-shape-corner-full),
+    thumb: (size: 16rem, border: map.get($theme-color-link, 'surface')),
+  ),
+  preview: (
+    size: 40rem,
+    radius: var(--sys-shape-corner-medium),
+    outline: map.get($theme-color-link, 'outline-variant'),
+    value: (color: map.get($theme-color-link, 'on-surface-variant'), type: 'body-small'),
+  ),
+  swatches: (
+    gap: 8rem,
+    size: 24rem,
+    radius: var(--sys-shape-corner-small),
+    outline: map.get($theme-color-link, 'outline-variant'),
+    selected: map.get($theme-color-link, 'primary'),
+  ),
+  // Checkerboard for alpha/transparency, expressed via two gradients.
+  checker: (
+    a: map.get($theme-color-link, 'surface-container-highest'),
+    b: map.get($theme-color-link, 'surface-container-low'),
+    size: 8rem,
+  ),
+);

@@ -7,15 +7,16 @@
 
 $tokens: (
   container: (
+    height: 80rem,
     padding: (
       inline: 12rem,
       block: 8rem,
     ),
     shape: var(--sys-shape-corner-large),
-    color: var(--color-surface),
+    color: map.get($theme-color-link, 'surface'),
     shadow: (0 -2rem 4rem rgb(0 0 0 / 8%), 0 -4rem 8rem rgb(0 0 0 / 10%)),
     text: (
-      color: var(--color-surface-variant-contrast),
+      color: map.get($theme-color-link, 'on-surface-variant'),
     ),
   ),
   item: (
@@ -23,9 +24,9 @@ $tokens: (
     padding: (
       block: 4rem,
     ),
-    color: var(--color-on-surface-variant),
+    color: map.get($theme-color-link, 'on-surface-variant'),
     active: (
-      color: var(--color-primary),
+      color: map.get($theme-color-link, 'primary'),
     ),
     typography: 'label-medium',
   ),

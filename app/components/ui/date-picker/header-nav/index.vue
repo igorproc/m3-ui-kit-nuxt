@@ -63,22 +63,9 @@
 <script setup lang="ts">
 import { ICONS } from '~~/shared/constants/icons'
 import MIcon from '~/components/ui/icon/index.vue'
+import { mDatePickerHeaderNavProps } from './props'
 
-interface Props {
-  headlineLabel: string
-  selectedLabel: string
-  monthYearLabel: string
-  view: 'calendar' | 'year'
-  placeholder?: boolean
-  canGoPrev?: boolean
-  canGoNext?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-  placeholder: false,
-  canGoPrev: true,
-  canGoNext: true,
-})
+defineProps(mDatePickerHeaderNavProps)
 
 const emit = defineEmits<{
   (e: 'toggle' | 'prev' | 'next'): void

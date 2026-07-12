@@ -17,7 +17,7 @@ $tokens: (
     height: 56rem,
   ),
   bg: (
-    color: var(--color-surface-container-highest),
+    color: map.get($theme-color-link, 'surface-container-highest'),
   ),
   text: (
     color: map.get($theme-color-link, 'on-surface'),

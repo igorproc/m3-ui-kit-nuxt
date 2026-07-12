@@ -63,18 +63,9 @@
 import { computed, onScopeDispose, ref } from 'vue'
 import MTimePickerKeyboard from '../keyboard/index.vue'
 import { useGlobalListener } from '~/composables/useGlobalListener'
+import { mTimePickerDialProps } from '../props'
 
-interface Props {
-  label?: string
-  helperText?: string
-  is24h?: boolean
-  layout?: 'vertical' | 'horizontal'
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  is24h: true,
-  layout: 'vertical',
-})
+const props = defineProps(mTimePickerDialProps)
 
 const modelValue = defineModel<string>({ default: '' })
 const keyboardRef = ref<InstanceType<typeof MTimePickerKeyboard> | null>(null)
@@ -165,8 +156,9 @@ function updateTimeFromEvent(e: MouseEvent | TouchEvent) {
   if (!faceRef.value || !keyboardRef.value) return
 
   const rect = faceRef.value.getBoundingClientRect()
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  const touch = 'touches' in e ? e.touches[0] : null
+  const clientX = touch ? touch.clientX : (e as MouseEvent).clientX
+  const clientY = touch ? touch.clientY : (e as MouseEvent).clientY
   const cx = rect.left + rect.width / 2
   const cy = rect.top + rect.height / 2
   const dx = clientX - cx
@@ -231,6 +223,7 @@ function onPointerUp() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/time-picker/dial/_index' as t;
 
 .ui-time-picker-dial {
@@ -275,13 +268,13 @@ function onPointerUp() {
   }
 
   &__label {
-    color: var(--color-on-surface-variant);
+    color: map.get($theme-color-link, 'on-surface-variant');
 
     @include typescale('label-large');
   }
 
   &__helper {
-    color: var(--color-on-surface-variant);
+    color: map.get($theme-color-link, 'on-surface-variant');
 
     @include typescale('body-small');
   }

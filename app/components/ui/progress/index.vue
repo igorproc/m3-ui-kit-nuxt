@@ -1,6 +1,6 @@
 <template>
   <ProgressLinear
-    v-if="variant === 'linear'"
+    v-if="type === 'linear'"
     v-bind="leafProps"
   >
     <slot />
@@ -18,27 +18,9 @@
 import { computed } from 'vue'
 import ProgressLinear from './linear/index.vue'
 import ProgressCircular from './circular/index.vue'
-import type { ProgressSize, ProgressVariant } from '~/composables/progress/useProgress'
+import { mProgressProps } from './props'
 
-interface Props {
-  variant?: ProgressVariant
-  value?: number
-  indeterminate?: boolean
-  size?: ProgressSize
-  showTrack?: boolean
-  ariaLabel?: string
-  expressive?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  variant: 'linear',
-  value: 0,
-  indeterminate: false,
-  size: 'medium',
-  showTrack: true,
-  ariaLabel: 'Progress',
-  expressive: false,
-})
+const props = defineProps(mProgressProps)
 
 const leafProps = computed(() => ({
   value: props.value,

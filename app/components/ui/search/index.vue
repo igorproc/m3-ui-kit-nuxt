@@ -6,11 +6,14 @@
       'ui-search--empty': !modelValue,
     }"
   >
-    <m-icon
-      class="ui-search__icon ui-search__icon--leading"
-      :name="ICONS.search"
-      aria-hidden="true"
-    />
+    <span class="ui-search__icon ui-search__icon--leading">
+      <slot name="leading">
+        <m-icon
+          :name="ICONS.search"
+          aria-hidden="true"
+        />
+      </slot>
+    </span>
 
     <input
       :id="fieldId"
@@ -31,25 +34,18 @@
       aria-label="Clear search"
       @click="onClear"
     >
-      <m-icon :name="ICONS.close" />
+      <slot name="clear">
+        <m-icon :name="ICONS.close" />
+      </slot>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ICONS } from '~~/shared/constants/icons'
+import { mSearchProps } from './props'
 
-interface Props {
-  placeholder?: string
-  ariaLabel?: string
-  disabled?: boolean
-}
-
-withDefaults(defineProps<Props>(), {
-  placeholder: 'Search',
-  ariaLabel: undefined,
-  disabled: false,
-})
+defineProps(mSearchProps)
 
 const modelValue = defineModel<string>({ default: '' })
 
@@ -71,6 +67,7 @@ function onClear() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/search' as t;
 
 .ui-search {
@@ -141,7 +138,7 @@ function onClear() {
       &:hover {
         background-color: color-mix(
           in srgb,
-          var(--color-on-surface) 8%,
+          #{map.get($theme-color-link, 'on-surface')} 8%,
           transparent
         );
       }
@@ -162,7 +159,7 @@ function onClear() {
   &:hover {
     background-color: color-mix(
       in srgb,
-      var(--color-on-surface) 4%,
+      #{map.get($theme-color-link, 'on-surface')} 4%,
       g($t, 'bg-color')
     );
   }

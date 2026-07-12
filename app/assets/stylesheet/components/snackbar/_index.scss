@@ -21,9 +21,9 @@ $tokens: (
       radius: var(--sys-shape-corner-large),
     ),
     bg: (
-      color: var(--color-surface),
+      color: map.get($theme-color-link, 'surface'),
     ),
-    color: var(--color-on-surface),
+    color: map.get($theme-color-link, 'on-surface'),
     shadow: (0 2rem 4rem rgb(0 0 0 / 16%), 0 6rem 12rem rgb(0 0 0 / 12%)),
     gap: 16rem,
   ),
@@ -37,12 +37,12 @@ $tokens: (
     border: (
       radius: var(--sys-shape-corner-small),
     ),
-    color: var(--color-primary),
+    color: map.get($theme-color-link, 'primary'),
     text: (
       type: 'label-large',
     ),
     hover: (
-      bg: color-mix(in srgb, var(--color-primary) 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'primary')} 8%, transparent),
     ),
   ),
 );

@@ -2,7 +2,7 @@
   <div
     ref="rootRef"
     class="ui-fab-menu"
-    :class="[`ui-fab-menu--${size}`, `ui-fab-menu--${align}`]"
+    :class="[`ui-fab-menu--${size}`, `ui-fab-menu--${align}`, `ui-fab-menu--${color}`]"
     :style="{ zIndex: isOpen ? stackTicket.zIndex.value : undefined }"
   >
     <!--
@@ -22,6 +22,7 @@
         class="ui-fab-menu__activator"
         :size="size"
         :color="color"
+        :variant="variant"
         :disabled="disabled"
         @click="toggle"
       >
@@ -94,46 +95,25 @@ import { ref, watch } from 'vue'
 import { useFabMenu } from '~/composables/useFabMenu'
 import { useClickOutside } from '~/composables/useClickOutside'
 import { useStack } from '~/composables/useStack'
+import { mFabMenuProps } from './props'
+import type { MFabMenuItem } from './props'
 
-export interface UiFabMenuItem {
-  label?: string
-  icon?: string
-  value?: string | number
-  action?: () => void
-}
+// Re-exported for backwards compatibility with existing imports.
+export type { MFabMenuItem } from './props'
 
-interface Props {
-  items?: UiFabMenuItem[]
-  size?: 'small' | 'medium' | 'large'
-  color?: 'primary' | 'surface' | 'secondary' | 'tertiary'
-  /** Edge the FAB and its items align to. @default 'right' */
-  align?: 'left' | 'right'
-  openIcon?: string
-  closeIcon?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  items: () => [],
-  size: 'medium',
-  color: 'primary',
-  align: 'right',
-  openIcon: 'asset:ui-test-plus',
-  closeIcon: 'asset:ui-test-close',
-  disabled: false,
-})
+const props = defineProps(mFabMenuProps)
 
 const emit = defineEmits<{
-  (e: 'select', item: UiFabMenuItem): void
+  (e: 'select', item: MFabMenuItem): void
 }>()
 
 const rootRef = ref<HTMLElement | null>(null)
 
-const { isOpen, open, toggle, close, select } = useFabMenu<UiFabMenuItem>({
+const { isOpen, open, toggle, close, select } = useFabMenu<MFabMenuItem>({
   disabled: () => props.disabled,
 })
 
-const selectItem = (item: UiFabMenuItem) => select(item, emit)
+const selectItem = (item: MFabMenuItem) => select(item, emit)
 
 // Lift the whole cluster above sticky/fixed page chrome while open (no teleport
 // needed for the canonical free-floating FAB — a high z-index clears headers).
@@ -253,8 +233,6 @@ useClickOutside(rootRef, () => close())
     align-items: center;
     justify-content: space-between;
     gap: g($t, 'item-gap');
-    background-color: g($t, 'item-bg-color');
-    color: g($t, 'item-text-color');
     border: none;
     border-radius: g($t, 'item-border-radius');
     padding: g($t, 'item-padding');
@@ -267,7 +245,7 @@ useClickOutside(rootRef, () => close())
     // cut; the reveal animates the LEFT edge in from 100% (unfolds from right).
     clip-path: inset(-40rem -40rem -40rem -40rem);
 
-    @include typescale(g($t, 'item-text-type'));
+    @include typescale(g($t, 'item-type'));
 
     &-icon {
       font-size: g($t, 'item-icon-size');
@@ -302,13 +280,27 @@ useClickOutside(rootRef, () => close())
       }
     }
 
-    &:hover {
-      background-color: color-mix(in srgb, var(--color-on-surface) 8%, #{g($t, 'item-bg-color')});
-    }
+  }
 
-    &:active {
-      background-color: color-mix(in srgb, var(--color-on-surface) 12%, #{g($t, 'item-bg-color')});
+  // Drawer-item pill scheme per MD3 color role.
+  @mixin apply-item-scheme($scheme) {
+    .ui-fab-menu__item {
+      background-color: g($t, 'item-scheme-#{$scheme}-bg-color');
+      color: g($t, 'item-scheme-#{$scheme}-text-color');
+
+      &:hover {
+        background-color: g($t, 'item-scheme-#{$scheme}-hover-color');
+      }
+
+      &:active {
+        background-color: g($t, 'item-scheme-#{$scheme}-pressed-color');
+      }
     }
   }
+
+  &--primary { @include apply-item-scheme('primary'); }
+  &--secondary { @include apply-item-scheme('secondary'); }
+  &--tertiary { @include apply-item-scheme('tertiary'); }
+  &--error { @include apply-item-scheme('error'); }
 }
 </style>

@@ -19,7 +19,7 @@ export default defineNuxtModule<MaterialKitOptions>({
     cookie: {
       theme: {
         definition: COOKIE_THEME_KEYS.DEFINITION,
-        pallete: COOKIE_THEME_KEYS.PALETTE,
+        palette: COOKIE_THEME_KEYS.PALETTE,
         contrast: COOKIE_THEME_KEYS.CONTRAST,
       },
     },
@@ -85,13 +85,13 @@ ${breakpointsScss}
           continue
         }
 
-        generatedThemesScss += `[data-definition="light"][data-pallet="${theme.key}"] {\n`
+        generatedThemesScss += `[data-definition="light"][data-palette="${theme.key}"] {\n`
         for (const [token, hex] of Object.entries(getTokens(scheme.light))) {
           generatedThemesScss += `  --md-sys-color-${token}: ${hex};\n`
         }
         generatedThemesScss += `}\n\n`
 
-        generatedThemesScss += `[data-definition="dark"][data-pallet="${theme.key}"] {\n`
+        generatedThemesScss += `[data-definition="dark"][data-palette="${theme.key}"] {\n`
         for (const [token, hex] of Object.entries(getTokens(scheme.dark))) {
           generatedThemesScss += `  --md-sys-color-${token}: ${hex};\n`
         }

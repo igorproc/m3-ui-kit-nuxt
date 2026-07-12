@@ -41,18 +41,9 @@ import { ICONS } from '~~/shared/constants/icons'
 // Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
 // would otherwise shadow the kit composable and break the `{ path, model }` call.
 import { useField } from '~/composables/useField'
+import { mCheckboxProps } from './props'
 
-interface Props {
-  path?: string
-  label?: string
-  disabled?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: undefined,
-  label: undefined,
-  disabled: false,
-})
+const props = defineProps(mCheckboxProps)
 
 const modelValue = defineModel<boolean>({ default: false })
 
@@ -79,6 +70,7 @@ const checkboxClasses = computed(() => [
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/checkbox/index' as t;
 
 .ui-checkbox {
@@ -89,7 +81,7 @@ const checkboxClasses = computed(() => [
   align-items: center;
   gap: g($t, 'container-gap');
   cursor: pointer;
-  color: var(--color-on-surface);
+  color: map.get($theme-color-link, 'on-surface');
 
   &__input {
     position: absolute;
@@ -133,7 +125,7 @@ const checkboxClasses = computed(() => [
     height: g($t, 'container-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: map.get($theme-color-link, 'on-surface');
     opacity: 0;
     pointer-events: none;
     transition:

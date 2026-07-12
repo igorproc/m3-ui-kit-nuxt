@@ -40,25 +40,12 @@ import { onScopeDispose } from 'vue'
 import { useField } from 'vee-validate'
 import { useRadioGroupContext } from '~/composables/radio/useRadioGroup'
 import type { SingleTicket } from '~/composables/registry/createSingle'
+import { mRadioProps } from './props'
+import type { MRadioValue } from './props'
 
-type RadioValue = string | number
+const props = defineProps(mRadioProps)
 
-interface Props {
-  name?: string
-  value: RadioValue
-  label?: string
-  disabled?: boolean
-  path?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  name: undefined,
-  label: undefined,
-  disabled: false,
-  path: undefined,
-})
-
-const modelValue = defineModel<RadioValue | undefined>({ default: undefined })
+const modelValue = defineModel<MRadioValue | undefined>({ default: undefined })
 
 const fieldId = useId()
 
@@ -67,7 +54,7 @@ const errorMessage = ref<string | undefined>()
 const group = useRadioGroupContext()
 
 // Grouped mode registers a ticket; standalone mode leaves this `null`.
-let ticket: SingleTicket<{ value: RadioValue, disabled?: boolean }> | null = null
+let ticket: SingleTicket | null = null
 
 if (group) {
   ticket = group.register({
@@ -118,7 +105,7 @@ function onChange() {
 
 // --- Standalone vee-validate path (form-renderer relies on this) ------------
 if (!group && props.path) {
-  const field = useField<RadioValue>(() => props.path as string, undefined)
+  const field = useField<MRadioValue>(() => props.path as string, undefined)
   const { value, errorMessage: fieldError } = field
 
   watch(
@@ -130,7 +117,7 @@ if (!group && props.path) {
   )
 
   watch(modelValue, (next) => {
-    value.value = next as RadioValue
+    value.value = next as MRadioValue
   })
 
   watch(
@@ -144,6 +131,7 @@ if (!group && props.path) {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/radio/index' as t;
 
 .ui-radio {
@@ -154,7 +142,7 @@ if (!group && props.path) {
   align-items: center;
   gap: g($t, 'container-gap');
   cursor: pointer;
-  color: var(--color-on-surface);
+  color: map.get($theme-color-link, 'on-surface');
 
   &__input {
     position: absolute;
@@ -190,7 +178,7 @@ if (!group && props.path) {
     height: g($t, 'container-size');
     transform: translate(-50%, -50%) scale(0.6);
     border-radius: var(--sys-shape-corner-full);
-    background-color: var(--color-on-surface);
+    background-color: map.get($theme-color-link, 'on-surface');
     opacity: 0;
     pointer-events: none;
     transition:

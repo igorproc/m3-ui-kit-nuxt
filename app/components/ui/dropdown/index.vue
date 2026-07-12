@@ -55,41 +55,20 @@
   </div>
 </template>
 
-<script setup lang="ts" generic="T extends DropdownItem">
-import { computed, ref, watch } from 'vue'
-import type { UiMenuOrigin } from '~/components/ui/menu/types'
+<script setup lang="ts">
+import { computed, nextTick, ref, shallowRef, watch } from 'vue'
+import type { Ref } from 'vue'
 import { createSingle } from '~/composables/registry/createSingle'
 import { createGroup } from '~/composables/registry/createGroup'
 import { provideDropdownContext } from './context'
-import type { DropdownContext, DropdownEntry, DropdownItem, DropdownOption } from './types'
+import type { DropdownContext, DropdownEntry, DropdownItem, DropdownOption, DropdownOptionTicket } from './types'
+import { mDropdownProps } from './props'
 import DropdownTrigger from './trigger/index.vue'
 import DropdownPanel from './panel/index.vue'
 import DropdownOptionRow from './option/index.vue'
 import DropdownSelectedChips from './selected-chips/index.vue'
 
-interface Props {
-  path?: string
-  label?: string
-  placeholder?: string
-  options?: DropdownOption[]
-  items?: T[]
-  disabled?: boolean
-  variant?: 'filled' | 'outlined'
-  menuOrigin?: UiMenuOrigin
-  multiple?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  path: '',
-  label: '',
-  placeholder: '',
-  options: () => [],
-  items: () => [],
-  disabled: false,
-  variant: 'filled',
-  menuOrigin: 'top left',
-  multiple: false,
-})
+const props = defineProps(mDropdownProps)
 
 const modelValue = defineModel<unknown>()
 const isOpen = ref(false)
@@ -217,6 +196,136 @@ function isSelected(entry: DropdownEntry | unknown): boolean {
   return single!.selectedValue.value === val
 }
 
+function open() {
+  if (props.disabled) return
+  isOpen.value = true
+}
+
+// --- Combobox/listbox keyboard navigation ---------------------------------
+// Options register themselves (in DOM order) so the orchestrator can move a
+// virtual focus (`aria-activedescendant`) through them while real focus stays
+// on the combobox trigger.
+const listboxId = useId() as string
+const triggerEl = ref<HTMLElement | null>(null)
+
+interface OptionEntry {
+  id: string
+  entry: DropdownEntry
+  el: Ref<HTMLElement | null>
+}
+
+// `shallowRef` (not `ref`): the array holds option records whose `el` is itself
+// a `Ref`; a deep `ref` would unwrap that nested ref. Mutations reassign the
+// array to trigger reactivity.
+const optionEntries = shallowRef<OptionEntry[]>([])
+const activeIndex = ref(-1)
+
+const activeDescendant = computed(() =>
+  activeIndex.value >= 0 ? optionEntries.value[activeIndex.value]?.id : undefined)
+
+function setTriggerEl(el: HTMLElement | null) {
+  triggerEl.value = el
+}
+
+function registerOption(entry: DropdownEntry, el: Ref<HTMLElement | null>): DropdownOptionTicket {
+  const id = `${listboxId}-opt-${optionEntries.value.length}-${useId()}`
+  const record: OptionEntry = { id, entry, el }
+  optionEntries.value = [...optionEntries.value, record]
+
+  const isActive = computed(() => activeDescendant.value === id)
+
+  return {
+    id,
+    isActive,
+    unregister: () => {
+      optionEntries.value = optionEntries.value.filter(o => o !== record)
+    },
+  }
+}
+
+function moveActive(target: 'next' | 'prev' | 'first' | 'last') {
+  const count = optionEntries.value.length
+  if (count === 0) return
+
+  let next: number
+  if (target === 'first') next = 0
+  else if (target === 'last') next = count - 1
+  else if (target === 'next') next = activeIndex.value < 0 ? 0 : (activeIndex.value + 1) % count
+  else next = activeIndex.value <= 0 ? count - 1 : activeIndex.value - 1
+
+  activeIndex.value = next
+  nextTick(() => {
+    optionEntries.value[next]?.el.value?.scrollIntoView({ block: 'nearest' })
+  })
+}
+
+function selectActive() {
+  const record = optionEntries.value[activeIndex.value]
+  if (record) select(record.entry)
+}
+
+function focusTrigger() {
+  nextTick(() => triggerEl.value?.focus())
+}
+
+// Reset the virtual focus to the selected option (or top) whenever the popover
+// opens; clear it on close.
+watch(isOpen, (openState) => {
+  if (!openState) {
+    activeIndex.value = -1
+    return
+  }
+  nextTick(() => {
+    const selectedIdx = optionEntries.value.findIndex(o => isSelected(o.entry))
+    activeIndex.value = selectedIdx >= 0 ? selectedIdx : (optionEntries.value.length ? 0 : -1)
+  })
+})
+
+function onTriggerKeydown(event: KeyboardEvent) {
+  if (props.disabled) return
+
+  if (!isOpen.value) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      open()
+    }
+    return
+  }
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault()
+      moveActive('next')
+      break
+    case 'ArrowUp':
+      event.preventDefault()
+      moveActive('prev')
+      break
+    case 'Home':
+      event.preventDefault()
+      moveActive('first')
+      break
+    case 'End':
+      event.preventDefault()
+      moveActive('last')
+      break
+    case 'Enter':
+    case ' ':
+      event.preventDefault()
+      selectActive()
+      if (!props.multiple) focusTrigger()
+      break
+    case 'Escape':
+      event.preventDefault()
+      close()
+      focusTrigger()
+      break
+    case 'Tab':
+      close()
+      break
+  }
+}
+
 provideDropdownContext({
   multiple: computed(() => props.multiple),
   disabled: computed(() => props.disabled),
@@ -231,6 +340,12 @@ provideDropdownContext({
   select,
   remove,
   isSelected,
+  listboxId,
+  activeDescendant,
+  registerOption,
+  open,
+  onTriggerKeydown,
+  setTriggerEl,
 } satisfies DropdownContext)
 </script>
 

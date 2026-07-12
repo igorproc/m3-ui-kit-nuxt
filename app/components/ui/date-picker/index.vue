@@ -62,18 +62,9 @@ import DatePickerHeaderNav from './header-nav/index.vue'
 import DatePickerDayGrid from './day-grid/index.vue'
 import DatePickerYearGrid from './year-grid/index.vue'
 import MButton from '~/components/ui/button/index.vue'
+import { mDatePickerProps } from './props'
 
-interface Props {
-  headline?: string
-  minDate?: Date | string | number
-  maxDate?: Date | string | number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  headline: 'Select date',
-  minDate: undefined,
-  maxDate: undefined,
-})
+const props = defineProps(mDatePickerProps)
 
 const emit = defineEmits(['update:modelValue', 'cancel', 'confirm'])
 const modelValue = defineModel<Date | string | number | null>({ default: null })
@@ -115,6 +106,7 @@ function confirm() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/date-picker/docked' as t;
 
 .ui-date-picker {
@@ -336,7 +328,7 @@ function confirm() {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: var(--color-outline-variant);
+      background: map.get($theme-color-link, 'outline-variant');
       border-radius: 4rem;
     }
   }

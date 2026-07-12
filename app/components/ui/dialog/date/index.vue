@@ -8,6 +8,7 @@
     content-transition="vfm-fade"
     :click-to-close="clickToClose"
     :esc-to-close="escToClose"
+    :aria-labelledby="headlineId"
     @before-open="onBeforeOpen"
   >
     <div
@@ -18,7 +19,10 @@
       <header class="ui-date-dialog__header">
         <div class="ui-date-dialog__header-main">
           <div class="ui-date-dialog__headline">
-            <p class="ui-date-dialog__headline-label">
+            <p
+              :id="headlineId"
+              class="ui-date-dialog__headline-label"
+            >
               {{ headlineLabel }}
             </p>
             <p
@@ -90,7 +94,7 @@
           >
             {{ currentMonthYearLabel }}
             <m-icon
-              :name="view === 'calendar' ? ICONS.arrowDropDown : ICONS.arrowDropUp"
+              :name="ICONS.arrowDropUp"
               class="ui-date-dialog__view-toggle-icon"
             />
           </button>
@@ -121,25 +125,44 @@
                 </span>
               </div>
 
-              <div class="ui-date-dialog__grid">
-                <button
-                  v-for="day in days"
-                  :key="day.key"
-                  type="button"
-                  class="ui-date-dialog__day"
-                  :class="{
-                    'ui-date-dialog__day--outside': !day.inCurrentMonth,
-                    'ui-date-dialog__day--today': day.isToday,
-                    'ui-date-dialog__day--selected': day.isSelected,
-                  }"
-                  :aria-label="day.ariaLabel"
-                  @click="onSelect(day.date)"
+              <div
+                ref="dayGridEl"
+                class="ui-date-dialog__grid"
+                role="grid"
+                @keydown="onDayGridKeydown"
+              >
+                <div
+                  v-for="(week, wIdx) in dayWeeks"
+                  :key="`week-${wIdx}`"
+                  class="ui-date-dialog__week"
+                  role="row"
                 >
-                  <span class="ui-date-dialog__day-state" />
-                  <span class="ui-date-dialog__day-label">
-                    {{ day.label }}
-                  </span>
-                </button>
+                  <div
+                    v-for="(day, dIdx) in week"
+                    :key="day.key"
+                    role="gridcell"
+                    :aria-selected="day.isSelected"
+                  >
+                    <button
+                      type="button"
+                      class="ui-date-dialog__day"
+                      :class="{
+                        'ui-date-dialog__day--outside': !day.inCurrentMonth,
+                        'ui-date-dialog__day--today': day.isToday,
+                        'ui-date-dialog__day--selected': day.isSelected,
+                      }"
+                      :aria-label="day.ariaLabel"
+                      :tabindex="isActiveDay(wIdx, dIdx) ? 0 : -1"
+                      @click="onSelect(day.date)"
+                      @focus="activeDay = [wIdx, dIdx]"
+                    >
+                      <span class="ui-date-dialog__day-state" />
+                      <span class="ui-date-dialog__day-label">
+                        {{ day.label }}
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -149,22 +172,38 @@
               key="year"
               ref="yearGrid"
               class="ui-date-dialog__year-grid"
+              role="grid"
+              @keydown="onYearGridKeydown"
             >
-              <button
-                v-for="year in years"
-                :key="year"
-                type="button"
-                class="ui-date-dialog__year"
-                :class="{
-                  'ui-date-dialog__year--selected': year === displayDate.year(),
-                  'ui-date-dialog__year--current': year === today.year(),
-                }"
-                @click="onSelectYear(year)"
+              <div
+                v-for="(row, rIdx) in yearRows"
+                :key="`year-row-${rIdx}`"
+                class="ui-date-dialog__year-row"
+                role="row"
               >
-                <span class="ui-date-dialog__year-label">
-                  {{ year }}
-                </span>
-              </button>
+                <div
+                  v-for="(year, cIdx) in row"
+                  :key="year"
+                  role="gridcell"
+                  :aria-selected="year === displayDate.year()"
+                >
+                  <button
+                    type="button"
+                    class="ui-date-dialog__year"
+                    :class="{
+                      'ui-date-dialog__year--selected': year === displayDate.year(),
+                      'ui-date-dialog__year--current': year === today.year(),
+                    }"
+                    :tabindex="isActiveYear(rIdx, cIdx) ? 0 : -1"
+                    @click="onSelectYear(year)"
+                    @focus="activeYear = [rIdx, cIdx]"
+                  >
+                    <span class="ui-date-dialog__year-label">
+                      {{ year }}
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
           </transition>
         </template>
@@ -204,8 +243,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, nextTick } from 'vue'
 import type { ComputedRef } from 'vue'
+import type { DayCell } from '~/composables/date'
 import { VueFinalModal } from 'vue-final-modal'
 import { ICONS } from '../../../../../shared/constants/icons'
 import { useDatePicker } from '../../../../composables/date'
@@ -232,6 +272,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const modelValue = defineModel<boolean>('modelValue', { default: false })
+
+// Accessible name for the dialog root (vue-final-modal supplies role="dialog"
+// + aria-modal="true"; this points it at the headline label).
+const headlineId = useId()
 
 const emit = defineEmits<{
   (e: 'cancel'): void
@@ -277,6 +321,130 @@ const {
 
 const headlineLabel = computed(() => props.headline)
 
+// --- Grid roving focus (calendar days + decade years) ---------------------
+const dayGridEl = ref<HTMLElement | null>(null)
+const activeDay = ref<[number, number]>([0, 0])
+const activeYear = ref<[number, number]>([0, 0])
+const YEAR_COLS = 3
+
+const dayWeeks = computed<DayCell[][]>(() => {
+  const out: DayCell[][] = []
+  for (let i = 0; i < days.value.length; i += 7) out.push(days.value.slice(i, i + 7))
+  return out
+})
+
+const yearRows = computed<number[][]>(() => {
+  const out: number[][] = []
+  for (let i = 0; i < years.value.length; i += YEAR_COLS) out.push(years.value.slice(i, i + YEAR_COLS))
+  return out
+})
+
+watch(dayWeeks, () => {
+  let found: [number, number] | null = null
+  for (let r = 0; r < dayWeeks.value.length && !found; r++) {
+    const row = dayWeeks.value[r]
+    if (!row) continue
+    for (let c = 0; c < row.length; c++) {
+      if (row[c]?.isSelected || row[c]?.isToday) {
+        found = [r, c]
+        break
+      }
+    }
+  }
+  activeDay.value = found ?? [0, 0]
+}, { immediate: true })
+
+watch([yearRows, displayDate], () => {
+  let found: [number, number] | null = null
+  for (let r = 0; r < yearRows.value.length && !found; r++) {
+    const row = yearRows.value[r]
+    if (!row) continue
+    const c = row.indexOf(displayDate.value.year())
+    if (c >= 0) found = [r, c]
+  }
+  activeYear.value = found ?? [0, 0]
+}, { immediate: true })
+
+const isActiveDay = (row: number, col: number) =>
+  activeDay.value[0] === row && activeDay.value[1] === col
+const isActiveYear = (row: number, col: number) =>
+  activeYear.value[0] === row && activeYear.value[1] === col
+
+function moveGrid(
+  event: KeyboardEvent,
+  rowsRef: number[][] | DayCell[][],
+  active: [number, number],
+): [number, number] | null {
+  const rowCount = rowsRef.length
+  if (rowCount === 0) return null
+
+  let [r, c] = active
+  const rowLen = (idx: number) => rowsRef[idx]?.length ?? 1
+  const lastColInRow = rowLen(r) - 1
+
+  switch (event.key) {
+    case 'ArrowRight':
+      if (c < lastColInRow) {
+        c++
+      } else if (r < rowCount - 1) {
+        r++
+        c = 0
+      }
+      break
+    case 'ArrowLeft':
+      if (c > 0) {
+        c--
+      } else if (r > 0) {
+        r--
+        c = rowLen(r) - 1
+      }
+      break
+    case 'ArrowDown':
+      if (r < rowCount - 1) {
+        r++
+        c = Math.min(c, rowLen(r) - 1)
+      }
+      break
+    case 'ArrowUp':
+      if (r > 0) {
+        r--
+        c = Math.min(c, rowLen(r) - 1)
+      }
+      break
+    case 'Home':
+      c = 0
+      break
+    case 'End':
+      c = lastColInRow
+      break
+    default:
+      return null
+  }
+
+  event.preventDefault()
+  return [r, c]
+}
+
+function onDayGridKeydown(event: KeyboardEvent) {
+  const next = moveGrid(event, dayWeeks.value, activeDay.value)
+  if (!next) return
+  activeDay.value = next
+  nextTick(() => {
+    const buttons = dayGridEl.value?.querySelectorAll<HTMLButtonElement>('.ui-date-dialog__day')
+    buttons?.[next[0] * 7 + next[1]]?.focus()
+  })
+}
+
+function onYearGridKeydown(event: KeyboardEvent) {
+  const next = moveGrid(event, yearRows.value, activeYear.value)
+  if (!next) return
+  activeYear.value = next
+  nextTick(() => {
+    const buttons = yearGrid.value?.querySelectorAll<HTMLButtonElement>('.ui-date-dialog__year')
+    buttons?.[next[0] * YEAR_COLS + next[1]]?.focus()
+  })
+}
+
 const formattedHeaderDate = computed(() => {
   if (!localDate.value) return 'Select date'
   return dayjs(localDate.value).format('ddd, MMM D')
@@ -315,9 +483,9 @@ function onTextInput(val: string) {
     return
   }
 
-  const d = Number.parseInt(parts[0], 10)
-  const m = Number.parseInt(parts[1], 10)
-  const y = Number.parseInt(parts[2], 10)
+  const d = Number.parseInt(parts[0] ?? '', 10)
+  const m = Number.parseInt(parts[1] ?? '', 10)
+  const y = Number.parseInt(parts[2] ?? '', 10)
 
   if (Number.isNaN(d) || Number.isNaN(m) || Number.isNaN(y)) {
     inputError.value = 'Invalid date format'
@@ -350,6 +518,7 @@ function onConfirm() {
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '~/assets/stylesheet/components/date-picker/modal-picker' as mp;
 @use '~/assets/stylesheet/components/date-picker/modal-input' as mi;
 
@@ -361,7 +530,7 @@ function onConfirm() {
   justify-content: center;
   align-items: center;
   z-index: z('dialog');
-  background-color: var(--color-scrim);
+  background-color: map.get($theme-color-link, 'scrim');
   opacity: 1;
 }
 
@@ -523,6 +692,15 @@ function onConfirm() {
     row-gap: 4rem;
   }
 
+  // Row + gridcell wrappers carry ARIA structure only; `display: contents`
+  // keeps the day/year buttons as the actual grid items (unchanged layout).
+  &__week,
+  &__year-row,
+  &__grid [role='gridcell'],
+  &__year-grid [role='gridcell'] {
+    display: contents;
+  }
+
   &__day {
     position: relative;
     height: g($t-mp, 'day-size');
@@ -601,7 +779,7 @@ function onConfirm() {
     }
 
     &::-webkit-scrollbar-thumb {
-      background: var(--color-outline-variant);
+      background: map.get($theme-color-link, 'outline-variant');
       border-radius: 4rem;
     }
   }

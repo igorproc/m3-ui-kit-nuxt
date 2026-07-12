@@ -13,13 +13,9 @@
 
 <script setup lang="ts">
 import { useTabsContext } from '~/composables/tabs/useTabs'
-import type { TabValue } from '~/composables/tabs/useTabs'
+import type { MTabPanelProps } from './props'
 
-interface Props {
-  value: TabValue
-}
-
-const props = defineProps<Props>()
+const props = defineProps<MTabPanelProps>()
 
 const ctx = useTabsContext()
 

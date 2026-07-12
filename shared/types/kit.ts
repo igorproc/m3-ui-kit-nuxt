@@ -14,7 +14,7 @@ export type TTheme = ITheme | IThemeWithPreset
 export interface ICookie {
   theme: {
     definition: string
-    pallete: string
+    palette: string
     contrast: string
   }
 }

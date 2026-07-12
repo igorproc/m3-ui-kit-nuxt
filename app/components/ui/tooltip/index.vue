@@ -9,6 +9,7 @@
     <span
       ref="triggerRef"
       class="ui-tooltip__trigger"
+      :aria-describedby="visible ? tooltipId : undefined"
     >
       <slot />
     </span>
@@ -17,6 +18,7 @@
       <transition name="ui-tooltip-fade">
         <span
           v-if="visible"
+          :id="tooltipId"
           ref="tooltipRef"
           class="ui-tooltip__content"
           role="tooltip"
@@ -32,18 +34,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, useId } from 'vue'
 import { useStack } from '~/composables/useStack'
 import { useGlobalListener } from '~/composables/useGlobalListener'
+import { mTooltipProps } from './props'
 
-interface Props {
-  text?: string
-}
+defineProps(mTooltipProps)
 
-withDefaults(defineProps<Props>(), {
-  text: '',
-})
-
+const tooltipId = useId()
 const visible = ref(false)
 const triggerRef = ref<HTMLElement | null>(null)
 const tooltipRef = ref<HTMLElement | null>(null)
@@ -94,9 +92,15 @@ function onLeave() {
   ticket.unselect()
 }
 
+// Esc dismisses the tooltip (APG tooltip pattern) without moving focus.
+function onKeydown(event: Event) {
+  if ((event as KeyboardEvent).key === 'Escape' && visible.value) onLeave()
+}
+
 // Reactively reposition tooltip on scroll/resize when visible
 useGlobalListener('window', 'scroll', updatePosition, { capture: true, passive: true })
 useGlobalListener('window', 'resize', updatePosition, { passive: true })
+useGlobalListener('window', 'keydown', onKeydown)
 </script>
 
 <style lang="scss">

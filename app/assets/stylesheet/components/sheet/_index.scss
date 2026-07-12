@@ -16,7 +16,7 @@ $tokens: (
     radius: var(--sys-shape-corner-extra-large-top),
   ),
   bg: (
-    color: var(--color-sheet-surface),
+    color: map.get($theme-color-link, 'surface-container-high'),
   ),
   shadow: (0 -4rem 8rem 3rem rgb(0 0 0 / 15%), 0 -1rem 3rem rgb(0 0 0 / 30%)),
   container: (
@@ -28,7 +28,7 @@ $tokens: (
       width: 32rem,
       height: 4rem,
       radius: 999rem,
-      color: var(--color-outline-variant),
+      color: map.get($theme-color-link, 'outline-variant'),
       margin: (
         bottom: 8rem,
       ),
@@ -36,7 +36,7 @@ $tokens: (
   ),
   content: (
     gap: 16rem,
-    color: var(--color-on-surface),
+    color: map.get($theme-color-link, 'on-surface'),
   ),
   motion: (
     enter: (

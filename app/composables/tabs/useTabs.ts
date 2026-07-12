@@ -9,13 +9,13 @@
  */
 import type { ComputedRef, Ref } from 'vue'
 import { createContext } from '~~/shared/utils/createContext'
-import type { SingleContext } from '~/composables/registry/createSingle'
+import type { SingleContext, SingleTicket, SingleTicketInput } from '~/composables/registry/createSingle'
 
 export type TabValue = string | number
 
 export interface TabsContext {
   /** Register a tab ticket in the single-selection instance. */
-  register: SingleContext['register']
+  register(ticket?: Partial<SingleTicketInput<TabValue>>): SingleTicket<SingleTicketInput<TabValue>>
   /** Unregister a tab ticket by id. */
   unregister: SingleContext['unregister']
   /** Select a ticket by id. */

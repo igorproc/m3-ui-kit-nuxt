@@ -26,24 +26,40 @@ $z-indexes: (
 $theme-color-link: (
   // Primary
   'primary': var(--md-sys-color-primary),
+  'primary-dim': var(--md-sys-color-primary-dim),
   'on-primary': var(--md-sys-color-on-primary),
   'primary-container': var(--md-sys-color-primary-container),
   'on-primary-container': var(--md-sys-color-on-primary-container),
+  'primary-fixed': var(--md-sys-color-primary-fixed),
+  'primary-fixed-dim': var(--md-sys-color-primary-fixed-dim),
+  'on-primary-fixed': var(--md-sys-color-on-primary-fixed),
+  'on-primary-fixed-variant': var(--md-sys-color-on-primary-fixed-variant),
 
   // Secondary
   'secondary': var(--md-sys-color-secondary),
+  'secondary-dim': var(--md-sys-color-secondary-dim),
   'on-secondary': var(--md-sys-color-on-secondary),
   'secondary-container': var(--md-sys-color-secondary-container),
   'on-secondary-container': var(--md-sys-color-on-secondary-container),
+  'secondary-fixed': var(--md-sys-color-secondary-fixed),
+  'secondary-fixed-dim': var(--md-sys-color-secondary-fixed-dim),
+  'on-secondary-fixed': var(--md-sys-color-on-secondary-fixed),
+  'on-secondary-fixed-variant': var(--md-sys-color-on-secondary-fixed-variant),
 
   // Tertiary
   'tertiary': var(--md-sys-color-tertiary),
+  'tertiary-dim': var(--md-sys-color-tertiary-dim),
   'on-tertiary': var(--md-sys-color-on-tertiary),
   'tertiary-container': var(--md-sys-color-tertiary-container),
   'on-tertiary-container': var(--md-sys-color-on-tertiary-container),
+  'tertiary-fixed': var(--md-sys-color-tertiary-fixed),
+  'tertiary-fixed-dim': var(--md-sys-color-tertiary-fixed-dim),
+  'on-tertiary-fixed': var(--md-sys-color-on-tertiary-fixed),
+  'on-tertiary-fixed-variant': var(--md-sys-color-on-tertiary-fixed-variant),
 
   // Error
   'error': var(--md-sys-color-error),
+  'error-dim': var(--md-sys-color-error-dim),
   'on-error': var(--md-sys-color-on-error),
   'error-container': var(--md-sys-color-error-container),
   'on-error-container': var(--md-sys-color-on-error-container),
@@ -55,6 +71,13 @@ $theme-color-link: (
   'on-surface': var(--md-sys-color-on-surface),
   'surface-variant': var(--md-sys-color-surface-variant),
   'on-surface-variant': var(--md-sys-color-on-surface-variant),
+  'surface-dim': var(--md-sys-color-surface-dim),
+  'surface-bright': var(--md-sys-color-surface-bright),
+  'surface-container-lowest': var(--md-sys-color-surface-container-lowest),
+  'surface-container-low': var(--md-sys-color-surface-container-low),
+  'surface-container': var(--md-sys-color-surface-container),
+  'surface-container-high': var(--md-sys-color-surface-container-high),
+  'surface-container-highest': var(--md-sys-color-surface-container-highest),
 
   // Outlines & Utility
   'outline': var(--md-sys-color-outline),

@@ -13,7 +13,7 @@
     <span class="ui-navigation-rail-item__icon-wrapper">
       <m-icon
         class="ui-navigation-rail-item__icon"
-        :name="icon"
+        :name="icon ?? ''"
         aria-hidden="true"
       />
 
@@ -31,19 +31,9 @@
 </template>
 
 <script setup lang="ts">
-interface Props {
-  active?: boolean
-  expanded?: boolean
-  icon: string
-  label: string
-  badge?: number
-}
+import { mNavigationRailItemProps } from './props'
 
-withDefaults(defineProps<Props>(), {
-  active: false,
-  expanded: false,
-  badge: 0,
-})
+defineProps(mNavigationRailItemProps)
 
 defineEmits<{
   (e: 'select'): void
