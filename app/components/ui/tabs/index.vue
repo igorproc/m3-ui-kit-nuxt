@@ -12,6 +12,7 @@
         :label="item.label"
         :icon="item.icon"
         :disabled="item.disabled"
+        :to="item.to"
       />
 
       <slot name="tabs" />

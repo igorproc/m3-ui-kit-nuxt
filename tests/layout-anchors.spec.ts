@@ -6,6 +6,7 @@ import MLayoutHeader from '../app/components/ui/layout/header.vue'
 import MLayoutAside from '../app/components/ui/layout/aside.vue'
 import MLayoutMain from '../app/components/ui/layout/main.vue'
 import MAppBar from '../app/components/ui/app-bar/index.vue'
+import MNavigationRail from '../app/components/ui/navigation-rail/index.vue'
 import { useLayoutZone } from '../app/composables/useLayout'
 
 // useHead в тестовой среде не пишет в document.head, поэтому генерацию CSS
@@ -165,6 +166,26 @@ describe('multi-instance zones & sticky anchors', () => {
     expect(probeItems(wrapper)).toEqual([
       { kind: 'start', size: 'var(--w)', sticky: true },
       { kind: 'end', size: 'var(--w2)', sticky: false },
+      { kind: 'main', size: null, sticky: false },
+    ])
+  })
+
+  it('navigation rail contributes width and drops viewport anchoring inside an aside zone', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      render: () => h(MLayout, () => [
+        h(MLayoutAside, { sticky: true }, () => h(MNavigationRail, {
+          items: [{ id: 'home', icon: 'home', label: 'Home' }],
+        })),
+        h(MLayoutMain, () => h(Probe)),
+      ]),
+    }))
+
+    const rail = wrapper.find('.ui-navigation-rail')
+
+    expect(rail.classes()).toContain('ui-navigation-rail--hosted')
+    expect(rail.attributes('data-m3-zone')).toBeUndefined()
+    expect(probeItems(wrapper)).toEqual([
+      { kind: 'start', size: 'var(--ui-navigation-rail-width)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })

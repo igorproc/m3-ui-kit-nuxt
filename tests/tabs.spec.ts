@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import MTabs from '../app/components/ui/tabs/index.vue'
 import MTabPanel from '../app/components/ui/tabs/panel/index.vue'
 
@@ -52,6 +53,34 @@ describe('m-tabs', () => {
     const events = wrapper.emitted('update:modelValue')
     expect(events).toBeTruthy()
     expect(events!.at(-1)).toEqual(['two'])
+  })
+
+  it('renders route-backed items as Nuxt links', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/components/button/overview', component: { template: '<div />' } },
+        { path: '/components/button/reference', component: { template: '<div />' } },
+      ],
+    })
+    await router.push('/components/button/overview')
+    await router.isReady()
+
+    const wrapper = await mountSuspended(MTabs, {
+      global: { plugins: [router] },
+      props: {
+        items: [
+          { value: 'overview', label: 'Overview', to: '/components/button/overview' },
+          { value: 'reference', label: 'Reference', to: '/components/button/reference' },
+        ],
+        modelValue: 'overview',
+      },
+    })
+
+    const tabs = wrapper.findAll('[role="tab"]')
+
+    expect(tabs[0]!.element.tagName).toBe('A')
+    expect(tabs[0]!.attributes('href')).toBe('/components/button/overview')
   })
 
   it('does not select a disabled tab on click', async () => {

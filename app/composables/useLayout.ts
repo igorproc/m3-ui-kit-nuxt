@@ -246,7 +246,12 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
   const sizeExpr = computed(() => normalizeSize(unref(options.sizeToken)))
 
   if (!layout) {
-    return { layoutItemStyles: noStyles, layoutItemAttrs: noStyles, isLayoutChild: false }
+    return {
+      layoutItemStyles: noStyles,
+      layoutItemAttrs: noStyles,
+      isLayoutChild: false,
+      isLayoutHostChild: false,
+    }
   }
 
   // A host wins over shallow owner discovery. This prevents a nested app bar
@@ -259,7 +264,12 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     if (host) {
       onScopeDispose(host.contribute(sizeExpr))
     }
-    return { layoutItemStyles: noStyles, layoutItemAttrs: noStyles, isLayoutChild: false }
+    return {
+      layoutItemStyles: noStyles,
+      layoutItemAttrs: noStyles,
+      isLayoutChild: false,
+      isLayoutHostChild: Boolean(host),
+    }
   }
 
   const kindRef = computed<LayoutKind>(() => {
@@ -359,7 +369,12 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     }))
   }
 
-  return { layoutItemStyles, layoutItemAttrs, isLayoutChild: true }
+  return {
+    layoutItemStyles,
+    layoutItemAttrs,
+    isLayoutChild: true,
+    isLayoutHostChild: false,
+  }
 }
 
 /**

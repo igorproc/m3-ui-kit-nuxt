@@ -2,7 +2,10 @@
   <nav
     ref="navEl"
     class="ui-navigation-rail"
-    :class="{ 'ui-navigation-rail--expanded': isExpanded }"
+    :class="{
+      'ui-navigation-rail--expanded': isExpanded,
+      'ui-navigation-rail--hosted': isLayoutHostChild,
+    }"
     :aria-label="ariaLabel"
     v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
@@ -46,7 +49,7 @@ const sizeToken = computed(() =>
 
 // Первый уровень m-layout → start-зона (прижат sticky); внутри m-layout-aside —
 // вклад ширины в зону (раскрытие меняет токен → грид анимируется)
-const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs, isLayoutHostChild } = useLayoutItem({
   kind: 'start',
   sizeToken,
   sticky: true,
@@ -206,6 +209,17 @@ function onKeydown(event: KeyboardEvent) {
 
   &--expanded {
     width: var(--ui-navigation-rail-width-expanded);
+  }
+
+  // A hosting layout zone already owns viewport anchoring and receives this
+  // component's width contribution. Inside that zone the rail is ordinary
+  // content, so it must not create a second sticky viewport box.
+  &--hosted {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    position: static;
+    z-index: auto;
   }
 }
 </style>

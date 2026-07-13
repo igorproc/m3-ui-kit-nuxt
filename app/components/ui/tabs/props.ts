@@ -2,6 +2,7 @@
  * Public prop surface for `<MTabs>`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { NuxtLinkProps } from '#app'
 import type { TabValue } from '~/composables/tabs/useTabs'
 
 export interface MTabItem {
@@ -9,6 +10,7 @@ export interface MTabItem {
   label: string
   icon?: string
   disabled?: boolean
+  to?: NuxtLinkProps['to']
 }
 
 export const mTabsProps = {

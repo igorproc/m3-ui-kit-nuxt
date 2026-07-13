@@ -7,10 +7,13 @@
  * `disabled` is a plain state flag (a tab has no async action → no `loading`).
  */
 import type { TabValue } from '~/composables/tabs/useTabs'
+import type { NuxtLinkProps } from '#app'
 
 export interface MTabProps {
   value: TabValue
   label?: string
   icon?: string
   disabled?: boolean
+  /** Optional Nuxt route destination. Without it the tab remains a button. */
+  to?: NuxtLinkProps['to']
 }

@@ -1,5 +1,6 @@
 <template>
-  <button
+  <component
+    :is="componentTag"
     :id="ctx.tabId(value)"
     ref="btnRef"
     class="ui-tabs__tab"
@@ -7,12 +8,14 @@
       'ui-tabs__tab--active': ticket.isSelected.value,
       'ui-tabs__tab--disabled': disabled,
     }"
-    type="button"
+    :type="isLink ? undefined : 'button'"
+    :to="isLink ? to : undefined"
     role="tab"
     :aria-selected="ticket.isSelected.value"
     :aria-controls="ctx.panelId(value)"
     :tabindex="ticket.isSelected.value ? 0 : -1"
-    :disabled="disabled"
+    :disabled="isLink ? undefined : disabled"
+    :aria-disabled="isLink && disabled ? 'true' : undefined"
     @click="onSelect"
   >
     <span
@@ -27,20 +30,23 @@
         {{ label }}
       </slot>
     </span>
-  </button>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onScopeDispose, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onScopeDispose, ref, watch } from 'vue'
 import { useTabsContext } from '~/composables/tabs/useTabs'
 import MIcon from '~/components/ui/icon/index.vue'
 import type { MTabProps } from './props'
 
 const props = withDefaults(defineProps<MTabProps>(), { disabled: false })
+const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
+const isLink = computed(() => props.to !== undefined)
+const componentTag = computed(() => isLink.value ? NuxtLink : 'button')
 
 const ctx = useTabsContext()
 
-const btnRef = ref<HTMLButtonElement | null>(null)
+const btnRef = ref<HTMLElement | null>(null)
 
 const ticket = ctx.register({
   value: props.value,
@@ -56,8 +62,11 @@ watch(ctx.focusedValue, (value) => {
   nextTick(() => btnRef.value?.focus())
 })
 
-function onSelect() {
-  if (props.disabled) return
+function onSelect(event: MouseEvent) {
+  if (props.disabled) {
+    event.preventDefault()
+    return
+  }
 
   ticket.select()
 }
@@ -82,6 +91,7 @@ function onSelect() {
   border: none;
   background-color: transparent;
   color: g($t, 'tab-text-color');
+  text-decoration: none;
   cursor: pointer;
   outline: none;
   transition:
