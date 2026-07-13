@@ -13,15 +13,15 @@ export type TTheme = ITheme | IThemeWithPreset
 
 export interface ICookie {
   theme: {
-    definition: string
-    palette: string
-    contrast: string
+    definition?: string
+    palette?: string
+    contrast?: string
   }
 }
 
 export interface MaterialKitOptions {
   breakpoints?: Partial<Record<'desktop' | 'desktop-xs' | 'tablet' | 'tablet-xs' | 'mobile' | 'mobile-xs', string>>
-  cookie: ICookie
+  cookie?: Partial<ICookie>
   defaultTheme?: string // Default theme key
   themes?: TTheme[] // List of available themes
   typography?: {

@@ -1,9 +1,9 @@
 <template>
-  <MApp>
+  <m-app>
     <NuxtRouteAnnouncer />
 
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-  </MApp>
+  </m-app>
 </template>
