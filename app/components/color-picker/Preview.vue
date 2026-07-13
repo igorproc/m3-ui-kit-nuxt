@@ -24,14 +24,14 @@ const ctx = useColorPickerContext()
 
   display: flex;
   align-items: center;
-  gap: 12rem;
+  gap: g($t, 'preview-gap');
 
   &__swatch {
     position: relative;
     width: g($t, 'preview-size');
     height: g($t, 'preview-size');
     border-radius: g($t, 'preview-radius');
-    box-shadow: inset 0 0 0 1rem g($t, 'preview-outline');
+    box-shadow: inset 0 0 0 g($t, 'preview-outline-width') g($t, 'preview-outline');
     background:
       linear-gradient(var(--preview-color), var(--preview-color)),
       conic-gradient(g($t, 'checker-a') 0 25%, g($t, 'checker-b') 0 50%, g($t, 'checker-a') 0 75%, g($t, 'checker-b') 0) 0 0 / #{g($t, 'checker-size')} #{g($t, 'checker-size')};

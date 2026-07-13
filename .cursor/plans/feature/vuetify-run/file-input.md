@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VFileInput` · Target: `MFileInput` · Phase: 2 · Type: public field wrapper over `MTextField`</identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Standalone public field, file policy, tokens, tests and docs_v2 page are present.
+Optional future integration with `MFileUpload` does not block standalone scope.
+</implementation-status>
+
 <problem>Native file input возвращает `FileList`, но плохо вписывается в M3 field UI. При этом новый компонент не должен копировать label, variants, helper/error и focus states уже готового `MTextField`.</problem>
 
 <solution>`MFileInput` — надстройка над public `MTextField`: computed filename display передаётся в readonly text field, hidden native `input[type=file]` остаётся источником File objects, а browse/clear actions композируются через button family.</solution>

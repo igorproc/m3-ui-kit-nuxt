@@ -4,6 +4,10 @@
 Vuetify reference: `VBreadcrumbsDivider` · PrimeTime target: private `BreadcrumbsDivider` · Phase: 3 · Type: sub
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Leaf specification is approved; no breadcrumbs divider implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Approved as a stateless decorative leaf.
 </status>
@@ -57,4 +61,3 @@ Dividers remain visually configurable, semantically silent and independent of na
 <questions>
 None.
 </questions>
-

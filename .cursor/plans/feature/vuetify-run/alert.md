@@ -4,6 +4,10 @@
 Vuetify reference: `VAlert` · PrimeTime target: `MAlert` · Phase: 3 · Type: public
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Specification is approved; no public `MAlert` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved. `MAlert` is a persistent inline status block. It is not a toast, snackbar, dialog, notification queue or overlay.
 </status>
@@ -254,4 +258,3 @@ Initial visibility and semantic attributes derive synchronously from props/model
 <questions>
 None. Product and API direction approved.
 </questions>
-

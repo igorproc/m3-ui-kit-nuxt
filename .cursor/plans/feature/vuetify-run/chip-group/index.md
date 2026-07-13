@@ -4,6 +4,10 @@
 Vuetify reference: `VChipGroup` · PrimeTime target: `MChipGroup` · Phase: 3 · Type: public family parent
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Family specification is approved; no public `MChipGroup` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved. The original `filter` and `column` props are removed as first-iteration artifacts. Vuetify's `VChipGroupSymbol` is an injection symbol, not a visual component; PrimeTime keeps its internal context key inside this plan and creates no `ChipGroupSymbol` component.
 </status>

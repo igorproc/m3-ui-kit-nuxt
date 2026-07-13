@@ -4,6 +4,10 @@
 Vuetify reference: `VBannerActions` · PrimeTime target: private `BannerActions` · Phase: 3 · Type: sub
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Leaf specification is approved; no banner actions implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved as a stateless private layout leaf.
 </status>
@@ -65,4 +69,3 @@ Banner actions have deterministic responsive alignment without state, context, p
 <questions>
 None.
 </questions>
-

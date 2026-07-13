@@ -67,6 +67,16 @@ describe('m-overlay', () => {
     expect(scrims).toHaveLength(0)
   })
 
+  it('marks the popover viewport boundary for pointer pass-through styling', async () => {
+    const popover = mountOverlay({ modelValue: true, mode: 'popover' })
+    await popover.mount()
+    await nextTick()
+
+    const root = document.querySelector('.ui-overlay--popover') as HTMLElement
+
+    expect(root.classList).toContain('ui-overlay--popover')
+  })
+
   it('closes on a scrim click and emits dismiss(outside)', async () => {
     const { model, mount } = mountOverlay({ modelValue: true })
     await mount()

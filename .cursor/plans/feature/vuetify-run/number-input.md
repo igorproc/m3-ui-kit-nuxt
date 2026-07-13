@@ -4,6 +4,11 @@
 Vuetify: `VNumberInput` · Target: `MNumberInput` · Phase: 2 · Type: public numeric field
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public component, locale-aware codec, split/stacked button-family controls,
+focused tests and docs_v2 page are present.
+</implementation-status>
+
 <problem>
 `MTextField type="number"` остаётся string field и наследует непоследовательные browser steppers/parsing. Пользователь редактирует временную строку (`-`, `1,`, empty), но business model должен получать только конечный `number | null`, никогда `NaN`.
 </problem>
@@ -100,7 +105,8 @@ MButtonIcon
 
 Не создавать native button вручную и не копировать button tokens. `type="button"` предотвращает form submit.
 
-`stacked` остаётся в API plan, но implementation блокируется до общего button size contract, если текущий 40rem control не помещается без нарушения touch target. Не ужимать `MButtonIcon` локальными overrides.
+`stacked` размещает два полноразмерных `MButtonIcon` вертикально и позволяет
+field вырасти по высоте. Touch target не ужимается локальными overrides.
 </controls>
 
 <control-slots>
@@ -208,7 +214,7 @@ Private shared field chrome, current field validation bridge, `MButtonIcon`/`MBu
 - keyboard, wheel, IME, paste;
 - external model while focused/dirty;
 - field validation/helper/error ARIA;
-- split layout; stacked gated by button size contract.
+- split и distinct stacked layouts.
 </tests>
 
 <done>

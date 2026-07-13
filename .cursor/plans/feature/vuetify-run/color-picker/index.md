@@ -4,6 +4,11 @@
 Vuetify: `VColorPicker` · Target: `MColorPicker` · Phase: 2 · Type: public visual editor with private leaves
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public component, one shared HSVA context, context-only private leaves,
+zero-runtime design tokens and focused integration/leaf behavior tests are present.
+</implementation-status>
+
 <problem>
 Visual color selection требует синхронизировать saturation/value canvas, hue/alpha sliders, textual channels, preview и swatches. Если каждый leaf хранит локальный color state или parser, значения расходятся, а pointer и keyboard paths дают разный результат.
 </problem>

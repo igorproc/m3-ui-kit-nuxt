@@ -124,7 +124,7 @@ function onFormat(value: string | number | (string | number)[]) {
   &__sliders {
     display: flex;
     flex-direction: column;
-    gap: 12rem;
+    gap: g($t, 'slider-gap');
   }
 
   &__hue,
@@ -140,18 +140,18 @@ function onFormat(value: string | number | (string | number)[]) {
       appearance: none;
       width: g($t, 'slider-thumb-size');
       height: g($t, 'slider-thumb-size');
-      border: 2rem solid g($t, 'slider-thumb-border');
+      border: g($t, 'slider-thumb-border-width') solid g($t, 'slider-thumb-border');
       border-radius: 50%;
-      box-shadow: 0 0 0 1rem rgb(0 0 0 / 30%);
+      box-shadow: g($t, 'slider-thumb-shadow');
       cursor: pointer;
     }
 
     &::-moz-range-thumb {
       width: g($t, 'slider-thumb-size');
       height: g($t, 'slider-thumb-size');
-      border: 2rem solid g($t, 'slider-thumb-border');
+      border: g($t, 'slider-thumb-border-width') solid g($t, 'slider-thumb-border');
       border-radius: 50%;
-      box-shadow: 0 0 0 1rem rgb(0 0 0 / 30%);
+      box-shadow: g($t, 'slider-thumb-shadow');
       cursor: pointer;
     }
   }
@@ -170,11 +170,11 @@ function onFormat(value: string | number | (string | number)[]) {
   &__inputs {
     display: flex;
     flex-direction: column;
-    gap: 12rem;
+    gap: g($t, 'edit-inputs-gap');
   }
 
   &--disabled {
-    opacity: 0.6;
+    opacity: g($t, 'disabled-opacity');
     pointer-events: none;
   }
 }

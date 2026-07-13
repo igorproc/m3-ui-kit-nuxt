@@ -17,13 +17,30 @@ PrimeTime-first. Полная классификация существующи�
 - `<reuse>` в каждом плане обязателен: новый код начинается с композиции
   существующего kit, а не с копирования Vuetify.
 
+## Состояние реализации
+
+Актуально на **2026-07-14**. Product/discussion approval и implementation
+state разделены: источником состояния служит `<implementation-status>` внутри
+каждого plan. Шкала описана в [common.md](common.md).
+
+| State | Количество | Планы |
+|---|---:|---|
+| `done` | 28 | Все планы фаз 1–2 |
+| `partial` | 0 | — |
+| `planned` | 14 | Active roadmap plans фаз 3–5 |
+
+Фаза 2 закрыта: form/picker inputs реализованы, review gate `MColorInput`
+подтверждён human direction от 2026-07-14, focused suite проходит.
+
 ## Фазы
 
 ### 1. Runtime, shell и utility
 
 Создаём M3 root/surface/overlay boundaries: `MApp`, `MSurface`,
 `MOverlay`. Утилитарные роли Vuetify становятся PrimeTime composables или
-directive: global hotkey registry с визуальным `MHotkey`, hover, smart lazy activation и selection registry.
+directive: global hotkey registry с визуальным `MHotkey`, smart lazy activation
+и selection registry. Hover/focus API остаётся в pending и не входит в текущую
+итерацию.
 Validation API временно вынесен в `feature/pendind-components/validation.md`. Результат: единые SSR, overlay и interaction primitives,
 на которых строятся следующие фазы.
 

@@ -20,6 +20,7 @@ interface Props {
   sizeToken?: string
   sticky?: boolean
   force?: boolean
+  order?: number
 }
 
 const props = defineProps<Props>()
@@ -31,5 +32,6 @@ const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   sizeToken: computed(() => props.sizeToken),
   sticky: computed(() => props.sticky),
   force: props.force,
+  order: computed(() => props.order),
 })
 </script>

@@ -4,6 +4,10 @@
 Vuetify reference: `VTimelineDivider` · PrimeTime target: private `TimelineDivider` · Phase: 5 · Type: sub
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Leaf specification is approved; no timeline divider implementation or focused tests were found.
+</implementation-status>
+
 <problem>Before/after connector segments and marker geometry must respond to first/last, density, line and dot content without consumers assembling decorative DOM.</problem>
 
 <api>Internal direct props: first, last, line, color, icon, hideDot and resolved side/density as needed. Slots: dot/icon projection from parent. No model, emits, expose or public import.</api>
@@ -25,4 +29,3 @@ Vuetify reference: `VTimelineDivider` · PrimeTime target: private `TimelineDivi
 <done>All sequence connector geometry is private, decorative and driven by parent/item state.</done>
 
 <questions>None.</questions>
-

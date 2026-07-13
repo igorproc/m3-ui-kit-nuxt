@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VColorPickerEdit` · Target: private `ColorPickerEdit` · Parent: `MColorPicker` · Phase: 2 · Type: sub</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+HEX draft commit and numeric RGB/HSL(A) editing use the shared context and
+the field/number-input foundations, with focused format/channel tests.
+</implementation-status>
+
 <problem>Canvas даёт быстрый visual selection, но точное значение требует редактируемых HEX/RGB/HSL channels. Incomplete/invalid draft не должен ломать единый HSVA state.</problem>
 
 <solution>Private edit leaf выбирает поля по parent format, хранит только временные drafts и commit-ит valid channels в parent context. Собственного color model/parser нет.</solution>

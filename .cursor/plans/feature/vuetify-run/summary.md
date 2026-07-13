@@ -168,7 +168,14 @@ File-upload и OTP уже переведены на новую структур�
 - [x] [TimelineDivider](timeline/divider.md)
 - [x] [MTimelineItem](timeline/item.md)
 
-## Активный roadmap завершён
+## Обсуждение активного roadmap завершено
+
+Все active plans обсуждены и имеют самодостаточные specifications. Это не
+означает, что весь roadmap реализован: implementation state ведётся отдельно в
+`<implementation-status>` каждого plan и агрегируется в `index.md`.
+
+Срез на 2026-07-13: **10 done · 7 partial · 25 planned**. `useHover` по-прежнему
+остаётся pending и не входит в текущую итерацию.
 
 Все оставшиеся visualization plans перенесены в отдельный
 [`paid-charts-plab`](../paid-charts-plab/index.md). Следующий шаг — финальный

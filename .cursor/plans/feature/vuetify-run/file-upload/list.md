@@ -4,6 +4,11 @@
 Vuetify: `VFileUploadList` · Target: private `FileUploadList<TResult>` · Parent: `MFileUpload` · Phase: 2 · Type: registered collection leaf
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private semantic list preserves stable queue order, empty/item slots and
+readonly context actions without owning transport state.
+</implementation-status>
+
 <problem>
 Queue list должна сохранять порядок entries, empty/aggregate state, item customization и предсказуемый focus после удаления. Если custom list получает mutable queue internals, он может обойти scheduler и разрушить lifecycle.
 </problem>

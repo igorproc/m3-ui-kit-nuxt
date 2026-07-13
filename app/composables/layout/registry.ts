@@ -2,7 +2,8 @@
  * @module layout/registry
  *
  * @remarks
- * Ordered registry of layout items (DOM order = carving priority).
+ * Ordered registry of layout items. Registration/DOM order is the fallback
+ * carving priority; an item may override it with an explicit `order`.
  *
  * Items register from `watchEffect`s, so every read of the backing reactive
  * array inside `register`/`unregister` goes through `toRaw` — otherwise each
@@ -14,7 +15,7 @@ import { reactive, toRaw } from 'vue'
 import type { LayoutKind } from './carve'
 
 /**
- * `kind`/`size`/`sticky` may be live getters (`useLayoutItem` registers
+ * `kind`/`size`/`sticky`/`order` may be live getters (`useLayoutItem` registers
  * getter-backed snapshots): every read returns the current value, so the css
  * computed sees children contributions even on SSR, where no `watchEffect`
  * re-registration happens.
@@ -25,6 +26,8 @@ export interface LayoutItem {
   /** Resolved CSS size expression (explicit token or children contributions). */
   size?: string
   sticky?: boolean
+  /** Lower values carve first; equal/omitted values keep registry order. */
+  order?: number
 }
 
 export interface LayoutRegistry {
@@ -41,7 +44,7 @@ export interface LayoutRegistry {
 }
 
 const sameItem = (a: LayoutItem, b: LayoutItem) =>
-  a.id === b.id && a.kind === b.kind && a.size === b.size && a.sticky === b.sticky
+  a.id === b.id && a.kind === b.kind && a.size === b.size && a.sticky === b.sticky && a.order === b.order
 
 export function createLayoutRegistry(): LayoutRegistry {
   const items = reactive<LayoutItem[]>([])
@@ -77,8 +80,9 @@ export function createLayoutRegistry(): LayoutRegistry {
     els.delete(id)
   }
 
-  // Initial render registers in setup order (= DOM order). Only items mounted
-  // after hydration need a real DOM-position lookup.
+  // Registration order normally matches DOM order. Async setup may register a
+  // zone later on SSR; explicit `order` handles that case, while this lookup
+  // keeps the no-order fallback aligned after hydration.
   const reorder = (id: string) => {
     if (!hydrated) return
 

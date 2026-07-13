@@ -11,7 +11,16 @@
 <script setup lang="ts">
 // Контентная зона — остаточный прямоугольник после выкраивания краёв.
 // В full-height-режиме скроллится сама (overflow-y: auto)
-const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({ kind: 'main' })
+interface Props {
+  order?: number
+}
+
+const props = defineProps<Props>()
+
+const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
+  kind: 'main',
+  order: computed(() => props.order),
+})
 </script>
 
 <style lang="scss">

@@ -4,8 +4,8 @@
  * @remarks
  * Pure carving engine for the auto-layout grid — no Vue, fully unit-testable.
  *
- * Items are processed in DOM order; each one cuts a band off the remaining
- * rectangle (Vuetify-like semantics: whoever comes first owns the corner).
+ * Items are processed by explicit order, then DOM/registration order; each one
+ * cuts a band off the remaining rectangle (whoever comes first owns the corner).
  * The result is a `grid-template-areas/columns/rows` triple per device range
  * plus per-item viewport insets for sticky positioning.
  *
@@ -34,6 +34,8 @@ export interface CarveItem {
   size?: string
   /** The zone is pinned to the viewport — participates in sticky insets. */
   sticky?: boolean
+  /** Lower values carve first; defaults to `0` like CSS flex/grid order. */
+  order?: number
 }
 
 export interface CarveGrid {
@@ -109,15 +111,20 @@ export function filterByRange(items: CarveItem[], range: DeviceRange): CarveItem
 }
 
 /**
- * Carves the grid from items in DOM order.
+ * Carves the grid by explicit order, preserving input order for equal values.
  *
  * Each band spans the cross-axis cells that were still unclaimed when it was
  * processed, so earlier items own the corners — Vuetify layout semantics.
  */
 export function carve(items: CarveItem[]): CarveResult {
-  const mainItem = items.find(item => item.kind === 'main')
+  const orderedItems = items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => (a.item.order ?? 0) - (b.item.order ?? 0) || a.index - b.index)
+    .map(entry => entry.item)
+
+  const mainItem = orderedItems.find(item => item.kind === 'main')
   const mainArea = mainItem?.id ?? 'main'
-  const bands = items.filter(item => item.kind !== 'main')
+  const bands = orderedItems.filter(item => item.kind !== 'main')
 
   const counts = { top: 0, bottom: 0, start: 0, end: 0 }
   for (const band of bands) counts[band.kind]++

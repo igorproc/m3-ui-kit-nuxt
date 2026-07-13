@@ -49,6 +49,12 @@ export default defineNuxtConfig({
   },
 
   appDir: resolve('./app'),
+
+  build: {
+    // MCU 0.4.0 ships a few extensionless ESM imports. Keep the package in
+    // Nuxt's transform pipeline so Node never evaluates those files raw.
+    transpile: ['@material/material-color-utilities'],
+  },
   features: { inlineStyles: false },
 
   vite: {

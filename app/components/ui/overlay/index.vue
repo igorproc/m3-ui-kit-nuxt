@@ -200,6 +200,10 @@ $prefix: 'md-overlay';
   position: fixed;
   inset: 0;
 
+  &--popover {
+    pointer-events: none;
+  }
+
   &__scrim {
     position: absolute;
     inset: 0;

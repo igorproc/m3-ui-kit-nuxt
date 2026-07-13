@@ -1,0 +1,31 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+$tokens: (
+  root: (
+    gap: 12rem,
+  ),
+  group: (
+    gap: 8rem,
+  ),
+  field: (
+    size: 48rem,
+    shape: var(--sys-shape-corner-medium),
+    outline: map.get($theme-color-link, outline),
+    color: map.get($theme-color-link, on-surface),
+    active-outline: map.get($theme-color-link, primary),
+    active-width: 2rem,
+    filled-container: map.get($theme-color-link, surface-container-highest),
+    error-outline: map.get($theme-color-link, error),
+    disabled-opacity: 38%,
+    typography: title-large,
+  ),
+  separator: (
+    color: map.get($theme-color-link, on-surface-variant),
+  ),
+  message: (
+    margin-top: 4rem,
+    color: map.get($theme-color-link, error),
+    typography: body-small,
+  ),
+);

@@ -77,6 +77,17 @@ describe('createLayoutRegistry', () => {
     expect(consumerRuns).toBe(2)
   })
 
+  it('updates a changed explicit order without moving the registry fallback order', () => {
+    const registry = createLayoutRegistry()
+
+    registry.register({ ...item('a'), order: 1 }, noEl)
+    registry.register(item('b'), noEl)
+    registry.register({ ...item('a'), order: 0 }, noEl)
+
+    expect(registry.items.map(i => i.id)).toEqual(['a', 'b'])
+    expect(registry.items[0]?.order).toBe(0)
+  })
+
   it('reorder inserts a late-mounted item at its DOM position', () => {
     const registry = createLayoutRegistry()
 

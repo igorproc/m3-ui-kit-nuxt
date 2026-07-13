@@ -12,15 +12,14 @@
     :error="error || invalid"
     :error-message="errorMessage"
     :path="path"
-    spellcheck="false"
-    autocapitalize="none"
     autocomplete="off"
+    :input-attrs="colorInputAttrs"
     @keydown.enter.prevent="commitDraft"
     @keydown.esc.prevent="revertDraft"
   >
     <template #append>
       <span class="ui-color-input__trigger-wrap">
-        <button
+        <MButtonIcon
           type="button"
           class="ui-color-input__trigger"
           :disabled="disabled || readonly"
@@ -33,7 +32,7 @@
             class="ui-color-input__swatch"
             :style="{ '--swatch-color': swatchCss }"
           />
-        </button>
+        </MButtonIcon>
 
         <MMenu
           v-if="picker"
@@ -61,6 +60,7 @@
 import { computed, ref, watch } from 'vue'
 import MMenu from '~/components/ui/menu/index.vue'
 import MColorPicker from '~/components/ui/color-picker/index.vue'
+import MButtonIcon from '~/components/ui/button/icon/index.vue'
 import { formatColor, parseColor, toCssColor } from '~~/shared/utils/color'
 import type { ColorFormat, ColorParseError } from '~~/shared/utils/color'
 import { mColorInputProps } from './props'
@@ -96,6 +96,10 @@ const swatchCss = computed(() => {
 })
 
 const swatchLabel = computed(() => model.value ?? '')
+const colorInputAttrs = {
+  spellcheck: false,
+  autocapitalize: 'none',
+}
 
 // Keep the draft aligned with the committed value while the field is idle.
 watch([() => model.value, resolvedFormat, focused], () => {
@@ -200,39 +204,26 @@ watch(open, (isOpen) => {
 </script>
 
 <style lang="scss">
-@use 'sass:map';
-@use '~/assets/stylesheet/components/color-picker/index' as t;
+@use '~/assets/stylesheet/components/color-input' as t;
 
 .ui-color-input {
+  $t: material-map(t.$tokens, 'md-color-input');
+
   &__trigger-wrap {
     position: relative;
     display: inline-flex;
   }
 
   &__trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    border: none;
-    border-radius: var(--sys-shape-corner-small);
-    background: transparent;
-    cursor: pointer;
-
-    &:disabled {
-      cursor: default;
-      opacity: 0.5;
-    }
+    padding: g($t, 'trigger-padding');
   }
 
   &__swatch {
-    $t: material-map(t.$tokens, 'md-color-picker');
-
     display: block;
-    width: 22rem;
-    height: 22rem;
-    border-radius: var(--sys-shape-corner-small);
-    box-shadow: inset 0 0 0 1rem g($t, 'preview-outline');
+    width: g($t, 'swatch-size');
+    height: g($t, 'swatch-size');
+    border-radius: g($t, 'swatch-shape');
+    box-shadow: inset 0 0 0 g($t, 'swatch-outline-width') g($t, 'swatch-outline');
     background:
       linear-gradient(var(--swatch-color), var(--swatch-color)),
       conic-gradient(g($t, 'checker-a') 0 25%, g($t, 'checker-b') 0 50%, g($t, 'checker-a') 0 75%, g($t, 'checker-b') 0) 0 0 / #{g($t, 'checker-size')} #{g($t, 'checker-size')};

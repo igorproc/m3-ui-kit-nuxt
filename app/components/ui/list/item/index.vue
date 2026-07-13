@@ -85,7 +85,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, useSlots } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
-import { mListItemProps } from './props'
+import { type MListItemProps, mListItemProps } from './props'
 
 const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
 

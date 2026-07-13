@@ -2,6 +2,8 @@
 
 > Ссылки ведут только на отсутствующие возможности. Существующие семьи и их
 > gaps живут в `components-should-update/` и намеренно не входят в этот roadmap.
+> Текущее состояние реализации находится в `<implementation-status>` каждого
+> plan; агрегированный срез — в [index.md](index.md#состояние-реализации).
 
 <phase id="1" name="runtime-and-utilities">
 [MApp](app.md) · [MSurface](surface.md) · [MOverlay](overlay.md) ·
@@ -16,6 +18,8 @@
 [MFileInput](file-input.md) · [MFileUpload](file-upload/index.md) · [Dropzone](file-upload/dropzone.md) · [UploadItem](file-upload/item.md) · [UploadList](file-upload/list.md) ·
 [MOtpInput](otp-input/index.md) · [OtpField](otp-input/field.md) · [OtpGroup](otp-input/group.md) · [OtpSeparator](otp-input/separator.md) ·
 [MRating](rating.md) · [MConfirmEdit](confirm-edit.md)
+
+Status: **done** · 2026-07-14
 </phase>
 
 <phase id="3" name="content-and-collections">

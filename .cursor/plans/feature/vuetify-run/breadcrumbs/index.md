@@ -4,6 +4,10 @@
 Vuetify reference: `VBreadcrumbs` · PrimeTime target: `MBreadcrumbs` · Phase: 3 · Type: public family parent
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Family specification is approved; no public `MBreadcrumbs` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved. Mobile overflow is `scroll | wrap`, default `scroll`; interactive collapse is deferred. Family uses direct props rather than context.
 </status>
@@ -121,4 +125,3 @@ Hierarchy renders as accessible, token-driven navigation with centralized link b
 <questions>
 None.
 </questions>
-

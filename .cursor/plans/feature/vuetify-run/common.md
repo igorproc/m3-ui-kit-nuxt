@@ -28,6 +28,26 @@ Vuetify. Каждый новый visual-компонент обязан выра
 Отдельный `.md` в корне создаётся только для реально отсутствующей роли.
 </delta-rule>
 
+<implementation-status-rule>
+Каждый plan с `<identity>` обязан содержать отдельный
+`<implementation-status>` сразу после identity. Product/discussion `<status>`
+не заменяет состояние реализации.
+
+Допустимые значения `state`:
+
+- `done` — согласованный scope существует в коде и покрыт focused tests;
+- `partial` — runtime существует, но конкретный contract, token, test или
+  review gate из плана ещё не закрыт;
+- `planned` — specification утверждена, целевой implementation отсутствует;
+- `pending` — решение или dependency gate не утверждены; такие планы обычно
+  живут вне active `vuetify-run/`.
+
+Block содержит `updated="YYYY-MM-DD"`, краткое evidence и для `partial` —
+конкретный blocker. Наличие похожего private/existing компонента само по себе
+не повышает статус: например, `MTablePagination` не является public
+`MPagination`.
+</implementation-status-rule>
+
 <public-sub-rule>
 `public` живёт в `app/components/ui/<name>/index.vue`, получает `M*` имя и
 может auto-importиться потребителем. `sub` живёт у родителя, импортируется

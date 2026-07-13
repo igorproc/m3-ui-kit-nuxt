@@ -10,23 +10,26 @@
 </template>
 
 <script setup lang="ts">
-// Нижняя зона лейаута. Мульти-инстанс (auto-id), порядок задаёт DOM.
+// Нижняя зона лейаута. Мульти-инстанс (auto-id), приоритет задаёт order или DOM.
 // По умолчанию — классический футер в потоке; sticky прибивает к низу
 // viewport (строка грида резервирует место, нужен размер)
 interface Props {
   sticky?: boolean
   sizeToken?: string
+  order?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   sticky: false,
   sizeToken: undefined,
+  order: undefined,
 })
 
 const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   kind: 'bottom',
   sizeToken: computed(() => props.sizeToken),
   sticky: computed(() => props.sticky),
+  order: computed(() => props.order),
 })
 </script>
 

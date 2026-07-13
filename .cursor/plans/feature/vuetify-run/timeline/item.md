@@ -4,6 +4,10 @@
 Vuetify reference: `VTimelineItem` · PrimeTime target: `MTimelineItem` · Phase: 5 · Type: public family child
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Public-child specification is approved; no `MTimelineItem` implementation or focused tests were found.
+</implementation-status>
+
 <status>Approved as a public explicit-composition component.</status>
 
 <problem>An event needs opposite/time content, semantic content surface, marker/icon and connector participation while inheriting parent layout and retaining chronological list order.</problem>
@@ -47,4 +51,3 @@ Defaults: primary color, plain surface, no side override, visible opposite/dot, 
 <done>Each event is a public semantic list item that derives all sequence geometry from its parent ticket.</done>
 
 <questions>None.</questions>
-

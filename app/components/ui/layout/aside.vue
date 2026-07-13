@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-// Боковая зона лейаута. Мульти-инстанс (auto-id), порядок задаёт DOM:
+// Боковая зона лейаута. Мульти-инстанс (auto-id), приоритет задаёт order или DOM:
 // кто раньше — тот владеет углом. По умолчанию тянется с контентом,
 // sticky прижимает к viewport с высотой 100dvh − insets
 interface Props {
@@ -22,12 +22,14 @@ interface Props {
   sizeToken?: string
   /** Прижать к viewport (высота между прибитыми краями, скролл внутри) */
   sticky?: boolean
+  order?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: 'start',
   sizeToken: undefined,
   sticky: false,
+  order: undefined,
 })
 
 const side = computed<'start' | 'end'>(() => {
@@ -40,6 +42,7 @@ const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
   kind: side,
   sizeToken: computed(() => props.sizeToken),
   sticky: computed(() => props.sticky),
+  order: computed(() => props.order),
 })
 </script>
 

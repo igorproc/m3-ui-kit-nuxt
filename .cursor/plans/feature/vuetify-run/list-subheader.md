@@ -4,6 +4,10 @@
 Vuetify reference: `VListSubheader` · PrimeTime target: `MListSubheader` · Phase: 3 · Type: public
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Specification is approved; no public `MListSubheader` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved as the only missing list-family role. `MListGroup` and `ListChildren` are already covered by the existing `MList`/`MListItem` implementation and are removed from the new-capability delta.
 </status>
@@ -132,4 +136,3 @@ List sections receive a consistent, semantic and optionally sticky label without
 <questions>
 None.
 </questions>
-

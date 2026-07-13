@@ -55,22 +55,22 @@ function select(value: string) {
     padding: 0;
     border: none;
     border-radius: g($t, 'swatches-radius');
-    box-shadow: inset 0 0 0 1rem g($t, 'swatches-outline');
+    box-shadow: inset 0 0 0 g($t, 'swatches-outline-width') g($t, 'swatches-outline');
     background-color: var(--swatch-color);
     cursor: pointer;
-    transition: transform var(--sys-motion-duration-short-2) var(--sys-motion-easing-standard);
+    transition: transform g($t, 'swatches-motion-duration') g($t, 'swatches-motion-easing');
 
     &:hover {
-      transform: scale(1.1);
+      transform: scale(g($t, 'swatches-hover-scale'));
     }
 
     &--selected {
-      box-shadow: 0 0 0 2rem g($t, 'swatches-selected');
+      box-shadow: 0 0 0 g($t, 'swatches-selected-width') g($t, 'swatches-selected');
     }
 
     &:disabled {
       cursor: default;
-      opacity: 0.5;
+      opacity: g($t, 'swatches-disabled-opacity');
     }
   }
 }

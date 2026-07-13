@@ -8,23 +8,33 @@
  * is a single-source-of-truth prop via `makeStateProps` (no writable model),
  * and `readonly` comes from `makeReadonlyProps`.
  */
-import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { ExtractPublicPropTypes, InputHTMLAttributes, PropType } from 'vue'
 import { makeReadonlyProps, makeStateProps, makeVariantProps } from '~~/shared/utils/props'
 
 export type MTextFieldType = 'text' | 'number' | 'email' | 'password'
 export type MTextFieldVariant = 'filled' | 'outlined'
 
-export const mTextFieldProps = {
+export const mFieldProps = {
   ...makeStateProps(),
   ...makeReadonlyProps(),
   ...makeVariantProps({ variant: 'filled' }),
   path: { type: String, default: undefined },
+  name: { type: String, default: undefined },
   label: { type: String, default: undefined },
   placeholder: { type: String, default: undefined },
-  type: { type: String as PropType<MTextFieldType>, default: 'text' },
   helperText: { type: String, default: undefined },
   error: { type: Boolean, default: false },
   errorMessage: { type: String, default: undefined },
+  required: { type: Boolean, default: false },
+  autofocus: { type: Boolean, default: false },
+  autocomplete: { type: String, default: undefined },
+}
+
+export const mTextFieldProps = {
+  ...mFieldProps,
+  type: { type: String as PropType<MTextFieldType>, default: 'text' },
+  /** Native input attributes/listeners used by composite fields such as comboboxes. */
+  inputAttrs: { type: Object as PropType<InputHTMLAttributes>, default: undefined },
 }
 
 export type MTextFieldProps = ExtractPublicPropTypes<typeof mTextFieldProps>

@@ -87,4 +87,13 @@ describe('m-color-picker', () => {
 
     expect(wrapper.find('.ui-color-picker--disabled').exists()).toBe(true)
   })
+
+  it('renders precise number channels for rgb formats', async () => {
+    const { mount } = mountPicker({ modelValue: 'rgb(103, 80, 164)', format: 'rgb' })
+    const wrapper = await mount()
+
+    const channels = wrapper.findAll('.ui-color-edit__channel')
+    expect(channels).toHaveLength(3)
+    expect(channels.map(channel => channel.find('label').text())).toEqual(['R', 'G', 'B'])
+  })
 })

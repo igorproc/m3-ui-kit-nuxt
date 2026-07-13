@@ -4,6 +4,11 @@
 Vuetify: `VOtpField` · Target: private visual `OtpField` · Parent: `MOtpInput/OtpGroup` · Phase: 2 · Type: deterministic presentation leaf, not form input
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private passive cell derives filled/active/masked/error states, remains
+aria-hidden and delegates caret focus to the single parent input.
+</implementation-status>
+
 <problem>
 Каждая позиция кода должна показывать empty/filled/active/masked/error states и реагировать на click, но отдельный native input создаст лишний tab stop, нарушит autofill/paste и продублирует aggregate model.
 </problem>

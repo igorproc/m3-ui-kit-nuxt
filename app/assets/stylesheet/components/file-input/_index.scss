@@ -1,0 +1,16 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  actions: (
+    gap: 4rem,
+  ),
+  selection: (
+    margin: (
+      top: 8rem,
+    ),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: 'body-small',
+  ),
+);
+

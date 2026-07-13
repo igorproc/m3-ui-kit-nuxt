@@ -1,0 +1,24 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+$tokens: (
+  root: (gap: 16rem),
+  dropzone: (
+    min-height: 160rem,
+    padding: 24rem,
+    gap: 12rem,
+    shape: var(--sys-shape-corner-large),
+    outline: map.get($theme-color-link, outline),
+    dragging-outline: map.get($theme-color-link, primary),
+    dragging-container: map.get($theme-color-link, primary-container),
+  ),
+  list: (gap: 8rem),
+  item: (
+    gap: 12rem,
+    padding: 12rem,
+    shape: var(--sys-shape-corner-medium),
+    container: map.get($theme-color-link, surface-container),
+    color: map.get($theme-color-link, on-surface),
+    meta-color: map.get($theme-color-link, on-surface-variant),
+  ),
+);

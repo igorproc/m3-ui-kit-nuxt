@@ -16,26 +16,62 @@ $tokens: (
   canvas: (
     height: 160rem,
     radius: var(--sys-shape-corner-medium),
-    thumb: (size: 14rem, border: map.get($theme-color-link, 'surface')),
+    saturation-color: white,
+    value-color: black,
+    focus: (
+      width: 2rem,
+      offset: 2rem,
+      color: map.get($theme-color-link, 'primary'),
+    ),
+    thumb: (
+      size: 14rem,
+      border: map.get($theme-color-link, 'surface'),
+      border-width: 2rem,
+      shadow: 0 0 0 1rem rgb(0 0 0 / 30%),
+    ),
   ),
   slider: (
     height: 14rem,
     radius: var(--sys-shape-corner-full),
-    thumb: (size: 16rem, border: map.get($theme-color-link, 'surface')),
+    gap: 12rem,
+    thumb: (
+      size: 16rem,
+      border: map.get($theme-color-link, 'surface'),
+      border-width: 2rem,
+      shadow: 0 0 0 1rem rgb(0 0 0 / 30%),
+    ),
   ),
   preview: (
+    gap: 12rem,
     size: 40rem,
     radius: var(--sys-shape-corner-medium),
     outline: map.get($theme-color-link, 'outline-variant'),
+    outline-width: 1rem,
     value: (color: map.get($theme-color-link, 'on-surface-variant'), type: 'body-small'),
+  ),
+  edit: (
+    gap: 8rem,
+    inputs-gap: 12rem,
+    channel: (
+      min: (
+        width: 56rem,
+      ),
+    ),
   ),
   swatches: (
     gap: 8rem,
     size: 24rem,
     radius: var(--sys-shape-corner-small),
     outline: map.get($theme-color-link, 'outline-variant'),
+    outline-width: 1rem,
     selected: map.get($theme-color-link, 'primary'),
+    selected-width: 2rem,
+    hover-scale: 1.1,
+    disabled-opacity: 50%,
+    motion-duration: var(--sys-motion-duration-short-2),
+    motion-easing: var(--sys-motion-easing-standard),
   ),
+  disabled: (opacity: 60%),
   // Checkerboard for alpha/transparency, expressed via two gradients.
   checker: (
     a: map.get($theme-color-link, 'surface-container-highest'),

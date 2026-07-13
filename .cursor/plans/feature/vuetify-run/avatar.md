@@ -4,6 +4,10 @@
 Vuetify reference: `VAvatar` · PrimeTime target: `MAvatar` · Phase: 3 · Type: public
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Specification is approved; no public `MAvatar` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Approved without additional product review. The component is a passive identity surface for a person, organization or entity.
 </status>
@@ -238,4 +242,3 @@ SSR renders deterministic dimensions and the current content branch. No browser 
 <questions>
 None.
 </questions>
-

@@ -4,6 +4,11 @@
 Vuetify: `VConfirmEdit` · Target: `MConfirmEdit<T>` · Phase: 2 · Type: public adaptive editor + shared transaction foundation
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public adaptive editor and reusable transaction composable cover isolated
+drafts, async save, external conflicts, dirty dismissal, focused tests and docs.
+</implementation-status>
+
 <problem>
 Подтверждаемое редактирование почти всегда живёт во временной surface: короткое изменение — anchored popover, сложная форма — dialog. Один renderless draft helper заставил бы consumer каждый раз заново соединять clone/dirty/conflict/async save с activator, overlay, actions, dismiss guard и focus restore.
 </problem>

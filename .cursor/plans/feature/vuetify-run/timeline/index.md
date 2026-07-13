@@ -4,6 +4,10 @@
 Vuetify reference: `VTimeline` · PrimeTime target: `MTimeline` · Phase: 5 · Type: public family parent
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Family specification is approved; no public `MTimeline` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved. V1 is vertical and explicit-composition-first. `MTimelineItem` is public; `TimelineDivider` is private. Horizontal/data-driven modes are deferred.
 </status>
@@ -117,4 +121,3 @@ Consumers compose chronological event histories with public items and correct co
 <questions>
 None. Horizontal/data-driven APIs require future concrete use cases.
 </questions>
-

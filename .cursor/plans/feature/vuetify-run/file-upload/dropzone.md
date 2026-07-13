@@ -4,6 +4,11 @@
 Vuetify: `VFileUploadDropzone` · Target: private `FileUploadDropzone` · Parent: `MFileUpload` · Phase: 2 · Type: sub-component registered in upload master-context
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private nested-drag-safe adapter delegates dropped File objects to the upload
+master context and reuses its single picker action and policy.
+</implementation-status>
+
 <problem>
 Drag-and-drop должен быть равноценным способом добавить файлы, а не второй независимой реализацией file selection. Наивный dropzone часто дублирует accept/size/count validation, создаёт собственный hidden input, мигает при переходах над дочерними DOM-узлами и позволяет browser открыть dropped файл вместо приложения.
 </problem>

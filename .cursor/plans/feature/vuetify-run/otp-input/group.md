@@ -4,6 +4,11 @@
 Vuetify: `VOtpGroup` · Target: private layout `OtpGroup` · Parent: `MOtpInput` · Phase: 2 · Type: deterministic presentation leaf
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private layout-only group renders validated global index ranges without local
+model, caret or completion state.
+</implementation-status>
+
 <problem>
 Коды вроде банковских/резервных удобнее читать блоками, но визуальная grouping не должна менять aggregate string, native caret indices, completion length или создавать вложенные field contexts.
 </problem>

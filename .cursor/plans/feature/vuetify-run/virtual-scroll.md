@@ -4,6 +4,10 @@
 Vuetify references: `VInfiniteScroll`, `VInfiniteScrollIntersect`, `VVirtualScroll`, `VVirtualScrollItem` · PrimeTime target: one headless `useVirtualScroll` composable · Phase: 4 · Type: composable
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Specification is approved; no public `useVirtualScroll` composable or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved. No loader/fetch state, `MInfiniteScroll`, intersect leaf, `MVirtualScroll` wrapper or VirtualScrollItem component is created. SSR initial range uses the project's deterministic `useSSRWindowSize`; no `ssrCount` fallback exists.
 </status>
@@ -182,4 +186,3 @@ One headless composable virtualizes large arbitrary collections and exposes scro
 <questions>
 None. Measured variable heights are explicitly deferred.
 </questions>
-

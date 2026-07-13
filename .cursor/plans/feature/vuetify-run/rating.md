@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VRating` · Target: `MRating` · Phase: 2 · Type: public numeric visual control</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public single-tab-stop slider control, shared range keyboard controller,
+fractional clipping, pointer preview, focused tests and docs are present.
+</implementation-status>
+
 <problem>Rating требует pointer preview, fractional selection, keyboard editing и readonly display. Набор отдельных star buttons создаёт много tab stops и особенно плохо масштабируется при half/quarter steps.</problem>
 
 <user-jobs>

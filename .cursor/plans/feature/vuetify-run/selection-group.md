@@ -4,6 +4,10 @@
 Vuetify: `VItemGroup` · Target: `MSelectionGroup` · Phase: 1 · Type: public renderless component over kit reactive registry
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public renderless component, shared registry/context and focused tests are present.
+</implementation-status>
+
 <problem>
 Kit уже имеет мощную реактивную selection infrastructure (`createSelection`, `createGroup`, `createSingle`, proxy registry и context trinity), но она требует знания внутренних tickets/ids/namespaces. Для custom selectable cards, filters, tiles и toolbars нужен template-first API с generic type flow и без копирования selection state.
 </problem>

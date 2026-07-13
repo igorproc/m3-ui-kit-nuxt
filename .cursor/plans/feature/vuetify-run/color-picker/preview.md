@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VColorPickerPreview` · Target: private `ColorPickerPreview` · Parent: `MColorPicker` · Phase: 2 · Type: sub</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private context-only preview renders formatted value and alpha checkerboard
+without mutable state; all design values are token-resolved.
+</implementation-status>
+
 <problem>Пользователь должен видеть итоговый цвет и реальную прозрачность, включая white/black/transparent extremes, без дополнительного mutable state.</problem>
 
 <solution>Private passive leaf читает formatted value/RGBA/HSVA из parent context и показывает текущий цвет на checkerboard. Before/after comparison не входит: transactional snapshot/Apply/Cancel принадлежит dialog/form consumer.</solution>

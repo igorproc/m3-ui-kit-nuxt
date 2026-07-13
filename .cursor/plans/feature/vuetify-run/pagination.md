@@ -4,6 +4,11 @@
 Vuetify reference: `VPagination` · PrimeTime target: `MPagination` · Phase: 4 · Type: public
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Specification is approved; only private table pagination exists, not the public
+standalone `MPagination` described here.
+</implementation-status>
+
 <status>
 Discussed and approved. Standalone numbered pagination remains distinct from the compact private `MTablePagination` footer.
 </status>
@@ -160,4 +165,3 @@ Arbitrary collections receive a compact accessible numbered navigator that never
 <questions>
 None.
 </questions>
-

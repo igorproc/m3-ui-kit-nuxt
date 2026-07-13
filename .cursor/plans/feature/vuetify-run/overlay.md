@@ -4,6 +4,13 @@
 Vuetify: `VOverlay` · Target: `MOverlay` · Phase: 1 · Type: public primitive + internal runtime foundation
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public primitive, shared runtime and focused tests are present. `vue-final-modal`
+remains an allowed internal mounting adapter and does not block this status.
+</implementation-status>
+
+<status>done</status>
+
 <problem>
 Сейчас `MDialog`, modal `MSheet` и `MMenu` решают одну инфраструктурную задачу разными путями: teleport, scrim, порядок слоёв, dismiss по Escape/outside, блокировку прокрутки и возврат фокуса. Из-за этого вложенные поверхности могут конкурировать за z-index и события закрытия, а исправление поведения приходится повторять в нескольких компонентах.
 
@@ -124,9 +131,13 @@ if (status === 'confirmed')
 <migration>
 1. Выделить shared stack, dismiss, scroll-lock и focus runtime с тестами.
 2. Реализовать `MOverlay` поверх runtime.
-3. Перевести `MDialog`, затем modal `MSheet`, затем `MMenu`, сохраняя их текущий API через deprecated aliases при необходимости.
-4. Подключить `$modals` к тому же runtime по плану `components-should-update/modals.md`.
-5. После миграции удалить дублирующиеся overlay paths и оценить, нужен ли ещё `vue-final-modal` как adapter.
+3. Перевести `MDialog` и modal `MSheet`, сохранив их текущий public API.
+4. Оставить `MMenu` на собственном anchor-positioning path поверх общего
+   `useStack`: принудительная композиция через `MOverlay` не должна дублировать
+   positioning, outside и keyboard runtime.
+5. Сохранить `vue-final-modal` как внутренний mounting adapter для `$modals`,
+   navigation drawer и date dialog до отдельной согласованной миграции. Его
+   наличие не блокирует готовность public `MOverlay` primitive.
 
 Текущие `clickToClose`/`escToClose` в consumers мигрируют к `closeOnOutside`/`closeOnEscape`; старые имена можно временно поддержать с dev warning.
 </migration>
@@ -151,7 +162,11 @@ if (status === 'confirmed')
 </non-goals>
 
 <done>
-`MDialog`, `MSheet`, `MMenu` и программные modals используют один runtime; вложенные слои предсказуемо работают с focus, Escape, outside, scroll lock и SSR, а public consumers не зависят от `vue-final-modal`.
+`MOverlay` реализован как public controlled primitive с едиными stack,
+dismiss, focus-return и scroll-lock guarantees; `MDialog` и modal `MSheet`
+используют его без breaking changes. `MMenu` сохраняет специализированный
+anchor-positioning path на общем `useStack`, а `vue-final-modal` остаётся
+допустимым внутренним mounting adapter до отдельной миграции.
 </done>
 
 <questions></questions>

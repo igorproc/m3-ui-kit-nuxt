@@ -4,6 +4,10 @@
 Vuetify reference: `VBreadcrumbsItem` · PrimeTime target: private `BreadcrumbsItem` · Phase: 3 · Type: sub
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Leaf specification is approved; no breadcrumbs item implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Approved. Active crumbs reuse `MLink` or the current canonical `MButton` text-link path; current/disabled crumbs render as text.
 </status>
@@ -67,4 +71,3 @@ Every crumb has exactly one semantic state and reuses the kit's canonical naviga
 <questions>
 None.
 </questions>
-

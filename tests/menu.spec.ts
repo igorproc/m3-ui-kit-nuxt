@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, effectScope, h, nextTick, ref } from 'vue'
 import MMenu from '../app/components/ui/menu/index.vue'
+import { useMenu } from '../app/composables/menu/useMenu'
 
 // The menu teleports into the shared #ui-overlay-host (client-only). Tests check
 // roles/emits in document.body rather than overlay geometry/pixels.
@@ -35,6 +36,21 @@ function renderTrigger(props: Record<string, unknown> = {}, items = '') {
 }
 
 describe('m-menu', () => {
+  it('uses the anchor width in the native CSS anchor path', () => {
+    const supports = vi.spyOn(CSS, 'supports').mockReturnValue(true)
+    const scope = effectScope()
+    const menu = scope.run(() => useMenu(ref(false), {
+      absolute: () => true,
+      origin: () => 'top left',
+      matchWidth: () => true,
+    }))!
+
+    expect(menu.menuStyle.value.width).toBe('anchor-size(width)')
+
+    scope.stop()
+    supports.mockRestore()
+  })
+
   it('does not render the surface while closed', async () => {
     await mountSuspended(renderTrigger({ modelValue: false }))
 

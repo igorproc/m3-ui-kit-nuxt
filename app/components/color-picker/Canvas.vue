@@ -97,7 +97,6 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '~/assets/stylesheet/components/color-picker/index' as t;
 
 .ui-color-canvas {
@@ -113,8 +112,8 @@ function onKeydown(event: KeyboardEvent) {
   overflow: hidden;
 
   &:focus-visible {
-    outline: 2rem solid map.get($theme-color-link, 'primary');
-    outline-offset: 2rem;
+    outline: g($t, 'canvas-focus-width') solid g($t, 'canvas-focus-color');
+    outline-offset: g($t, 'canvas-focus-offset');
   }
 
   &__saturation,
@@ -125,20 +124,20 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   &__saturation {
-    background: linear-gradient(to right, #fff, transparent);
+    background: linear-gradient(to right, #{g($t, 'canvas-saturation-color')}, transparent);
   }
 
   &__value {
-    background: linear-gradient(to top, #000, transparent);
+    background: linear-gradient(to top, #{g($t, 'canvas-value-color')}, transparent);
   }
 
   &__thumb {
     position: absolute;
     width: g($t, 'canvas-thumb-size');
     height: g($t, 'canvas-thumb-size');
-    border: 2rem solid g($t, 'canvas-thumb-border');
+    border: g($t, 'canvas-thumb-border-width') solid g($t, 'canvas-thumb-border');
     border-radius: 50%;
-    box-shadow: 0 0 0 1rem rgb(0 0 0 / 30%);
+    box-shadow: g($t, 'canvas-thumb-shadow');
     transform: translate(-50%, -50%);
     pointer-events: none;
   }

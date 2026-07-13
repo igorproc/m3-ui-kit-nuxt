@@ -4,6 +4,11 @@
 Vuetify: `VFileUploadItem` · Target: private `FileUploadItem<TResult>` · Parent: `FileUploadList/MFileUpload` · Phase: 2 · Type: registered presentation leaf
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private readonly queue-entry renderer exposes status, progress and context-owned
+start/cancel/retry/remove actions through kit button/progress primitives.
+</implementation-status>
+
 <problem>
 Каждый queue entry имеет несколько переходов и допустимых действий. Если item самостоятельно вызывает upload callback или хранит progress/status, он расходится с scheduler, переживает removal некорректно и оставляет AbortController/listeners.
 </problem>

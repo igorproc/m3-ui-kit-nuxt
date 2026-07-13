@@ -4,6 +4,10 @@
 Vuetify reference: `VBanner` · PrimeTime target: `MBanner` · Phase: 3 · Type: public family parent
 </identity>
 
+<implementation-status state="planned" updated="2026-07-13">
+Family specification is approved; no public `MBanner` implementation or focused tests were found.
+</implementation-status>
+
 <status>
 Discussed and approved. `MBanner` is a neutral contextual action surface for page/section-level situations. It is distinct from severity-oriented inline `MAlert` and transient overlay `MSnackbar`.
 </status>
@@ -158,4 +162,3 @@ Props/defaults, slot precedence, both variants, all layouts, CSS auto transition
 <questions>
 None.
 </questions>
-

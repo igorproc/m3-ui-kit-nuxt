@@ -4,6 +4,10 @@
 Vuetify: `VLazy` · Target: `MLazy` · Phase: 1 · Type: public runtime boundary + Nuxt integration guidance
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public component, activation lifecycle, tokens, tests and docs_v2 page are present.
+</implementation-status>
+
 <problem>
 Тяжёлые charts, editors, maps и data views не всегда нужны в initial interaction path. Разработчику нужен один понятный способ отложить их активацию до свободного времени browser, появления в viewport или намерения взаимодействовать, не собирая вручную `IntersectionObserver`, async component, loading placeholder и cleanup.
 

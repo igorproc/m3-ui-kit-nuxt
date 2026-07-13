@@ -12,7 +12,8 @@
  *   provide pierces wrappers, `instance.parent` does not).
  * - Deeper layout-aware components (e.g. `m-app-bar` inside `m-layout-header`)
  *   contribute their size to the hosting zone instead.
- * - DOM order drives carving priority — no manual `order`.
+ * - DOM order drives carving priority by default; explicit `order` stabilizes
+ *   SSR when an async setup registers a visually earlier zone later.
  */
 import {
   computed,
@@ -182,6 +183,7 @@ export function createLayout(layoutId: string) {
       kind: item.kind,
       size: item.size,
       sticky: item.sticky,
+      order: item.order,
     }))
 
     return buildLayoutCss(layoutId, carveItems, [
@@ -205,8 +207,8 @@ export interface UseLayoutItemOptions {
   sticky?: boolean | Ref<boolean | undefined>
   /** Bypass the first-level parent check (escape hatch for wrapped `m-layout-item`). */
   force?: boolean
-  /** @deprecated DOM order drives priority now; ignored. */
-  order?: number
+  /** Lower values carve first; equal/omitted values preserve registration/DOM order. */
+  order?: number | Ref<number | undefined>
 }
 
 /**
@@ -297,7 +299,7 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
 
   const getEl = () => (instance?.proxy?.$el as Element | null) ?? null
 
-  // Live-геттеры: реестр всегда отдаёт АКТУАЛЬНЫЕ kind/size/sticky. Критично
+  // Live-геттеры: реестр всегда отдаёт АКТУАЛЬНЫЕ kind/size/sticky/order. Критично
   // для SSR: вклады детей появляются после setup родителя, watchEffect на
   // сервере не отработает — а css-computed резолвится в самом конце и через
   // геттеры видит финальные значения (и реактивно трекает их на клиенте)
@@ -306,6 +308,7 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     get kind() { return kindRef.value },
     get size() { return effectiveSize.value },
     get sticky() { return unref(options.sticky) || undefined },
+    get order() { return unref(options.order) },
   })
 
   // Синхронная регистрация — SSR собирает грид при рендере

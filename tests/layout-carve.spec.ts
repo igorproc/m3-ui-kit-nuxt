@@ -57,6 +57,26 @@ describe('carve — grid templates', () => {
     expect(grid.areas).toBe('"sb sb" "ab ab" "nav main" "nav foot"')
   })
 
+  it('explicit order stabilizes SSR when an async aside registers after the header', () => {
+    const { grid } = carve([
+      { ...item('header', 'top', 'var(--h)'), order: 1 },
+      { ...item('aside', 'start', 'var(--w)'), order: 0 },
+      { ...item('content', 'main'), order: 2 },
+    ])
+
+    expect(grid.areas).toBe('"aside header" "aside content"')
+  })
+
+  it('equal and omitted order values preserve registration order', () => {
+    const { grid } = carve([
+      { ...item('header', 'top'), order: 0 },
+      item('aside', 'start'),
+      item('content', 'main'),
+    ])
+
+    expect(grid.areas).toBe('"header header" "aside content"')
+  })
+
   it('end side mirrors start: three-column shell', () => {
     const { grid } = carve([
       item('header', 'top', 'var(--h)'),
