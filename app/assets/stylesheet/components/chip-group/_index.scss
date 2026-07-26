@@ -1,0 +1,12 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// CHIP GROUP M3 COMPONENT TOKENS
+// ==========================================
+// Layout only. Every selected/hover/focus/disabled visual state belongs to
+// `MChip`; the group owns gap, direction, wrap and overflow.
+
+$tokens: (
+  gap: 8rem,
+  scroll: (padding: (block: 2rem)),
+);

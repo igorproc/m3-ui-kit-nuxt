@@ -27,12 +27,18 @@ Status: **done** · 2026-07-14
 [MBreadcrumbs](breadcrumbs/index.md) · [Divider](breadcrumbs/divider.md) · [Item](breadcrumbs/item.md) ·
 [MChipGroup](chip-group/index.md) ·
 [MListSubheader](list-subheader.md) ·
+
+Status: **done** · 2026-07-16
 </phase>
 
 <phase id="4" name="navigation-data-and-views">
 [useVirtualScroll](virtual-scroll.md) · [MPagination](pagination.md) ·
+
+Status: **done** · 2026-07-18
 </phase>
 
 <phase id="5" name="hierarchy-and-visualization">
 [MTimeline](timeline/index.md) · [TimelineDivider](timeline/divider.md) · [MTimelineItem](timeline/item.md)
+
+Status: **done** · 2026-07-18
 </phase>

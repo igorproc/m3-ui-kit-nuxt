@@ -4,8 +4,14 @@
 Vuetify reference: `VAvatar` · PrimeTime target: `MAvatar` · Phase: 3 · Type: public
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Specification is approved; no public `MAvatar` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Public `MAvatar`, the pure `getAvatarInitials` utility
+(`shared/utils/avatar/index.ts`), co-located `avatar/_index.scss` tokens and
+focused tests (`tests/avatar.spec.ts`, 19 cases incl. Unicode/RTL initials,
+stale-event guard, alt/name labelling) are present; lint and stylelint pass.
+The docs_v2 page (content en/ru, token manifest, interactive/playground
+renderers) is generated and validated. Note: the `fallback` slot payload is
+bound as one object because `name` is reserved on `<slot>`.
 </implementation-status>
 
 <status>

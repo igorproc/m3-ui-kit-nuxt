@@ -4,8 +4,18 @@
 Vuetify reference: `VBreadcrumbsDivider` · PrimeTime target: private `BreadcrumbsDivider` · Phase: 3 · Type: sub
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Leaf specification is approved; no breadcrumbs divider implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Private leaf at `app/components/ui/breadcrumbs/divider/index.vue`, rendered only
+between crumbs inside an `aria-hidden` `li`. Discriminator: values matching
+`^[a-z][a-z0-9]*(?:[-:][a-z0-9]+)+# BreadcrumbsDivider
+
+<identity>
+Vuetify reference: `VBreadcrumbsDivider` · PrimeTime target: private `BreadcrumbsDivider` · Phase: 3 · Type: sub
+</identity>
+
+ render through `MIcon`, anything else
+(`/`, `>`) as text. Root class is `ui-breadcrumbs-divider` because the BEM
+stylelint pattern forbids a dash inside an element name.
 </implementation-status>
 
 <status>

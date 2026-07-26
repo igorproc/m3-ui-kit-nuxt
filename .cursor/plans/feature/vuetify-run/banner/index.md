@@ -4,8 +4,14 @@
 Vuetify reference: `VBanner` · PrimeTime target: `MBanner` · Phase: 3 · Type: public family parent
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Family specification is approved; no public `MBanner` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Public `MBanner`, the private `BannerActions` leaf, co-located
+`banner/_index.scss` tokens and focused tests (`tests/banner.spec.ts`, 13
+cases) are present; lint and stylelint pass. The docs_v2 page (content en/ru,
+token manifest, interactive/playground renderers) is generated and validated.
+`auto` switches presentation через static `@media` на `$breakpoints.tablet-xs`
+(px, не rem — media resolves rem against the initial 16px); grid areas move the
+actions row without touching DOM order.
 </implementation-status>
 
 <status>

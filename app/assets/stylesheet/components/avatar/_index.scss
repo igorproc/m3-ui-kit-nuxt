@@ -1,0 +1,49 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// AVATAR M3 COMPONENT TOKENS
+// ==========================================
+// The avatar is a passive identity surface: no hover, pressed or focus state
+// layers exist here. Interactive state belongs to the wrapping control.
+
+$tokens: (
+  sm: (
+    size: 24rem,
+    icon: (size: 16rem),
+    initials: (typography: map.get($theme-typography-link, 'label', 'small')),
+  ),
+  md: (
+    size: 40rem,
+    icon: (size: 24rem),
+    initials: (typography: map.get($theme-typography-link, 'label', 'large')),
+  ),
+  lg: (
+    size: 56rem,
+    icon: (size: 32rem),
+    initials: (typography: map.get($theme-typography-link, 'title', 'medium')),
+  ),
+  shape: (
+    full: map.get($theme-shape-link, 'full'),
+    large: map.get($theme-shape-link, 'large'),
+    medium: map.get($theme-shape-link, 'medium'),
+    small: map.get($theme-shape-link, 'small'),
+  ),
+  image: (fit: cover),
+  tonal: (
+    container: (color: map.get($theme-color-link, 'primary-container')),
+    content: (color: map.get($theme-color-link, 'on-primary-container')),
+  ),
+  filled: (
+    container: (color: map.get($theme-color-link, 'primary')),
+    content: (color: map.get($theme-color-link, 'on-primary')),
+  ),
+  outlined: (
+    container: (color: transparent),
+    content: (color: map.get($theme-color-link, 'on-surface-variant')),
+    outline: (
+      color: map.get($theme-color-link, 'outline-variant'),
+      width: 1rem,
+    ),
+  ),
+);

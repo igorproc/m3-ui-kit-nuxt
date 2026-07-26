@@ -1,10 +1,15 @@
 <template>
   <button
+    ref="element"
     class="ui-chip"
     :class="chipClasses"
     type="button"
-    :disabled="disabled"
+    :disabled="isDisabled"
+    :aria-pressed="ticket ? isSelected : undefined"
+    :aria-disabled="isBlocked ? 'true' : undefined"
+    :tabindex="ticket?.tabindex.value"
     @click="onClick"
+    @keydown="onKeydown"
   >
     <span
       v-if="$slots.icon"
@@ -27,28 +32,89 @@
 </template>
 
 <script setup lang="ts">
+import { tryUseChipGroupContext } from '~/composables/chip-group/context'
 import { mChipProps } from './props'
 
 const props = defineProps(mChipProps)
 
 const selectedModel = defineModel<boolean>({ default: false })
 
+const element = useTemplateRef<HTMLElement>('element')
+const group = tryUseChipGroupContext()
+
+/**
+ * A chip joins the group only with a `value`. Without one it stays standalone —
+ * a normal Tab stop with its own boolean model — even inside a group layout.
+ */
+const ticket = group && props.value !== undefined
+  ? group.register({
+      value: () => props.value,
+      disabled: () => props.disabled,
+      element,
+    })
+  : undefined
+
+onScopeDispose(() => ticket?.stop())
+
+const isSelected = computed(() => (ticket ? ticket.selected.value : selectedModel.value))
+const isDisabled = computed(() => (ticket ? ticket.disabled.value : props.disabled))
+// Blocked by the group `max`: announced as unavailable through aria-disabled
+// rather than natively disabled, so it stays discoverable in the group.
+const isBlocked = computed(() => Boolean(ticket && ticket.blockReason.value === 'max'))
+
 const chipClasses = computed(() => [
   `ui-chip--${props.type}`,
   {
-    'ui-chip--selected': selectedModel.value,
-    'ui-chip--disabled': props.disabled,
+    'ui-chip--selected': isSelected.value,
+    'ui-chip--disabled': isDisabled.value,
+    'ui-chip--blocked': isBlocked.value,
   },
 ])
 
 function onClick() {
-  if (props.disabled) {
+  if (isDisabled.value) return
+
+  if (ticket) {
+    // The registry rejects a blocked toggle, so no local guard is duplicated.
+    ticket.toggle()
     return
   }
 
-  if (props.type === 'filter') {
-    selectedModel.value = !selectedModel.value
+  if (props.type === 'filter') selectedModel.value = !selectedModel.value
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (!ticket || !group) return
+
+  const horizontal = group.direction.value === 'horizontal'
+  // RTL swaps the visual meaning of previous/next along the inline axis only.
+  const rtl = horizontal && element.value
+    ? getComputedStyle(element.value).direction === 'rtl'
+    : false
+
+  const forward = horizontal ? (rtl ? 'ArrowLeft' : 'ArrowRight') : 'ArrowDown'
+  const backward = horizontal ? (rtl ? 'ArrowRight' : 'ArrowLeft') : 'ArrowUp'
+  const value = ticket.value.value
+
+  switch (event.key) {
+    case forward:
+      event.preventDefault()
+      group.focusNext(value)
+      break
+    case backward:
+      event.preventDefault()
+      group.focusPrev(value)
+      break
+    case 'Home':
+      event.preventDefault()
+      group.focusFirst()
+      break
+    case 'End':
+      event.preventDefault()
+      group.focusLast()
+      break
   }
+  // Space/Enter keep native button activation and reach `onClick`.
 }
 </script>
 
@@ -142,10 +208,23 @@ $prefix: 'md-chip';
     }
   }
 
+  // Restores the visible indicator removed by `outline: none` above.
+  &:focus-visible {
+    outline: g($t, 'focus-width') solid g($t, 'focus-color');
+    outline-offset: g($t, 'focus-offset');
+  }
+
   &--disabled {
     cursor: default;
     opacity: g($t, 'disabled-opacity');
     pointer-events: none;
+  }
+
+  // Selection is blocked by the group `max`; the chip stays focusable so the
+  // user can reach it and understand why it cannot be selected.
+  &--blocked {
+    cursor: default;
+    opacity: g($t, 'blocked-opacity');
   }
 }
 </style>

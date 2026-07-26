@@ -4,8 +4,18 @@
 Vuetify reference: `VChipGroup` · PrimeTime target: `MChipGroup` · Phase: 3 · Type: public family parent
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Family specification is approved; no public `MChipGroup` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Public `MChipGroup`, the dedicated context
+(`app/composables/chip-group/context.ts`), `MChip` integration (optional
+`value`, aria-pressed, roving tabindex, arrows/Home/End) and layout-only
+`chip-group/_index.scss` tokens are present. Chip tokens gained focus-visible
+and max-blocked branches. Focused tests (`tests/chip-group.spec.ts`, 18 cases)
+cover standalone regression, no accidental generic-selection injection,
+single/multiple/mandatory/max, roving focus, data mode and cleanup; the
+existing chip/selection suites still pass. Lint, stylelint and vue-tsc pass.
+The docs_v2 page is generated and validated. Props follow the runtime-object
+convention (as `MAutocomplete`) because the docs API generator only reads
+`defineProps(mXProps)`.
 </implementation-status>
 
 <status>

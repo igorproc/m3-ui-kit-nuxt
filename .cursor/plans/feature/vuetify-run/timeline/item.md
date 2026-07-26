@@ -4,8 +4,13 @@
 Vuetify reference: `VTimelineItem` · PrimeTime target: `MTimelineItem` · Phase: 5 · Type: public family child
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Public-child specification is approved; no `MTimelineItem` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-18">
+Public `MTimelineItem` at `app/components/ui/timeline/item/index.vue`: injects
+the timeline context, registers one DOM-ordered ticket, renders `li` with
+opposite/divider/`MSurface` content. Slot precedence (opposite>time,
+title/default>props), `<time datetime>`, side override, hideDot/hideOpposite,
+contentTag. Covered by `tests/timeline.spec.ts` incl. the context-required
+guard.
 </implementation-status>
 
 <status>Approved as a public explicit-composition component.</status>

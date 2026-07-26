@@ -1,0 +1,28 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// BREADCRUMBS M3 COMPONENT TOKENS
+// ==========================================
+// Interactive layers come from the reused `MButton` text-link. Breadcrumb
+// tokens only adapt typography/spacing and own the noninteractive
+// current/disabled branches.
+$on-surface: map.get($theme-color-link, 'on-surface');
+$tokens: (
+  list: (gap: 4rem),
+  item: (
+    height: 32rem,
+    shape: map.get($theme-shape-link, 'small'),
+    typography: map.get($theme-typography-link, 'label', 'large'),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    padding: (inline: 8rem),
+    current: (color: $on-surface),
+    disabled: (color: color-mix(in srgb, #{$on-surface} 38%, transparent)),
+  ),
+  divider: (
+    color: map.get($theme-color-link, 'outline'),
+    size: 18rem,
+    // The chevron points along the reading direction, so RTL mirrors it.
+    rtl: (transform: scaleX(-1)),
+  ),
+);

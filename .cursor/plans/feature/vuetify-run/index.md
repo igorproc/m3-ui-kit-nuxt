@@ -19,18 +19,37 @@ PrimeTime-first. Полная классификация существующи�
 
 ## Состояние реализации
 
-Актуально на **2026-07-14**. Product/discussion approval и implementation
+Актуально на **2026-07-18**. Product/discussion approval и implementation
 state разделены: источником состояния служит `<implementation-status>` внутри
 каждого plan. Шкала описана в [common.md](common.md).
 
 | State | Количество | Планы |
 |---|---:|---|
-| `done` | 28 | Все планы фаз 1–2 |
+| `done` | 42 | Все планы фаз 1–5 |
 | `partial` | 0 | — |
-| `planned` | 14 | Active roadmap plans фаз 3–5 |
+| `planned` | 0 | — |
+
+Все фазы roadmap закрыты. Осталось обязательное финальное реформатирование
+планов (см. ниже) перед завершением инициативы.
 
 Фаза 2 закрыта: form/picker inputs реализованы, review gate `MColorInput`
 подтверждён human direction от 2026-07-14, focused suite проходит.
+
+Фаза 3 закрыта (2026-07-16): `MAlert`, `MAvatar`, `MBanner`(+`BannerActions`),
+`MBreadcrumbs`(+`Item`/`Divider`), `MChipGroup`, `MListSubheader` реализованы,
+для каждого создана docs_v2 страница. Severity → semantic role mapping alert'а
+(`info → secondary`, `success → tertiary`, `warning → primary`) подтверждён
+human direction от 2026-07-16 по фактической палитре (tertiary — зелёный,
+primary — янтарный).
+
+Фаза 4 закрыта (2026-07-18): `useVirtualScroll` (headless composable, без
+docs-страницы — composables получат отдельную HeadlessUI-подобную секцию
+позже) и `MPagination` (минимальная docs: hero + playground).
+
+Фаза 5 закрыта (2026-07-18): `MTimeline`(+`MTimelineItem`, `TimelineDivider`),
+минимальная docs. Docs-валидатор ослаблен по human direction: секции
+компонентной страницы теперь — упорядоченное подмножество канонических пяти,
+что разрешает минимальные страницы (hero + reference-only).
 
 ## Фазы
 

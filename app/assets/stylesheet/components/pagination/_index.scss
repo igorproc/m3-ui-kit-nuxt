@@ -1,0 +1,17 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// PAGINATION M3 COMPONENT TOKENS
+// ==========================================
+// Page and directional interactive states are owned by the reused button
+// components; pagination only owns layout and the decorative ellipsis.
+
+$tokens: (
+  list: (gap: 4rem),
+  control: (size: 40rem),
+  ellipsis: (
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: map.get($theme-typography-link, 'label', 'large'),
+  ),
+);

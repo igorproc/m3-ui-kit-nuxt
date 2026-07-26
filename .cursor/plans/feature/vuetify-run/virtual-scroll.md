@@ -4,8 +4,18 @@
 Vuetify references: `VInfiniteScroll`, `VInfiniteScrollIntersect`, `VVirtualScroll`, `VVirtualScrollItem` · PrimeTime target: one headless `useVirtualScroll` composable · Phase: 4 · Type: composable
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Specification is approved; no public `useVirtualScroll` composable or focused tests were found.
+<implementation-status state="done" updated="2026-07-18">
+Headless `useVirtualScroll` lives at `app/composables/virtual-scroll/`
+(`geometry.ts` pure offset/range maths + `useVirtualScroll.ts` reactive
+machine). Range/overscan/boundaries/anchor/programmatic navigation and the
+idle/scrolling/programmatic/settling machine are implemented on
+`useSSRWindowSize` + `useEventListener` + `useRaf` + `ResizeObserver`, with
+scope-disposed cleanup. Focused tests (`tests/virtual-scroll.spec.ts`, 13
+cases) cover geometry (constant + size-fn binary search), SSR range, native
+scroll recompute, boundaries, anchor prepend/restore, disabled and clamped
+programmatic scroll; lint and vue-tsc pass. No docs page: composables get a
+separate HeadlessUI-style section later, not a component page. Measured
+variable heights remain deferred per plan.
 </implementation-status>
 
 <status>

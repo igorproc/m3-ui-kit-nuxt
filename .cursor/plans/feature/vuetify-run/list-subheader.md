@@ -4,8 +4,14 @@
 Vuetify reference: `VListSubheader` · PrimeTime target: `MListSubheader` · Phase: 3 · Type: public
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Specification is approved; no public `MListSubheader` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Public `MListSubheader` at `app/components/ui/list/subheader/index.vue` with
+tokens at `app/assets/stylesheet/components/list/subheader/_index.scss`
+(mirrors the existing `list/item` organization). The inset offset is derived
+from the list item leading column, not a literal. Focused tests
+(`tests/list-subheader.spec.ts`, 6 cases) cover title/slot precedence, tag
+variants, passive semantics and modifiers; lint and stylelint pass. The docs_v2
+page is generated and validated.
 </implementation-status>
 
 <status>

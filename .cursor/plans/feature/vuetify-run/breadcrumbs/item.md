@@ -4,8 +4,11 @@
 Vuetify reference: `VBreadcrumbsItem` · PrimeTime target: private `BreadcrumbsItem` · Phase: 3 · Type: sub
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Leaf specification is approved; no breadcrumbs item implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Private leaf at `app/components/ui/breadcrumbs/item/index.vue`: active crumbs
+render through `MButton variant=text tag=link`, current/disabled render as text
+with `aria-current`/`aria-disabled`. Covered by `tests/breadcrumbs.spec.ts`
+(all semantic branches, current precedence, tab order, slot content).
 </implementation-status>
 
 <status>

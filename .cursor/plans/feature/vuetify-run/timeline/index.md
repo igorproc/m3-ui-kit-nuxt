@@ -4,8 +4,15 @@
 Vuetify reference: `VTimeline` · PrimeTime target: `MTimeline` · Phase: 5 · Type: public family parent
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Family specification is approved; no public `MTimeline` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-18">
+Public `MTimeline` + `MTimelineItem` with the private `TimelineDivider` leaf,
+the view-only `app/composables/timeline/context.ts` registry (DOM-ordered so
+mid-list insertion stays correct), co-located `timeline/_index.scss` tokens and
+focused tests (`tests/timeline.spec.ts`, 15 cases). Vertical v1; side
+start/end/alternate + per-item override, density, line modes, first/last
+connector, hideDot/hideOpposite, MColor marker, article/div content. side/line
+are data-attributes (BEM stylelint forbids a dash in a static modifier).
+Lint, stylelint and vue-tsc pass. Docs: minimal page (hero + playground).
 </implementation-status>
 
 <status>

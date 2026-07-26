@@ -38,5 +38,13 @@ $tokens: (
     ),
   ),
   disabled: (opacity: 0.38),
+  // Reached the group `max`: unavailable for selection, but not disabled, so it
+  // stays more legible than a disabled chip.
+  blocked: (opacity: 0.6),
+  focus: (
+    color: map.get($theme-color-link, 'secondary'),
+    width: 2rem,
+    offset: 2rem,
+  ),
   suggestion: (shadow: 0 1rem 2rem rgb(0 0 0 / 10%)),
 );

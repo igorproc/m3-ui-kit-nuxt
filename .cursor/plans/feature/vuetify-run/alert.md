@@ -4,8 +4,13 @@
 Vuetify reference: `VAlert` · PrimeTime target: `MAlert` · Phase: 3 · Type: public
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Specification is approved; no public `MAlert` implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Public `MAlert`, co-located `alert/_index.scss` tokens and focused tests
+(`tests/alert.spec.ts`, 12 cases) are present; lint and stylelint pass. The
+docs_v2 page (content en/ru, token manifest, interactive/playground renderers)
+is generated and validated. Severity → role mapping is declared in alert
+tokens: `info → secondary`, `success → tertiary`, `warning → primary`,
+`error → error`.
 </implementation-status>
 
 <status>
@@ -121,6 +126,7 @@ export interface MAlertCloseSlot {
   close: () => void
   props: {
     type: 'button'
+    class: string
     ariaLabel: string
     disabled: false
     onClick: () => void
@@ -129,6 +135,8 @@ export interface MAlertCloseSlot {
 ```
 
 The whole-control `close` slot receives safe bindings. A consumer replacing it is responsible for retaining button semantics and an accessible name. Slots never accept HTML strings.
+
+`props.class` carries the alert-owned close class, so a replacement control inherits the same geometry, shape and per-severity state layers instead of restyling them. Close tokens therefore apply to any control in that slot, not only to the default `MButtonIcon`.
 </slots>
 
 <default-icons>

@@ -4,8 +4,11 @@
 Vuetify reference: `VTimelineDivider` · PrimeTime target: private `TimelineDivider` · Phase: 5 · Type: sub
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Leaf specification is approved; no timeline divider implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-18">
+Private `TimelineDivider` at `app/components/ui/timeline/divider/index.vue`:
+direct props only (first/last/line/color/icon/hideDot), no context. Decorative
+and `aria-hidden`; before/after connector hidden on first/last; dashed line via
+repeating-gradient; MColor dot. Covered by `tests/timeline.spec.ts`.
 </implementation-status>
 
 <problem>Before/after connector segments and marker geometry must respond to first/last, density, line and dot content without consumers assembling decorative DOM.</problem>

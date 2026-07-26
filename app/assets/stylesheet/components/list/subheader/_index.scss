@@ -1,0 +1,28 @@
+@use 'sass:map';
+@use '../../../abstracts/forward.scss' as *;
+@use '../item/index' as item;
+
+// ==========================================
+// LIST SUBHEADER M3 COMPONENT TOKENS
+// ==========================================
+// The subheader is passive: no hover, focus, pressed or disabled states exist.
+// The inset offset is derived from the list item's leading-media column
+// (leading padding + icon size + gap) instead of repeating the resulting
+// literal, so the label keeps aligning with item headlines if item spacing
+// changes.
+$item-padding: map.get(item.$tokens, 'padding');
+$inset-offset: map.get($item-padding, 'leading') + map.get(item.$tokens, 'leading', 'icon', 'size') + map.get($item-padding, 'between');
+$tokens: (
+  min: (height: 48rem),
+  padding: (
+    block: 8rem,
+    inline: map.get($item-padding, 'leading'),
+  ),
+  inset: (padding: (inline: $inset-offset)),
+  typography: map.get($theme-typography-link, 'title', 'small'),
+  color: map.get($theme-color-link, 'on-surface-variant'),
+  sticky: (
+    container: (color: map.get($theme-color-link, 'surface')),
+    z: 1,
+  ),
+);

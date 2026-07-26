@@ -16,6 +16,7 @@
       class="ui-button__spinner"
       aria-hidden="true"
     />
+
     <span
       v-else-if="$slots.prepend"
       class="ui-button__icon ui-button__icon--prepend"

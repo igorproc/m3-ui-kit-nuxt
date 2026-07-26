@@ -4,8 +4,11 @@
 Vuetify reference: `VBannerActions` · PrimeTime target: private `BannerActions` · Phase: 3 · Type: sub
 </identity>
 
-<implementation-status state="planned" updated="2026-07-13">
-Leaf specification is approved; no banner actions implementation or focused tests were found.
+<implementation-status state="done" updated="2026-07-16">
+Private leaf lives at `app/components/ui/banner/actions/index.vue`, is mounted
+by `MBanner` only when an `actions` slot exists, takes `layout` as an explicit
+prop and reads the parent's nested `actions` token paths. Covered by
+`tests/banner.spec.ts` (conditional mount, layout modifier, stable DOM order).
 </implementation-status>
 
 <status>
