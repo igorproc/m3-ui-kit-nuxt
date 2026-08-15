@@ -53,8 +53,8 @@
 </template>
 
 <script setup lang="ts">
-import BreadcrumbsItem from './item/index.vue'
-import BreadcrumbsDivider from './divider/index.vue'
+import BreadcrumbsItem from '~/components/fragments/breadcrumbs/item/index.vue'
+import BreadcrumbsDivider from '~/components/fragments/breadcrumbs/divider/index.vue'
 import type { MBreadcrumbItem } from './props'
 import { mBreadcrumbsProps } from './props'
 

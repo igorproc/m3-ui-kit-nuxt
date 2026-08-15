@@ -1,23 +1,43 @@
 /**
  * Public prop surface for `<MAppBar>`.
  *
- * The legacy `variant` (`center-aligned | small | medium | large`) is a *size*
- * taxonomy, not the MD3 surface style (`elevated | filled | …`). Per the prop
- * unification spec it is renamed to `type` to avoid colliding with the shared
- * `variant` contract.
+ * MD3 Expressive (May 2025) splits the old size/alignment mix into two axes:
+ * `type` is the *size* (`small | medium | large`) and `align` is the *headline
+ * alignment* (`start | center`). The pre-Expressive `center-aligned` value is
+ * kept as a `@deprecated` alias that normalizes to `type: 'small'` +
+ * `align: 'center'` inside the container — nothing in consumer code breaks.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { AppBarAlign, AppBarSize } from '~/composables/app-bar/useAppBar'
 
-export type MAppBarType = 'center-aligned' | 'small' | 'medium' | 'large'
+/**
+ * Accepted `type` values. `'center-aligned'` is a legacy alias — prefer
+ * `type="small"` with `align="center"`.
+ */
+export type MAppBarType = AppBarSize | 'center-aligned'
 
 export const mAppBarProps = {
+  /** Ready-made headline text; omit and compose `<MAppBarTitle>` for full control. */
   title: { type: String, default: '' },
+  /** Ready-made supporting text under the title. */
   subtitle: { type: String, default: '' },
-  type: { type: String as PropType<MAppBarType>, default: 'center-aligned' },
-  /** Прибить к верху, когда app-bar — прямой ребёнок m-layout */
+  /** MD3 size. `'center-aligned'` is a deprecated alias for `small` + `align: center`. */
+  type: { type: String as PropType<MAppBarType>, default: 'small' },
+  /**
+   * Headline alignment axis. Presets `start | center`; for anything more exotic
+   * style `<MAppBarTitle>` / the actions slot directly — the compound children
+   * accept ordinary `class`/`style` flex overrides.
+   */
+  align: { type: String as PropType<AppBarAlign>, default: 'start' },
+  /** Pin to the top when the bar is a direct child of `m-layout`. */
   sticky: { type: Boolean, default: true },
-  /** @deprecated принудительный override — elevate теперь автоматический (по скроллу лейаута) */
-  isScrolled: { type: Boolean, default: false },
+  /**
+   * Scroll-fill control (MD3: fill, not shadow).
+   * - `undefined` (default) — auto: follows the layout/window scroll offset.
+   * - `true` / `false` — controlled: pins the state and skips the scroll
+   *   listener entirely (opt out of any scroll reaction).
+   */
+  scrolled: { type: Boolean as PropType<boolean | undefined>, default: undefined },
 }
 
 export type MAppBarProps = ExtractPublicPropTypes<typeof mAppBarProps>

@@ -3,7 +3,7 @@
     class="ui-form-renderer"
     @submit.prevent="form.submit"
   >
-    <m-form-renderer-field
+    <FormRendererField
       v-for="field in fields"
       :key="field.name"
       :field="field"
@@ -26,6 +26,8 @@
 </template>
 
 <script setup lang="ts">
+import FormRendererField from '~/components/fragments/form-renderer/field/index.vue'
+import MButton from '~/components/ui/button/index.vue'
 import { useFormSchema, type FormFieldConfig } from '~/composables/useFormSchema'
 
 interface Props {

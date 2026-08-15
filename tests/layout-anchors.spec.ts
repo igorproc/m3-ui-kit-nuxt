@@ -89,7 +89,7 @@ describe('multi-instance zones & sticky anchors', () => {
     expect(bar.classes()).toContain('ui-app-bar--anchored')
 
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'top', size: 'var(--ui-app-bar-height-small)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })
@@ -106,7 +106,7 @@ describe('multi-instance zones & sticky anchors', () => {
     expect(bar.attributes('data-m3-zone')).toBeTruthy()
     expect(bar.classes()).toContain('ui-app-bar--anchored')
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'top', size: 'var(--ui-app-bar-height-small)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })
@@ -130,7 +130,7 @@ describe('multi-instance zones & sticky anchors', () => {
     // зона получила размер из вклада app-bar — реестр отдаёт его live-геттером,
     // поэтому generated-CSS прибьёт header и зарезервирует строку и на SSR
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'top', size: 'var(--ui-app-bar-height-small)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })

@@ -10,8 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import MTimePickerKeyboard from './keyboard/index.vue'
-import MTimePickerDial from './dial/index.vue'
+import MTimePickerKeyboard from '~/components/fragments/time-picker/keyboard/index.vue'
+import MTimePickerDial from '~/components/fragments/time-picker/dial/index.vue'
 import { mTimePickerProps } from './props'
 
 const props = defineProps(mTimePickerProps)

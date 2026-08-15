@@ -5,7 +5,7 @@ Vuetify reference: `VBreadcrumbsItem` · PrimeTime target: private `BreadcrumbsI
 </identity>
 
 <implementation-status state="done" updated="2026-07-16">
-Private leaf at `app/components/ui/breadcrumbs/item/index.vue`: active crumbs
+Private leaf at `app/components/fragments/breadcrumbs/item/index.vue`: active crumbs
 render through `MButton variant=text tag=link`, current/disabled render as text
 with `aria-current`/`aria-disabled`. Covered by `tests/breadcrumbs.spec.ts`
 (all semantic branches, current precedence, tab order, slot content).

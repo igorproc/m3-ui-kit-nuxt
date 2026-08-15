@@ -1,201 +1,123 @@
 <template>
   <div
     class="ui-app-bar"
-    :class="[
-      `ui-app-bar--${type}`,
-      {
-        'ui-app-bar--scrolled': scrolled,
-        'ui-app-bar--with-subtitle': hasSubtitle,
-        'ui-app-bar--anchored': isLayoutChild,
-      },
-    ]"
+    :class="rootClasses"
     v-bind="layoutItemAttrs"
-    :style="[
-      layoutItemStyles,
-      dynamicGridStyles,
-    ]"
+    :style="layoutItemStyles"
   >
-    <slot name="container">
-      <div
-        v-if="$slots.nav"
-        class="ui-app-bar__nav"
-      >
-        <slot name="nav" />
-      </div>
-
-      <div
-        v-if="$slots.title || title || subtitle || $slots.subtitle"
-        class="ui-app-bar__title"
-      >
-        <slot name="title">
-          <p
-            v-if="title"
-            class="ui-app-bar__title-text"
-          >
-            {{ title }}
-          </p>
-        </slot>
-
-        <slot name="subtitle">
-          <p
-            v-if="subtitle"
-            class="ui-app-bar__subtitle"
-          >
-            {{ subtitle }}
-          </p>
-        </slot>
-      </div>
-
-      <div
-        v-if="$slots.actions"
-        class="ui-app-bar__actions"
-      >
-        <slot name="actions" />
-      </div>
+    <slot>
+      <m-app-bar-title
+        v-if="title || subtitle"
+        :title="title"
+        :subtitle="subtitle"
+      />
     </slot>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useSlots } from 'vue'
+import { computed, ref, shallowReactive } from 'vue'
+import type { Ref } from 'vue'
+import { provideAppBarContext } from '~/composables/app-bar/useAppBar'
+import type { AppBarAlign, AppBarSize } from '~/composables/app-bar/useAppBar'
+import MAppBarTitle from './title/index.vue'
 import { mAppBarProps } from './props'
 
 const props = defineProps(mAppBarProps)
 
-const slots = useSlots()
+// `center-aligned` is the legacy alias: normalize the mixed axis into a pure
+// size + a forced center alignment. Everything downstream sees clean axes.
+const size = computed<AppBarSize>(() => props.type === 'center-aligned' ? 'small' : props.type)
+const align = computed<AppBarAlign>(() => props.type === 'center-aligned' ? 'center' : props.align)
 
-const hasSubtitle = computed(() => {
-  return !!props.subtitle || !!slots.subtitle
+// Subtitle presence: the container's own prop OR any composed <MAppBarTitle>
+// that reported one up through the context.
+const subtitleReports = shallowReactive(new Set<Ref<boolean>>())
+const hasSubtitle = computed(() => !!props.subtitle || [...subtitleReports].some(report => report.value))
+
+function registerSubtitle(present: Ref<boolean>) {
+  subtitleReports.add(present)
+  return () => void subtitleReports.delete(present)
+}
+
+// Height token lookup — a map keyed by size, the condition (subtitle) selects
+// the column, replacing the old switch/ternary tangle.
+const HEIGHT_TOKENS: Record<AppBarSize, { base: string, subtitle: string }> = {
+  small: { base: '--ui-app-bar-height-small', subtitle: '--ui-app-bar-height-small-subtitle' },
+  medium: { base: '--ui-app-bar-height-medium', subtitle: '--ui-app-bar-height-medium-subtitle' },
+  large: { base: '--ui-app-bar-height-large', subtitle: '--ui-app-bar-height-large-subtitle' },
+}
+const sizeToken = computed(() => {
+  const tokens = HEIGHT_TOKENS[size.value]
+  return hasSubtitle.value ? tokens.subtitle : tokens.base
 })
 
-// Auto-elevate: внутри лейаута — общий windowY контекстной зоны (покрывает скролл
-// документа и скролл main в full-height); вне лейаута — собственный слушатель
+// Scroll-fill: controlled when `scrolled` is passed (skips the listener), else
+// auto — inside a layout via the zone's shared offset, otherwise its own listener.
 const layoutZone = useLayoutZone()
 const fallbackY = ref(0)
 
-if (!layoutZone) {
+if (props.scrolled === undefined && !layoutZone) {
   useGlobalListener('window', 'scroll', () => {
     fallbackY.value = window.scrollY
   }, { passive: true })
 }
 
 const scrolled = computed(() => {
-  if (props.isScrolled) return true
+  if (props.scrolled !== undefined) return props.scrolled
   return (layoutZone ? layoutZone.windowY.value : fallbackY.value) > 0
 })
 
-// Self-register in layout system with correct CSS variable token resolved in SCSS
-const sizeToken = computed(() => {
-  switch (props.type) {
-    case 'small':
-      return '--ui-app-bar-height-small'
-    case 'medium':
-      return hasSubtitle.value ? '--ui-app-bar-height-medium-subtitle' : '--ui-app-bar-height-medium'
-    case 'large':
-      return hasSubtitle.value ? '--ui-app-bar-height-large-subtitle' : '--ui-app-bar-height-large'
-    case 'center-aligned':
-    default:
-      return '--ui-app-bar-height-center-aligned'
-  }
-})
-
-// Первый уровень m-layout → top-зона; внутри m-layout-header → вклад высоты в зону
 const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
   kind: 'top',
   sizeToken,
   sticky: computed(() => props.sticky),
 })
 
-// Dynamic grid template layout based on variant and active slots
-const dynamicGridStyles = computed(() => {
-  // If the container slot is used, we skip all dynamic grid layouts
-  if (slots.container) {
-    return {
-      display: 'block',
-    }
-  }
+const rootClasses = computed(() => [
+  `ui-app-bar--${size.value}`,
+  {
+    'ui-app-bar--center': align.value === 'center',
+    'ui-app-bar--subtitle': hasSubtitle.value,
+    'ui-app-bar--scrolled': scrolled.value,
+    'ui-app-bar--anchored': isLayoutChild,
+  },
+])
 
-  const hasNav = !!slots.nav
-  const hasTitle = !!slots.title || !!props.title || !!props.subtitle || !!slots.subtitle
-  const hasActions = !!slots.actions
+provideAppBarContext({ type: size, align, registerSubtitle })
 
-  // Build grid columns based on slot presence
-  const columns: string[] = []
-  if (hasNav) columns.push('auto')
-  if (hasTitle) columns.push('1fr')
-  if (hasActions) columns.push('auto')
-
-  const gridTemplateColumns = columns.length > 0 ? columns.join(' ') : '1fr'
-
-  if (props.type === 'medium' || props.type === 'large') {
-    // Two-row layout:
-    // Row 1: nav (left), space (center), actions (right)
-    // Row 2: title spanning across
-    const row1Areas: string[] = []
-    row1Areas.push(hasNav ? 'nav' : '.')
-
-    // Add empty space/column if both nav/actions exist or only title exists
-    if (hasTitle && (hasNav || hasActions)) {
-      row1Areas.push('.')
-    }
-
-    row1Areas.push(hasActions ? 'actions' : '.')
-
-    const areas = `
-      "${row1Areas.join(' ')}"
-      "title title title"
-    `
-
-    return {
-      display: 'grid',
-      gridTemplateColumns: hasNav && hasActions ? 'auto 1fr auto' : 'auto 1fr',
-      gridTemplateRows: 'auto 1fr',
-      gridTemplateAreas: areas.trim(),
-    }
-  }
-
-  // Single-row layout (center-aligned or small)
-  const rowAreas: string[] = []
-  if (hasNav) rowAreas.push('nav')
-  if (hasTitle) rowAreas.push('title')
-  if (hasActions) rowAreas.push('actions')
-
-  const areas = `"${rowAreas.join(' ')}"`
-
-  return {
-    display: 'grid',
-    gridTemplateColumns,
-    gridTemplateAreas: areas,
-  }
-})
+defineExpose({ scrolled })
 </script>
 
 <style lang="scss">
 @use '~/assets/stylesheet/components/app-bar/index' as *;
 
 .ui-app-bar {
-  $prefix: 'ui-app-bar';
-  $t: material-map($tokens, $prefix);
+  // Area names are owned by each region's map — single source of truth shared
+  // with the leaves that claim them.
+  $nav-area: g($nav, 'grid-name');
+  $headline-area: g($title, 'grid-name');
+  $actions-area: g($actions, 'grid-name');
 
   @at-root :root {
-    --ui-app-bar-height-center-aligned: #{g($t, 'height.center-aligned')};
-    --ui-app-bar-height-small: #{g($t, 'height.small')};
-    --ui-app-bar-height-medium: #{g($t, 'height.medium')};
-    --ui-app-bar-height-medium-subtitle: #{g($t, 'height.medium-with-subtitle')};
-    --ui-app-bar-height-large: #{g($t, 'height.large')};
-    --ui-app-bar-height-large-subtitle: #{g($t, 'height.large-with-subtitle')};
+    --ui-app-bar-height-small: #{g($height, 'small')};
+    --ui-app-bar-height-small-subtitle: #{g($height, 'small-with-subtitle')};
+    --ui-app-bar-height-medium: #{g($height, 'medium')};
+    --ui-app-bar-height-medium-subtitle: #{g($height, 'medium-with-subtitle')};
+    --ui-app-bar-height-large: #{g($height, 'large')};
+    --ui-app-bar-height-large-subtitle: #{g($height, 'large-with-subtitle')};
   }
 
-  min-height: var(--ui-app-bar-height-center-aligned);
   display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: '#{$nav-area} #{$headline-area} #{$actions-area}';
   align-items: center;
-  gap: g($t, 'container-gap');
-  padding-inline: g($t, 'container-padding-inline');
-  padding-block: g($t, 'container-padding-block');
+  min-height: var(--ui-app-bar-height-small);
+  padding: #{g($container, 'padding.block')} #{g($container, 'padding.inline')};
   border-radius: 0;
-  background-color: g($t, 'container-color');
-  color: g($t, 'title-text-color');
-  box-shadow: g($t, 'container-shadow');
+  background-color: g($container, 'color');
+  color: g($title, 'color');
+  box-shadow: g($container, 'shadow');
   position: sticky;
   top: 0;
   z-index: z(header);
@@ -204,109 +126,75 @@ const dynamicGridStyles = computed(() => {
     background-color var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard),
     box-shadow var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
 
-  &--center-aligned {
-    min-height: var(--ui-app-bar-height-center-aligned);
-
-    .ui-app-bar__title {
-      text-align: center;
-      align-items: center;
-    }
-  }
-
   &--small {
     min-height: var(--ui-app-bar-height-small);
   }
 
-  &--medium {
-    min-height: var(--ui-app-bar-height-medium);
+  // Medium & large share the two-row layout: controls row, then headline below.
+  &--medium,
+  &--large {
+    grid-template-areas:
+      '#{$nav-area} . #{$actions-area}'
+      '#{$headline-area} #{$headline-area} #{$headline-area}';
     grid-template-rows: auto 1fr;
     align-items: start;
 
-    .ui-app-bar__title {
+    .ui-app-bar__headline {
       align-self: end;
-      padding-bottom: 24rem;
+    }
+  }
+
+  &--medium {
+    min-height: var(--ui-app-bar-height-medium);
+
+    .ui-app-bar__headline {
+      padding-bottom: g($title, 'padding-bottom.medium');
     }
 
-    .ui-app-bar__title-text {
-      @include apply-typography(g($t, 'title-text-typography-medium'));
-    }
-
-    &.ui-app-bar--with-subtitle {
-      min-height: var(--ui-app-bar-height-medium-subtitle);
+    .ui-app-bar__title {
+      @include apply-typography(g($title, 'typography.medium'));
     }
   }
 
   &--large {
     min-height: var(--ui-app-bar-height-large);
-    grid-template-rows: auto 1fr;
-    align-items: start;
+
+    .ui-app-bar__headline {
+      padding-bottom: g($title, 'padding-bottom.large');
+    }
 
     .ui-app-bar__title {
-      align-self: end;
-      padding-bottom: 28rem;
+      @include apply-typography(g($title, 'typography.large'));
+    }
+  }
+
+  // Subtitle grows the bar to the taller MD3 height variant of its size.
+  &--subtitle {
+    &.ui-app-bar--small {
+      min-height: var(--ui-app-bar-height-small-subtitle);
     }
 
-    .ui-app-bar__title-text {
-      @include apply-typography(g($t, 'title-text-typography-large'));
+    &.ui-app-bar--medium {
+      min-height: var(--ui-app-bar-height-medium-subtitle);
     }
 
-    &.ui-app-bar--with-subtitle {
+    &.ui-app-bar--large {
       min-height: var(--ui-app-bar-height-large-subtitle);
     }
   }
 
+  &--center .ui-app-bar__headline {
+    text-align: center;
+    align-items: center;
+  }
+
   &--scrolled {
-    background-color: g($t, 'container-scrolled-color');
-    box-shadow: g($t, 'container-scrolled-shadow');
+    background-color: g($container, 'scrolled.color');
+    box-shadow: g($container, 'scrolled.shadow');
   }
 
   &--anchored {
     z-index: z(header);
-  }
-
-  &__nav {
-    grid-area: nav;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: g($t, 'nav-min-width');
-    min-height: g($t, 'nav-min-height');
-  }
-
-  &__title {
-    grid-area: title;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: g($t, 'title-gap');
-    min-width: 0;
-  }
-
-  &__title-text {
-    margin: 0;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-
-    @include apply-typography(g($t, 'title-text-typography-small'));
-  }
-
-  &__subtitle {
-    margin: 0;
-    color: g($t, 'subtitle-color');
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-
-    @include apply-typography(g($t, 'subtitle-typography'));
-  }
-
-  &__actions {
-    grid-area: actions;
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: g($t, 'actions-gap');
   }
 }
 </style>

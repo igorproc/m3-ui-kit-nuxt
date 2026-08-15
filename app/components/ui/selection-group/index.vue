@@ -28,7 +28,7 @@
 
 <script setup lang="ts" generic="TItem, TValue = TItem">
 import { computed } from 'vue'
-import SelectionDataItem from '~/components/selection/data-item.vue'
+import SelectionDataItem from '~/components/fragments/selection-group/data-item.vue'
 import { useSelectionGroup } from '~/composables/selection/useSelectionGroup'
 import { provideSelectionContext } from '~/composables/selection/context'
 import type {

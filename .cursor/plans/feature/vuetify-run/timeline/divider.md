@@ -5,7 +5,7 @@ Vuetify reference: `VTimelineDivider` · PrimeTime target: private `TimelineDivi
 </identity>
 
 <implementation-status state="done" updated="2026-07-18">
-Private `TimelineDivider` at `app/components/ui/timeline/divider/index.vue`:
+Private `TimelineDivider` at `app/components/fragments/timeline/divider/index.vue`:
 direct props only (first/last/line/color/icon/hideDot), no context. Decorative
 and `aria-hidden`; before/after connector hidden on first/last; dashed line via
 repeating-gradient; MColor dot. Covered by `tests/timeline.spec.ts`.

@@ -58,9 +58,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useDatePicker } from '~/composables/date'
-import DatePickerHeaderNav from './header-nav/index.vue'
-import DatePickerDayGrid from './day-grid/index.vue'
-import DatePickerYearGrid from './year-grid/index.vue'
+import DatePickerHeaderNav from '~/components/fragments/date-picker/header-nav/index.vue'
+import DatePickerDayGrid from '~/components/fragments/date-picker/day-grid/index.vue'
+import DatePickerYearGrid from '~/components/fragments/date-picker/year-grid/index.vue'
 import MButton from '~/components/ui/button/index.vue'
 import { mDatePickerProps } from './props'
 

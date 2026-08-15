@@ -19,11 +19,14 @@ export default defineNuxtConfig({
   components: {
     dirs: [
       {
-        path: resolve('./app/components'),
-        pathPrefix: true,
+        path: resolve('./app/components/core'),
+        extensions: ['vue'],
+        pathPrefix: false,
+        prefix: 'core',
       },
       {
         path: resolve('./app/components/ui'),
+        extensions: ['vue'],
         pathPrefix: true,
         prefix: 'm',
         global: true,

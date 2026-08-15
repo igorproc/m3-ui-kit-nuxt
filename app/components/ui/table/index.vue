@@ -1,7 +1,7 @@
 <template>
   <div class="ui-table-container">
     <table class="ui-table">
-      <m-table-header
+      <UiTableHeader
         v-model:sort="sortState"
         :columns="columns"
         :selectable="selectable"
@@ -20,7 +20,7 @@
             {{ col.label }}
           </slot>
         </template>
-      </m-table-header>
+      </UiTableHeader>
 
       <tbody>
         <tr
@@ -33,7 +33,7 @@
             v-if="selectable"
             class="ui-table__cell ui-table__cell--checkbox"
           >
-            <m-checkbox
+            <MCheckbox
               :model-value="isSelected(row)"
               @update:model-value="toggleRow(row)"
             />
@@ -57,7 +57,7 @@
       </tbody>
     </table>
 
-    <m-table-pagination
+    <UiTablePagination
       v-if="pagination"
       :page-size="pageSize"
       :current-page="currentPage"
@@ -69,14 +69,15 @@
           Items per page: {{ pageSize }}
         </slot>
       </template>
-    </m-table-pagination>
+    </UiTablePagination>
   </div>
 </template>
 
 <script setup lang="ts" generic="T extends TableData">
 import { computed, toRef } from 'vue'
-import UiTableHeader from './header/index.vue'
-import UiTablePagination from './pagination/index.vue'
+import UiTableHeader from '~/components/fragments/table/header/index.vue'
+import UiTablePagination from '~/components/fragments/table/pagination/index.vue'
+import MCheckbox from '~/components/ui/checkbox/index.vue'
 import type { TableColumn, TableData, SortState } from './types'
 import { useTableSelection } from '~/composables/table/useTableSelection'
 import { provideTableContext } from '~/composables/table/useTableContext'

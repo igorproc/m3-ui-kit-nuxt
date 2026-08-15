@@ -5,7 +5,7 @@ Vuetify reference: `VBreadcrumbsDivider` · PrimeTime target: private `Breadcrum
 </identity>
 
 <implementation-status state="done" updated="2026-07-16">
-Private leaf at `app/components/ui/breadcrumbs/divider/index.vue`, rendered only
+Private leaf at `app/components/fragments/breadcrumbs/divider/index.vue`, rendered only
 between crumbs inside an `aria-hidden` `li`. Discriminator: values matching
 `^[a-z][a-z0-9]*(?:[-:][a-z0-9]+)+# BreadcrumbsDivider
 

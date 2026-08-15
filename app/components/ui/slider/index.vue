@@ -69,11 +69,11 @@
 </template>
 
 <script setup lang="ts">
-import SliderRoot from './root/index.vue'
-import SliderTrack from './track/index.vue'
-import SliderRange from './range/index.vue'
-import SliderThumb from './thumb/index.vue'
-import SliderHiddenInput from './hidden-input/index.vue'
+import SliderRoot from '~/components/fragments/slider/root/index.vue'
+import SliderTrack from '~/components/fragments/slider/track/index.vue'
+import SliderRange from '~/components/fragments/slider/range/index.vue'
+import SliderThumb from '~/components/fragments/slider/thumb/index.vue'
+import SliderHiddenInput from '~/components/fragments/slider/hidden-input/index.vue'
 import { useDrag } from '~/composables/useDrag'
 import type { DragState } from '~/composables/useDrag'
 import { useGlobalListener } from '~/composables/useGlobalListener'

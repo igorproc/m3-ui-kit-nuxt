@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import FieldRoot from '~/components/field/root.vue'
+import FieldRoot from '~/components/fragments/field/root.vue'
 import { mTextareaProps } from './props'
 
 const props = defineProps(mTextareaProps)

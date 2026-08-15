@@ -74,7 +74,7 @@
 import MSurface from '~/components/ui/surface/index.vue'
 import MIcon from '~/components/ui/icon/index.vue'
 import MButtonIcon from '~/components/ui/button/icon/index.vue'
-import BannerActions from './actions/index.vue'
+import BannerActions from '~/components/fragments/banner/actions/index.vue'
 import type { MBannerCloseSlot } from './props'
 import { mBannerProps } from './props'
 

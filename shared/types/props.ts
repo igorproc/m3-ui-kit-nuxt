@@ -1,3 +1,9 @@
+import type {
+  ComponentObjectPropsOptions,
+  ExtractPropTypes,
+  ExtractPublicPropTypes,
+} from 'vue'
+
 /**
  * @module props
  *
@@ -12,6 +18,16 @@
  * | tertiary | error` (NOT the legacy `accent`/`warn`), and surface variants
  * are the five MD3 button/surface styles.
  */
+
+/** Flattens Vue's mapped prop types into a conventional object shape. */
+export type InferType<T extends ComponentObjectPropsOptions> = {
+  [K in keyof ExtractPublicPropTypes<T>]: ExtractPublicPropTypes<T>[K]
+}
+
+/** Resolved component-side props, including values supplied by defaults. */
+export type InferResolvedType<T extends ComponentObjectPropsOptions> = {
+  [K in keyof ExtractPropTypes<T>]: ExtractPropTypes<T>[K]
+}
 
 /** MD3 color role. Replaces the legacy `primary | accent | warn` naming. */
 export type MColor = 'primary' | 'secondary' | 'tertiary' | 'error'

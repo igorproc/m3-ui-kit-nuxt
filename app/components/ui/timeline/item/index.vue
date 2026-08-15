@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import MSurface from '~/components/ui/surface/index.vue'
-import TimelineDivider from '../divider/index.vue'
+import TimelineDivider from '~/components/fragments/timeline/divider/index.vue'
 import { useTimelineContext } from '~/composables/timeline/context'
 import { mTimelineItemProps } from '../props'
 

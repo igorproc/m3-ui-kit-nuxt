@@ -18,8 +18,9 @@ A component is split into two halves:
 - **Thin view** — the `.vue`. Attaches listeners, juggles styling variants, passes
   `props`/`emit` through to the composable, renders slots. No business logic.
 
-Reference split: `app/components/ui/slider/` (`index.vue` + `root/` `track/`
-`range/` `thumb/` `hidden-input/`) backed by
+Reference split: public `app/components/ui/slider/index.vue` plus private
+`app/components/fragments/slider/` leaves (`root/` `track/` `range/` `thumb/`
+`hidden-input/`), backed by
 `app/composables/slider/createSlider.ts`. Fat/"god" components get decomposed into
 a thin `index.vue` orchestrator plus small single-responsibility leaf folders.
 
@@ -83,6 +84,17 @@ watch(isOpen, v => (v ? ticket.select() : ticket.unselect()))
 `nuxt.config.ts`). Reactivity APIs, hooks, composables and utils need no import.
 **Other UI components must still be imported explicitly** — do not rely on
 auto-import for them inside the library.
+
+Component visibility is path-based:
+
+- `app/components/ui/**` contains only public `M*` components;
+- `app/components/fragments/**` contains private leaves and is never scanned;
+- `app/components/core/**` contains internal runtime infrastructure;
+- only `.vue` files participate in component scanning;
+- component unit tests are co-located with their owner as `index.spec.ts`.
+
+A private leaf is always imported explicitly from `~/components/fragments/...`.
+Public family children remain inside their owning `ui/<family>/` directory.
 
 ## 5. Checklist per refactor
 

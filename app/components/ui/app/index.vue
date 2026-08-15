@@ -8,48 +8,35 @@
 
     <slot
       name="loading"
-      :progress="readonlyProgress"
-      :is-loading="readonlyIsLoading"
+      :progress="progress"
+      :is-loading="isLoading"
     />
 
-    <ClientOnly>
-      <core-scope />
-    </ClientOnly>
+    <core-scope />
   </component>
-
-  <div
-    id="ui-overlay-host"
-    class="ui-app__overlay-host"
-  />
 </template>
 
 <script setup lang="ts">
-import type { ComputedRef, Ref } from 'vue'
-
 interface MAppProps {
-  /** HTML element used for the neutral PrimeTime application boundary. */
   tag?: string
 }
 
 interface MAppSlots {
   default(): unknown
   loading?(scope: {
-    progress: Readonly<Ref<number>>
-    isLoading: Readonly<ComputedRef<boolean>>
+    progress: number
+    isLoading: boolean
   }): unknown
 }
 
-withDefaults(defineProps<MAppProps>(), {
-  tag: 'div',
-})
+withDefaults(
+  defineProps<MAppProps>(),
+  { tag: 'div' },
+)
 
 defineSlots<MAppSlots>()
-
 useThemeStore()
 
-// Duplicate detection runs client-side only (in `onMounted`) so the server
-// never seeds the flag: otherwise a single hydrated <MApp> would read its own
-// SSR-serialized `true` on the client and false-positive on every load.
 const appRegistered = useState('material-kit:m-app-registered', () => false)
 
 onMounted(() => {
@@ -65,13 +52,9 @@ onBeforeUnmount(() => {
 })
 
 const { progress, isLoading } = useLoadingIndicator({ throttle: 0 })
-const readonlyProgress = readonly(progress)
-const readonlyIsLoading = readonly(computed(() => isLoading.value))
 const rootElement = useTemplateRef<HTMLElement>('root')
 
-defineExpose({
-  rootElement: readonly(rootElement),
-})
+defineExpose({ rootElement: rootElement?.value })
 </script>
 
 <style lang="scss">

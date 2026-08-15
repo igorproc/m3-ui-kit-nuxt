@@ -5,5 +5,10 @@
 </script>
 
 <template>
+  <div
+    id="ui-overlay-host"
+    class="ui-app__overlay-host"
+  />
+
   <core-global-container />
 </template>

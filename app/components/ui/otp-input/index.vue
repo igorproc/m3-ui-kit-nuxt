@@ -102,9 +102,9 @@
 </template>
 
 <script setup lang="ts">
-import OtpField from '~/components/otp-input/Field.vue'
-import OtpGroup from '~/components/otp-input/Group.vue'
-import OtpSeparator from '~/components/otp-input/Separator.vue'
+import OtpField from '~/components/fragments/otp-input/Field.vue'
+import OtpGroup from '~/components/fragments/otp-input/Group.vue'
+import OtpSeparator from '~/components/fragments/otp-input/Separator.vue'
 import { mOtpInputProps } from './props'
 
 const props = defineProps(mOtpInputProps)

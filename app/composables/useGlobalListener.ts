@@ -44,10 +44,16 @@ function resolveTarget(target: GlobalListenerTarget): Window | Document {
 }
 
 function optionsKey(options?: boolean | AddEventListenerOptions): string {
-  if (options == null) return ''
-  if (typeof options === 'boolean') return `capture=${options}`
+  if (options == null) {
+    return ''
+  }
+
+  if (typeof options === 'boolean') {
+    return `capture=${options}`
+  }
+
   const { capture, passive, once } = options
-  return `capture=${!!capture}&passive=${!!passive}&once=${!!once}`
+  return `capture=${capture}&passive=${passive}&once=${once}`
 }
 
 /**

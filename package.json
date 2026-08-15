@@ -17,6 +17,7 @@
   },
   "files": [
     "app",
+    "!app/**/*.spec.ts",
     "shared",
     "public",
     "nuxt.config.ts",
@@ -36,7 +37,6 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest",
-    "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:style": "stylelint **/*.{vue,css,scss}"
   },
@@ -61,7 +61,6 @@
     "@nuxt/test-utils": "^4.0.3",
     "@nuxtjs/stylelint-module": "^5.2.1",
     "@pinia/nuxt": "^0.11.3",
-    "@playwright/test": "^1.59.1",
     "@types/flubber": "^0.4.0",
     "@vue/test-utils": "^2.4.10",
     "eslint": "^10.3.0",

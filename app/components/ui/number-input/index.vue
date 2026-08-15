@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import FieldRoot from '~/components/field/root.vue'
+import FieldRoot from '~/components/fragments/field/root.vue'
 import MButtonIcon from '~/components/ui/button/icon/index.vue'
 import MIcon from '~/components/ui/icon/index.vue'
 import { useField } from '~/composables/useField'

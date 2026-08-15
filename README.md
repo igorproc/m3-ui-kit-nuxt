@@ -372,6 +372,8 @@ Features used: CSS variables, `color-mix()`, `calc()`, Grid/Flexbox, `contain`.
 | File | Purpose |
 |------|---------|
 | `app/components/ui/` | Public library components (`<MButton>`, `<MCard>`, etc.) |
+| `app/components/fragments/` | Private component leaves imported explicitly by their owners |
+| `app/components/core/` | Internal application and overlay runtime infrastructure |
 | `app/assets/stylesheet/abstracts/` | `g()` function, `material-map()`, `$theme-*` links |
 | `app/assets/stylesheet/components/` | Per-component `$tokens` map + styles |
 | `app/modules/kit/module.ts` | Theme build engine; generates `--md-sys-color-*` |
@@ -383,11 +385,18 @@ Features used: CSS variables, `color-mix()`, `calc()`, Grid/Flexbox, `contain`.
 ## 📖 For Developers
 
 ### Adding a Component
-1. Create `app/components/ui/<name>/index.vue` (single-file, no partial)
+1. Create the public root at `app/components/ui/<name>/index.vue`
 2. Create `app/assets/stylesheet/components/<name>/index.scss` with `$tokens` map
 3. Import and resolve tokens via `g($t, 'path')`
 4. Add `@use '~/assets/stylesheet/components/<name>/index' as t;` to `<style>`
-5. Run `npm run lint && npm run lint:style` — must pass 0 errors
+5. Place private leaves under `app/components/fragments/<name>/` and import them explicitly
+6. Place component unit tests next to their owner as `index.spec.ts`
+7. Run `npm run lint && npm run lint:style` — must pass 0 errors
+
+Every `.vue` file under `app/components/ui/` is part of the public `M*`
+auto-import surface. Private leaves must never be placed there. The Nuxt scanner
+only reads `.vue` files from `ui/` and `core/`; support files such as `props.ts`
+and `types.ts` are imported normally and are not components.
 
 ### Migrating a Component to M3 Tokens
 - See `.cursor/rules/migration_workflow.md`
@@ -414,6 +423,7 @@ kit/
 ├── app/
 │   ├── components/
 │   │   ├── ui/              # Public library components (<MButton>, …)
+│   │   ├── fragments/       # Private leaves, explicit imports only
 │   │   └── core/            # Overlay/modals infrastructure (core-scope)
 │   ├── composables/         # Vue 3 Composition API utilities
 │   ├── assets/stylesheet/   # Token system + styling

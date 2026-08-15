@@ -59,10 +59,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import ColorCanvas from '~/components/color-picker/Canvas.vue'
-import ColorPreview from '~/components/color-picker/Preview.vue'
-import ColorEdit from '~/components/color-picker/Edit.vue'
-import ColorSwatches from '~/components/color-picker/Swatches.vue'
+import ColorCanvas from '~/components/fragments/color-picker/Canvas.vue'
+import ColorPreview from '~/components/fragments/color-picker/Preview.vue'
+import ColorEdit from '~/components/fragments/color-picker/Edit.vue'
+import ColorSwatches from '~/components/fragments/color-picker/Swatches.vue'
 import { createColorPickerState, provideColorPickerContext } from '~/composables/color-picker/context'
 import { mColorPickerProps } from './props'
 import type { ColorFormat, ColorParseError } from '~~/shared/utils/color'

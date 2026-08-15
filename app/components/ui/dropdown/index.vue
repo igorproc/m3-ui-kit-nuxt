@@ -63,10 +63,10 @@ import { createGroup } from '~/composables/registry/createGroup'
 import { provideDropdownContext } from './context'
 import type { DropdownContext, DropdownEntry, DropdownItem, DropdownOption, DropdownOptionTicket } from './types'
 import { mDropdownProps } from './props'
-import DropdownTrigger from './trigger/index.vue'
-import DropdownPanel from './panel/index.vue'
-import DropdownOptionRow from './option/index.vue'
-import DropdownSelectedChips from './selected-chips/index.vue'
+import DropdownTrigger from '~/components/fragments/dropdown/trigger/index.vue'
+import DropdownPanel from '~/components/fragments/dropdown/panel/index.vue'
+import DropdownOptionRow from '~/components/fragments/dropdown/option/index.vue'
+import DropdownSelectedChips from '~/components/fragments/dropdown/selected-chips/index.vue'
 
 const props = defineProps(mDropdownProps)
 
