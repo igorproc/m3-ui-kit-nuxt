@@ -13,6 +13,9 @@ $tokens: (
       append: 12rem,
     ),
     border: (width: 1rem,
+    ),
+    field: (gap: 8rem,
+      input-min-width: 60rem,
     )),
   typography: (label: 'body-large',
     input: 'body-large',
@@ -125,5 +128,24 @@ $tokens: (
           width: 2rem,
         ),
         label: (color: map.get($theme-color-link, error),
-        ))))
+        )))),
+  // Plain: classic full border + static label above, appearance overridable at
+  // runtime via the --m-field-* custom properties (see field/root.vue). Disabled
+  // and error states reuse the shared control rules, so only the resting, hover,
+  // and focused chrome is declared here.
+  plain: (
+    bg: transparent,
+    radius: 28rem,
+    border: (color: map.get($theme-color-link, outline),
+      width: 1rem,
+    ),
+    label: (color: map.get($theme-color-link, on-surface-variant),
+      gap: 6rem,
+    ),
+    hover: (border: (color: map.get($theme-color-link, on-surface),
+      )),
+    focused: (border: (color: map.get($theme-color-link, primary),
+        width: 2rem,
+      )),
+  )
 );

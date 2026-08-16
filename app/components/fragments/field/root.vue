@@ -1,5 +1,14 @@
 <template>
   <div :class="rootClasses">
+    <!-- Plain variant: a classic static label sitting above the control. -->
+    <label
+      v-if="label && variant === 'plain'"
+      :class="elementClasses('label')"
+      :for="fieldId"
+    >
+      {{ label }}
+    </label>
+
     <div :class="controlClasses">
       <div
         v-if="$slots.prepend"
@@ -8,15 +17,25 @@
         <slot name="prepend" />
       </div>
 
+      <!-- Filled / outlined: the floating MD3 label lives inside the control. -->
       <label
-        v-if="label"
+        v-if="label && variant !== 'plain'"
         :class="elementClasses('label')"
         :for="fieldId"
       >
         {{ label }}
       </label>
 
-      <slot />
+      <!-- Composite fields (e.g. a multiple combobox) render inline content such
+           as chips before the input, on one non-wrapping row that scrolls. -->
+      <div
+        v-if="$slots['leading-content']"
+        :class="elementClasses('field')"
+      >
+        <slot name="leading-content" />
+        <slot />
+      </div>
+      <slot v-else />
 
       <div
         v-if="$slots.append"
@@ -72,12 +91,13 @@ const props = defineProps<{
 const slots = useSlots()
 
 defineSlots<{
-  default(): unknown
-  prepend?(): unknown
-  append?(): unknown
-  helper?(props: { helperText?: string }): unknown
-  error?(props: { message?: string }): unknown
-  supporting?(): unknown
+  'default'(): unknown
+  'prepend'?(): unknown
+  'append'?(): unknown
+  'leading-content'?(): unknown
+  'helper'?(props: { helperText?: string }): unknown
+  'error'?(props: { message?: string }): unknown
+  'supporting'?(): unknown
 }>()
 
 const rootClasses = computed(() => [
@@ -129,9 +149,30 @@ const iconClasses = (position: 'prepend' | 'append') => [
   display: flex;
   flex-direction: column;
   gap: g($t, 'container-gap');
+  min-width: 0;
 
   &--outlined {
     padding-top: 8rem;
+  }
+
+  // Plain: the label is a static block above the control, and the placeholder
+  // stays visible since there is no floating label to double as it.
+  &--plain {
+    gap: g($t, 'plain-label-gap');
+
+    > .ui-field__label {
+      max-width: 100%;
+      overflow: hidden;
+      color: g($t, 'plain-label-color');
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      @include typescale(g($t, 'typography-label'));
+    }
+
+    .ui-field__input::placeholder {
+      opacity: 1;
+    }
   }
 
   &__control {
@@ -184,6 +225,32 @@ const iconClasses = (position: 'prepend' | 'append') => [
       &::placeholder {
         opacity: 0;
         transition: opacity g($t, 'state-duration') g($t, 'state-easing');
+      }
+    }
+
+    // Composite input row: inline content (chips) + the native input on a single
+    // non-wrapping line that scrolls horizontally instead of growing the field.
+    .ui-field__field {
+      display: flex;
+      flex: 1;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: g($t, 'container.field.gap');
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      > :not(.ui-field__input) {
+        flex: 0 0 auto;
+      }
+
+      .ui-field__input {
+        flex: 1 0 g($t, 'container.field.input-min-width');
+        width: auto;
       }
     }
 
@@ -246,6 +313,25 @@ const iconClasses = (position: 'prepend' | 'append') => [
 
       &:hover {
         border-color: g($t, 'outlined-hover-border-color');
+      }
+    }
+
+    // Classic full border. The resting chrome reads --m-field-* hooks first and
+    // falls back to tokens, so consumers can restyle the box (e.g. a pill radius
+    // via `--m-field-radius: 999px`) without touching SCSS. States keep tokens.
+    &.ui-field__control--plain {
+      border-width: var(--m-field-border-width, #{g($t, 'plain-border-width')});
+      border-color: var(--m-field-border-color, #{g($t, 'plain-border-color')});
+      border-radius: var(--m-field-radius, #{g($t, 'plain-radius')});
+      background-color: var(--m-field-bg, #{g($t, 'plain-bg')});
+
+      &:hover {
+        border-color: g($t, 'plain-hover-border-color');
+      }
+
+      &.ui-field__control--focused {
+        border-width: g($t, 'plain-focused-border-width');
+        border-color: g($t, 'plain-focused-border-color');
       }
     }
 

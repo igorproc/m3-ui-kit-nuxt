@@ -7,7 +7,6 @@
 // MD3 Expressive (May 2025): size (small | medium | large) and alignment
 // (start | center) are separate axes; subtitle is supported on every size.
 // On scroll a color fill — NOT a drop shadow — separates the bar from content.
-//
 // Tokens are split per region so each leaf (<MAppBarNav/Title/Actions>) reads
 // only its own map; the grid-area name each leaf claims lives in that same map
 // (`grid-name`), keeping placement and styling in one place.

@@ -1,18 +1,9 @@
 <template>
-  <button
-    v-ripple="!isDisabled"
-    class="ui-fab"
-    :class="[
-      `ui-fab--${color}`,
-      `ui-fab--${variant}`,
-      `ui-fab--${size}`,
-      {
-        'ui-fab--disabled': isDisabled,
-        'ui-fab--loading': loading,
-      },
-    ]"
-    :disabled="isDisabled"
-    :aria-busy="loading ? 'true' : undefined"
+  <component
+    :is="tag"
+    v-ripple="rippleEnabled"
+    :class="rootClass"
+    v-bind="rootAttrs"
     :aria-label="ariaLabel"
   >
     <span
@@ -26,16 +17,16 @@
     >
       <slot />
     </span>
-  </button>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useButton } from '~/composables/button/useButton'
 import { mFabProps } from './props'
 
 const props = defineProps(mFabProps)
 
-const isDisabled = computed(() => props.disabled || props.loading)
+const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab', props })
 </script>
 
 <style lang="scss">

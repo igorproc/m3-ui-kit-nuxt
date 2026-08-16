@@ -5,7 +5,7 @@
     :variant="variant"
     :label="label"
     :focused="isFocused"
-    :populated="!!modelValue"
+    :populated="populated || !!modelValue"
     :error="isError"
     :disabled="disabled"
     :message="displayMessage"
@@ -29,6 +29,13 @@
       @focus="onFocus"
       @blur="onBlur"
     >
+
+    <template
+      v-if="$slots['leading-content']"
+      #leading-content
+    >
+      <slot name="leading-content" />
+    </template>
 
     <template
       v-if="$slots.prepend"

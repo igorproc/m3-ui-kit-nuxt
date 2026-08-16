@@ -31,6 +31,7 @@ defineProps<Props>()
 
   display: flex;
   flex-direction: column;
+  gap: g($t, 'container-gap');
   padding-block: g($t, 'container-padding-block');
   padding-inline: g($t, 'container-padding-inline');
   border-radius: g($t, 'container-shape');

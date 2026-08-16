@@ -210,6 +210,7 @@ watch(safeLength, (length) => {
 
   &__group {
     display: inline-flex;
+    align-items: center;
     gap: g($t, 'group-gap');
   }
 
@@ -246,6 +247,7 @@ watch(safeLength, (length) => {
   }
 
   &__separator {
+    height: fit-content;
     color: g($t, 'separator-color');
   }
 

@@ -108,6 +108,20 @@ describe('m-text-field', () => {
     expect(wrapper.find('.ui-text-field__control--error').exists()).toBe(true)
   })
 
+  it('renders the plain variant with a static label above the control', async () => {
+    const wrapper = await mountSuspended(MTextField, {
+      props: { variant: 'plain', label: 'Email' },
+    })
+
+    expect(wrapper.classes()).toContain('ui-text-field--plain')
+    expect(wrapper.find('.ui-text-field__control--plain').exists()).toBe(true)
+
+    // Classic layout: the label sits above the control, not floating inside it.
+    const control = wrapper.find('.ui-text-field__control')
+    expect(control.find('label.ui-text-field__label').exists()).toBe(false)
+    expect(wrapper.find('label.ui-text-field__label').text()).toBe('Email')
+  })
+
   it('renders prepend and append slots', async () => {
     const wrapper = await mountSuspended(MTextField, {
       slots: {

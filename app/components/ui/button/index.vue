@@ -1,15 +1,9 @@
 <template>
   <component
-    :is="componentTag"
-    v-ripple="!isDisabled"
-    class="ui-button"
-    :class="buttonClasses"
-    v-bind="linkBindings"
-    :type="componentTag === 'button' ? type : undefined"
-    :disabled="componentTag === 'button' ? isDisabled : undefined"
-    :aria-disabled="isLink && isDisabled ? 'true' : undefined"
-    :aria-busy="loading ? 'true' : undefined"
-    :tabindex="isLink && isDisabled ? -1 : undefined"
+    :is="tag"
+    v-ripple="rippleEnabled"
+    :class="rootClass"
+    v-bind="rootAttrs"
   >
     <span
       v-if="loading"
@@ -38,46 +32,83 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, useSlots } from 'vue'
+import { computed, useSlots } from 'vue'
+import { useButton } from '~/composables/button/useButton'
 import { mButtonProps } from './props'
 
 const props = defineProps(mButtonProps)
-
-const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
-
-const isLink = computed(() => props.tag === 'link')
-const isDisabled = computed(() => props.disabled || props.loading)
-
-const componentTag = computed(() => (isLink.value ? NuxtLink : 'button'))
-
 const slots = useSlots()
+
 const hasPrepend = computed(() => !!slots.prepend)
 const hasAppend = computed(() => !!slots.append)
 const hasDefault = computed(() => !!slots.default)
 
-const buttonClasses = computed(() => [
-  `ui-button--${props.variant}`,
-  `ui-button--${props.color}`,
-  {
-    'ui-button--disabled': isDisabled.value,
-    'ui-button--loading': props.loading,
-    'ui-button--has-prepend': hasPrepend.value && !props.loading,
-    'ui-button--has-append': hasAppend.value,
-    'ui-button--icon-only': !hasDefault.value && (hasPrepend.value || hasAppend.value),
-  },
-])
-
-const linkBindings = computed(() => (isLink.value && props.to ? { to: props.to } : {}))
+const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
+  block: 'ui-button',
+  props,
+  modifiers: () => ({
+    'has-prepend': hasPrepend.value && !props.loading,
+    'has-append': hasAppend.value,
+    'icon-only': !hasDefault.value && (hasPrepend.value || hasAppend.value),
+  }),
+})
 </script>
 
 <style lang="scss">
 @use 'sass:map';
 @use '~/assets/stylesheet/components/button/_index' as t;
 
-.ui-button {
-  $prefix: 'md-button';
-  $t: material-map(t.$tokens, $prefix);
+$prefix: 'md-button';
+$t: material-map(t.$tokens, $prefix);
 
+// COLOR MIXIN
+// Применяет токены выбранной схемы ко всем вариантам
+@mixin apply-scheme($scheme) {
+  // Цикл по вариантам для DRY-применения токенов состояний
+  $variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
+
+  @each $v in $variants {
+    &.ui-button--#{$v} {
+      $base: "#{$scheme}-#{$v}";
+
+      background-color: g($t, "#{$base}-container-color");
+      color: g($t, "#{$base}-label-text-color");
+
+      @if $v == 'outlined' {
+        border: 1rem solid g($t, "#{$base}-outline-color");
+      }
+
+      @if $v == 'elevated' {
+        box-shadow: g($t, "#{$base}-shadow");
+      }
+
+      &:hover:not(.ui-button--disabled) {
+        background-color: g($t, "#{$base}-container-hover-color");
+
+        @if $v == 'elevated' {
+          box-shadow: g($t, "#{$base}-hover-shadow");
+        }
+      }
+
+      &:active:not(.ui-button--disabled) {
+        background-color: g($t, "#{$base}-container-pressed-color");
+      }
+
+      &.ui-button--disabled {
+        background-color: g($t, "#{$base}-container-disabled-color");
+        color: g($t, "#{$base}-label-text-disabled-color");
+
+        @if $v == 'outlined' {
+          border-color: g($t, "#{$base}-outline-disabled-color");
+        }
+
+        box-shadow: none !important;
+      }
+    }
+  }
+}
+
+.ui-button {
   // Base Styles
   display: inline-flex;
   align-items: center;
@@ -149,53 +180,6 @@ const linkBindings = computed(() => (isLink.value && props.to ? { to: props.to }
   &--icon-only {
     padding-inline: g($t, 'container-padding-icon-only');
     width: g($t, 'container-height');
-  }
-
-  // COLOR MIXIN
-  // Применяет токены выбранной схемы ко всем вариантам
-  @mixin apply-scheme($scheme) {
-    // Цикл по вариантам для DRY-применения токенов состояний
-    $variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
-
-    @each $v in $variants {
-      &.ui-button--#{$v} {
-        $base: "#{$scheme}-#{$v}";
-
-        background-color: g($t, "#{$base}-container-color");
-        color: g($t, "#{$base}-label-text-color");
-
-        @if $v == 'outlined' {
-          border: 1rem solid g($t, "#{$base}-outline-color");
-        }
-
-        @if $v == 'elevated' {
-          box-shadow: g($t, "#{$base}-shadow");
-        }
-
-        &:hover:not(.ui-button--disabled) {
-          background-color: g($t, "#{$base}-container-hover-color");
-
-          @if $v == 'elevated' {
-            box-shadow: g($t, "#{$base}-hover-shadow");
-          }
-        }
-
-        &:active:not(.ui-button--disabled) {
-          background-color: g($t, "#{$base}-container-pressed-color");
-        }
-
-        &.ui-button--disabled {
-          background-color: g($t, "#{$base}-container-disabled-color");
-          color: g($t, "#{$base}-label-text-disabled-color");
-
-          @if $v == 'outlined' {
-            border-color: g($t, "#{$base}-outline-disabled-color");
-          }
-
-          box-shadow: none !important;
-        }
-      }
-    }
   }
 
   // ПРИМЕНЕНИЕ СХЕМ (MD3 color roles)
