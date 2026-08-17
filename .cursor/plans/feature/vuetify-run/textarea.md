@@ -4,6 +4,10 @@
 Vuetify: `VTextarea` · Target: `MTextarea` · Phase: 2 · Type: public multiline field
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public component, shared private field shell, tokens, tests and docs_v2 page are present.
+</implementation-status>
+
 <problem>
 `MTextField` рендерит однострочный native input. Многострочный ввод имеет отдельные native semantics и UX: rows, wrapping, resize, auto-grow, max rows, counter и внутренний scroll. `type="textarea"` скрыл бы эти различия и перегрузил API text field.
 </problem>

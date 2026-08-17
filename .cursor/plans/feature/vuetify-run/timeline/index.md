@@ -4,6 +4,17 @@
 Vuetify reference: `VTimeline` · PrimeTime target: `MTimeline` · Phase: 5 · Type: public family parent
 </identity>
 
+<implementation-status state="done" updated="2026-07-18">
+Public `MTimeline` + `MTimelineItem` with the private `TimelineDivider` leaf,
+the view-only `app/composables/timeline/context.ts` registry (DOM-ordered so
+mid-list insertion stays correct), co-located `timeline/_index.scss` tokens and
+focused tests (`tests/timeline.spec.ts`, 15 cases). Vertical v1; side
+start/end/alternate + per-item override, density, line modes, first/last
+connector, hideDot/hideOpposite, MColor marker, article/div content. side/line
+are data-attributes (BEM stylelint forbids a dash in a static modifier).
+Lint, stylelint and vue-tsc pass. Docs: minimal page (hero + playground).
+</implementation-status>
+
 <status>
 Discussed and approved. V1 is vertical and explicit-composition-first. `MTimelineItem` is public; `TimelineDivider` is private. Horizontal/data-driven modes are deferred.
 </status>
@@ -117,4 +128,3 @@ Consumers compose chronological event histories with public items and correct co
 <questions>
 None. Horizontal/data-driven APIs require future concrete use cases.
 </questions>
-

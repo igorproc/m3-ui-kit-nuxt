@@ -4,6 +4,10 @@
 Vuetify reference: `useHotkey` / behavioral part of `VHotkey` · Target: `useHotkey` · Phase: 1 · Type: public composable + internal global pub/sub registry
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Composable, global registry, formatting utilities and focused tests are present.
+</implementation-status>
+
 <problem>
 Application shortcuts нельзя надёжно реализовывать разрозненными `window.addEventListener('keydown')`: каждый consumer заново нормализует клавиши, забывает cleanup, перехватывает ввод в fields, конфликтует с dialog/menu и отдельно форматирует подпись shortcut. В результате реально зарегистрированное сочетание и показанная пользователю подсказка могут расходиться.
 

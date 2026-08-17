@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VOtpInput` · Target: `MOtpInput` · Phase: 2 · Type: public orchestrator · Family: `otp-input/`</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public aggregate native input, caret-aware segmented presentation, Unicode
+normalization, grouping/masking, completion events, focused tests and docs are present.
+</implementation-status>
+
 <problem>One-time code требует segmented visual UI, но несколько настоящих inputs ухудшают SMS autofill, paste, screen reader navigation и создают сложный focus graph.</problem>
 
 <solution>Один native input владеет aggregate string/caret/autofill; private OtpField cells только визуализируют characters/active state. OtpGroup/Separator управляют layout без model/focus logic.</solution>

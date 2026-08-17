@@ -7,6 +7,10 @@ Phase: 1 — runtime and foundations
 Type: public, passive visual primitive
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public component, token map and focused unit tests are present in kit.
+</implementation-status>
+
 <problem>
 PrimeTime имеет готовые semantic containers — Card, Dialog, Bottom Sheet,
 Menu — но не даёт разработчику безопасно собрать собственную M3-поверхность.

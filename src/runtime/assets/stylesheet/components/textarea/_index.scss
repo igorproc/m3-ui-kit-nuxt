@@ -1,0 +1,38 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  container: (
+    min: (
+      height: 96rem,
+    ),
+  ),
+  input: (
+    min: (
+      height: 72rem,
+    ),
+    padding: (
+      block: 8rem,
+    ),
+    line: (
+      height: 24rem,
+    ),
+    resize: (
+      none: none,
+      vertical: vertical,
+      horizontal: horizontal,
+      both: both,
+    ),
+  ),
+  counter: (
+    padding: (
+      inline: 16rem,
+    ),
+    margin: (
+      top: 4rem,
+    ),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: 'body-small',
+  ),
+);
+

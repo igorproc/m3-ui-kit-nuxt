@@ -1,0 +1,49 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TIMELINE M3 COMPONENT TOKENS
+// ==========================================
+// The item content surface delegates its container styling to `MSurface`;
+// timeline tokens own only the grid geometry, connector and marker.
+
+$tokens: (
+  // Column that holds the marker + connector between the two content columns.
+  rail: (width: 40rem),
+  dot: (
+    size: 16rem,
+    icon: (size: 14rem),
+    ring: (width: 2rem),
+    color: map.get($theme-color-link, 'primary'),
+    on-color: map.get($theme-color-link, 'on-primary'),
+    surface: map.get($theme-color-link, 'surface'),
+  ),
+  line: (
+    width: 2rem,
+    color: map.get($theme-color-link, 'outline-variant'),
+  ),
+  density: (
+    compact: (gap: 12rem),
+    default: (gap: 20rem),
+    comfortable: (gap: 32rem),
+  ),
+  content: (
+    gap: 12rem,
+    padding: (block: 4rem),
+  ),
+  time: (
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: map.get($theme-typography-link, 'label', 'large'),
+  ),
+  title: (typography: map.get($theme-typography-link, 'title', 'medium')),
+  body: (typography: map.get($theme-typography-link, 'body', 'medium')),
+  // Collapse alternate to end-side below this width (px: media resolves rem
+  // against the initial 16px).
+  collapse: (threshold: map.get($breakpoints, 'tablet-xs')),
+  dot-color: (
+    primary: (color: map.get($theme-color-link, 'primary'), on: map.get($theme-color-link, 'on-primary')),
+    secondary: (color: map.get($theme-color-link, 'secondary'), on: map.get($theme-color-link, 'on-secondary')),
+    tertiary: (color: map.get($theme-color-link, 'tertiary'), on: map.get($theme-color-link, 'on-tertiary')),
+    error: (color: map.get($theme-color-link, 'error'), on: map.get($theme-color-link, 'on-error')),
+  ),
+);

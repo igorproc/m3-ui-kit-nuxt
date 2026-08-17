@@ -1,0 +1,27 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+$tokens: (
+  root: (
+    gap: 4rem,
+    shape: var(--sys-shape-corner-medium),
+    focus-outline: map.get($theme-color-link, secondary),
+    focus-width: 2rem,
+    focus-offset: 2rem,
+    disabled-opacity: 38%,
+  ),
+  item: (
+    size: 48rem,
+    icon-size: 32rem,
+    inactive-color: map.get($theme-color-link, on-surface-variant),
+    primary-color: map.get($theme-color-link, primary),
+    secondary-color: map.get($theme-color-link, secondary),
+    tertiary-color: map.get($theme-color-link, tertiary),
+    error-color: map.get($theme-color-link, error),
+    preview-opacity: 72%,
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
+);

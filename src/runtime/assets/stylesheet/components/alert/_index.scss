@@ -1,0 +1,86 @@
+@forward '../../abstracts/forward';
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+@function alert-tonal($container, $on-container) {
+  @return (
+    container: (color: $container),
+    content: (color: $on-container),
+    icon: (color: $on-container),
+    close: (
+      color: $on-container,
+      hover: (color: color-mix(in srgb, #{$on-container} 8%, transparent)),
+      pressed: (color: color-mix(in srgb, #{$on-container} 12%, transparent)),
+      focus: (color: $on-container),
+    ),
+  );
+}
+
+@function alert-outlined($accent) {
+  $on-surface: map.get($theme-color-link, 'on-surface');
+
+  @return (
+    container: (color: transparent),
+    content: (color: $on-surface),
+    icon: (color: $accent),
+    outline: (color: $accent),
+    close: (
+      color: map.get($theme-color-link, 'on-surface-variant'),
+      hover: (color: color-mix(in srgb, #{$on-surface} 8%, transparent)),
+      pressed: (color: color-mix(in srgb, #{$on-surface} 12%, transparent)),
+      focus: (color: $accent),
+    ),
+  );
+}
+
+$alert-token-overrides: () !default;
+$alert-default-tokens: (
+  root: (
+    gap: 12rem,
+    padding: 12rem 16rem,
+    closable: (padding-inline-end: 56rem),
+  ),
+  outline: (width: 1rem),
+  content: (
+    gap: 4rem,
+    min: (width: 240rem),
+  ),
+  title: (typography: map.get($theme-typography-link, 'title', 'small')),
+  body: (typography: map.get($theme-typography-link, 'body', 'medium')),
+  icon: (size: 24rem),
+  close: (
+    inset: (
+      block: 8rem,
+      inline: 8rem,
+    ),
+    focus: (
+      width: 2rem,
+      offset: 2rem,
+    ),
+  ),
+  tonal: (
+    info: alert-tonal(
+      map.get($theme-color-link, 'secondary-container'),
+      map.get($theme-color-link, 'on-secondary-container')
+    ),
+    success: alert-tonal(
+      map.get($theme-color-link, 'tertiary-container'),
+      map.get($theme-color-link, 'on-tertiary-container')
+    ),
+    warning: alert-tonal(
+      map.get($theme-color-link, 'primary-container'),
+      map.get($theme-color-link, 'on-primary-container')
+    ),
+    error: alert-tonal(
+      map.get($theme-color-link, 'error-container'),
+      map.get($theme-color-link, 'on-error-container')
+    ),
+  ),
+  outlined: (
+    info: alert-outlined(map.get($theme-color-link, 'secondary')),
+    success: alert-outlined(map.get($theme-color-link, 'tertiary')),
+    warning: alert-outlined(map.get($theme-color-link, 'primary')),
+    error: alert-outlined(map.get($theme-color-link, 'error')),
+  ),
+);
+$tokens: map.deep-merge($alert-default-tokens, $alert-token-overrides) !default;

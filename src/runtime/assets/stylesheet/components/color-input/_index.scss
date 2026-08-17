@@ -1,0 +1,17 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+$tokens: (
+  trigger: (padding: 2rem),
+  swatch: (
+    size: 22rem,
+    shape: var(--sys-shape-corner-small),
+    outline: map.get($theme-color-link, outline-variant),
+    outline-width: 1rem,
+  ),
+  checker: (
+    a: map.get($theme-color-link, surface-container-highest),
+    b: map.get($theme-color-link, surface-container-low),
+    size: 8rem,
+  ),
+);

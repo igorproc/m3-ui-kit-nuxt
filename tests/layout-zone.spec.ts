@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import MLayout from '../app/components/ui/layout/index.vue'
-import MLayoutMain from '../app/components/ui/layout/main.vue'
-import { useLayoutZone } from '../app/composables/useLayout'
+import MLayout from '../src/runtime/components/ui/layout/index.vue'
+import MLayoutMain from '../src/runtime/components/ui/layout/main.vue'
+import { useLayoutZone } from '../src/runtime/composables/useLayout'
 
 const Probe = defineComponent({
   setup() {

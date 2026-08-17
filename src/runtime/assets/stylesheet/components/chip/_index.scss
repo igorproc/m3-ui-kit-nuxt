@@ -1,0 +1,50 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  height: 32rem,
+  padding: (inline: 12rem),
+  radius: 8rem,
+  gap: 8rem,
+
+  text: (
+    type: 'label-large',
+    color: (
+      variant: map.get($theme-color-link, 'on-surface-variant'),
+      default: map.get($theme-color-link, 'on-surface'),
+      selected: map.get($theme-color-link, 'on-primary-container'),
+    ),
+  ),
+  bg: (
+    color: (
+      default: map.get($theme-color-link, 'surface-container-highest'),
+      suggestion: map.get($theme-color-link, 'surface-container-low'),
+      selected: map.get($theme-color-link, 'secondary-container'),
+    ),
+  ),
+  border: (
+    width: 1rem,
+    color: (default: map.get($theme-color-link, 'outline')),
+  ),
+
+  icon: (size: 18rem),
+
+  state: (
+    layer: (
+      opacity: (
+        hover: 8%,
+        active: 12%,
+      ),
+    ),
+  ),
+  disabled: (opacity: 0.38),
+  // Reached the group `max`: unavailable for selection, but not disabled, so it
+  // stays more legible than a disabled chip.
+  blocked: (opacity: 0.6),
+  focus: (
+    color: map.get($theme-color-link, 'secondary'),
+    width: 2rem,
+    offset: 2rem,
+  ),
+  suggestion: (shadow: 0 1rem 2rem rgb(0 0 0 / 10%)),
+);

@@ -4,6 +4,15 @@
 Vuetify reference: `VBreadcrumbs` · PrimeTime target: `MBreadcrumbs` · Phase: 3 · Type: public family parent
 </identity>
 
+<implementation-status state="done" updated="2026-07-16">
+Public `MBreadcrumbs` with private `BreadcrumbsItem`/`BreadcrumbsDivider` leaves,
+co-located `breadcrumbs/_index.scss` tokens and focused tests
+(`tests/breadcrumbs.spec.ts`, 13 cases) are present; lint and stylelint pass.
+The docs_v2 page is generated and validated. The kit layer ships no pages, so
+link-mode tests install a memory router to exercise the canonical NuxtLink path
+for real.
+</implementation-status>
+
 <status>
 Discussed and approved. Mobile overflow is `scroll | wrap`, default `scroll`; interactive collapse is deferred. Family uses direct props rather than context.
 </status>
@@ -121,4 +130,3 @@ Hierarchy renders as accessible, token-driven navigation with centralized link b
 <questions>
 None.
 </questions>
-

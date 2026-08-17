@@ -1,0 +1,29 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// AUTOCOMPLETE TOKENS
+// ==========================================
+// The option row is an MListItem and inherits its hover / selected / disabled
+// visuals; only the popover chrome, empty/loading state, and the keyboard
+// active-descendant highlight are owned here.
+
+$tokens: (
+  menu: (
+    margin-top: 4rem,
+    max-height: 320rem,
+  ),
+  list: (
+    padding-block: 8rem,
+  ),
+  option: (
+    active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} 8%, transparent),
+  ),
+  chip: (
+    active-outline: map.get($theme-color-link, primary),
+  ),
+  state: (
+    padding: 24rem,
+    color: map.get($theme-color-link, on-surface-variant),
+  ),
+);

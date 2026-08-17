@@ -1,0 +1,67 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// BANNER M3 COMPONENT TOKENS
+// ==========================================
+// The banner is a neutral contextual surface: it has no severity and no accent
+// container. Both variants keep `on-surface` content, so close state layers are
+// declared once instead of per variant.
+
+$hover-opacity: 8%;
+$pressed-opacity: 12%;
+$on-surface: map.get($theme-color-link, 'on-surface');
+$tokens: (
+  root: (
+    gap: 16rem,
+    min: (height: 54rem),
+    shape: map.get($theme-shape-link, 'none'),
+    padding: (
+      block: 16rem,
+      inline: 16rem,
+    ),
+  ),
+  // `auto` switches presentation on a static threshold. Media queries resolve
+  // rem against the initial 16px, so the breakpoint stays in px.
+  auto: (threshold: map.get($breakpoints, 'tablet-xs')),
+  surface: (
+    container: (color: map.get($theme-color-link, 'surface')),
+    content: (color: $on-surface),
+    divider: (
+      color: map.get($theme-color-link, 'outline-variant'),
+      width: 1rem,
+    ),
+  ),
+  tonal: (
+    container: (color: map.get($theme-color-link, 'surface-container-high')),
+    content: (color: $on-surface),
+  ),
+  icon: (
+    size: 24rem,
+    color: map.get($theme-color-link, 'on-surface-variant'),
+  ),
+  content: (gap: 4rem),
+  title: (typography: map.get($theme-typography-link, 'title', 'medium')),
+  body: (typography: map.get($theme-typography-link, 'body', 'medium')),
+  actions: (
+    gap: 8rem,
+    margin: (block: 12rem),
+  ),
+  close: (
+    size: 40rem,
+    shape: map.get($theme-shape-link, 'full'),
+    icon: (size: 20rem),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    hover: (color: color-mix(in srgb, #{$on-surface} #{$hover-opacity}, transparent)),
+    pressed: (color: color-mix(in srgb, #{$on-surface} #{$pressed-opacity}, transparent)),
+    focus: (
+      color: map.get($theme-color-link, 'secondary'),
+      width: 2rem,
+      offset: 2rem,
+    ),
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
+);

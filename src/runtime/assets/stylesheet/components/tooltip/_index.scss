@@ -1,0 +1,24 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TOOLTIP M3 COMPONENT TOKENS
+// ==========================================
+
+$tokens: (
+  content: (
+    offset: 8rem,
+    padding: 4rem 8rem,
+    border: (
+      radius: var(--sys-shape-corner-small),
+    ),
+    bg: (
+      color: map.get($theme-color-link, 'on-surface'),
+    ),
+    color: map.get($theme-color-link, 'surface'),
+    shadow: (0 2rem 4rem rgb(0 0 0 / 15%)),
+    text: (
+      type: 'body-small',
+    ),
+  ),
+);

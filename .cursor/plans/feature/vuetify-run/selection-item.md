@@ -4,6 +4,10 @@
 Vuetify: `VItem` · Target: `MSelectionItem` · Phase: 1 · Type: public renderless child · Parent: `MSelectionGroup`
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public renderless child and manual-composition tests are present.
+</implementation-status>
+
 <problem>
 Manual template composition должна получать reactive selection ticket без прямого вызова context register и без знания внутренних ids. Item не может навязывать DOM/ARIA, потому что selectable consumer может быть card, chip, checkbox, tab или option.
 </problem>

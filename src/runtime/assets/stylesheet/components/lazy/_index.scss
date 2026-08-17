@@ -1,0 +1,14 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+$tokens: (
+  motion: (
+    duration: map.get($theme-animation-link, 'duration', 'medium', '2'),
+    exit: (
+      duration: map.get($theme-animation-link, 'duration', 'short', '4'),
+    ),
+    easing: map.get($theme-animation-link, 'easing', 'emphasized-decelerate'),
+    offset: 8rem,
+  ),
+);
+

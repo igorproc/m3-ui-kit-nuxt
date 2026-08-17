@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createScrollLock } from '../app/composables/layout/scroll'
+import { createScrollLock } from '../src/runtime/composables/layout/scroll'
 
 const makeTargets = () => {
   const doc = document.createElement('div')

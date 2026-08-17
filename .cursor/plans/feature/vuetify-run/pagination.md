@@ -4,6 +4,19 @@
 Vuetify reference: `VPagination` · PrimeTime target: `MPagination` · Phase: 4 · Type: public
 </identity>
 
+<implementation-status state="done" updated="2026-07-18">
+Public `MPagination` at `app/components/ui/pagination/index.vue` with pure
+`createPaginationRange`/`normalizePage` utilities in `shared/utils/pagination`,
+co-located `pagination/_index.scss` tokens and focused tests
+(`tests/pagination.spec.ts`, 21 cases). The range is a proven
+boundary/sibling construction (`siblingCount = floor((totalVisible - 5) / 2)`)
+that always yields exactly `totalVisible` slots, keeps both ends and never
+hides a single page behind an ellipsis. Model normalizes down on length
+shrink; page controls reuse `MButton`, directional controls reuse
+`MButtonIcon`. Lint and stylelint pass. Docs: minimal page (hero + a
+reference section containing only the playground), per human direction.
+</implementation-status>
+
 <status>
 Discussed and approved. Standalone numbered pagination remains distinct from the compact private `MTablePagination` footer.
 </status>
@@ -160,4 +173,3 @@ Arbitrary collections receive a compact accessible numbered navigator that never
 <questions>
 None.
 </questions>
-

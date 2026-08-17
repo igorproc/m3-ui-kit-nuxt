@@ -4,6 +4,10 @@
 Vuetify roles: visual `VHotkey` + single-key `VKbd` coverage · Target: `MHotkey` · Phase: 1 · Type: public visual component
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public visual component, tokens and shared hotkey tests are present.
+</implementation-status>
+
 <problem>
 Shortcut-подсказки часто собираются вручную из `<kbd>`, поэтому разные экраны по-разному подписывают Command/Control, путают порядок модификаторов, не имеют accessible label и расходятся с реально зарегистрированной комбинацией. Отдельный `MKbd` решает внешний вид одной клавиши, но не решает platform normalization и связь с поведением.
 </problem>

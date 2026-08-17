@@ -4,6 +4,16 @@
 Vuetify reference: `VBanner` · PrimeTime target: `MBanner` · Phase: 3 · Type: public family parent
 </identity>
 
+<implementation-status state="done" updated="2026-07-16">
+Public `MBanner`, the private `BannerActions` leaf, co-located
+`banner/_index.scss` tokens and focused tests (`tests/banner.spec.ts`, 13
+cases) are present; lint and stylelint pass. The docs_v2 page (content en/ru,
+token manifest, interactive/playground renderers) is generated and validated.
+`auto` switches presentation через static `@media` на `$breakpoints.tablet-xs`
+(px, не rem — media resolves rem against the initial 16px); grid areas move the
+actions row without touching DOM order.
+</implementation-status>
+
 <status>
 Discussed and approved. `MBanner` is a neutral contextual action surface for page/section-level situations. It is distinct from severity-oriented inline `MAlert` and transient overlay `MSnackbar`.
 </status>
@@ -158,4 +168,3 @@ Props/defaults, slot precedence, both variants, all layouts, CSS auto transition
 <questions>
 None.
 </questions>
-

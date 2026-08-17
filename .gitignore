@@ -5,6 +5,7 @@
 .nitro
 .cache
 dist
+/coverage/
 
 # Node dependencies
 node_modules
@@ -28,3 +29,4 @@ logs
 .agent
 .planning
 graphify-out
+/test-results/

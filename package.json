@@ -1,6 +1,6 @@
 {
-  "name": "@primetime/ui-kit",
-  "version": "1.0.0-alpha.0",
+  "name": "@pr0s1k/primetime-kit",
+  "version": "0.1.0-rc.1",
   "type": "module",
   "description": "PrimeTime UI Kit — a Nuxt 4 layer & Material Design 3 component library (zero-runtime SCSS tokens).",
   "license": "MIT",
@@ -8,19 +8,32 @@
     "type": "git",
     "url": "git+https://github.com/igorproc/m3-ui-kit-nuxt.git"
   },
-  "main": "./nuxt.config.ts",
+  "main": "./dist/module.mjs",
+  "types": "./dist/module.d.mts",
+  "author": {
+    "email": "type19790098@gmail.com",
+    "name": "Igor Prosvirnin"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
-    ".": "./nuxt.config.ts",
-    "./defineKit": "./shared/utils/defineKit.ts",
-    "./types": "./shared/types/props.ts",
+    ".": {
+      "types": "./dist/module.d.mts",
+      "import": "./dist/module.mjs"
+    },
+    "./defineKit": {
+      "types": "./dist/runtime/shared/utils/defineKit.d.ts",
+      "import": "./dist/runtime/shared/utils/defineKit.js"
+    },
+    "./types": {
+      "types": "./dist/runtime/shared/types/props.d.ts",
+      "import": "./dist/runtime/shared/types/props.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
-    "app",
-    "shared",
-    "public",
-    "nuxt.config.ts",
-    "tsconfig.json",
+    "dist",
     "README.md",
     "LICENSE"
   ],
@@ -30,50 +43,54 @@
     "**/*.vue"
   ],
   "scripts": {
-    "build": "nuxt build",
+    "build": "nuxt-module-build build",
+    "build:module": "nuxt-module-build build",
+    "prepack": "nuxt-module-build build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
     "test": "vitest",
-    "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:style": "stylelint **/*.{vue,css,scss}"
   },
   "dependencies": {
+    "@iconify-json/ic": "^1.2.4",
     "@material/material-color-utilities": "^0.4.0",
+    "@nuxt/icon": "^2.2.1",
     "@nuxtjs/device": "^4.0.0",
+    "@pinia/nuxt": "^0.11.3",
     "@vee-validate/nuxt": "^4.15.1",
-    "@vee-validate/yup": "^4.15.1",
     "@vueuse/core": "^14.3.0",
     "@vueuse/nuxt": "^14.3.0",
     "dayjs": "^1.11.20",
     "flubber": "^0.4.2",
-    "nuxt": "^4.4.4",
-    "vue": "^3.5.33",
+    "pinia": "^3.0.4",
+    "vee-validate": "^4.15.1",
     "vue-final-modal": "^4.5.5",
-    "vue-router": "^5.0.6",
     "yup": "^1.7.1"
   },
   "devDependencies": {
-    "@iconify-json/ic": "^1.2.4",
     "@nuxt/eslint": "^1.15.2",
     "@nuxt/eslint-config": "^1.15.2",
-    "@nuxt/icon": "^2.2.1",
+    "@nuxt/module-builder": "^1.0.3",
     "@nuxt/test-utils": "^4.0.3",
     "@nuxtjs/stylelint-module": "^5.2.1",
-    "@pinia/nuxt": "^0.11.3",
-    "@playwright/test": "^1.59.1",
     "@types/flubber": "^0.4.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "@vue/test-utils": "^2.4.10",
     "eslint": "^10.3.0",
     "happy-dom": "^20.9.0",
-    "pinia": "^3.0.4",
+    "nuxt": "4.4.8",
     "sass": "^1.99.0",
     "stylelint": "^17.9.1",
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-config-standard-vue": "^1.0.0",
     "stylelint-scss": "^7.0.0",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "vue-router": "^5.0.6"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.4.8",
+    "vue": "3.5.39"
   }
 }

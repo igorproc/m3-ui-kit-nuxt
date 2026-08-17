@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import MRadio from '../app/components/ui/radio/index.vue'
-import MRadioGroup from '../app/components/ui/radio/group/index.vue'
-import MExpansionPanel from '../app/components/ui/expansion-panel/index.vue'
-import MExpansionPanels from '../app/components/ui/expansion-panels/index.vue'
+import MRadio from '../src/runtime/components/ui/radio/index.vue'
+import MRadioGroup from '../src/runtime/components/ui/radio/group/index.vue'
+import MExpansionPanel from '../src/runtime/components/ui/expansion-panel/index.vue'
+import MExpansionPanels from '../src/runtime/components/ui/expansion-panels/index.vue'
 
 // Regression coverage for the grouped "initial v-model" bug: a preset value on
 // the group must select/open the matching child at mount (the child registers

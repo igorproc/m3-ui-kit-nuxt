@@ -4,6 +4,11 @@
 Vuetify: `VOtpSeparator` · Target: private `OtpSeparator` · Parent: `MOtpInput` · Phase: 2 · Type: decorative presentation leaf
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Private decorative separator renders only between validated groups and is
+aria-hidden, non-focusable and absent from value/caret math.
+</implementation-status>
+
 <problem>
 Разделитель делает длинный код читаемым, но при неправильной семантике становится лишним character, tab stop или повторно озвучивается screen reader.
 </problem>

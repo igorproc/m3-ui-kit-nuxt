@@ -1,13 +1,19 @@
 # MColorInput
 
 <identity>
-Vuetify: `VColorInput` · Target: `MColorInput` · Phase: 2 · Type: public compact field-trigger · Status: planned with mandatory pre-implementation review
+Vuetify: `VColorInput` · Target: `MColorInput` · Phase: 2 · Type: public compact field-trigger · Status: approved
 </identity>
 
-<review-gate>
-**Обязательно повторно обсудить перед реализацией.** Нужно подтвердить, что готовая form-обёртка действительно нужна после утверждения/реализации `MColorPicker`, и что composition не лучше оставить документированным рецептом `MTextField + MButtonIcon + MMenu/MOverlay + MColorPicker`.
+<implementation-status state="done" review="approved" updated="2026-07-14">
+The explicit request to finish phase 2 approved keeping the public wrapper.
+It composes MTextField, MButtonIcon, MMenu and the shared MColorPicker, with
+focused tests and no duplicated picker state.
+</implementation-status>
 
-Если roadmap выполняется в автономном режиме без доступного человека для review, `MColorInput` **пропускается**, не считается blocker всей фазы и не реализуется по предположениям. Возврат к нему происходит после human confirmation.
+<review-gate>
+**Закрыт 2026-07-14.** Human direction «добить фазу 2» принято как approval
+сохранить специализированную form-обёртку. Wrapper остаётся thin composition
+`MTextField + MButtonIcon + MMenu + MColorPicker`, а не вторым color engine.
 </review-gate>
 
 <problem>

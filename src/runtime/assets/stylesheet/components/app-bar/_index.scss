@@ -1,0 +1,73 @@
+@use 'sass:map';
+@use '../../abstracts/forward' as *;
+
+// ==========================================
+// APP BAR M3 COMPONENT TOKENS
+// ==========================================
+// MD3 Expressive (May 2025): size (small | medium | large) and alignment
+// (start | center) are separate axes; subtitle is supported on every size.
+// On scroll a color fill — NOT a drop shadow — separates the bar from content.
+// Tokens are split per region so each leaf (<MAppBarNav/Title/Actions>) reads
+// only its own map; the grid-area name each leaf claims lives in that same map
+// (`grid-name`), keeping placement and styling in one place.
+
+// Container chrome — surface, scroll fill, padding.
+$container: (
+  color: map.get($theme-color-link, surface),
+  shadow: none,
+  scrolled: (
+    color: map.get($theme-color-link, surface-container),
+    // MD3: color fill separates the bar on scroll, no elevation shadow.
+    shadow: none,
+  ),
+  padding: (
+    inline: 16rem,
+    block: 8rem,
+  ),
+);
+
+// Height variants keyed by size, with a taller counterpart when a subtitle shows.
+$height: (
+  small: 64rem,
+  // ASSUMPTION: exact dp absent from the saved MD3 specs (lazy-loaded); tune if needed.
+  small-with-subtitle: 72rem,
+  medium: 112rem,
+  medium-with-subtitle: 136rem,
+  large: 120rem,
+  large-with-subtitle: 152rem,
+);
+
+// Leading region — <MAppBarNav>.
+$nav: (
+  grid-name: nav,
+  min-width: 48rem,
+  min-height: 48rem,
+  margin: 8rem,
+);
+
+// Headline region — <MAppBarTitle>.
+$title: (
+  grid-name: headline,
+  gap: 2rem,
+  color: map.get($theme-color-link, on-surface),
+  padding-bottom: (
+    medium: 24rem,
+    large: 28rem,
+  ),
+  typography: (
+    small: map.get($theme-typography-link, title, large),
+    medium: map.get($theme-typography-link, headline, small),
+    large: map.get($theme-typography-link, headline, medium),
+  ),
+  subtitle: (
+    color: map.get($theme-color-link, on-surface-variant),
+    typography: map.get($theme-typography-link, body, medium),
+  ),
+);
+
+// Trailing region — <MAppBarActions>.
+$actions: (
+  grid-name: actions,
+  gap: 4rem,
+  margin: 8rem,
+);

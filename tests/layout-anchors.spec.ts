@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import MLayout from '../app/components/ui/layout/index.vue'
-import MLayoutHeader from '../app/components/ui/layout/header.vue'
-import MLayoutAside from '../app/components/ui/layout/aside.vue'
-import MLayoutMain from '../app/components/ui/layout/main.vue'
-import MAppBar from '../app/components/ui/app-bar/index.vue'
-import { useLayoutZone } from '../app/composables/useLayout'
+import MLayout from '../src/runtime/components/ui/layout/index.vue'
+import MLayoutHeader from '../src/runtime/components/ui/layout/header.vue'
+import MLayoutAside from '../src/runtime/components/ui/layout/aside.vue'
+import MLayoutMain from '../src/runtime/components/ui/layout/main.vue'
+import MAppBar from '../src/runtime/components/ui/app-bar/index.vue'
+import MNavigationRail from '../src/runtime/components/ui/navigation-rail/index.vue'
+import { useLayoutZone } from '../src/runtime/composables/useLayout'
 
 // useHead в тестовой среде не пишет в document.head, поэтому генерацию CSS
 // (sticky/fixed-правила, display: none вне диапазона) покрывают юниты carve;
@@ -88,7 +89,7 @@ describe('multi-instance zones & sticky anchors', () => {
     expect(bar.classes()).toContain('ui-app-bar--anchored')
 
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'top', size: 'var(--ui-app-bar-height-small)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })
@@ -105,7 +106,7 @@ describe('multi-instance zones & sticky anchors', () => {
     expect(bar.attributes('data-m3-zone')).toBeTruthy()
     expect(bar.classes()).toContain('ui-app-bar--anchored')
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'top', size: 'var(--ui-app-bar-height-small)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })
@@ -129,7 +130,7 @@ describe('multi-instance zones & sticky anchors', () => {
     // зона получила размер из вклада app-bar — реестр отдаёт его live-геттером,
     // поэтому generated-CSS прибьёт header и зарезервирует строку и на SSR
     expect(probeItems(wrapper)).toEqual([
-      { kind: 'top', size: 'var(--ui-app-bar-height-center-aligned)', sticky: true },
+      { kind: 'top', size: 'var(--ui-app-bar-height-small)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })
@@ -165,6 +166,26 @@ describe('multi-instance zones & sticky anchors', () => {
     expect(probeItems(wrapper)).toEqual([
       { kind: 'start', size: 'var(--w)', sticky: true },
       { kind: 'end', size: 'var(--w2)', sticky: false },
+      { kind: 'main', size: null, sticky: false },
+    ])
+  })
+
+  it('navigation rail contributes width and drops viewport anchoring inside an aside zone', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      render: () => h(MLayout, () => [
+        h(MLayoutAside, { sticky: true }, () => h(MNavigationRail, {
+          items: [{ id: 'home', icon: 'home', label: 'Home' }],
+        })),
+        h(MLayoutMain, () => h(Probe)),
+      ]),
+    }))
+
+    const rail = wrapper.find('.ui-navigation-rail')
+
+    expect(rail.classes()).toContain('ui-navigation-rail--hosted')
+    expect(rail.attributes('data-m3-zone')).toBeUndefined()
+    expect(probeItems(wrapper)).toEqual([
+      { kind: 'start', size: 'var(--ui-navigation-rail-width)', sticky: true },
       { kind: 'main', size: null, sticky: false },
     ])
   })

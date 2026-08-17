@@ -1,14 +1,10 @@
 import { defineNuxtModule, addTemplate } from '@nuxt/kit'
-import {
-  hexFromArgb,
-  Scheme,
-  DynamicScheme,
-} from '@material/material-color-utilities'
 
-import { generateScheme } from '../../../shared/utils/defineKit'
-import { COOKIE_THEME_KEYS } from '../../../shared/constants/cookie'
+import { generateScheme } from '../../../src/runtime/shared/utils/defineKit'
+import { buildThemeBlocks } from '../../../src/runtime/shared/utils/themeScss'
+import { COOKIE_THEME_KEYS } from '../../../src/runtime/shared/constants/cookie'
 
-import type { MaterialKitOptions } from '../../../shared/types/kit'
+import type { MaterialKitOptions } from '../../../src/runtime/shared/types/kit'
 
 export default defineNuxtModule<MaterialKitOptions>({
   meta: {
@@ -24,7 +20,9 @@ export default defineNuxtModule<MaterialKitOptions>({
       },
     },
     breakpoints: {},
-    defaultTheme: 'light',
+    defaultDefinition: 'dark',
+    defaultPalette: '_m3-fallback',
+    defaultContrast: 'medium',
     themes: [
       {
         key: '_m3-fallback',
@@ -62,40 +60,8 @@ ${breakpointsScss}
     // 2. Generate dynamic themes
     let generatedThemesScss = ''
     if (options.themes) {
-      const getTokens = (s: Scheme | DynamicScheme): Record<string, string> => {
-        const tokens: Record<string, string> = {}
-        if (s instanceof Scheme) {
-          for (const [key, value] of Object.entries(s.toJSON())) {
-            const token = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-            tokens[token] = hexFromArgb(value as number)
-          }
-        } else if (s instanceof DynamicScheme) {
-          for (const color of s.colors.allColors) {
-            const token = color.name.replace(/_/g, '-')
-            tokens[token] = hexFromArgb(color.getArgb(s))
-          }
-        }
-        return tokens
-      }
-
       for (const theme of options.themes) {
-        const scheme = generateScheme(theme)
-
-        if (!scheme?.dark || !scheme.light) {
-          continue
-        }
-
-        generatedThemesScss += `[data-definition="light"][data-palette="${theme.key}"] {\n`
-        for (const [token, hex] of Object.entries(getTokens(scheme.light))) {
-          generatedThemesScss += `  --md-sys-color-${token}: ${hex};\n`
-        }
-        generatedThemesScss += `}\n\n`
-
-        generatedThemesScss += `[data-definition="dark"][data-palette="${theme.key}"] {\n`
-        for (const [token, hex] of Object.entries(getTokens(scheme.dark))) {
-          generatedThemesScss += `  --md-sys-color-${token}: ${hex};\n`
-        }
-        generatedThemesScss += `}\n\n`
+        generatedThemesScss += buildThemeBlocks(theme.key, generateScheme(theme))
       }
     }
 

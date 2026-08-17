@@ -154,53 +154,37 @@ The kit uses viewport-aware scaling: `html { font-size: calc(1vw / root-scale(bp
 
 ## 🚀 Getting Started
 
-### Consuming the kit (Nuxt layer)
+### Consuming the kit (Nuxt module)
 
-The kit is a **Nuxt 4 layer** (not a Nuxt module). You consume it through `extends`, in one of three ways — pick whichever fits your workflow.
+The kit is a **Nuxt 4 module**. It ships pre-built (`dist/`), so you register it in `modules` — no build step on your side.
 
-**1 — Copy the files as a local layer**
+**1 — Install**
 ```bash
-# copy the kit/ directory into your repo (e.g. ./vendor/ui-kit)
+npm i @pr0s1k/primetime-kit                 # from the npm registry
+npm i @pr0s1k/primetime-kit@file:../kit     # local path (side-by-side dev)
+npm i github:igorproc/m3-ui-kit-nuxt        # straight from git
 ```
+
+**2 — Register the module**
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-  extends: ['./vendor/ui-kit'],
+  modules: ['@pr0s1k/primetime-kit'],
 })
 ```
 
-**2 — Install via npm (git or file — registry not required)**
-```bash
-npm i @primetime/ui-kit            # from a registry, if published
-npm i github:igorproc/m3-ui-kit-nuxt   # straight from git
-npm i @primetime/ui-kit@file:../kit    # local path (monorepo / side-by-side)
-```
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  // `install: true` lets Nuxt install the layer's own dependencies
-  extends: [['@primetime/ui-kit', { install: true }]],
-})
-```
-
-**3 — Native Nuxt git extends (no install step — Nuxt fetches via giget)**
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  extends: ['github:igorproc/m3-ui-kit-nuxt#main'],
-})
-```
+The module pulls in its own Nuxt dependencies (`@nuxt/icon`, `@pinia/nuxt`, `@vee-validate/nuxt`, `@nuxtjs/device`) via `moduleDependencies` — you don't register them yourself.
 
 ### Required configuration
 
-The theme engine needs a `materialKit` config. Import the typed helper from the `./defineKit` subpath:
+The theme engine reads the top-level `materialKit` key. Import the typed helper from the `./defineKit` subpath:
 
 ```ts
 // nuxt.config.ts
-import { defineMaterialKit } from '@primetime/ui-kit/defineKit'
+import { defineMaterialKit } from '@pr0s1k/primetime-kit/defineKit'
 
 export default defineNuxtConfig({
-  extends: [['@primetime/ui-kit', { install: true }]],
+  modules: ['@pr0s1k/primetime-kit'],
   materialKit: defineMaterialKit({
     themes: [{ key: 'm3', name: 'M3 Baseline', color: '#6750A4' }],
     cookie: { theme: { definition: 'md-def', palette: 'md-pal', contrast: 'md-con' } },
@@ -210,7 +194,7 @@ export default defineNuxtConfig({
 
 Public prop types are available from the `./types` subpath:
 ```ts
-import type { MColor, MVariant } from '@primetime/ui-kit/types'
+import type { MColor, MVariant } from '@pr0s1k/primetime-kit/types'
 ```
 
 ### Required infrastructure (overlays & modals)
@@ -231,8 +215,10 @@ Overlay components (`MDialog`, `MMenu`, `MSnackbar`, …) teleport into a host a
 ### Local development (working on the kit itself)
 ```bash
 npm install
-npm run postinstall   # nuxt prepare — generates types & theme SCSS
+npm run build:module   # build dist/ (module.mjs + runtime + types)
 ```
+
+The runtime lives in `src/runtime/`; the module entry is `src/module.ts`. Consumers see the built `dist/`, so rebuild (`npm run build:module`) after changing kit sources — there is no module HMR through `dist`. A consumer linked via `file:` must restart its dev server to pick up a rebuild.
 
 ### Commands
 ```bash
@@ -348,11 +334,14 @@ $tokens: map.merge(t.$tokens, (
 - **Fluid scaling** — breakpoints adjust the root font-size, not individual properties
 - **Maintenance** — one global rule scales the entire design consistently
 
-### Nuxt Layer Architecture
-The kit is a **Nuxt layer** — consumed by `docs/` via `extends: ['../kit']`. This allows:
-- **Live component development** — change `kit/` → instant HMR in `docs/`
-- **Theme centralization** — one build → both kit + docs inherit themes
-- **Reusable patterns** — layouts, composables, utilities shared across apps
+### Nuxt Module Architecture
+The kit is a **Nuxt module** built with `@nuxt/module-builder`. `src/module.ts` registers the
+components, auto-imports, plugins, SCSS pipeline and MD3 theming; `src/runtime/` holds everything
+shipped to the consumer. It's published built (`dist/`), and its own Nuxt dependencies are declared
+via `moduleDependencies`. This gives:
+- **Zero-config consumption** — register in `modules`, dependencies install themselves
+- **Theme centralization** — one `materialKit` config drives the generated MD3 SCSS
+- **Reusable patterns** — components, composables, utilities exposed via auto-import
 
 ---
 
@@ -372,6 +361,8 @@ Features used: CSS variables, `color-mix()`, `calc()`, Grid/Flexbox, `contain`.
 | File | Purpose |
 |------|---------|
 | `app/components/ui/` | Public library components (`<MButton>`, `<MCard>`, etc.) |
+| `app/components/fragments/` | Private component leaves imported explicitly by their owners |
+| `app/components/core/` | Internal application and overlay runtime infrastructure |
 | `app/assets/stylesheet/abstracts/` | `g()` function, `material-map()`, `$theme-*` links |
 | `app/assets/stylesheet/components/` | Per-component `$tokens` map + styles |
 | `app/modules/kit/module.ts` | Theme build engine; generates `--md-sys-color-*` |
@@ -383,11 +374,18 @@ Features used: CSS variables, `color-mix()`, `calc()`, Grid/Flexbox, `contain`.
 ## 📖 For Developers
 
 ### Adding a Component
-1. Create `app/components/ui/<name>/index.vue` (single-file, no partial)
+1. Create the public root at `app/components/ui/<name>/index.vue`
 2. Create `app/assets/stylesheet/components/<name>/index.scss` with `$tokens` map
 3. Import and resolve tokens via `g($t, 'path')`
 4. Add `@use '~/assets/stylesheet/components/<name>/index' as t;` to `<style>`
-5. Run `npm run lint && npm run lint:style` — must pass 0 errors
+5. Place private leaves under `app/components/fragments/<name>/` and import them explicitly
+6. Place component unit tests next to their owner as `index.spec.ts`
+7. Run `npm run lint && npm run lint:style` — must pass 0 errors
+
+Every `.vue` file under `app/components/ui/` is part of the public `M*`
+auto-import surface. Private leaves must never be placed there. The Nuxt scanner
+only reads `.vue` files from `ui/` and `core/`; support files such as `props.ts`
+and `types.ts` are imported normally and are not components.
 
 ### Migrating a Component to M3 Tokens
 - See `.cursor/rules/migration_workflow.md`
@@ -414,6 +412,7 @@ kit/
 ├── app/
 │   ├── components/
 │   │   ├── ui/              # Public library components (<MButton>, …)
+│   │   ├── fragments/       # Private leaves, explicit imports only
 │   │   └── core/            # Overlay/modals infrastructure (core-scope)
 │   ├── composables/         # Vue 3 Composition API utilities
 │   ├── assets/stylesheet/   # Token system + styling

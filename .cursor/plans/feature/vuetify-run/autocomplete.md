@@ -4,6 +4,11 @@
 Vuetify: `VAutocomplete` · Target: `MAutocomplete` · Phase: 2 · Type: public generic field
 </identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public generic field, native-input combobox semantics, shared headless listbox,
+local/remote filtering modes, multiple selection and focused tests are present.
+</implementation-status>
+
 <problem>
 `MDropdown` выбирает из готового списка через readonly trigger, а `MSearch/MTextField` работают с текстом. Нет field, где editable search draft и committed selection являются разными состояниями, поддерживают local/remote items и полноценный combobox/listbox keyboard UX.
 </problem>

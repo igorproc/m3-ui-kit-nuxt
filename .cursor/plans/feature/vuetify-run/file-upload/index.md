@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VFileUpload` · Target: `MFileUpload` · Phase: 2 · Type: public orchestrator · Family: `file-upload/`</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Public orchestrator, shared file policy, readonly upload context, concurrent
+AbortController queue, default family leaves, focused tests and docs are present.
+</implementation-status>
+
 <problem>Picker, dropzone, queue list и item actions работают с одним набором файлов. Если validation/add/transport lifecycle оставить в SFC leaves, появятся разные accept rules, progress states и AbortControllers.</problem>
 
 <solution>`MFileUpload` — thin UI orchestrator над двумя вынесенными reactive foundations: `useFileSelection` для добавления/отклонения File objects и `useFileUploadQueue<TResult>` для queue/transport lifecycle. UI family только предоставляет context и default M3 rendering.</solution>

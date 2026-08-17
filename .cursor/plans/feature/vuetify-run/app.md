@@ -7,6 +7,10 @@ Phase: 1 — runtime and shell
 Type: public, optional convenience boundary
 </identity>
 
+<implementation-status state="done" updated="2026-07-13">
+Public component, co-located tokens and focused unit tests are present in kit.
+</implementation-status>
+
 <problem>
 PrimeTime UI поставляется как Nuxt layer и уже имеет root infrastructure:
 theme initialization, `#ui-overlay-host`, modal container и Nuxt loading

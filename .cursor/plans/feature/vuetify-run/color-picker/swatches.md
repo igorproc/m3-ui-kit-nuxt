@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VColorPickerSwatches` · Target: private `ColorPickerSwatches` · Parent: `MColorPicker` · Phase: 2 · Type: sub</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Opt-in normalized swatches select through the master context, expose listbox
+semantics and use complete co-located state tokens with integration tests.
+</implementation-status>
+
 <problem>Приложению может понадобиться быстрый выбор брендовых/preset цветов, но picker не должен навязывать случайную универсальную palette или обходить единый HSVA state.</problem>
 
 <solution>Private optional swatch grid рендерится только при переданном `swatches`, нормализует colors через shared codec и выбирает их через parent context. Без prop секция отсутствует полностью.</solution>

@@ -4,6 +4,13 @@
 Vuetify reference: `VBreadcrumbsItem` · PrimeTime target: private `BreadcrumbsItem` · Phase: 3 · Type: sub
 </identity>
 
+<implementation-status state="done" updated="2026-07-16">
+Private leaf at `app/components/fragments/breadcrumbs/item/index.vue`: active crumbs
+render through `MButton variant=text tag=link`, current/disabled render as text
+with `aria-current`/`aria-disabled`. Covered by `tests/breadcrumbs.spec.ts`
+(all semantic branches, current precedence, tab order, slot content).
+</implementation-status>
+
 <status>
 Approved. Active crumbs reuse `MLink` or the current canonical `MButton` text-link path; current/disabled crumbs render as text.
 </status>
@@ -67,4 +74,3 @@ Every crumb has exactly one semantic state and reuses the kit's canonical naviga
 <questions>
 None.
 </questions>
-

@@ -4,6 +4,20 @@
 Vuetify reference: `VChipGroup` · PrimeTime target: `MChipGroup` · Phase: 3 · Type: public family parent
 </identity>
 
+<implementation-status state="done" updated="2026-07-16">
+Public `MChipGroup`, the dedicated context
+(`app/composables/chip-group/context.ts`), `MChip` integration (optional
+`value`, aria-pressed, roving tabindex, arrows/Home/End) and layout-only
+`chip-group/_index.scss` tokens are present. Chip tokens gained focus-visible
+and max-blocked branches. Focused tests (`tests/chip-group.spec.ts`, 18 cases)
+cover standalone regression, no accidental generic-selection injection,
+single/multiple/mandatory/max, roving focus, data mode and cleanup; the
+existing chip/selection suites still pass. Lint, stylelint and vue-tsc pass.
+The docs_v2 page is generated and validated. Props follow the runtime-object
+convention (as `MAutocomplete`) because the docs API generator only reads
+`defineProps(mXProps)`.
+</implementation-status>
+
 <status>
 Discussed and approved. The original `filter` and `column` props are removed as first-iteration artifacts. Vuetify's `VChipGroupSymbol` is an injection symbol, not a visual component; PrimeTime keeps its internal context key inside this plan and creates no `ChipGroupSymbol` component.
 </status>

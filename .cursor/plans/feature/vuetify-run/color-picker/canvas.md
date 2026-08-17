@@ -2,6 +2,11 @@
 
 <identity>Vuetify: `VColorPickerCanvas` · Target: private `ColorPickerCanvas` · Parent: `MColorPicker` · Phase: 2 · Type: sub</identity>
 
+<implementation-status state="done" updated="2026-07-14">
+Pointer/keyboard HSVA leaf, slider semantics, scoped pointer lifecycle and
+complete co-located visual tokens are present.
+</implementation-status>
+
 <problem>Picker нужен точный двухмерный saturation/value control. Pointer и keyboard должны менять один parent color state, не создавая собственный model/parser и не включая hue/alpha.</problem>
 
 <solution>Private canvas leaf читает HSVA из `MColorPicker` context и изменяет только S/V. Hue и alpha остаются отдельными `MSlider` controls родителя. Public auto-import/v-model не создаётся.</solution>

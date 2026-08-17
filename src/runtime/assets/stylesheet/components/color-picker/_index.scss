@@ -1,0 +1,81 @@
+@use 'sass:map';
+@use '../../abstracts/variables' as *;
+
+// Zero-runtime tokens for the MColorPicker family (root + private leaves). The
+// chosen color itself is only ever an inline CSS value/gradient, never a token.
+$tokens: (
+  root: (
+    width: 280rem,
+    gap: 16rem,
+    padding: 16rem,
+    radius: var(--sys-shape-corner-large),
+    surface: map.get($theme-color-link, 'surface-container-high'),
+    color: map.get($theme-color-link, 'on-surface'),
+    elevation: (0 1rem 2rem 0 rgb(0 0 0 / 30%), 0 1rem 3rem 1rem rgb(0 0 0 / 15%)),
+  ),
+  canvas: (
+    height: 160rem,
+    radius: var(--sys-shape-corner-medium),
+    saturation-color: white,
+    value-color: black,
+    focus: (
+      width: 2rem,
+      offset: 2rem,
+      color: map.get($theme-color-link, 'primary'),
+    ),
+    thumb: (
+      size: 14rem,
+      border: map.get($theme-color-link, 'surface'),
+      border-width: 2rem,
+      shadow: 0 0 0 1rem rgb(0 0 0 / 30%),
+    ),
+  ),
+  slider: (
+    height: 14rem,
+    radius: var(--sys-shape-corner-full),
+    gap: 12rem,
+    thumb: (
+      size: 16rem,
+      border: map.get($theme-color-link, 'surface'),
+      border-width: 2rem,
+      shadow: 0 0 0 1rem rgb(0 0 0 / 30%),
+    ),
+  ),
+  preview: (
+    gap: 12rem,
+    size: 40rem,
+    radius: var(--sys-shape-corner-medium),
+    outline: map.get($theme-color-link, 'outline-variant'),
+    outline-width: 1rem,
+    value: (color: map.get($theme-color-link, 'on-surface-variant'), type: 'body-small'),
+  ),
+  edit: (
+    gap: 8rem,
+    inputs-gap: 12rem,
+    channel: (
+      min: (
+        width: 56rem,
+      ),
+    ),
+  ),
+  swatches: (
+    gap: 8rem,
+    size: 24rem,
+    radius: var(--sys-shape-corner-small),
+    outline: map.get($theme-color-link, 'outline-variant'),
+    outline-width: 1rem,
+    selected: map.get($theme-color-link, 'primary'),
+    selected-width: 2rem,
+    hover-scale: 1.1,
+    disabled-opacity: 50%,
+    motion-duration: var(--sys-motion-duration-short-2),
+    motion-easing: var(--sys-motion-easing-standard),
+  ),
+  disabled: (opacity: 60%),
+  // Checkerboard for alpha/transparency, expressed via two gradients.
+  checker: (
+    a: map.get($theme-color-link, 'surface-container-highest'),
+    b: map.get($theme-color-link, 'surface-container-low'),
+    size: 8rem,
+  ),
+);

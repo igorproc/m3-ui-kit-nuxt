@@ -4,6 +4,15 @@
 Vuetify reference: `VTimelineItem` · PrimeTime target: `MTimelineItem` · Phase: 5 · Type: public family child
 </identity>
 
+<implementation-status state="done" updated="2026-07-18">
+Public `MTimelineItem` at `app/components/ui/timeline/item/index.vue`: injects
+the timeline context, registers one DOM-ordered ticket, renders `li` with
+opposite/divider/`MSurface` content. Slot precedence (opposite>time,
+title/default>props), `<time datetime>`, side override, hideDot/hideOpposite,
+contentTag. Covered by `tests/timeline.spec.ts` incl. the context-required
+guard.
+</implementation-status>
+
 <status>Approved as a public explicit-composition component.</status>
 
 <problem>An event needs opposite/time content, semantic content surface, marker/icon and connector participation while inheriting parent layout and retaining chronological list order.</problem>
@@ -47,4 +56,3 @@ Defaults: primary color, plain surface, no side override, visible opposite/dot, 
 <done>Each event is a public semantic list item that derives all sequence geometry from its parent ticket.</done>
 
 <questions>None.</questions>
-

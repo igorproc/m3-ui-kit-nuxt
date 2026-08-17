@@ -8,8 +8,8 @@ import {
   parseColor,
   rgbaToHsla,
   rgbaToHsva,
-} from '../shared/utils/color'
-import type { RGBA } from '../shared/utils/color'
+} from '../src/runtime/shared/utils/color'
+import type { RGBA } from '../src/runtime/shared/utils/color'
 
 function rgba(r: number, g: number, b: number, a = 1): RGBA {
   return { r, g, b, a }
