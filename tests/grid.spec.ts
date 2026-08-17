@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import MContainer from '../app/components/ui/container/index.vue'
-import MRow from '../app/components/ui/row/index.vue'
-import MCol from '../app/components/ui/col/index.vue'
-import MResponsive from '../app/components/ui/responsive/index.vue'
+import MContainer from '../src/runtime/components/ui/container/index.vue'
+import MRow from '../src/runtime/components/ui/row/index.vue'
+import MCol from '../src/runtime/components/ui/col/index.vue'
+import MResponsive from '../src/runtime/components/ui/responsive/index.vue'
 
 describe('m-container', () => {
   it('renders the bare grid by default', async () => {

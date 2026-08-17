@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createNumberCodec, precisionFromStep, roundDecimal } from '../shared/utils/number'
+import { createNumberCodec, precisionFromStep, roundDecimal } from '../src/runtime/shared/utils/number'
 
 describe('number codec', () => {
   it('parses and formats locale decimal/group symbols', () => {

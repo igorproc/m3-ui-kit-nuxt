@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import MLayout from '../app/components/ui/layout/index.vue'
-import MLayoutHeader from '../app/components/ui/layout/header.vue'
-import MLayoutAside from '../app/components/ui/layout/aside.vue'
-import MLayoutMain from '../app/components/ui/layout/main.vue'
-import MAppBar from '../app/components/ui/app-bar/index.vue'
-import MNavigationRail from '../app/components/ui/navigation-rail/index.vue'
-import { useLayoutZone } from '../app/composables/useLayout'
+import MLayout from '../src/runtime/components/ui/layout/index.vue'
+import MLayoutHeader from '../src/runtime/components/ui/layout/header.vue'
+import MLayoutAside from '../src/runtime/components/ui/layout/aside.vue'
+import MLayoutMain from '../src/runtime/components/ui/layout/main.vue'
+import MAppBar from '../src/runtime/components/ui/app-bar/index.vue'
+import MNavigationRail from '../src/runtime/components/ui/navigation-rail/index.vue'
+import { useLayoutZone } from '../src/runtime/composables/useLayout'
 
 // useHead в тестовой среде не пишет в document.head, поэтому генерацию CSS
 // (sticky/fixed-правила, display: none вне диапазона) покрывают юниты carve;

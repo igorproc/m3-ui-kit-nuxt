@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick, ref } from 'vue'
-import { buildMeasurement, computeRange } from '../app/composables/virtual-scroll/geometry'
-import { useVirtualScroll } from '../app/composables/virtual-scroll/useVirtualScroll'
+import { buildMeasurement, computeRange } from '../src/runtime/composables/virtual-scroll/geometry'
+import { useVirtualScroll } from '../src/runtime/composables/virtual-scroll/useVirtualScroll'
 
 describe('virtual-scroll geometry', () => {
   it('resolves a constant size analytically', () => {

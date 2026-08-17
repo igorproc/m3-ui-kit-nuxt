@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const root = resolve(process.cwd())
-const componentsRoot = resolve(root, 'app/components')
+const componentsRoot = resolve(root, 'src/runtime/components')
 const nuxtConfig = readFileSync(resolve(root, 'nuxt.config.ts'), 'utf8')
 const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as { files?: string[] }
 
@@ -25,9 +25,9 @@ describe('component boundaries', () => {
   })
 
   it('scans only Vue files from the core and public ui boundaries', () => {
-    expect(nuxtConfig).toContain('path: resolve(\'./app/components/core\')')
-    expect(nuxtConfig).toContain('path: resolve(\'./app/components/ui\')')
-    expect(nuxtConfig).not.toMatch(/resolve\('\.\/app\/components'\)/)
+    expect(nuxtConfig).toContain('path: resolve(\'./src/runtime/components/core\')')
+    expect(nuxtConfig).toContain('path: resolve(\'./src/runtime/components/ui\')')
+    expect(nuxtConfig).not.toMatch(/resolve\('\.\/src\/runtime\/components'\)/)
     expect(nuxtConfig.match(/extensions: \['vue'\]/g)).toHaveLength(2)
   })
 
@@ -38,8 +38,8 @@ describe('component boundaries', () => {
 
     const declarations = readFileSync(declarationsPath, 'utf8').replaceAll('\\', '/')
 
-    expect(declarations).not.toContain('/app/components/fragments/')
-    expect(declarations).not.toMatch(/app\/components\/ui\/.+\/(?:props|types|context)"?\)/)
+    expect(declarations).not.toContain('/src/runtime/components/fragments/')
+    expect(declarations).not.toMatch(/src\/runtime\/components\/ui\/.+\/(?:props|types|context)"?\)/)
     expect(declarations).not.toMatch(/export const (?:ColorPickerCanvas|SelectionDataItem|MSliderRoot|MSliderThumb|MTablePagination|MTimePickerDial):/)
     expect(declarations).toMatch(/export const MButton:/)
     expect(declarations).toMatch(/export const MSlider:/)

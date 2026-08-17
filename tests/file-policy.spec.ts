@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createFilePolicy, formatFileSize } from '../shared/utils/file'
+import { createFilePolicy, formatFileSize } from '../src/runtime/shared/utils/file'
 
 describe('file policy', () => {
   it('validates type, size and count without mutating files', () => {

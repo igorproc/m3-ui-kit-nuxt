@@ -8,7 +8,8 @@
     "type": "git",
     "url": "git+https://github.com/igorproc/m3-ui-kit-nuxt.git"
   },
-  "main": "./nuxt.config.ts",
+  "main": "./dist/module.mjs",
+  "types": "./dist/module.d.mts",
   "author": {
     "email": "type19790098@gmail.com",
     "name": "Igor Prosvirnin"
@@ -17,18 +18,22 @@
     "access": "public"
   },
   "exports": {
-    ".": "./nuxt.config.ts",
-    "./defineKit": "./shared/utils/defineKit.ts",
-    "./types": "./shared/types/props.ts",
+    ".": {
+      "types": "./dist/module.d.mts",
+      "import": "./dist/module.mjs"
+    },
+    "./defineKit": {
+      "types": "./dist/runtime/shared/utils/defineKit.d.ts",
+      "import": "./dist/runtime/shared/utils/defineKit.js"
+    },
+    "./types": {
+      "types": "./dist/runtime/shared/types/props.d.ts",
+      "import": "./dist/runtime/shared/types/props.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
-    "app",
-    "!app/**/*.spec.ts",
-    "shared",
-    "public",
-    "nuxt.config.ts",
-    "tsconfig.json",
+    "dist",
     "README.md",
     "LICENSE"
   ],
@@ -38,7 +43,9 @@
     "**/*.vue"
   ],
   "scripts": {
-    "build": "nuxt build",
+    "build": "nuxt-module-build build",
+    "build:module": "nuxt-module-build build",
+    "prepack": "nuxt-module-build build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -65,6 +72,7 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
     "@nuxt/eslint-config": "^1.15.2",
+    "@nuxt/module-builder": "^1.0.3",
     "@nuxt/test-utils": "^4.0.3",
     "@nuxtjs/stylelint-module": "^5.2.1",
     "@types/flubber": "^0.4.0",

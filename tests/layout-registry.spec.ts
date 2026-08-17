@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { nextTick, ref, watchEffect } from 'vue'
-import { createLayoutRegistry } from '../app/composables/layout/registry'
-import type { LayoutItem } from '../app/composables/layout/registry'
+import { createLayoutRegistry } from '../src/runtime/composables/layout/registry'
+import type { LayoutItem } from '../src/runtime/composables/layout/registry'
 
 const noEl = () => null
 

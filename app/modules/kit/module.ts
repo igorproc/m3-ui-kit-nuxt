@@ -1,10 +1,10 @@
 import { defineNuxtModule, addTemplate } from '@nuxt/kit'
 
-import { generateScheme } from '../../../shared/utils/defineKit'
-import { buildThemeBlocks } from '../../../shared/utils/themeScss'
-import { COOKIE_THEME_KEYS } from '../../../shared/constants/cookie'
+import { generateScheme } from '../../../src/runtime/shared/utils/defineKit'
+import { buildThemeBlocks } from '../../../src/runtime/shared/utils/themeScss'
+import { COOKIE_THEME_KEYS } from '../../../src/runtime/shared/constants/cookie'
 
-import type { MaterialKitOptions } from '../../../shared/types/kit'
+import type { MaterialKitOptions } from '../../../src/runtime/shared/types/kit'
 
 export default defineNuxtModule<MaterialKitOptions>({
   meta: {

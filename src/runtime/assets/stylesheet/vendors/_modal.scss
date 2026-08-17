@@ -1,0 +1,52 @@
+.ui-dialog-backdrop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(0 0 0 / 32%); // Scrim opacity 32%
+  backdrop-filter: blur(4px);
+}
+
+.ui-sheet-backdrop {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  background-color: transparent;
+}
+
+// Fade transition for dialog backdrop (opacity + blur)
+.vfm-fade-enter-active .ui-dialog-backdrop,
+.vfm-fade-leave-active .ui-dialog-backdrop {
+  transition:
+    opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
+    backdrop-filter var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+}
+
+.vfm-fade-enter-from .ui-dialog-backdrop,
+.vfm-fade-leave-to .ui-dialog-backdrop {
+  opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+// Navigation drawer backdrop: align content to left or right
+.ui-navigation-drawer {
+  display: flex;
+  align-items: stretch;
+  background-color: rgb(0 0 0 / 32%);
+
+  &--left {
+    justify-content: flex-start;
+  }
+
+  &--right {
+    justify-content: flex-end;
+  }
+}
+
+// Override VFM slide duration with M3 tokens for drawer (transition classes are on content element)
+.vfm-slide-left-enter-active.ui-navigation-drawer__surface,
+.vfm-slide-left-leave-active.ui-navigation-drawer__surface,
+.vfm-slide-right-enter-active.ui-navigation-drawer__surface,
+.vfm-slide-right-leave-active.ui-navigation-drawer__surface {
+  transition-duration: var(--sys-motion-duration-medium-2);
+  transition-timing-function: var(--sys-motion-easing-standard-decelerate);
+}
