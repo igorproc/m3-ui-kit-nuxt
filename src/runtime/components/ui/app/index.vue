@@ -17,6 +17,10 @@
 </template>
 
 <script setup lang="ts">
+// Явный импорт: в потребителе кит лежит в node_modules, а unimport не переписывает
+// его SFC — авто-импорт стора там не инжектится (useThemeStore is not defined в SSR).
+import { useThemeStore } from '#kit/store/theme'
+
 interface MAppProps {
   tag?: string
 }
