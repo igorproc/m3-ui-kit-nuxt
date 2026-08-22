@@ -28,7 +28,7 @@ import type { MaybeRefOrGetter, Ref } from 'vue'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 import { toArray } from '#kit/shared/utils/toArray'
 import type { MaybeArray } from '#kit/shared/utils/toArray'
-import { isElement, isFunction, isNull, isNullOrUndefined, isString } from '#kit/shared/utils/guards'
+import { isElement, isFunction, isNull, isNullOrUndefined, isString } from '#kit/shared/utils/guards/guards'
 import { useDocumentEventListener, useWindowEventListener } from './useEventListener'
 
 export type ClickOutsideElement = HTMLElement | null | undefined

@@ -15,11 +15,17 @@ export function clonePlainData<T>(value: T): T {
       // explicit plain-data clone below, which gives a clearer type boundary.
     }
   }
-  if (Array.isArray(value)) return value.map(clonePlainData) as T
+  if (Array.isArray(value)) {
+    return value.map(clonePlainData) as T
+  }
+
   if (isPlainObject(value)) {
     return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, clonePlainData(entry)])) as T
   }
-  if (value === null || typeof value !== 'object') return value
+  if (value === null || typeof value !== 'object') {
+    return value
+  }
+
   throw new TypeError('[m-confirm-edit] non-plain values require an explicit clone function')
 }
 

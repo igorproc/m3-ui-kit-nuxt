@@ -29,7 +29,7 @@ import type {
   FieldRules,
   FormBinding,
 } from '#kit/composables/validation/types'
-import { isUndefined } from '#kit/shared/utils/guards'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 
 export type FormFieldType = 'text' | 'textarea' | 'number' | 'checkbox' | 'switch' | 'radio' | 'search'
 

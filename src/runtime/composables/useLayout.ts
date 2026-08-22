@@ -32,7 +32,7 @@ import {
 } from 'vue'
 import { useRuntimeConfig } from '#app'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import { resolveBreakpoints } from '#kit/shared/utils/resolveBreakpoints'
 import { useEventListener } from './useEventListener'
 import { useGlobalListener } from './useGlobalListener'

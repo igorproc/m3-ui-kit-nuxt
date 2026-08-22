@@ -10,7 +10,7 @@
  * active value without the parent re-plumbing props.
  */
 import type { ComputedRef } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { SingleContext, SingleTicket, SingleTicketInput } from '#kit/composables/registry/createSingle'
 
 export type NavigationValue = string

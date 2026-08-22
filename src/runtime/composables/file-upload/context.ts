@@ -1,7 +1,7 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { FileRejection } from '#kit/shared/utils/file'
 import type { FileUploadEntry } from './useFileUploadQueue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 
 export interface FileUploadContext<TResult = unknown> {
   entries: Readonly<Ref<readonly FileUploadEntry<TResult>[]>>

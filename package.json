@@ -23,8 +23,8 @@
       "import": "./dist/module.mjs"
     },
     "./defineKit": {
-      "types": "./dist/runtime/shared/utils/defineKit.d.ts",
-      "import": "./dist/runtime/shared/utils/defineKit.js"
+      "types": "./dist/runtime/shared/utils/setup/defineKit.d.ts",
+      "import": "./dist/runtime/shared/utils/setup/defineKit.js"
     },
     "./types": {
       "types": "./dist/runtime/shared/types/props.d.ts",
@@ -39,7 +39,10 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!app/**/*.spec.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/specs"
   ],
   "sideEffects": [
     "**/*.scss",

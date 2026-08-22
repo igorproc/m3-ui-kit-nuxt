@@ -7,7 +7,16 @@ export const THEME_DEFINITIONS = {
 }
 
 export const THEME_CONTRASTS = {
+  STANDARD: 'standard',
   MEDIUM: 'medium',
+  HIGH: 'high',
+}
+
+/** Default semantic seeds, harmonized to each palette when the app doesn't override them. */
+export const DEFAULT_SEMANTIC_COLORS = {
+  success: '#2e7d32',
+  warning: '#ed6c02',
+  info: '#0288d1',
 }
 
 /** Reserved `data-palette` value used for a runtime-generated custom (HEX) palette. */

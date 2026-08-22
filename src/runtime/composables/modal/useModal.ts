@@ -15,7 +15,7 @@
  */
 import type { Component, Ref } from 'vue'
 import { useModal as useVfmModal } from 'vue-final-modal'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 
 export interface M3ModalContext {
   id: string

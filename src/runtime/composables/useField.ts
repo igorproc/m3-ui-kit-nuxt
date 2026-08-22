@@ -23,7 +23,7 @@
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { injectValidationAdapter } from '#kit/composables/validation/context'
 import type { FieldMeta } from '#kit/composables/validation/types'
-import { isUndefined } from '#kit/shared/utils/guards'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 
 export interface UseFieldOptions<T> {
   /** Field path. Evaluated once at setup; when absent the field is inert. */

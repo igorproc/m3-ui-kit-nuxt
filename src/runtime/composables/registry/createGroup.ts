@@ -21,9 +21,9 @@
  */
 import { computed, shallowReactive, toRef, toValue, useId } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter, Reactive, Ref } from 'vue'
-import { useContext } from '#kit/shared/utils/createContext'
-import { createTrinity } from '#kit/shared/utils/createTrinity'
-import type { ContextTrinity } from '#kit/shared/utils/createTrinity'
+import { useContext } from '#kit/shared/utils/context/createContext'
+import { createTrinity } from '#kit/shared/utils/context/createTrinity'
+import type { ContextTrinity } from '#kit/shared/utils/context/createTrinity'
 import { toArray } from '#kit/shared/utils/toArray'
 import { resolveIds, resolveIndexes } from '#kit/shared/utils/helpers'
 import { createSelection } from './createSelection'

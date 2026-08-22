@@ -17,7 +17,9 @@
  */
 function graphemes(value: string, locale?: string): string[] {
   const Segmenter = Intl.Segmenter
-  if (!Segmenter) return Array.from(value)
+  if (!Segmenter) {
+    return Array.from(value)
+  }
 
   const segments = new Segmenter(locale, { granularity: 'grapheme' }).segment(value)
   return Array.from(segments, segment => segment.segment)

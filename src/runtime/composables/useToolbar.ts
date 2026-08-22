@@ -12,7 +12,7 @@
  */
 import { computed, toValue, watch } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import { createSingle } from '#kit/composables/registry/createSingle'
 import { createGroup } from '#kit/composables/registry/createGroup'
 import type { ID } from '#kit/shared/types/registry'

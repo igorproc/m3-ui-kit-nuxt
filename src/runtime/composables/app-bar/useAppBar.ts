@@ -12,7 +12,7 @@
  * back up, so the container can pick the taller MD3 height variant even when the
  * title lives in a child rather than the container's `subtitle` prop.
  */
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { Ref } from 'vue'
 
 /** MD3 Expressive size taxonomy (alignment is a separate axis, see `AppBarAlign`). */

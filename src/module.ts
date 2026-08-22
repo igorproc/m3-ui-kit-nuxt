@@ -8,8 +8,6 @@ import {
   defineNuxtModule,
 } from '@nuxt/kit'
 
-import { generateScheme } from './runtime/shared/utils/defineKit'
-import { buildThemeBlocks } from './runtime/shared/utils/themeScss'
 import { COOKIE_THEME_KEYS } from './runtime/shared/constants/cookie'
 import type { MaterialKitOptions } from './runtime/shared/types/kit'
 
@@ -34,9 +32,13 @@ function injectScssPrelude(nuxt: any, additionalScss: string) {
 }
 
 /**
- * Emits the generated MD3 SCSS (breakpoints + per-theme color blocks) as build
- * templates and exposes them through the `~material-kit-config` /
- * `~material-kit-themes` aliases the stylesheet consumes.
+ * Emits the breakpoints config SCSS as a build template and keeps the
+ * `~material-kit-config` / `~material-kit-themes` aliases the stylesheet consumes.
+ *
+ * Dynamic palette CSS is no longer generated at build time: `<MApp>` renders only
+ * the active palette at runtime (SSR + reactive). The themes template stays empty
+ * so the `@use '~material-kit-themes'` import keeps resolving; static themes
+ * (`definedInScss`) live in `assets/stylesheet/themes/base`.
  */
 function registerThemePipeline(options: MaterialKitOptions, nuxt: any) {
   const breakpointsScss = Object.entries(options.breakpoints || {})
@@ -50,14 +52,9 @@ function registerThemePipeline(options: MaterialKitOptions, nuxt: any) {
   })
   nuxt.options.alias['~material-kit-config'] = configTemplate.dst
 
-  let generatedThemesScss = ''
-  for (const theme of options.themes || []) {
-    generatedThemesScss += buildThemeBlocks(theme.key, generateScheme(theme))
-  }
-
   const themesTemplate = addTemplate({
     filename: 'material-kit-themes.scss',
-    getContents: () => generatedThemesScss,
+    getContents: () => '// Dynamic palettes are generated at runtime by <MApp>.\n',
     write: true,
   })
   nuxt.options.alias['~material-kit-themes'] = themesTemplate.dst

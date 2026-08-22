@@ -9,7 +9,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import {
   formatColor,
   formatSupportsAlpha,

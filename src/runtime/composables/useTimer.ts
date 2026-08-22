@@ -25,7 +25,7 @@
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 
 // Utilities
-import { isUndefined } from '#kit/shared/utils/guards'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 import { onScopeDispose, shallowRef, toValue } from 'vue'
 
 // Types

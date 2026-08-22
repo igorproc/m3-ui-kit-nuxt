@@ -22,12 +22,12 @@
  * ```
  */
 import { shallowReactive, useId } from 'vue'
-import { useContext } from '#kit/shared/utils/createContext'
-import { createTrinity } from '#kit/shared/utils/createTrinity'
-import type { ContextTrinity } from '#kit/shared/utils/createTrinity'
+import { useContext } from '#kit/shared/utils/context/createContext'
+import { createTrinity } from '#kit/shared/utils/context/createTrinity'
+import type { ContextTrinity } from '#kit/shared/utils/context/createTrinity'
 import { useLogger } from '#kit/shared/utils/logger'
 import { clamp } from '#kit/shared/utils/helpers'
-import { isUndefined } from '#kit/shared/utils/guards'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 import type { Extensible, ID } from '#kit/shared/types/registry'
 
 /** User-facing input shape for registry tickets. */

@@ -39,7 +39,16 @@ withDefaults(
 )
 
 defineSlots<MAppSlots>()
-useThemeStore()
+
+// MApp owns the theme head injection: html attributes (data-definition/palette/contrast)
+// and the active palette's generated <style>. SSR-rendered (no FOUC), reactive on the client.
+// Pinia unwraps the store's computeds on access, so re-wrap them in local
+// `computed`s to keep the head reactive (a plain read would freeze at setup).
+const theme = useThemeStore()
+useHead({
+  htmlAttrs: computed(() => theme.htmlAttrs),
+  style: [{ id: 'material-kit-theme', innerHTML: computed(() => theme.themeCss) }],
+})
 
 const appRegistered = useState('material-kit:m-app-registered', () => false)
 

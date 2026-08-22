@@ -9,7 +9,7 @@
 import * as yup from 'yup'
 import type { AnyObjectSchema, AnySchema } from 'yup'
 import type { FieldDescriptor } from '#kit/composables/validation/types'
-import { isString, isUndefined } from '#kit/shared/utils/guards'
+import { isString, isUndefined } from '#kit/shared/utils/guards/guards'
 
 /** Resolves the base yup schema for a field kind before rules are applied. */
 function baseSchemaFor(field: FieldDescriptor): AnySchema {

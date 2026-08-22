@@ -8,7 +8,7 @@
  * and read the active value. Namespace: `m3:tabs`.
  */
 import type { ComputedRef, Ref } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { SingleContext, SingleTicket, SingleTicketInput } from '#kit/composables/registry/createSingle'
 
 export type TabValue = string | number
