@@ -28,7 +28,7 @@
  */
 import { inject, provide } from 'vue'
 import type { App, InjectionKey } from 'vue'
-import { isObject, isString, isSymbol, isUndefined } from './guards'
+import { isObject, isString, isSymbol, isUndefined } from '../guards/guards'
 
 export type ContextKey<Z> = InjectionKey<Z> | string
 

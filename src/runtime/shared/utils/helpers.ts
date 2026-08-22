@@ -5,7 +5,7 @@
  * Small pure helpers ported from `@vuetify/v0`'s `utilities` that the registry
  * chain depends on. Kept dependency-light (only `guards`).
  */
-import { isUndefined } from './guards'
+import { isUndefined } from './guards/guards'
 import type { ID } from '../types/registry'
 
 /**
