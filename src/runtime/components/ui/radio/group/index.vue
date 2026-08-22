@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { useField } from 'vee-validate'
+import { useField } from '#kit/composables/useField'
 import { createSingle } from '#kit/composables/registry/createSingle'
 import { provideRadioGroupContext } from '#kit/composables/radio/useRadioGroup'
 import type { RadioValue } from '#kit/composables/radio/useRadioGroup'
@@ -46,26 +46,15 @@ watch(sel.selectedValue, (v) => {
   if (v !== modelValue.value) modelValue.value = v
 })
 
+// `useField` keeps `modelValue` in two-way sync with the field value; the
+// group's own selection watches (above) propagate that to the child radios.
 if (props.path) {
-  const field = useField<RadioValue>(() => props.path as string, undefined)
-  const { value, errorMessage: fieldError } = field
+  const field = useField<RadioValue | undefined>({ path: props.path, model: modelValue })
 
   watch(
-    value,
+    field.errorMessage,
     (next) => {
-      modelValue.value = next
-    },
-    { immediate: true },
-  )
-
-  watch(modelValue, (next) => {
-    value.value = next as RadioValue
-  })
-
-  watch(
-    fieldError,
-    (next) => {
-      errorMessage.value = next || undefined
+      errorMessage.value = next
     },
     { immediate: true },
   )

@@ -34,8 +34,6 @@
 </template>
 
 <script setup lang="ts">
-// Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
-// would otherwise shadow the kit composable and break the `{ path, model }` call.
 import { useField } from '#kit/composables/useField'
 import { mSwitchProps } from './props'
 

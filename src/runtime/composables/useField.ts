@@ -2,15 +2,17 @@
  * @module useField
  *
  * @remarks
- * Consolidates the repeated `vee-validate` wiring that input components
- * (`MTextField`, `MCheckbox`, `MRadio`, …) each duplicated: a `path` prop, a
- * conditional `useField` call, a two-way `watch` syncing the component's
- * `defineModel` ref with the field value, and an exposed `errorMessage`.
+ * The field **autopilot**: consolidates the repeated wiring that input
+ * components (`MTextField`, `MCheckbox`, `MRadio`, …) each duplicated — a `path`
+ * prop, a two-way `watch` syncing the component's `defineModel` ref with the
+ * field value, and an exposed `errorMessage`.
  *
- * The `path` is read **once at setup** (matching the existing component
- * behaviour). When `path` is absent the field is inert: `errorMessage` stays
- * `undefined`, `hasError` is always `false`, and no validation runs. SSR-safe —
- * `vee-validate` is only touched when a `path` is provided.
+ * Engine-agnostic: the actual field binding is delegated to the injected
+ * {@link ValidationAdapter} (see {@link injectValidationAdapter}). The field is
+ * inert — `errorMessage` stays `undefined`, `hasError` is always `false`, no
+ * validation runs — whenever **either** `path` is absent **or** no adapter has
+ * been provided. So an app that never calls `provideValidationAdapter` ships no
+ * validation engine, and inputs behave as plain controlled components.
  *
  * @example
  * ```ts
@@ -19,29 +21,29 @@
  * ```
  */
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
-import { useField as useVeeField } from 'vee-validate'
-import type { FieldMeta } from 'vee-validate'
+import { injectValidationAdapter } from '#kit/composables/validation/context'
+import type { FieldMeta } from '#kit/composables/validation/types'
 import { isUndefined } from '#kit/shared/utils/guards'
 
 export interface UseFieldOptions<T> {
-  /** vee-validate field path. Evaluated once at setup; when absent the field is inert. */
+  /** Field path. Evaluated once at setup; when absent the field is inert. */
   path?: string
-  /** The component's model ref to keep in two-way sync with the vee-validate field. */
+  /** The component's model ref to keep in two-way sync with the field value. */
   model: Ref<T>
   /** Forward validation-on-input. @default true */
   validateOnValueUpdate?: boolean
 }
 
 export interface UseFieldReturn<T> {
-  /** Validation error message for this field (undefined when valid or path absent). */
+  /** Validation error message for this field (undefined when valid or inert). */
   errorMessage: Readonly<Ref<string | undefined>>
   /** Whether the field currently has an error. */
   hasError: ComputedRef<boolean>
-  /** vee-validate meta (valid/touched/dirty…) or an inert default when path absent. */
+  /** Field meta (valid/touched/dirty…) or an inert default when the field is inert. */
   meta: FieldMeta<T>
 }
 
-/** Inert, always-valid meta used when no `path` is provided. */
+/** Inert, always-valid meta used when the field is not bound to an adapter. */
 function createInertMeta<T>(): FieldMeta<T> {
   return {
     required: false,
@@ -55,14 +57,16 @@ function createInertMeta<T>(): FieldMeta<T> {
 }
 
 /**
- * Bridges a component's `defineModel` ref to a `vee-validate` field.
+ * Bridges a component's `defineModel` ref to the injected validation adapter.
  */
 export function useField<T>(options: UseFieldOptions<T>): UseFieldReturn<T> {
   const { path, model, validateOnValueUpdate = true } = options
 
   const errorMessage = ref<string | undefined>()
 
-  if (isUndefined(path)) {
+  const adapter = injectValidationAdapter()
+
+  if (isUndefined(path) || !adapter) {
     return {
       errorMessage,
       hasError: computed(() => false),
@@ -70,7 +74,7 @@ export function useField<T>(options: UseFieldOptions<T>): UseFieldReturn<T> {
     }
   }
 
-  const field = useVeeField<T>(() => path, undefined, { validateOnValueUpdate })
+  const field = adapter.bindField<T>(path, { validateOnValueUpdate })
   const { value, errorMessage: fieldError } = field
 
   watch(

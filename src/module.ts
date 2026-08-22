@@ -75,8 +75,10 @@ export default defineNuxtModule<MaterialKitOptions>({
       nuxt.options.modulesDir.push(kitModulesDir)
     }
 
+    // Validation is opt-in and engine-agnostic: install an adapter at the
+    // composable level with `provideValidationAdapter()` instead of forcing a
+    // validation library on every consumer. See `./runtime/adapters`.
     return {
-      '@vee-validate/nuxt': {},
       '@pinia/nuxt': {},
       '@nuxtjs/device': {},
       '@nuxt/icon': {

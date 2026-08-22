@@ -30,3 +30,6 @@ logs
 .planning
 graphify-out
 /test-results/
+
+# Test subapps
+playground
