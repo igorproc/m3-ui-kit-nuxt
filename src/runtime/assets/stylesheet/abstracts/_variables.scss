@@ -2,7 +2,8 @@
 @use "~material-kit-config" as *;
 
 /* variables */
-$scrollbar-width: 4px;
+$scrollbar-width: 12px;
+$scrollbar-inline-inset: 4px;
 $breakpoints: (
   desktop: 1920px,
   desktop-xs: 1200px,
@@ -64,12 +65,28 @@ $theme-color-link: (
   'error-container': var(--md-sys-color-error-container),
   'on-error-container': var(--md-sys-color-on-error-container),
 
+  // Semantic (generated via MCU customColor, harmonized to the palette seed)
+  'success': var(--md-sys-color-success),
+  'on-success': var(--md-sys-color-on-success),
+  'success-container': var(--md-sys-color-success-container),
+  'on-success-container': var(--md-sys-color-on-success-container),
+  'warning': var(--md-sys-color-warning),
+  'on-warning': var(--md-sys-color-on-warning),
+  'warning-container': var(--md-sys-color-warning-container),
+  'on-warning-container': var(--md-sys-color-on-warning-container),
+  'info': var(--md-sys-color-info),
+  'on-info': var(--md-sys-color-on-info),
+  'info-container': var(--md-sys-color-info-container),
+  'on-info-container': var(--md-sys-color-on-info-container),
+
   // Background & Surface
   'background': var(--md-sys-color-background),
   'on-background': var(--md-sys-color-on-background),
   'surface': var(--md-sys-color-surface),
   'on-surface': var(--md-sys-color-on-surface),
-  'surface-variant': var(--md-sys-color-surface-variant),
+  // @deprecated MD3 deprecates the `surface-variant` role — aliased to
+  //             `surface-container-highest`. Prefer `g($t, 'surface-container-highest')`.
+  'surface-variant': var(--md-sys-color-surface-container-highest),
   'on-surface-variant': var(--md-sys-color-on-surface-variant),
   'surface-dim': var(--md-sys-color-surface-dim),
   'surface-bright': var(--md-sys-color-surface-bright),

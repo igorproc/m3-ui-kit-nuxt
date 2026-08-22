@@ -7,8 +7,6 @@ export default defineNuxtConfig({
   modules: [
     // https://github.com/nuxt/icon
     '@nuxt/icon',
-    // https://nuxt.com/modules/vee-validate
-    '@vee-validate/nuxt',
     // https://nuxt.com/modules/pinia
     '@pinia/nuxt',
     // https://nuxt.com/modules/device

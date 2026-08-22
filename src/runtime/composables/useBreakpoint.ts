@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useRuntimeConfig } from '#app'
 import { DEFAULT_BREAKPOINTS, type BreakpointKey } from '#kit/shared/constants/breakpoints'
-import { resolveBreakpoints } from '#kit/shared/utils/resolveBreakpoints'
+import { resolveBreakpoints } from '#kit/shared/utils/viewport/resolveBreakpoints'
 
 export function useBreakpoint() {
   const { width } = useSSRWindowSize()

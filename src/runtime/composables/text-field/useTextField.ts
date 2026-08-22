@@ -2,7 +2,7 @@
  * @module useTextField
  *
  * @remarks
- * Owns the non-presentational logic of `<MTextField>`: the `vee-validate`
+ * Owns the non-presentational logic of `<MTextField>`: the adapter-backed
  * field binding (via the shared {@link useField} composable), focus state, and
  * the derived error resolution that the view turns into classes / ARIA.
  *
@@ -29,10 +29,8 @@
  * ```
  */
 import { computed, type ComputedRef, type Ref } from 'vue'
-import type { FieldMeta } from 'vee-validate'
-// Explicit import: `@vee-validate/nuxt` auto-imports its own `useField`, which
-// would otherwise shadow the kit composable and break the `{ path, model }` call.
 import { useField } from '#kit/composables/useField'
+import type { FieldMeta } from '#kit/composables/validation/types'
 
 export interface UseTextFieldOptions {
   /** vee-validate field path. Evaluated once at setup; when absent the field is inert. */

@@ -20,7 +20,7 @@ import { computed, isRef, shallowReactive, toRaw, toRef, toValue, useId } from '
 import type { ComputedRef, MaybeRefOrGetter, Reactive, Ref } from 'vue'
 import { createRegistry } from './createRegistry'
 import type { RegistryContext, RegistryOptions, RegistryTicket, RegistryTicketInput } from './createRegistry'
-import { isUndefined } from '#kit/shared/utils/guards'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 import { resolveIds } from '#kit/shared/utils/helpers'
 import type { ID } from '#kit/shared/types/registry'
 

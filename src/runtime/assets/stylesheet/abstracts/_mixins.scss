@@ -46,17 +46,31 @@
   }
 }
 
-@mixin use-scrollbar($width) {
+@mixin use-scrollbar($width: $scrollbar-width, $inset: $scrollbar-inline-inset) {
+  // Firefox: overlay-скроллбар, край и так не залезает на скругление
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+
   &::-webkit-scrollbar {
     width: $width;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    border-radius: 4px;
+    height: $width;
   }
 
   &::-webkit-scrollbar-track {
-    border-radius: 4px;
+    background: transparent;
+  }
+
+  // Прозрачная боковая рамка сдвигает видимый thumb внутрь по горизонтали,
+  // чтобы он не прилипал к скруглённому краю блока
+  &::-webkit-scrollbar-thumb {
+    border: $inset solid transparent;
+    border-radius: var(--sys-shape-corner-full);
+    background-color: var(--md-sys-color-outline-variant);
+    background-clip: content-box;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--md-sys-color-outline);
   }
 }
 

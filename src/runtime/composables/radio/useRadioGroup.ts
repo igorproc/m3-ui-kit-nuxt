@@ -9,7 +9,7 @@
  * Namespace: `m3:radio-group`.
  */
 import type { ComputedRef } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { SingleContext, SingleTicket, SingleTicketInput } from '#kit/composables/registry/createSingle'
 
 export type RadioValue = string | number

@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { onScopeDispose } from 'vue'
-import { useField } from 'vee-validate'
+import { useField } from '#kit/composables/useField'
 import { useRadioGroupContext } from '#kit/composables/radio/useRadioGroup'
 import type { SingleTicket } from '#kit/composables/registry/createSingle'
 import { mRadioProps } from './props'
@@ -103,27 +103,16 @@ function onChange() {
   modelValue.value = props.value
 }
 
-// --- Standalone vee-validate path (form-renderer relies on this) ------------
+// --- Standalone validation path (form-renderer relies on this) --------------
+// Grouped radios delegate their value to the group; only a standalone radio
+// binds its own field. `useField` handles the model<->value sync internally.
 if (!group && props.path) {
-  const field = useField<MRadioValue>(() => props.path as string, undefined)
-  const { value, errorMessage: fieldError } = field
+  const field = useField<MRadioValue | undefined>({ path: props.path, model: modelValue })
 
   watch(
-    value,
+    field.errorMessage,
     (next) => {
-      modelValue.value = next
-    },
-    { immediate: true },
-  )
-
-  watch(modelValue, (next) => {
-    value.value = next as MRadioValue
-  })
-
-  watch(
-    fieldError,
-    (next) => {
-      errorMessage.value = next || undefined
+      errorMessage.value = next
     },
     { immediate: true },
   )

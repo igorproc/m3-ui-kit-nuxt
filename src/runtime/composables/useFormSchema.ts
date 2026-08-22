@@ -3,43 +3,39 @@
  *
  * @remarks
  * Config-driven form generation. Consumers describe fields declaratively (a
- * {@link FormSchemaConfig}) using a small {@link FieldRules} descriptor rather
- * than raw yup. `useFormSchema` maps the descriptor to a yup object schema,
- * derives type-appropriate initial values, and wires everything through the
- * existing {@link useFormBuilder}. The returned `fields` are the normalized
- * config that `<MFormRenderer>` iterates to render leaves.
+ * {@link FormSchemaConfig}) using a small {@link FieldRules} descriptor. This
+ * composable normalizes that config into engine-agnostic
+ * {@link FieldDescriptor}s and hands them to the injected
+ * {@link ValidationAdapter} via `createForm` — so it references no concrete
+ * validation library (no `yup`). The returned `fields` are the normalized config
+ * that `<MFormRenderer>` iterates to render leaves.
+ *
+ * Requires an adapter to be installed (see {@link provideValidationAdapter});
+ * without one it throws, since a form cannot be built without a validation
+ * engine.
  *
  * @example
  * ```ts
- * const { schema, form, fields } = useFormSchema(
+ * const { form, fields } = useFormSchema(
  *   [{ type: 'text', name: 'email', rules: { required: true, email: true } }],
  *   { onSubmit: save },
  * )
  * ```
  */
-import * as yup from 'yup'
-import type { AnyObjectSchema, AnySchema } from 'yup'
-import { useFormBuilder, type FormBuilderReturn } from '#kit/composables/useFormBuilder'
-import { isString, isUndefined } from '#kit/shared/utils/guards'
-
-export interface FieldRules {
-  /** Mark the field as required. A string is used as the custom message. */
-  required?: boolean | string
-  /** Minimum length (strings) or minimum value (numbers). */
-  min?: number
-  /** Maximum length (strings) or maximum value (numbers). */
-  max?: number
-  /** Validate as an email address (string fields only). */
-  email?: boolean
-  /** Regex source matched against the value (string fields only). */
-  pattern?: string
-}
+import { injectValidationAdapter } from '#kit/composables/validation/context'
+import type {
+  FieldDescriptor,
+  FieldKind,
+  FieldRules,
+  FormBinding,
+} from '#kit/composables/validation/types'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 
 export type FormFieldType = 'text' | 'textarea' | 'number' | 'checkbox' | 'switch' | 'radio' | 'search'
 
 export interface FormFieldConfig {
   type: FormFieldType
-  /** vee-validate path / schema key. */
+  /** Field path / schema key. */
   name: string
   label?: string
   placeholder?: string
@@ -54,15 +50,13 @@ export interface FormFieldConfig {
 export type FormSchemaConfig = FormFieldConfig[]
 
 export interface UseFormSchemaOptions<TValues extends Record<string, unknown>> {
-  /** Submit handler forwarded to {@link useFormBuilder}. */
+  /** Submit handler forwarded to the adapter. */
   onSubmit?: (values: TValues) => Promise<void> | void
 }
 
 export interface UseFormSchemaReturn<TValues extends Record<string, unknown>> {
-  /** The generated yup object schema. */
-  schema: AnyObjectSchema
-  /** The underlying form context from {@link useFormBuilder}. */
-  form: FormBuilderReturn<TValues>
+  /** The adapter-backed form handle. */
+  form: FormBinding<TValues>
   /** The normalized field config, ready to render. */
   fields: FormFieldConfig[]
 }
@@ -70,108 +64,89 @@ export interface UseFormSchemaReturn<TValues extends Record<string, unknown>> {
 const STRING_TYPES: FormFieldType[] = ['text', 'textarea', 'search']
 const BOOLEAN_TYPES: FormFieldType[] = ['checkbox', 'switch']
 
-/** Resolves the base yup schema for a field type before rules are applied. */
-function baseSchemaFor(field: FormFieldConfig): AnySchema {
-  if (field.type === 'number') {
-    return yup.number()
+/** Maps a UI field type to its engine-agnostic value kind. */
+function kindFor(type: FormFieldType): FieldKind {
+  if (type === 'number') {
+    return 'number'
   }
 
-  if (BOOLEAN_TYPES.includes(field.type)) {
-    return yup.boolean()
+  if (BOOLEAN_TYPES.includes(type)) {
+    return 'boolean'
   }
 
-  if (field.type === 'radio') {
-    const values = (field.options ?? []).map(option => option.value)
-
-    return values.length > 0 ? yup.mixed().oneOf(values) : yup.mixed()
+  if (type === 'radio') {
+    return 'enum'
   }
 
-  return yup.string()
-}
-
-/** Applies a {@link FieldRules} descriptor onto a base schema, defensively. */
-function applyRules(schema: AnySchema, field: FormFieldConfig): AnySchema {
-  const rules = field.rules
-
-  if (!rules) {
-    return schema
-  }
-
-  let next = schema
-
-  if (rules.required) {
-    const message = isString(rules.required) ? rules.required : undefined
-    next = next.required(message)
-  }
-
-  const isStringField = STRING_TYPES.includes(field.type)
-  const isNumberField = field.type === 'number'
-
-  if (!isUndefined(rules.min) && (isStringField || isNumberField)) {
-    next = (next as yup.StringSchema | yup.NumberSchema).min(rules.min)
-  }
-
-  if (!isUndefined(rules.max) && (isStringField || isNumberField)) {
-    next = (next as yup.StringSchema | yup.NumberSchema).max(rules.max)
-  }
-
-  if (isStringField) {
-    const stringSchema = next as yup.StringSchema
-
-    next = rules.email ? stringSchema.email() : stringSchema
-
-    if (!isUndefined(rules.pattern)) {
-      next = (next as yup.StringSchema).matches(new RegExp(rules.pattern))
-    }
-  }
-
-  return next
+  return 'string'
 }
 
 /** Type-appropriate empty value when a field declares no `default`. */
-function emptyValueFor(field: FormFieldConfig): unknown {
-  if (field.type === 'number') {
+function emptyValueFor(type: FormFieldType): unknown {
+  if (type === 'number') {
     return null
   }
 
-  if (BOOLEAN_TYPES.includes(field.type)) {
+  if (BOOLEAN_TYPES.includes(type)) {
     return false
   }
 
-  if (field.type === 'radio') {
+  if (type === 'radio') {
     return undefined
   }
 
   return ''
 }
 
+/** Normalizes a UI field config into an engine-agnostic descriptor. */
+function toDescriptor(field: FormFieldConfig): FieldDescriptor {
+  const descriptor: FieldDescriptor = {
+    name: field.name,
+    kind: kindFor(field.type),
+    rules: field.rules,
+  }
+
+  if (field.type === 'radio' && field.options) {
+    descriptor.options = field.options.map(option => option.value)
+  }
+
+  return descriptor
+}
+
 /**
- * Builds a yup schema + form from a declarative field config.
+ * Builds an adapter-backed form from a declarative field config.
  */
 export function useFormSchema<TValues extends Record<string, unknown> = Record<string, unknown>>(
   config: FormSchemaConfig,
   options: UseFormSchemaOptions<TValues> = {},
 ): UseFormSchemaReturn<TValues> {
+  const adapter = injectValidationAdapter()
+
+  if (!adapter) {
+    throw new Error(
+      '[primetime-kit] useFormSchema requires a validation adapter. '
+      + 'Install one with provideValidationAdapter(), e.g. '
+      + 'provideValidationAdapter(veeValidateAdapter()) from "@pr0s1k/primetime-kit/validation".',
+    )
+  }
+
   const fields = [...config]
 
-  const shape: Record<string, AnySchema> = {}
+  const descriptors: FieldDescriptor[] = []
   const initialValues: Record<string, unknown> = {}
 
   for (const field of fields) {
-    shape[field.name] = applyRules(baseSchemaFor(field), field)
-    initialValues[field.name] = isUndefined(field.default) ? emptyValueFor(field) : field.default
+    descriptors.push(toDescriptor(field))
+    initialValues[field.name] = isUndefined(field.default) ? emptyValueFor(field.type) : field.default
   }
 
-  const schema = yup.object(shape) as AnyObjectSchema
-
-  const form = useFormBuilder<TValues>({
-    validationSchema: schema,
+  const form = adapter.createForm<TValues>({
+    fields: descriptors,
     initialValues: initialValues as Partial<TValues>,
     onSubmit: options.onSubmit,
   })
 
   return {
-    schema,
     form,
     fields,
   }

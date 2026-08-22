@@ -13,7 +13,7 @@
  */
 import { inject } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { ID } from '#kit/shared/types/registry'
 
 /** Namespace for the selection-group provide/inject pair. */

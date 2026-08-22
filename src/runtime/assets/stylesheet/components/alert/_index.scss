@@ -60,16 +60,16 @@ $alert-default-tokens: (
   ),
   tonal: (
     info: alert-tonal(
-      map.get($theme-color-link, 'secondary-container'),
-      map.get($theme-color-link, 'on-secondary-container')
+      map.get($theme-color-link, 'info-container'),
+      map.get($theme-color-link, 'on-info-container')
     ),
     success: alert-tonal(
-      map.get($theme-color-link, 'tertiary-container'),
-      map.get($theme-color-link, 'on-tertiary-container')
+      map.get($theme-color-link, 'success-container'),
+      map.get($theme-color-link, 'on-success-container')
     ),
     warning: alert-tonal(
-      map.get($theme-color-link, 'primary-container'),
-      map.get($theme-color-link, 'on-primary-container')
+      map.get($theme-color-link, 'warning-container'),
+      map.get($theme-color-link, 'on-warning-container')
     ),
     error: alert-tonal(
       map.get($theme-color-link, 'error-container'),
@@ -77,9 +77,9 @@ $alert-default-tokens: (
     ),
   ),
   outlined: (
-    info: alert-outlined(map.get($theme-color-link, 'secondary')),
-    success: alert-outlined(map.get($theme-color-link, 'tertiary')),
-    warning: alert-outlined(map.get($theme-color-link, 'primary')),
+    info: alert-outlined(map.get($theme-color-link, 'info')),
+    success: alert-outlined(map.get($theme-color-link, 'success')),
+    warning: alert-outlined(map.get($theme-color-link, 'warning')),
     error: alert-outlined(map.get($theme-color-link, 'error')),
   ),
 );

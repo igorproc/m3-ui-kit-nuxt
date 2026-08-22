@@ -11,7 +11,7 @@
  * Namespace: `m3:table`.
  */
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 
 export interface TableContext {
   /** Whether the table renders the row-selection column. */

@@ -14,7 +14,7 @@ import type { ComputedRef, MaybeRefOrGetter } from 'vue'
 import { createGroup } from '#kit/composables/registry/createGroup'
 import { useProxyRegistry } from '#kit/composables/registry/useProxyRegistry'
 import { toArray } from '#kit/shared/utils/toArray'
-import { isUndefined } from '#kit/shared/utils/guards'
+import { isUndefined } from '#kit/shared/utils/guards/guards'
 import type { ID } from '#kit/shared/types/registry'
 import type { MSelectionContext, SelectionItemRegistration, SelectionItemTicket } from './context'
 

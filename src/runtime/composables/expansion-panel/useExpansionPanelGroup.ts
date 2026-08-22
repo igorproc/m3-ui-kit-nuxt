@@ -11,7 +11,7 @@
  * Namespace: `m3:expansion-panel-group`.
  */
 import type { MaybeRefOrGetter } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { GroupTicket } from '#kit/composables/registry/createGroup'
 import type { ID } from '#kit/shared/types/registry'
 

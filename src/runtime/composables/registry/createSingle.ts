@@ -17,9 +17,9 @@
  */
 import { toRef } from 'vue'
 import type { ComputedRef } from 'vue'
-import { useContext } from '#kit/shared/utils/createContext'
-import { createTrinity } from '#kit/shared/utils/createTrinity'
-import type { ContextTrinity } from '#kit/shared/utils/createTrinity'
+import { useContext } from '#kit/shared/utils/context/createContext'
+import { createTrinity } from '#kit/shared/utils/context/createTrinity'
+import type { ContextTrinity } from '#kit/shared/utils/context/createTrinity'
 import { createSelection } from './createSelection'
 import type { SelectionContext, SelectionContextOptions, SelectionOptions, SelectionTicket, SelectionTicketInput } from './createSelection'
 import type { ID } from '#kit/shared/types/registry'

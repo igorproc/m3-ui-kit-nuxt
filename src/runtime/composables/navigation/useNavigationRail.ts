@@ -9,7 +9,7 @@
  * Namespace: `m3:navigation-rail`.
  */
 import type { ComputedRef } from 'vue'
-import { createContext } from '#kit/shared/utils/createContext'
+import { createContext } from '#kit/shared/utils/context/createContext'
 import type { SingleContext, SingleTicket, SingleTicketInput } from '#kit/composables/registry/createSingle'
 
 // Local (not exported) to avoid an auto-import name clash with the identical

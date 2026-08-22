@@ -1,7 +1,5 @@
 import { defineNuxtModule, addTemplate } from '@nuxt/kit'
 
-import { generateScheme } from '../../../src/runtime/shared/utils/defineKit'
-import { buildThemeBlocks } from '../../../src/runtime/shared/utils/themeScss'
 import { COOKIE_THEME_KEYS } from '../../../src/runtime/shared/constants/cookie'
 
 import type { MaterialKitOptions } from '../../../src/runtime/shared/types/kit'
@@ -57,17 +55,10 @@ ${breakpointsScss}
     // Register explicit alias for SCSS
     nuxt.options.alias['~material-kit-config'] = configTemplate.dst
 
-    // 2. Generate dynamic themes
-    let generatedThemesScss = ''
-    if (options.themes) {
-      for (const theme of options.themes) {
-        generatedThemesScss += buildThemeBlocks(theme.key, generateScheme(theme))
-      }
-    }
-
+    // 2. Dynamic palettes are generated at runtime by <MApp>; keep the alias resolvable.
     const themesTemplate = addTemplate({
       filename: 'material-kit-themes.scss',
-      getContents: () => generatedThemesScss,
+      getContents: () => '// Dynamic palettes are generated at runtime by <MApp>.\n',
       write: true,
     })
     nuxt.options.alias['~material-kit-themes'] = themesTemplate.dst
