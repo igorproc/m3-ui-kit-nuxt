@@ -14,7 +14,7 @@
  */
 import type { App } from 'vue'
 import { createContext } from './createContext'
-import { isString } from './guards'
+import { isString } from '../guards/guards'
 
 export type ContextTrinity<Z = unknown> = readonly [
   () => Z,

@@ -1,4 +1,4 @@
-import { DEFAULT_BREAKPOINTS, type BreakpointKey } from '../constants/breakpoints'
+import { DEFAULT_BREAKPOINTS, type BreakpointKey } from '#kit/shared/constants/breakpoints'
 
 /**
  * Merges user-configured breakpoints (module options / runtime config) over

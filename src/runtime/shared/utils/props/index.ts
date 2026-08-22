@@ -11,7 +11,7 @@
  * prop surface (names/types/defaults). Color/state resolution stays in SCSS.
  */
 import type { PropType } from 'vue'
-import { propsFactory } from '../propsFactory'
+import { propsFactory } from './propsFactory'
 import type { MColor, MSize, MVariant } from '../../types/props'
 
 /** `color` — MD3 color role (`primary | secondary | tertiary | error`). */
