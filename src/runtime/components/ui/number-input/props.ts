@@ -13,6 +13,11 @@ export const mNumberInputProps = {
   useGrouping: { type: Boolean, default: true },
   controls: { type: [String, Boolean] as PropType<MNumberInputControls>, default: 'split' },
   clamp: { type: Boolean, default: true },
+  // Unit suffix rendered inside the container (e.g. MiB, %, ms) — one focus ring.
+  unit: { type: String, default: undefined },
+  // Slider-bound: a range under the field (needs `min` and `max`) — coarse by
+  // drag, exact by typing.
+  slider: { type: Boolean, default: false },
 }
 
 export type MNumberInputProps = ExtractPublicPropTypes<typeof mNumberInputProps>

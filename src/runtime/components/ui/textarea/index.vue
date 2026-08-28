@@ -1,6 +1,7 @@
 <template>
   <FieldRoot
     class-prefix="ui-textarea"
+    :class="{ 'ui-textarea--code': code, 'ui-textarea--composer': !!$slots.footer }"
     :field-id="fieldId"
     :variant="variant"
     :label="label"
@@ -32,7 +33,15 @@
       :aria-describedby="describedBy"
       @focus="onFocus"
       @blur="onBlur"
+      @keydown="onKeydown"
     />
+
+    <div
+      v-if="$slots.footer"
+      class="ui-textarea__footer"
+    >
+      <slot name="footer" />
+    </div>
 
     <template
       v-if="$slots.prepend"
@@ -123,6 +132,21 @@ const describedBy = computed(() => [
 ].filter(Boolean).join(' ') || undefined)
 const resizeClass = computed(() => `ui-textarea__input--resize-${props.autoGrow ? 'none' : (props.resize ?? 'none')}`)
 
+// Code mode: keep Tab inside the field (insert a real tab) instead of moving focus.
+function onKeydown(event: KeyboardEvent) {
+  if (!props.code || event.key !== 'Tab' || event.shiftKey) return
+
+  event.preventDefault()
+  const element = event.target as HTMLTextAreaElement
+  const start = element.selectionStart
+  const end = element.selectionEnd
+  modelValue.value = `${modelValue.value.slice(0, start)}\t${modelValue.value.slice(end)}`
+  nextTick(() => {
+    element.selectionStart = start + 1
+    element.selectionEnd = start + 1
+  })
+}
+
 function resizeTextarea() {
   if (!props.autoGrow || !textarea.value || !import.meta.client) return
 
@@ -211,6 +235,30 @@ onMounted(resizeTextarea)
     color: g($t, 'counter-color');
 
     @include typescale(g($t, 'counter-typography'));
+  }
+
+  // Code: monospace value with a real tab stop (Tab handled in script).
+  &--code .ui-textarea__input {
+    font-family: monospace;
+    tab-size: 2;
+  }
+
+  // Composer: the control becomes a column so the footer (toolbar + submit) lives
+  // inside the box; the field's single focus ring wraps the whole editable block.
+  &--composer .ui-field__control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__footer {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8rem;
+    padding-top: 8rem;
+    margin-top: 8rem;
+    border-top: 1rem solid var(--md-sys-color-outline-variant);
   }
 }
 </style>

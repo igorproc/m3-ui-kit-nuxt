@@ -12,15 +12,18 @@ import type { ExtractPublicPropTypes, InputHTMLAttributes, PropType } from 'vue'
 import { makeReadonlyProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
 
 export type MTextFieldType = 'text' | 'number' | 'email' | 'password'
-export type MTextFieldVariant = 'filled' | 'outlined' | 'plain'
+export type MTextFieldVariant = 'filled' | 'outlined' | 'underline' | 'ghost'
+export type MTextFieldRounded = 'sharp' | 'small' | 'medium' | 'large' | 'pill'
 
 export const mFieldProps = {
   ...makeStateProps(),
   ...makeReadonlyProps(),
   ...makeVariantProps({ variant: 'filled' }),
-  // Field variant is its own 3-value axis (filled | outlined | plain), narrower
+  // Field variant is its own axis (filled | outlined | underline | ghost), narrower
   // than the shared MVariant used by buttons — override the generic prop type.
   variant: { type: String as PropType<MTextFieldVariant>, default: 'filled' },
+  // Corner radius tier, pulled from the shape scale. Independent of `variant`.
+  rounded: { type: String as PropType<MTextFieldRounded>, default: 'small' },
   path: { type: String, default: undefined },
   name: { type: String, default: undefined },
   label: { type: String, default: undefined },

@@ -54,7 +54,7 @@ describe('m-autocomplete · variants', () => {
   })
 
   it('forwards the field variant to the underlying text field', async () => {
-    for (const variant of ['filled', 'outlined', 'plain'] as const) {
+    for (const variant of ['filled', 'outlined'] as const) {
       const wrapper = await mount({ ...base, variant })
       expect(wrapper.find(`.ui-text-field--${variant}`).exists()).toBe(true)
     }

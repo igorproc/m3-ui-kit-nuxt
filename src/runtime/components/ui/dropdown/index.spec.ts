@@ -94,12 +94,12 @@ describe('m-dropdown', () => {
     const empty = await mountSuspended(MDropdown, {
       props: { options: OPTIONS },
     })
-    expect(empty.find('.ui-text-field__control--focused').exists()).toBe(false)
+    expect(empty.find('.ui-text-field[data-focused]').exists()).toBe(false)
 
     const seeded = await mountSuspended(MDropdown, {
       props: { options: OPTIONS, modelValue: 2 },
     })
-    expect(seeded.find('.ui-text-field__control--focused').exists()).toBe(true)
+    expect(seeded.find('.ui-text-field[data-focused]').exists()).toBe(true)
   })
 
   it('selects the active option via keyboard and emits update:modelValue', async () => {

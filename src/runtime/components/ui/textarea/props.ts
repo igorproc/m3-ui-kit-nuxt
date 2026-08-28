@@ -14,6 +14,8 @@ export const mTextareaProps = {
   counter: { type: [Boolean, Number] as PropType<boolean | number>, default: false },
   spellcheck: { type: Boolean, default: undefined },
   wrap: { type: String as PropType<MTextareaWrap>, default: 'soft' },
+  // Code mode: monospace value, tab inserts a real tab (never moves focus).
+  code: { type: Boolean, default: false },
 }
 
 export type MTextareaProps = ExtractPublicPropTypes<typeof mTextareaProps>

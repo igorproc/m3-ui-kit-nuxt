@@ -25,6 +25,8 @@ $tokens: (
     color: map.get($theme-color-link, on-surface-variant),
     active: (scale: 0.75,
       top: 8rem,
+      raise: (filled: 18rem,
+      ),
     ),
     prepend: (left: 52rem,
     )),
@@ -41,6 +43,7 @@ $tokens: (
     ),
     margin: (top: 4rem,
     ),
+    min-height: 18rem,
     color: map.get($theme-color-link, on-surface-variant),
   ),
   state: (
@@ -129,23 +132,11 @@ $tokens: (
         ),
         label: (color: map.get($theme-color-link, error),
         )))),
-  // Plain: classic full border + static label above, appearance overridable at
-  // runtime via the --m-field-* custom properties (see field/root.vue). Disabled
-  // and error states reuse the shared control rules, so only the resting, hover,
-  // and focused chrome is declared here.
-  plain: (
-    bg: transparent,
-    radius: 28rem,
-    border: (color: map.get($theme-color-link, outline),
-      width: 1rem,
-    ),
-    label: (color: map.get($theme-color-link, on-surface-variant),
-      gap: 6rem,
-    ),
-    hover: (border: (color: map.get($theme-color-link, on-surface),
-      )),
-    focused: (border: (color: map.get($theme-color-link, primary),
-        width: 2rem,
-      )),
+  // Corner radius tiers for the `rounded` prop, pulled from the shape scale.
+  rounded: (sharp: map.get($theme-shape-link, 'none'),
+    small: map.get($theme-shape-link, 'extra-small'),
+    medium: map.get($theme-shape-link, 'medium'),
+    large: map.get($theme-shape-link, 'large'),
+    pill: map.get($theme-shape-link, 'full'),
   )
 );

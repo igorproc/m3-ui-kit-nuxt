@@ -1,14 +1,5 @@
 <template>
   <div :class="rootClasses">
-    <!-- Plain variant: a classic static label sitting above the control. -->
-    <label
-      v-if="label && variant === 'plain'"
-      :class="elementClasses('label')"
-      :for="fieldId"
-    >
-      {{ label }}
-    </label>
-
     <div :class="controlClasses">
       <div
         v-if="$slots.prepend"
@@ -17,17 +8,14 @@
         <slot name="prepend" />
       </div>
 
-      <!-- Filled / outlined: the floating MD3 label lives inside the control. -->
       <label
-        v-if="label && variant !== 'plain'"
+        v-if="label"
         :class="elementClasses('label')"
         :for="fieldId"
       >
         {{ label }}
       </label>
 
-      <!-- Composite fields (e.g. a multiple combobox) render inline content such
-           as chips before the input, on one non-wrapping row that scrolls. -->
       <div
         v-if="$slots['leading-content']"
         :class="elementClasses('field')"
@@ -75,7 +63,7 @@
 <script setup lang="ts">
 import type { MTextFieldVariant } from '#kit/components/ui/text-field/props'
 
-const props = defineProps<{
+interface Props {
   classPrefix: string
   fieldId: string
   variant: MTextFieldVariant
@@ -86,11 +74,9 @@ const props = defineProps<{
   disabled?: boolean
   message?: string
   messageId?: string
-}>()
+}
 
-const slots = useSlots()
-
-defineSlots<{
+interface Slots {
   'default'(): unknown
   'prepend'?(): unknown
   'append'?(): unknown
@@ -98,7 +84,12 @@ defineSlots<{
   'helper'?(props: { helperText?: string }): unknown
   'error'?(props: { message?: string }): unknown
   'supporting'?(): unknown
-}>()
+}
+
+const props = defineProps<Props>()
+const slots = useSlots()
+
+defineSlots<Slots>()
 
 const rootClasses = computed(() => [
   'ui-field',
@@ -148,66 +139,46 @@ const iconClasses = (position: 'prepend' | 'append') => [
 
   display: flex;
   flex-direction: column;
-  gap: g($t, 'container-gap');
+  gap: g($t, 'container.gap');
   min-width: 0;
 
   &--outlined {
     padding-top: 8rem;
   }
 
-  // Plain: the label is a static block above the control, and the placeholder
-  // stays visible since there is no floating label to double as it.
-  &--plain {
-    gap: g($t, 'plain-label-gap');
-
-    > .ui-field__label {
-      max-width: 100%;
-      overflow: hidden;
-      color: g($t, 'plain-label-color');
-      text-overflow: ellipsis;
-      white-space: nowrap;
-
-      @include typescale(g($t, 'typography-label'));
-    }
-
-    .ui-field__input::placeholder {
-      opacity: 1;
-    }
-  }
-
   &__control {
     position: relative;
     display: flex;
     align-items: center;
-    min-height: g($t, 'container-height');
-    padding-inline: g($t, 'container-padding-inline');
-    border-width: g($t, 'container-border-width');
+    min-height: g($t, 'container.height');
+    padding-inline: g($t, 'container.padding.inline');
+    border-width: g($t, 'container.border.width');
     border-style: solid;
     transition:
-      border-color g($t, 'state-duration') g($t, 'state-easing'),
-      background-color g($t, 'state-duration') g($t, 'state-easing'),
-      box-shadow g($t, 'state-duration') g($t, 'state-easing');
+      border-color g($t, 'state.duration') g($t, 'state.easing'),
+      background-color g($t, 'state.duration') g($t, 'state.easing'),
+      box-shadow g($t, 'state.duration') g($t, 'state.easing');
 
     .ui-field__label {
       position: absolute;
-      left: g($t, 'label-left');
+      left: g($t, 'label.left');
       top: 50%;
       z-index: 1;
       max-width: calc(100% - 32rem);
       overflow: hidden;
-      color: g($t, 'label-color');
+      color: g($t, 'label.color');
       text-overflow: ellipsis;
       white-space: nowrap;
       pointer-events: none;
       transform: translateY(-50%);
       transform-origin: left top;
       transition:
-        transform g($t, 'state-duration') g($t, 'state-easing'),
-        top g($t, 'state-duration') g($t, 'state-easing'),
-        font-size g($t, 'state-duration') g($t, 'state-easing'),
-        color g($t, 'state-duration') g($t, 'state-easing');
+        transform g($t, 'state.duration') g($t, 'state.easing'),
+        top g($t, 'state.duration') g($t, 'state.easing'),
+        font-size g($t, 'state.duration') g($t, 'state.easing'),
+        color g($t, 'state.duration') g($t, 'state.easing');
 
-      @include typescale(g($t, 'typography-label'));
+      @include typescale(g($t, 'typography.label'));
     }
 
     .ui-field__input {
@@ -218,13 +189,13 @@ const iconClasses = (position: 'prepend' | 'append') => [
       border: none;
       outline: none;
       background-color: transparent;
-      color: g($t, 'input-color');
+      color: g($t, 'input.color');
 
-      @include typescale(g($t, 'typography-input'));
+      @include typescale(g($t, 'typography.input'));
 
       &::placeholder {
         opacity: 0;
-        transition: opacity g($t, 'state-duration') g($t, 'state-easing');
+        transition: opacity g($t, 'state.duration') g($t, 'state.easing');
       }
     }
 
@@ -258,127 +229,108 @@ const iconClasses = (position: 'prepend' | 'append') => [
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: g($t, 'icon-width');
-      color: g($t, 'icon-color');
-      font-size: g($t, 'icon-size');
+      min-width: g($t, 'icon.width');
+      color: g($t, 'icon.color');
+      font-size: g($t, 'icon.size');
 
       &--prepend {
-        margin-right: g($t, 'icon-prepend-margin');
+        margin-right: g($t, 'icon.prepend.margin');
       }
 
       &--append {
-        margin-left: g($t, 'icon-append-margin');
+        margin-left: g($t, 'icon.append.margin');
       }
     }
 
     &.ui-field__control--prepend {
-      padding-left: g($t, 'container-padding-prepend');
+      padding-left: g($t, 'container.padding.prepend');
 
       .ui-field__label {
-        left: g($t, 'label-prepend-left');
+        left: g($t, 'label.prepend.left');
       }
     }
 
     &.ui-field__control--append {
-      padding-right: g($t, 'container-padding-append');
+      padding-right: g($t, 'container.padding.append');
     }
 
     &.ui-field__control--filled {
       align-items: center;
       border-color: transparent;
-      border-bottom: g($t, 'container-border-width') solid g($t, 'filled-border-bottom-color');
-      border-radius: g($t, 'filled-radius');
-      background-color: g($t, 'filled-bg');
+      border-bottom: g($t, 'container.border.width') solid g($t, 'filled.border.bottom.color');
+      border-radius: g($t, 'filled.radius');
+      background-color: g($t, 'filled.bg');
 
       .ui-field__input {
-        padding-top: g($t, 'filled-input-padding-top');
-        padding-bottom: g($t, 'filled-input-padding-bottom');
+        padding-top: g($t, 'filled.input.padding.top');
+        padding-bottom: g($t, 'filled.input.padding.bottom');
       }
 
       &:hover {
-        border-bottom-color: g($t, 'filled-hover-border-bottom-color');
-        background-color: g($t, 'filled-hover-bg');
+        border-bottom-color: g($t, 'filled.hover.border.bottom.color');
+        background-color: g($t, 'filled.hover.bg');
       }
     }
 
     &.ui-field__control--outlined {
-      border-color: g($t, 'outlined-border-color');
-      border-radius: g($t, 'outlined-radius');
+      border-color: g($t, 'outlined.border.color');
+      border-radius: g($t, 'outlined.radius');
       background-color: transparent;
 
       .ui-field__label {
-        padding-inline: g($t, 'outlined-label-padding-inline');
-        margin-left: g($t, 'outlined-label-margin-left');
+        padding-inline: g($t, 'outlined.label.padding.inline');
+        margin-left: g($t, 'outlined.label.margin.left');
       }
 
       &:hover {
-        border-color: g($t, 'outlined-hover-border-color');
-      }
-    }
-
-    // Classic full border. The resting chrome reads --m-field-* hooks first and
-    // falls back to tokens, so consumers can restyle the box (e.g. a pill radius
-    // via `--m-field-radius: 999px`) without touching SCSS. States keep tokens.
-    &.ui-field__control--plain {
-      border-width: var(--m-field-border-width, #{g($t, 'plain-border-width')});
-      border-color: var(--m-field-border-color, #{g($t, 'plain-border-color')});
-      border-radius: var(--m-field-radius, #{g($t, 'plain-radius')});
-      background-color: var(--m-field-bg, #{g($t, 'plain-bg')});
-
-      &:hover {
-        border-color: g($t, 'plain-hover-border-color');
-      }
-
-      &.ui-field__control--focused {
-        border-width: g($t, 'plain-focused-border-width');
-        border-color: g($t, 'plain-focused-border-color');
+        border-color: g($t, 'outlined.hover.border.color');
       }
     }
 
     &.ui-field__control--error {
-      border-color: g($t, 'filled-error-border-bottom-color') !important;
+      border-color: g($t, 'filled.error.border.bottom.color') !important;
 
       .ui-field__label {
-        color: g($t, 'filled-error-label-color') !important;
+        color: g($t, 'filled.error.label.color') !important;
       }
 
       &.ui-field__control--outlined {
-        border-color: g($t, 'outlined-error-border-color');
+        border-color: g($t, 'outlined.error.border.color');
       }
     }
 
     &.ui-field__control--disabled {
-      border-color: g($t, 'filled-disabled-border-bottom-color');
+      border-color: g($t, 'filled.disabled.border.bottom.color');
       background-color: transparent;
-      color: g($t, 'filled-disabled-input-color');
+      color: g($t, 'filled.disabled.input.color');
       cursor: default;
 
       .ui-field__label {
-        color: g($t, 'filled-disabled-label-color');
+        color: g($t, 'filled.disabled.label.color');
       }
 
       .ui-field__input {
-        color: g($t, 'filled-disabled-input-color');
+        color: g($t, 'filled.disabled.input.color');
       }
 
       .ui-field__icon {
-        color: g($t, 'filled-disabled-icon-color');
+        color: g($t, 'filled.disabled.icon.color');
       }
 
       &.ui-field__control--filled {
-        border-bottom-color: g($t, 'filled-disabled-border-bottom-color');
-        background-color: g($t, 'filled-disabled-bg');
+        border-bottom-color: g($t, 'filled.disabled.border.bottom.color');
+        background-color: g($t, 'filled.disabled.bg');
       }
 
       &.ui-field__control--outlined {
-        border-color: g($t, 'outlined-disabled-border-color');
+        border-color: g($t, 'outlined.disabled.border.color');
 
         .ui-field__label {
-          color: g($t, 'outlined-disabled-label-color');
+          color: g($t, 'outlined.disabled.label.color');
         }
 
         .ui-field__input {
-          color: g($t, 'outlined-disabled-input-color');
+          color: g($t, 'outlined.disabled.input.color');
         }
       }
     }
@@ -387,16 +339,16 @@ const iconClasses = (position: 'prepend' | 'append') => [
     &.ui-field__control--populated {
       &.ui-field__control--filled {
         .ui-field__label {
-          top: g($t, 'filled-active-label-top');
-          transform: translateY(0) scale(g($t, 'label-active-scale'));
+          top: g($t, 'filled.active.label.top');
+          transform: translateY(0) scale(g($t, 'label.active.scale'));
         }
       }
 
       &.ui-field__control--outlined {
         .ui-field__label {
           top: 0;
-          background-color: g($t, 'outlined-label-bg');
-          transform: translateY(-50%) scale(g($t, 'label-active-scale'));
+          background-color: g($t, 'outlined.label.bg');
+          transform: translateY(-50%) scale(g($t, 'label.active.scale'));
         }
       }
 
@@ -407,30 +359,30 @@ const iconClasses = (position: 'prepend' | 'append') => [
 
     &.ui-field__control--focused {
       &.ui-field__control--filled {
-        border-bottom-color: g($t, 'filled-focused-border-bottom-color');
-        border-bottom-width: g($t, 'filled-focused-border-width');
-        background-color: g($t, 'filled-focused-bg');
+        border-bottom-color: g($t, 'filled.focused.border.bottom.color');
+        border-bottom-width: g($t, 'filled.focused.border.width');
+        background-color: g($t, 'filled.focused.bg');
 
         .ui-field__label {
-          color: g($t, 'filled-focused-label-color');
+          color: g($t, 'filled.focused.label.color');
         }
 
         &.ui-field__control--error {
-          border-bottom-color: g($t, 'filled-error-focused-border-bottom-color');
+          border-bottom-color: g($t, 'filled.error.focused.border.bottom.color');
         }
       }
 
       &.ui-field__control--outlined {
-        padding-inline: g($t, 'outlined-focused-padding-inline');
-        border-width: g($t, 'outlined-focused-border-width');
-        border-color: g($t, 'outlined-focused-border-color');
+        padding-inline: g($t, 'outlined.focused.padding.inline');
+        border-width: g($t, 'outlined.focused.border.width');
+        border-color: g($t, 'outlined.focused.border.color');
 
         .ui-field__label {
-          color: g($t, 'outlined-focused-label-color');
+          color: g($t, 'outlined.focused.label.color');
         }
 
         &.ui-field__control--error {
-          border-color: g($t, 'outlined-error-focused-border-color') !important;
+          border-color: g($t, 'outlined.error.focused.border.color') !important;
         }
       }
     }
@@ -439,23 +391,23 @@ const iconClasses = (position: 'prepend' | 'append') => [
   &__supporting {
     display: flex;
     justify-content: space-between;
-    gap: g($t, 'container-gap');
+    gap: g($t, 'container.gap');
   }
 
   &__helper,
   &__error {
-    padding-inline: g($t, 'helper-padding-inline');
-    margin-top: g($t, 'helper-margin-top');
+    padding-inline: g($t, 'helper.padding.inline');
+    margin-top: g($t, 'helper.margin.top');
 
-    @include typescale(g($t, 'typography-helper'));
+    @include typescale(g($t, 'typography.helper'));
   }
 
   &__helper {
-    color: g($t, 'helper-color');
+    color: g($t, 'helper.color');
   }
 
   &__error {
-    color: g($t, 'filled-error-helper-color');
+    color: g($t, 'filled.error.helper.color');
   }
 }
 </style>
