@@ -1,73 +1,128 @@
-# M3 UI Kit Nuxt — Roadmap (План развития)
+# Roadmap
 
-Этот документ описывает пошаговый план развития нашего UI-кита: от наведения порядка в коде до создания полноценной дизайн-системы, которая сможет работать как в обычном браузере, так и в 3D-пространстве (VR/AR).
+The plan for growing PrimeTime UI Kit from a component library into a design system that
+works both in the browser and in 3D space (VR/AR).
 
----
-
-## 🛠 Фаза 1 / Q3: Фундамент и наведение порядка
-*Примерное время: ~4-5 недель*
-*На этом этапе мы готовим прочную базу, чтобы кит не развалился при дальнейшем масштабировании.*
-
-**1. Причесывание компонентов и рефакторинг SCSS-мап** *(~2 недели)*
-Избавляемся от хаоса в стилях. Вместо разрозненных переменных мы собираем все цвета, отступы и размеры в единые, удобные SCSS-карты (мапы). Это сделает код чище и позволит в будущем легко вытаскивать эти данные для 3D-версии или документации. Убираем устаревший синтаксис (deprecated) в Sass.
-
-**2. Добавление адаптива** *(~1-1.5 недели)*
-Учим наши компоненты правильно реагировать на разные размеры экранов (смартфоны, планшеты, десктопы). Делаем интерфейс «резиновым» по современным стандартам Material Design, чтобы всё смотрелось органично на любом устройстве.
-
-**3. Решение проблем с auto-layout и изоляция регистрации компонентов** *(~1 неделя)* — ✅ **сделано (2026-06-10)**
-Чиним архитектурный баг, который мог приводить к бесконечным циклам при глобальной регистрации. Теперь компоненты будут регистрироваться строго внутри своих родительских компонентов (anchor). Это сделает систему более предсказуемой и изолированной.
-> Реализовано фичей auto-layout (фазы A–F): carving-движок v2 (DOM-порядок, parent-check, мульти-зоны, sticky/fixed-механика), `useLayoutZone()`, колоночная система `m-container/m-row/m-col`, новые `m-system-bar`/`m-spacer`/`m-responsive`, 9 wireframes в `/demo/wf/*`. Док: `docs/layout.md`; план: `.cursor/plans/auto-layout.md`.
+Status markers reflect what is verifiably in the repository. Items without a marker have not
+started.
 
 ---
 
-## 🚀 Фаза 2 / Q3-Q4: Обогащение UI и производительность
-*Примерное время: ~5-6 недель*
-*Делаем компоненты приятными для пользователя и оптимизируем их загрузку.*
+## Phase 1 — Foundation and cleanup
 
-**4. Добавление скелетонов на все ui-components** *(~1.5 недели)*
-Внедряем красивые заглушки загрузки (skeletons) прямо на уровне базовых компонентов. Пока данные грузятся, пользователь будет видеть приятную анимацию формы компонента, а не дергающийся интерфейс. 
+**1. Component cleanup and the SCSS map refactor** — ✅ **done**
 
-**5. Умная загрузка и гидрация: MLazy** *(~2-2.5 недели)*
-Даем разработчикам контроль над тем, когда монтировать тяжелый UI и загружать его JS chunk. `MLazy` координирует activation, layout-preserving placeholder, Suspense loading/error UX и четыре режима:
-* `eager`: стандартный режим — активируем сразу;
-* `on-idle`: активируем в свободное время browser с максимальным timeout;
-* `on-view`: активируем перед появлением в viewport через IntersectionObserver/root margin;
-* `on-interaction`: активируем при pointer, focus или click intent пользователя.
+Replace scattered variables with unified SCSS maps for colors, spacing and sizes. Beyond
+cleanliness, this is what makes the values extractable later — for a 3D renderer or for
+generated documentation. Drop deprecated Sass syntax along the way.
 
-Для реальной отсрочки JS внутри `MLazy` используется Nuxt `Lazy*` component. SSR HTML с поздней интерактивностью остаётся native Nuxt delayed hydration (`hydrate-on-visible`, `hydrate-on-idle`, `hydrate-on-interaction`): wrapper не имитирует compiler-level hydration произвольного slot subtree.
+> Landed as the build-time token system: every component owns a nested `$tokens` map
+> resolved through `g()`. See [architecture.md](architecture.md).
 
-**6. Изучение исходников 0.vuetify** *(~0.5 недели)*
-Берем паузу на ресёрч. Смотрим, как устроена архитектура популярного Vuetify, чтобы подсмотреть у них удачные паттерны (как они пишут composables, работают с доступностью a11y) и не изобретать велосипед.
+**2. Responsiveness** — ✅ **done**
 
-**7. Создание v-scroll и мощной таблицы MTable** *(~1.5-2 недели)*
-Пишем composable `v-scroll` для виртуализации. Суть в том, чтобы рендерить только те элементы списка, которые видны на экране прямо сейчас. Затем внедряем это в нашу базовую таблицу (`MTable`), чтобы она летала и не тормозила даже при десятках тысяч строк данных.
+Teach components to react correctly to screen size, following Material Design's responsive
+standards.
 
----
+> Landed as the shared viewport state, `useBreakpoint()` bands, configurable breakpoints and
+> the fluid `1rem = 1px` root scale.
 
-## 📚 Фаза 3 / Q4: Документация и релиз Альфы
-*Примерное время: ~3-4 недели*
-*Без хорошей доки китом никто не сможет пользоваться. Делаем её понятной и автоматизированной.*
+**3. Auto-layout and isolated component registration** — ✅ **done (2026-06-10)**
 
-**8. Отрисовка wireframes в доке** *(~1 неделя)*
-Добавляем в документацию наглядные схемы (вайрфреймы). Это визуальные чертежи, которые сразу показывают разработчику, из каких слоев, слотов и отступов состоит каждый компонент, чтобы не приходилось гадать.
+Fix the architectural bug where global registration could cause infinite loops. Components
+now register strictly inside their parent (anchor), making the system predictable and
+isolated.
 
-**9. Полуавтоматическая генерация документации** *(~2-3 недели)*
-Настраиваем крутой пайплайн для доки. Она должна быть всегда актуальной: 
-* Текст и структура раздаются через сервер Nuxt.
-* Картинки и тяжелая статика лежат отдельно на S3.
-* Цвета и размеры (токены) скрипт автоматически вытягивает прямо из наших SCSS-мап (из пункта 1).
-* Пишем понятные use-cases.
+> Delivered across phases A–F: the v2 carving engine (DOM order, parent check, multi-zone,
+> sticky/fixed mechanics), `useLayoutZone()`, the `m-container`/`m-row`/`m-col` column
+> system, and the new `m-system-bar` / `m-spacer` / `m-responsive`. Documented in
+> [layout.md](layout.md); plan in `.cursor/plans/auto-layout.md`.
 
 ---
 
-## 🌌 Фаза 4 / Q1-Q2: Cross-Platform Engine & Выход в 3D (XR)
-*Примерное время: ~10-14 недель (глобальная архитектурная трансформация)*
-*Превращаем обычный Nuxt-кит в универсальный движок, который может рисовать интерфейсы и в браузере, и в шлеме виртуальной реальности.*
+## Phase 2 — Richer UI and performance
 
-**10. Мультиплатформенная архитектура (Compiler-First) и экстракт токенов** *(~4-6 недель)*
-Реализуем архитектуру из 3 независимых пакетов (например, в монорепозитории): `@pt-ui/core`, `@pt-ui/web` и `@pt-ui/xr`.
-* **Экстракт:** Пишем компилятор внутри ядра (`core`), который берет наши SCSS-мапы и превращает их в чистый JSON. Этот JSON поймет любой 3D-движок (превратив CSS-переменные в реальные HEX/RGB цвета).
-* **Thin Files (Тонкие обертки):** Выносим всю логику кнопок, чекбоксов и стейтов в независимые TS-файлы в `core`. Теперь веб-версия просто берет эту логику и привязывает к обычному HTML.
+**4. Skeletons for all UI components** — not started
 
-**11. Создание XR / 3D версии кита** *(~6-8 недель)*
-Имея единое ядро токенов и логики, приступаем к пакету `@pt-ui/xr`. Создаем 3D-компоненты, которые полностью абстрагированы от конкретного движка, и пишем для них адаптеры под Babylon.js и Three.js. Мы берем "тонкую" логику из ядра и привязываем её уже не к HTML, а к 3D-моделям (мешам) в пространстве, создавая полноценный Spatial Computing интерфейс с сохранением принципов Material Design.
+Loading placeholders at the base-component level, so that while data loads the user sees the
+component's shape animating rather than a jumping interface.
+
+**5. Smart loading and hydration: `MLazy`** — ✅ **done**
+
+Give developers control over when heavy UI mounts and when its JS chunk loads. `MLazy`
+coordinates activation, a layout-preserving placeholder, Suspense loading/error UX and four
+modes:
+
+- `eager` — activate immediately (the default);
+- `on-idle` — activate during browser idle time, with a maximum timeout;
+- `on-view` — activate just before entering the viewport, via IntersectionObserver and root
+  margin;
+- `on-interaction` — activate on pointer, focus or click intent.
+
+Actual JS deferral inside `MLazy` uses Nuxt's `Lazy*` component. SSR HTML with late
+interactivity remains native Nuxt delayed hydration (`hydrate-on-visible`,
+`hydrate-on-idle`, `hydrate-on-interaction`): the wrapper does not emulate compiler-level
+hydration of an arbitrary slot subtree.
+
+**6. Study Vuetify's sources** — ongoing
+
+A research pause: look at how Vuetify structures composables and handles accessibility,
+rather than reinventing patterns.
+
+**7. Virtual scrolling and a capable `MTable`** — ✅ **done**
+
+A virtualization composable that renders only the rows currently on screen, wired into the
+base table so it stays fast at tens of thousands of rows.
+
+> `useVirtualScroll()` plus the `m-table` integration; covered by
+> `tests/virtual-scroll.spec.ts`.
+
+---
+
+## Phase 3 — Documentation and the alpha release
+
+**8. Wireframes in the documentation**
+
+Visual diagrams showing which layers, slots and spacing each component is built from, so
+consumers do not have to guess.
+
+**9. Semi-automated documentation generation**
+
+A pipeline that keeps the docs current:
+
+- text and structure served by the Nuxt docs app;
+- images and heavy static assets on S3;
+- colors and sizes extracted automatically from the SCSS maps (item 1);
+- written use-cases rather than bare prop tables.
+
+---
+
+## Phase 4 — Cross-platform engine and XR
+
+**10. Compiler-first multi-platform architecture and token extraction**
+
+Three independent packages: `@pt-ui/core`, `@pt-ui/web`, `@pt-ui/xr`.
+
+- **Extraction:** a compiler in `core` turns the SCSS maps into plain JSON that any 3D engine
+  can consume, resolving CSS variables into real HEX/RGB values.
+- **Thin files:** the logic of buttons, checkboxes and states moves into engine-independent
+  TS modules in `core`; the web package binds that logic to HTML.
+
+**11. The XR / 3D kit**
+
+With shared token and logic cores in place, build `@pt-ui/xr`: 3D components abstracted from
+any specific engine, with adapters for Babylon.js and Three.js. The same thin logic binds to
+meshes instead of DOM nodes, producing a spatial-computing interface that keeps Material
+Design's principles.
+
+---
+
+## Recent work outside the numbered plan
+
+- **Dependency removal** — Pinia dropped entirely: theme state moved to a cookie-backed
+  controller (`useMaterialTheme`), viewport state to shared `useState` with a single global
+  listener. `flubber` replaced by an in-house shape-morph composable.
+- **Validation decoupled** — form components no longer depend on a validation library.
+  `vee-validate` became an opt-in adapter installed via `provideValidationAdapter()`.
+- **Packaging** — the kit ships as a Nuxt module (`src/module.ts` + `src/runtime/`) rather
+  than a layer.

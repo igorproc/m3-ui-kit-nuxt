@@ -77,7 +77,6 @@ export function useTextField(options: UseTextFieldOptions): UseTextFieldReturn {
   const field = useField({ path, model: stringModel })
 
   const errorMessage = computed(() => field.errorMessage.value || externalError())
-
   const isError = computed(() => error() || Boolean(externalError()) || field.hasError.value)
 
   const onFocus = () => {

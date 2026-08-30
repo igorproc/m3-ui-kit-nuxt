@@ -13,6 +13,7 @@
       :error="error"
       :error-message="errorMessage"
       :variant="variant"
+      :rounded="rounded"
       :path="path"
       :name="name"
       :disabled="disabled"

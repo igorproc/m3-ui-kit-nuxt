@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { generateScheme } from './defineKit'
-import { buildThemeBlocks, schemeToTokens } from './themeScss'
+import { generateScheme } from '#kit/utils/theme/generateScheme'
+import { buildThemeBlocks, schemeToTokens } from '#kit/utils/theme/themeScss'
 
 const SEED = '#6750a4'
 

@@ -28,6 +28,11 @@ const props = defineProps<{
    * the loop wrap — avoiding a main-thread hitch on the heaviest transition.
    */
   sequence?: readonly M3ShapeName[]
+  /**
+   * Morph duration in milliseconds for each transition.
+   * @default 600
+   */
+  duration?: number
 }>()
 
 const target = computed(() => M3_SHAPES[props.name] || M3_SHAPES['circle'])
@@ -36,7 +41,10 @@ const sequence = computed(() =>
   props.sequence?.map(name => M3_SHAPES[name] || M3_SHAPES['circle']),
 )
 
-const { d } = useShapeMorph(target, { duration: 600, sequence })
+const { d } = useShapeMorph(target, {
+  duration: () => props.duration ?? 600,
+  sequence,
+})
 </script>
 
 <style lang="scss">

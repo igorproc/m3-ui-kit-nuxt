@@ -288,7 +288,6 @@ function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabl
   }
 
   const allowedKeys = (bindingValue as any).keys ?? ['Enter', 'Space']
-  rippleData.keyDownHandler = (e: KeyboardEvent) => keyboardRippleShow(e, allowedKeys)
 
   if (enabled && !wasEnabled) {
     if (modifiers.stop) {
@@ -306,6 +305,7 @@ function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabl
     el.addEventListener('mouseup', rippleHide)
     el.addEventListener('mouseleave', rippleHide)
 
+    rippleData.keyDownHandler = (e: KeyboardEvent) => keyboardRippleShow(e, allowedKeys)
     el.addEventListener('keydown', rippleData.keyDownHandler)
     el.addEventListener('keyup', keyboardRippleHide)
 
@@ -314,6 +314,14 @@ function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabl
     el.addEventListener('dragstart', rippleHide, { passive: true })
   } else if (!enabled && wasEnabled) {
     removeListeners(el)
+  } else if (enabled && wasEnabled && !modifiers.stop) {
+    // Value changed while still enabled: re-bind keydown so updated `keys` take
+    // effect. Remove the exact previously-registered reference to avoid orphans.
+    if (rippleData.keyDownHandler) {
+      el.removeEventListener('keydown', rippleData.keyDownHandler)
+    }
+    rippleData.keyDownHandler = (e: KeyboardEvent) => keyboardRippleShow(e, allowedKeys)
+    el.addEventListener('keydown', rippleData.keyDownHandler)
   }
 }
 
@@ -351,6 +359,8 @@ export const ripple = {
   },
   unmounted(el: HTMLElement) {
     removeListeners(el)
+    // @ts-expect-error custom property
+    window.clearTimeout(el._ripple?.showTimer)
     // @ts-expect-error custom property
     delete el._ripple
   },

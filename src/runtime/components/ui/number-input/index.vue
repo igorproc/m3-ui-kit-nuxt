@@ -62,9 +62,16 @@
     </template>
 
     <template
-      v-if="controls !== false || $slots.append"
+      v-if="controls !== false || unit || $slots.append"
       #append
     >
+      <span
+        v-if="unit"
+        class="ui-number-input__unit"
+      >
+        {{ unit }}
+      </span>
+
       <slot
         v-if="controls === 'split'"
         name="increment"
@@ -110,6 +117,24 @@
         </slot>
       </span>
       <slot name="append" />
+    </template>
+
+    <template
+      v-if="slider && min !== undefined && max !== undefined"
+      #supporting
+    >
+      <input
+        type="range"
+        class="ui-number-input__slider"
+        :min="min"
+        :max="max"
+        :step="safeStep"
+        :value="currentValue"
+        :disabled="disabled || readonly"
+        tabindex="-1"
+        aria-hidden="true"
+        @input="onSlider"
+      >
     </template>
   </FieldRoot>
 </template>
@@ -189,6 +214,15 @@ function applyStep(direction: -1 | 1, multiplier = 1) {
   draft.value = codec.value.format(next, focusedModel.value ? 'edit' : 'display')
   dirty.value = false
   emit(direction > 0 ? 'increment' : 'decrement', next)
+}
+
+function onSlider(event: Event) {
+  if (props.disabled || props.readonly) return
+
+  const next = normalize(Number((event.target as HTMLInputElement).value), true)
+  modelValue.value = next
+  draft.value = codec.value.format(next, focusedModel.value ? 'edit' : 'display')
+  dirty.value = false
 }
 
 function decrement() {
@@ -299,6 +333,9 @@ if (import.meta.dev) {
 
   &__input {
     min-width: 0;
+
+    // Spec rule: numeric values use tabular figures so digits never shift width.
+    font-variant-numeric: tabular-nums;
   }
 
   .ui-field__icon--prepend,
@@ -310,6 +347,23 @@ if (import.meta.dev) {
     display: inline-flex;
     flex-direction: column;
     gap: g($t, 'controls-stacked-gap');
+  }
+
+  // Unit suffix: part of the container, not a separate control.
+  &__unit {
+    flex: 0 0 auto;
+    color: var(--md-sys-color-on-surface-variant);
+    font-variant-numeric: tabular-nums;
+
+    @include typescale('label-large');
+  }
+
+  // Slider-bound: full-width range under the field.
+  &__slider {
+    width: 100%;
+    margin: 0;
+    accent-color: var(--md-sys-color-primary);
+    cursor: pointer;
   }
 }
 </style>

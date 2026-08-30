@@ -11,13 +11,26 @@ describe('m-text-field', () => {
     expect(wrapper.find('input.ui-text-field__input').exists()).toBe(true)
   })
 
-  it('maps the variant prop to the control modifier', async () => {
+  it('carries no state data-attributes at rest (empty, unfocused, valid)', async () => {
+    const wrapper = await mountSuspended(MTextField, {
+      props: { label: 'Email', placeholder: 'you@mail.com' },
+    })
+
+    // A bare `:data-x="false"` binding renders `data-x="false"`, which the
+    // `[data-x]` selectors match — floating the label and revealing the
+    // placeholder at rest. Guard: none of the state hooks may be present.
+    for (const attr of ['data-focused', 'data-populated', 'data-error', 'data-disabled', 'data-prepend', 'data-append']) {
+      expect(wrapper.attributes(attr)).toBeUndefined()
+    }
+  })
+
+  it('maps the variant prop to the root modifier', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { variant: 'outlined' },
     })
 
     expect(wrapper.classes()).toContain('ui-text-field--outlined')
-    expect(wrapper.find('.ui-text-field__control--outlined').exists()).toBe(true)
+    expect(wrapper.find('.ui-text-field__control').exists()).toBe(true)
   })
 
   it('renders the label wired to the input via for/id', async () => {
@@ -54,15 +67,15 @@ describe('m-text-field', () => {
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual(['hello'])
   })
 
-  it('reflects a populated model in the control class', async () => {
+  it('reflects a populated model via the data-populated state', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { modelValue: 'preset' },
     })
 
-    expect(wrapper.find('.ui-text-field__control--populated').exists()).toBe(true)
+    expect(wrapper.attributes('data-populated')).toBeDefined()
   })
 
-  it('applies disabled to the native input and the disabled modifier', async () => {
+  it('applies disabled to the native input and the data-disabled state', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { disabled: true },
     })
@@ -70,7 +83,7 @@ describe('m-text-field', () => {
     const input = wrapper.find('input.ui-text-field__input')
 
     expect(input.attributes('disabled')).toBeDefined()
-    expect(wrapper.find('.ui-text-field__control--disabled').exists()).toBe(true)
+    expect(wrapper.attributes('data-disabled')).toBeDefined()
   })
 
   it('applies readonly to the native input', async () => {
@@ -81,48 +94,50 @@ describe('m-text-field', () => {
     expect(wrapper.find('input.ui-text-field__input').attributes('readonly')).toBeDefined()
   })
 
-  it('renders helper text and links it via aria-describedby', async () => {
+  it('renders helper text on the support line and links it via aria-describedby', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { helperText: 'Some hint' },
     })
 
-    const helper = wrapper.find('.ui-text-field__helper')
+    const support = wrapper.find('.ui-text-field__support')
     const input = wrapper.find('input.ui-text-field__input')
 
-    expect(helper.exists()).toBe(true)
-    expect(helper.text()).toBe('Some hint')
-    expect(input.attributes('aria-describedby')).toBe(helper.attributes('id'))
+    expect(support.exists()).toBe(true)
+    expect(support.classes()).toContain('ui-text-field__support--helper')
+    expect(support.text()).toBe('Some hint')
+    expect(input.attributes('aria-describedby')).toBe(support.attributes('id'))
   })
 
-  it('renders an error message and marks the input invalid', async () => {
+  it('renders an error message, marks the input invalid and sets the alert role', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { errorMessage: 'Required' },
     })
 
-    const error = wrapper.find('.ui-text-field__error')
+    const support = wrapper.find('.ui-text-field__support')
     const input = wrapper.find('input.ui-text-field__input')
 
-    expect(error.exists()).toBe(true)
-    expect(error.text()).toBe('Required')
+    expect(support.exists()).toBe(true)
+    expect(support.classes()).toContain('ui-text-field__support--error')
+    expect(support.text()).toBe('Required')
+    expect(support.attributes('role')).toBe('alert')
     expect(input.attributes('aria-invalid')).toBe('true')
-    expect(wrapper.find('.ui-text-field__control--error').exists()).toBe(true)
+    expect(wrapper.attributes('data-error')).toBeDefined()
   })
 
-  it('renders the plain variant with a static label above the control', async () => {
+  it('exposes a single root-owned label and applies the rounded tier', async () => {
     const wrapper = await mountSuspended(MTextField, {
-      props: { variant: 'plain', label: 'Email' },
+      props: { variant: 'outlined', rounded: 'pill', label: 'Email' },
     })
 
-    expect(wrapper.classes()).toContain('ui-text-field--plain')
-    expect(wrapper.find('.ui-text-field__control--plain').exists()).toBe(true)
+    expect(wrapper.classes()).toContain('ui-text-field--pill')
 
-    // Classic layout: the label sits above the control, not floating inside it.
+    // One label, owned by the root — never nested inside the control.
     const control = wrapper.find('.ui-text-field__control')
     expect(control.find('label.ui-text-field__label').exists()).toBe(false)
     expect(wrapper.find('label.ui-text-field__label').text()).toBe('Email')
   })
 
-  it('renders prepend and append slots', async () => {
+  it('renders prepend and append slots and flags them via data-* state', async () => {
     const wrapper = await mountSuspended(MTextField, {
       slots: {
         prepend: () => 'P',
@@ -132,7 +147,7 @@ describe('m-text-field', () => {
 
     expect(wrapper.find('.ui-text-field__icon--prepend').exists()).toBe(true)
     expect(wrapper.find('.ui-text-field__icon--append').exists()).toBe(true)
-    expect(wrapper.find('.ui-text-field__control--has-prepend').exists()).toBe(true)
-    expect(wrapper.find('.ui-text-field__control--has-append').exists()).toBe(true)
+    expect(wrapper.attributes('data-prepend')).toBeDefined()
+    expect(wrapper.attributes('data-append')).toBeDefined()
   })
 })

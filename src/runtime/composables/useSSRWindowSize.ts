@@ -1,20 +1,18 @@
 import { computed } from 'vue'
-import { useNuxtApp } from '#app'
-// Явный импорт: в потребителе кит лежит в node_modules и авто-импорт стора туда
-// не инжектится (тот же класс, что useThemeStore is not defined в SSR).
-import { useWindowSizeStore } from '#kit/store/windowSize'
+import { useState } from '#app'
+import { seedViewport } from '#kit/utils/viewport/seedViewport'
 
+/**
+ * Shared, SSR-safe viewport `{ width, height }` as refs. Backed by a single
+ * per-request `useState('md:viewport')`, seeded from the request device class
+ * and updated on the client by the `viewport.client` plugin's single resize
+ * listener — so consumers never spawn their own listener.
+ */
 export function useSSRWindowSize() {
-  // Explicitly pass the Nuxt pinia instance to avoid 'getActivePinia' undefined errors
-  // caused by duplicate pinia module installations between layers/workspaces.
-  const nuxtApp = useNuxtApp()
-  const windowSizeStore = useWindowSizeStore(nuxtApp.$pinia)
+  const viewport = useState('md:viewport', seedViewport)
 
-  const width = computed(() => windowSizeStore.windowSize.width)
-  const height = computed(() => windowSizeStore.windowSize.height)
+  const width = computed(() => viewport.value.width)
+  const height = computed(() => viewport.value.height)
 
-  return {
-    width,
-    height,
-  }
+  return { width, height }
 }

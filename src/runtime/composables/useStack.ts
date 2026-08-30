@@ -23,6 +23,7 @@
  */
 import { computed, getCurrentScope, onScopeDispose, shallowRef, toRef } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
+import { useNuxtApp } from '#app'
 
 export interface StackTicketInput {
   /** Stable id. Auto-generated when omitted. */
@@ -163,15 +164,23 @@ export function createStack(options: StackOptions = {}): StackContext {
   }
 }
 
-// Module-level singleton — overlays are global, so the whole app shares one stack.
-let globalStack: StackContext | undefined
+interface StackHost {
+  _m3OverlayStack?: StackContext
+}
 
 /**
- * Returns the shared global overlay stack.
+ * Returns the overlay stack scoped to the current Nuxt app instance.
+ *
+ * The stack is stored on `nuxtApp`, not at module scope: on the server each
+ * request gets its own instance that is GC'd with the request, so overlay
+ * tickets never accumulate across pages during SSR/prerender (SSR unmount
+ * hooks — and therefore `onScopeDispose` cleanup — never fire). On the client
+ * `nuxtApp` is a per-app singleton, so overlays still share one stack.
  */
 export function useStack(): StackContext {
-  if (!globalStack) {
-    globalStack = createStack()
+  const nuxtApp = useNuxtApp() as ReturnType<typeof useNuxtApp> & StackHost
+  if (!nuxtApp._m3OverlayStack) {
+    nuxtApp._m3OverlayStack = createStack()
   }
-  return globalStack
+  return nuxtApp._m3OverlayStack
 }

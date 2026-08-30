@@ -12,6 +12,28 @@ export const THEME_CONTRASTS = {
   HIGH: 'high',
 }
 
+/**
+ * Every MCU scheme variant the kit accepts, as plain data.
+ *
+ * Duplicated from `TThemeVariant` on purpose: the runtime validates a cookie against
+ * this list, and importing the generator's `VARIANT_MAP` to do it would drag the
+ * color utilities back into the static client graph.
+ */
+export const THEME_VARIANTS = [
+  'tonalSpot',
+  'neutral',
+  'vibrant',
+  'expressive',
+  'monochrome',
+  'fidelity',
+  'content',
+  'rainbow',
+  'fruitSalad',
+] as const
+
+/** A palette seed the generator can parse: 3, 6 or 8 hex digits, `#` optional. */
+export const HEX_SEED_PATTERN = /^#?(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
+
 /** Default semantic seeds, harmonized to each palette when the app doesn't override them. */
 export const DEFAULT_SEMANTIC_COLORS = {
   success: '#2e7d32',

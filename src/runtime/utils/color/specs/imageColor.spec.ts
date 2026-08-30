@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { seedFromPixels, argbPixelsFromImageData } from './imageColor'
+import { seedFromPixels, argbPixelsFromImageData } from '#kit/utils/color/imageColor'
 
 describe('argbPixelsFromImageData', () => {
   it('converts opaque RGBA bytes to ARGB ints and skips transparent pixels', () => {
