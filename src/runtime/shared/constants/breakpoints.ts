@@ -7,4 +7,5 @@ export const DEFAULT_BREAKPOINTS = {
   'mobile-xs': 0,
 }
 
+/** Reserved breakpoint keys in config/SCSS form (kebab-case). */
 export type BreakpointKey = keyof typeof DEFAULT_BREAKPOINTS

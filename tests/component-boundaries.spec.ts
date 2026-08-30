@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest'
 
 const root = resolve(process.cwd())
 const componentsRoot = resolve(root, 'src/runtime/components')
-const nuxtConfig = readFileSync(resolve(root, 'nuxt.config.ts'), 'utf8')
-const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as { files?: string[] }
+// The scan boundary is declared by the published module, not by nuxt.config:
+// the kit ships no app of its own, and the test environment boots `src/module`.
+const moduleSource = readFileSync(resolve(root, 'src/module.ts'), 'utf8')
 
 function collectFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -25,10 +26,10 @@ describe('component boundaries', () => {
   })
 
   it('scans only Vue files from the core and public ui boundaries', () => {
-    expect(nuxtConfig).toContain('path: resolve(\'./src/runtime/components/core\')')
-    expect(nuxtConfig).toContain('path: resolve(\'./src/runtime/components/ui\')')
-    expect(nuxtConfig).not.toMatch(/resolve\('\.\/src\/runtime\/components'\)/)
-    expect(nuxtConfig.match(/extensions: \['vue'\]/g)).toHaveLength(2)
+    expect(moduleSource).toContain('path: runtime(\'components/core\')')
+    expect(moduleSource).toContain('path: runtime(\'components/ui\')')
+    expect(moduleSource).not.toMatch(/runtime\('components'\)/)
+    expect(moduleSource.match(/extensions: \['vue'\]/g)).toHaveLength(2)
   })
 
   it('does not expose fragments or TypeScript support files as Nuxt components', () => {
@@ -47,6 +48,18 @@ describe('component boundaries', () => {
   })
 
   it('does not publish co-located unit tests', () => {
-    expect(packageJson.files).toContain('!app/**/*.spec.ts')
+    // The `!src/**` negations in package.json#files are decorative — npm applies
+    // negations to what is already included, and `src` never is. The real filter
+    // is @nuxt/module-builder excluding specs from its mkdist pattern, so assert
+    // on the build output instead of on a string that does nothing.
+    const distRoot = resolve(root, 'dist')
+    if (!existsSync(distRoot)) {
+      return
+    }
+
+    const published = collectFiles(distRoot)
+      .map(path => path.slice(distRoot.length + 1).replaceAll('\\', '/'))
+
+    expect(published.filter(path => /\.spec\.[cm]?[jt]s$/.test(path) || path.includes('/specs/'))).toEqual([])
   })
 })

@@ -1,174 +1,178 @@
-# Auto-Layout: carving-движок и колоночная система
+# Auto-layout: the carving engine and column system
 
-Система автолейаута PrimeTime UI Kit раскладывает каркас приложения (app bars, rails,
-footers, контент) **генерируемым CSS-гридом** и даёт M3-колоночную сетку для контента.
-Принципы: SSR-first (без измерений и ResizeObserver), ноль CLS (вся геометрия — CSS,
-применяется до первой отрисовки), Vuetify-подобная эргономика (без ручных `order`).
+The layout system arranges an application shell — app bars, rails, footers, content — with a
+**generated CSS grid**, and provides an MD3 column grid for the content itself. The
+principles: SSR-first (no measurement, no `ResizeObserver`), zero CLS (all geometry is CSS
+and applies before first paint), and Vuetify-like ergonomics (no manual `order`).
 
-План и история решений: `.cursor/plans/auto-layout.md`, саммари фаз A–E в `.cursor/summary/`.
+Design notes and decision history: `.cursor/plans/auto-layout.md`, phase summaries in
+`.cursor/summary/`.
 
 ---
 
-## 1. Движок: выкраивание (carving)
+## 1. The engine: carving
 
-`<m-layout>` — грид-корень. Компоненты лейаута регистрируются **только будучи прямыми
-детьми** `m-layout` (проверка идёт по дереву инстансов: `instance.parent` сверяется с
-владельцем контекста — provide сквозь обёртки «не считается»).
+`<m-layout>` is the grid root. Layout components register **only as direct children** of
+`m-layout` — the check walks the instance tree, comparing `instance.parent` against the
+context owner, so a `provide` reaching through a wrapper does not count.
 
-**Порядок в DOM = приоритет выкраивания.** Реестр обходится по порядку, каждый элемент
-отрезает полосу от оставшегося прямоугольника: `top`/`bottom` — строку на всю оставшуюся
-ширину, `start`/`end` — колонку на всю оставшуюся высоту. Кто раньше в DOM — тот владеет
-углом (семантика Vuetify):
+**DOM order is carving priority.** The registry is walked in order and each element cuts a
+strip off the remaining rectangle: `top`/`bottom` take a row across the remaining width,
+`start`/`end` take a column across the remaining height. Whoever comes first in the DOM owns
+the corner (Vuetify's semantics):
 
 ```vue
-<m-layout full-height>          <!-- steam-шелл -->
-  <m-system-bar />              <!-- строка 1, на всю ширину -->
-  <m-app-bar title="Store" />   <!-- строка 2, на всю ширину -->
-  <m-layout-footer sticky size-token="44rem" /> <!-- последняя строка, на всю ширину -->
-  <m-layout-aside sticky size-token="256rem" /> <!-- колонка МЕЖДУ барами и футером -->
+<m-layout full-height>          <!-- a Steam-style shell -->
+  <m-system-bar />              <!-- row 1, full width -->
+  <m-app-bar title="Store" />   <!-- row 2, full width -->
+  <m-layout-footer sticky size-token="44rem" /> <!-- last row, full width -->
+  <m-layout-aside sticky size-token="256rem" /> <!-- column BETWEEN the bars and the footer -->
   <m-layout-main>…</m-layout-main>
 </m-layout>
 ```
 
-Из реестра генерируются `grid-template-areas/columns/rows` для трёх диапазонов устройств
-(моб. <768 / планшет 768–1199 / десктоп ≥1200 — границы из `materialKit.breakpoints`) и
-инжектятся через `useHead` scoped-стилем на `#<layoutId>`. SSR отдаёт готовую сетку,
-браузер выбирает диапазон по `@media` без JS. Имена grid-area = id элементов; каждый
-элемент зоны несёт атрибут `data-m3-zone="<id>"` — по нему generated-CSS адресует
-per-item правила (sticky-позиционирование, скрытие вне диапазона).
+From the registry the engine generates `grid-template-areas/columns/rows` for three device
+ranges (mobile < 768 / tablet 768–1199 / desktop >= 1200 — the boundaries come from
+`materialKit.breakpoints`) and injects them through `useHead` as a scoped style on
+`#<layoutId>`. SSR ships a finished grid and the browser picks a range by `@media`, with no
+JS involved. Grid area names are element ids; every zone element carries
+`data-m3-zone="<id>"`, which the generated CSS uses to address per-item rules (sticky
+positioning, hiding outside a range).
 
-Дефолт по диапазонам: на мобильном боковые зоны не попадают в сетку, на планшете — без
-`end`-стороны. Выпавшая из диапазона зона скрывается `display: none` (иначе её элемент
-стал бы implicit-треком и сломал сетку).
+Range defaults: on mobile the side zones are not part of the grid at all, on tablet the
+`end` side is dropped. A zone that falls out of range is hidden with `display: none` —
+otherwise its element would become an implicit track and break the grid.
 
-- `full-height` — `height: 100dvh; overflow: hidden`: страница не скроллится, скроллится
-  `m-layout-main` (Discord/Steam-шеллы).
-- **Первый уровень — только регистрируемые компоненты.** Посторонний элемент станет
-  implicit-треком и сломает сетку (dev-warning подскажет обернуть в `m-layout-main` /
-  `m-layout-item`).
-- Late-mount (`v-if` после гидрации) досортировывается по реальной DOM-позиции.
+- `full-height` — `height: 100dvh; overflow: hidden`: the page does not scroll,
+  `m-layout-main` does (Discord/Steam-style shells).
+- **Only registering components may be direct children.** A stray element becomes an
+  implicit track and breaks the grid; a dev warning tells you to wrap it in
+  `m-layout-main` / `m-layout-item`.
+- Late mounts (`v-if` after hydration) are re-sorted by their real DOM position.
 
-### Зоны (мульти-инстанс, авто-id)
+### Zones (multi-instance, auto-id)
 
-| Компонент | kind | Пропсы | Дефолт sticky |
+| Component | kind | Props | Sticky by default |
 | :--- | :--- | :--- | :--- |
 | `m-layout-header` | top | `sticky`, `sizeToken` | **true** |
 | `m-layout-footer` | bottom | `sticky`, `sizeToken` | false |
-| `m-layout-aside` | start/end | `position` (`start|end`, legacy `left|right`), `sticky`, `sizeToken` | false |
+| `m-layout-aside` | start/end | `position` (`start\|end`, legacy `left\|right`), `sticky`, `sizeToken` | false |
 | `m-layout-main` | main | — | — |
-| `m-layout-item` | любой | `kind`, `id?`, `sizeToken`, `sticky`, `force` | false |
+| `m-layout-item` | any | `kind`, `id?`, `sizeToken`, `sticky`, `force` | false |
 
-Зон одного края может быть сколько угодно — каждая получает свою строку/колонку.
-`sizeToken` принимает имя CSS-переменной (`--ui-app-bar-height-small`) **или сырой
-размер** (`44rem`). `force` на `m-layout-item` — escape-hatch для регистрации из-под
-renderless-обёрток (`Transition` и т.п.), разрывающих цепочку родительства.
+There may be any number of zones on one edge — each gets its own row or column. `sizeToken`
+accepts either a CSS variable name (`--ui-app-bar-height-small`) or a **raw size**
+(`44rem`). `force` on `m-layout-item` is an escape hatch for registering from underneath
+renderless wrappers (`Transition` and friends) that break the parent chain.
 
-### Самодостаточные компоненты
+### Self-registering components
 
-`m-app-bar`, `m-system-bar`, `m-navigation-rail`, `m-navigation-bar` прямыми детьми
-`m-layout` регистрируются сами (зоны-обёртки не нужны). **Внутри зоны** те же компоненты
-вместо регистрации **отдают свой размер зоне**: зона без явного `sizeToken` суммирует
-вклады детей (`m-system-bar` + `m-app-bar` в одном `m-layout-header` → высота строки =
-сумма). Раскрытие рельсы меняет её токен → грид анимируется (`transition:
-grid-template-*`).
+`m-app-bar`, `m-system-bar`, `m-navigation-rail` and `m-navigation-bar` register themselves
+when they are direct children of `m-layout` — no wrapper zone needed. **Inside a zone** the
+same components instead **contribute their size to that zone**: a zone with no explicit
+`sizeToken` sums its children's contributions, so `m-system-bar` + `m-app-bar` in one
+`m-layout-header` produce a row as tall as both. Expanding a rail changes its token, and the
+grid animates (`transition: grid-template-*`).
 
-`m-navigation-drawer` (временный, v-model) — модальный оверлей, **не единица лейаута**.
+`m-navigation-drawer` (temporary, `v-model`) is a modal overlay, **not** a layout unit.
 
 ---
 
-## 2. Sticky-механика
+## 2. Sticky mechanics
 
-Ключевой факт CSS: containing block грид-итема — его собственная grid area, поэтому
-`position: sticky` в строке точной высоты двигаться не может. Отсюда два разных механизма:
+The governing CSS fact: a grid item's containing block is its own grid area, so
+`position: sticky` cannot move inside a row of exact height. Hence two different mechanisms:
 
-- **top/bottom + `sticky`** → `position: fixed`, а строка грида **резервирует место**
-  через size-переменную: ноль CLS, контент не прыгает. Поэтому sticky-зона верха/низа
-  **обязана иметь размер** (явный токен или вклад ребёнка) — безразмерная деградирует в
-  поток с dev-warning.
-- **start/end + `sticky`** → настоящий `position: sticky` (колонка-area высокая):
+- **top/bottom + `sticky`** → `position: fixed`, while the grid row **reserves the space**
+  through a size variable: zero CLS, content does not jump. A sticky top/bottom zone
+  therefore **must have a size** — an explicit token, or a contributing child. A size-less
+  one degrades to normal flow with a dev warning.
+- **start/end + `sticky`** → real `position: sticky` (the column area is tall):
   `align-self: start; inset-block-start: var(--m3-layout-<id>-top);
-  height: calc(100dvh − top − bottom-sticky)`. Не-sticky футер в вычитание не входит
-  (иначе дырка, пока он за экраном).
+  height: calc(100dvh − top − bottom-sticky)`. A non-sticky footer is not subtracted —
+  otherwise there would be a gap while it is off screen.
 
-Оффсеты считаются **per-item** из carving: каждый элемент знает, какие полосы выкроены
-до него. Второй sticky-header автоматически получает `top` = высота первого; бар,
-выкроенный после боковой колонки, получает `inset-inline-start` = её ширина. Все
-свойства — логические (RTL-ready).
+Offsets are computed **per item** during carving: each element knows which strips were cut
+before it. A second sticky header automatically gets `top` = the first one's height; a bar
+carved after a side column gets `inset-inline-start` = that column's width. All properties
+are logical, so the layout is RTL-ready.
 
-Позиционирование эмитится в **generated-CSS** (`#<layoutId> > [data-m3-zone="<id>"]`),
-не в inline-стили: размер зоны из вкладов детей известен только после рендера всего
-дерева (head-payload), а inline родителя вычисляется до setup детей — inline-вариант
-терял `position` на SSR/без JS. В inline живёт только `grid-area`.
+Positioning is emitted into the **generated CSS**
+(`#<layoutId> > [data-m3-zone="<id>"]`), not into inline styles. A zone's size derived from
+its children is only known after the whole tree has rendered (it arrives in the head
+payload), while a parent's inline style is computed before its children's setup — the inline
+variant lost `position` during SSR and with JS disabled. Only `grid-area` stays inline.
 
-Ограничения: fixed-координаты предполагают, что лейаут начинается от верха viewport
-(стандартный app-shell); `.m-layout` использует `contain: style` (не `layout` — он
-ломает fixed-потомков).
+Limits: the fixed coordinates assume the layout starts at the top of the viewport (the
+standard app shell), and `.m-layout` uses `contain: style` — not `layout`, which would break
+fixed descendants.
 
 ---
 
-## 3. Контекстная зона (`useLayoutZone`)
+## 3. Zone context (`useLayoutZone`)
 
-Любой потомок `m-layout` может получить rich-контекст (`null` вне лейаута, без throw):
+Any descendant of `m-layout` can read a rich context (`null` outside a layout, never throws):
 
 ```ts
 const zone = useLayoutZone()
-// zone.layoutId               — id корня
-// zone.items                  — реестр зон (read-only, DOM-порядок)
-// zone.insets.top|right|bottom|left — CSS-выражения суммарных краёв
-// zone.windowY                — скролл активного скроллера (документ ИЛИ main в full-height)
-// zone.scrollLock(true|false) — реф-счётный лок скролла
-// zone.sticky.top|bottom      — готовые offset'ы для position: sticky
+// zone.layoutId                     — root id
+// zone.items                        — zone registry (read-only, DOM order)
+// zone.insets.top|right|bottom|left — CSS expressions for the cumulative edges
+// zone.windowY                      — scroll of the active scroller (document OR main in full-height)
+// zone.scrollLock(true|false)       — ref-counted scroll lock
+// zone.sticky.top|bottom            — ready-made offsets for position: sticky
 ```
 
-`windowY` слушает и `window`, и `m-layout-main` (события шлёт только реально скроллящийся
-— режим различать не нужно); один пассивный слушатель на лейаут. `m-app-bar` поднимает
-elevation именно через него (`isScrolled`-проп — deprecated принудительный override).
+`windowY` listens to both `window` and `m-layout-main` — only the one actually scrolling
+emits, so there is no mode to distinguish — with a single passive listener per layout.
+`m-app-bar` raises its elevation through it (the `isScrolled` prop is a deprecated forced
+override).
 
-### CSS-переменные (на `#<layoutId>`, per-range)
+### CSS variables (on `#<layoutId>`, per range)
 
-| Переменная | Что это |
+| Variable | Meaning |
 | :--- | :--- |
-| `--m3-layout-<id>-size` | размер зоны (трек грида) |
-| `--m3-layout-<id>-top` / `-bottom-sticky` | per-item вертикальные оффсеты |
-| `--m3-layout-<id>-start` / `-end` | per-item горизонтальные оффсеты |
-| `--m3-layout-inset-top/right/bottom/left` | суммарные края лейаута (FAB, snackbar, sticky-контент) |
+| `--m3-layout-<id>-size` | zone size (its grid track) |
+| `--m3-layout-<id>-top` / `-bottom-sticky` | per-item vertical offsets |
+| `--m3-layout-<id>-start` / `-end` | per-item horizontal offsets |
+| `--m3-layout-inset-top/right/bottom/left` | cumulative layout edges (FAB, snackbar, sticky content) |
 
 ---
 
-## 4. Колоночная система: m-container / m-row / m-col
+## 4. Column system: m-container / m-row / m-col
 
-SCSS-first: вся адаптивность — статически сгенерированные `@media`-классы из
-`$material-kit-breakpoints` (px-пороги; rem в медиа резолвится от initial 16px и с
-fluid-скейлом «1rem = 1px» поплыл бы). JS только мапит пропсы в классы. Ноль CLS.
+SCSS-first: responsiveness is entirely statically generated `@media` classes built from
+`$material-kit-breakpoints`. The thresholds are px — rem in a media query resolves against
+the initial 16px and would drift badly under the fluid `1rem = 1px` scale. JS only maps
+props to class names. Zero CLS.
 
 ### m-container
 
-M3 layout grid: **4 колонки (<768) / 8 (≥768) / 12 (≥1200)**, гаттеры и маржины
-16rem → 24rem, ступенчатый `max-width` (1200rem/1600rem; `fluid` снимает).
-Переопределение: `:cols="2"`, `:cols-tablet-xs`, `:cols-tablet`, `:cols-desktop-xs`,
-`:cols-desktop`.
+The MD3 layout grid: **4 columns (< 768) / 8 (>= 768) / 12 (>= 1200)**, gutters and margins
+16rem → 24rem, a stepped `max-width` (1200rem / 1600rem; `fluid` removes it). Override with
+`:cols="2"`, `:cols-tablet-xs`, `:cols-tablet`, `:cols-desktop-xs`, `:cols-desktop`.
 
 ### m-col
 
-Спан **относителен активному числу колонок**: `cols="2"` на мобильном (4 колонки) —
-половина, на десктопе (12) — шестая часть. Спан клампится числом колонок (`span min()`),
-без пропов колонка занимает всю строку.
+A span is **relative to the active column count**: `cols="2"` is half the row on mobile
+(4 columns) and a sixth on desktop (12). Spans are clamped to the column count
+(`span min()`); with no props a column takes the whole row.
 
 ```vue
 <m-container>
-  <m-col desktop-xs="2">aside</m-col>   <!-- мобайл: вся строка; ≥1200: 2 из 12 -->
+  <m-col desktop-xs="2">aside</m-col>   <!-- mobile: full row; >= 1200: 2 of 12 -->
   <m-col desktop-xs="8">main</m-col>
   <m-col desktop-xs="2">aside</m-col>
 </m-container>
 ```
 
-Пропсы: `cols` (база, mobile-first) + `mobile`, `tablet-xs`, `tablet`, `desktop-xs`,
-`desktop`; `offset`, `offset-<bp>` — через `grid-column-start`, `offset-<bp>="0"`
-сбрасывает на авто-поток.
+Props: `cols` (the mobile-first base) plus `mobile`, `tablet-xs`, `tablet`, `desktop-xs`,
+`desktop`; `offset` and `offset-<bp>` map to `grid-column-start`, and `offset-<bp>="0"`
+resets to auto flow.
 
-**Семантика ключей** (mobile-first, активация с `min-width` = константе кита):
+**Key semantics** (mobile-first, activating at `min-width` equal to the kit's constant):
 
-| Ключ | min-width | Колонок по умолчанию |
+| Key | min-width | Default columns |
 | :--- | :--- | :--- |
 | `mobile-xs` | 0 | 4 |
 | `mobile` | 767px | 4 |
@@ -177,27 +181,28 @@ M3 layout grid: **4 колонки (<768) / 8 (≥768) / 12 (≥1200)**, гат�
 | `desktop-xs` | 1200px | 12 |
 | `desktop` | 1920px | 12 |
 
-⚠ Для «планшетного» поведения используйте `tablet-xs` (≥768): `tablet` активируется с
-1199px — это согласовано с существующими SCSS-миксинами (`bp-tablet`) кита.
+> For "tablet" behaviour use `tablet-xs` (>= 768). `tablet` activates at 1199px — this is
+> consistent with the kit's existing SCSS mixins (`bp-tablet`).
 
-### m-row (опционально) и утилиты
+### m-row (optional) and utilities
 
-`m-row` — семантическая строка на `subgrid`: форсит перенос (`grid-column: 1/-1`),
-наследует линии колонок, gap задаётся явно из `--m-container-gutter` (строчная ось
-subgrid'ом не покрывается). Пропсы: `align="start|center|end|stretch"`, `no-gutters`.
+`m-row` is a semantic row built on `subgrid`: it forces a wrap (`grid-column: 1/-1`) and
+inherits the column lines. Its gap is set explicitly from `--m-container-gutter`, because
+subgrid does not cover the inline axis here. Props: `align="start|center|end|stretch"`,
+`no-gutters`.
 
-`<m-spacer>` — flex-распорка. `<m-responsive aspect-ratio="16 / 9">` — обёртка с
-фиксированными пропорциями (контент — `position: absolute; inset: 0`).
+`<m-spacer>` is a flex spacer. `<m-responsive aspect-ratio="16 / 9">` is a fixed-ratio
+wrapper whose content is `position: absolute; inset: 0`.
 
 ---
 
-## 5. Правила и анти-паттерны
+## 5. Rules and anti-patterns
 
-1. **Не верстайте бары руками**: никаких собственных `position: fixed/sticky` для
-   шапок/сайдбаров — это делают зоны (`sticky`-пропсы) с корректными per-item оффсетами.
-2. Sticky top/bottom без размера не работает (см. §2) — дайте `sizeToken` или положите
-   внутрь компонент с высотным токеном.
-3. Прямыми детьми `m-layout` могут быть только регистрируемые компоненты.
-4. Кастомные размеры зон — токенами/выражениями, не измерениями.
-5. Песочницы: `/demo/grid` (сетка), `/demo/wf/*` (9 wireframes на движке),
-   `/demo/material|steam|youtube|primetime` (зоны-обёртки).
+1. **Do not hand-build bars.** No custom `position: fixed/sticky` for headers or sidebars —
+   zones do that, with correct per-item offsets.
+2. A sticky top/bottom zone without a size does not work (see §2) — give it a `sizeToken`,
+   or put a component with a height token inside it.
+3. Only registering components may be direct children of `m-layout`.
+4. Custom zone sizes come from tokens and expressions, never from measurement.
+5. Prefer `is` from `useBreakpoint()` over `more`/`less` when branching on device class —
+   see [architecture.md](architecture.md#3-the-viewport-layer).

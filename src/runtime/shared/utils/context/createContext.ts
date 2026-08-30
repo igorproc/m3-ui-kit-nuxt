@@ -13,7 +13,7 @@
  *   key passed at runtime (for per-instance namespacing).
  *
  * ⚠ **Scope: component-local coordination only.** Never use this for theme —
- * there is exactly one global theme (the Pinia `app/store/theme.ts`). Per-tree
+ * there is exactly one global theme (`useMaterialTheme`, cookie-backed). Per-tree
  * theme provision is explicitly forbidden (see `plan.md` guardrails).
  *
  * @example

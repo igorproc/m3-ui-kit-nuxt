@@ -8,15 +8,11 @@ import {
 } from '@material/material-color-utilities'
 import type { CustomColorGroup } from '@material/material-color-utilities'
 import type {
-  MaterialKitOptions,
   TTheme,
   TThemeVariant,
   TThemeContrast,
   TSemanticColors,
-} from '../types/kit'
-
-/** defineMaterialKit — type-safe helper for configuring the Material 3 UI Kit. */
-export const defineMaterialKit = (options: MaterialKitOptions): MaterialKitOptions => options
+} from '#kit/shared/types/kit'
 
 export interface ISchemePair {
   light: DynamicScheme

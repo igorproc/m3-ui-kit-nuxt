@@ -17,9 +17,7 @@
 </template>
 
 <script setup lang="ts">
-// Явный импорт: в потребителе кит лежит в node_modules, а unimport не переписывает
-// его SFC — авто-импорт стора там не инжектится (useThemeStore is not defined в SSR).
-import { useThemeStore } from '#kit/store/theme'
+import { useMaterialTheme } from '#kit/composables/useMaterialTheme'
 
 interface MAppProps {
   tag?: string
@@ -40,11 +38,7 @@ withDefaults(
 
 defineSlots<MAppSlots>()
 
-// MApp owns the theme head injection: html attributes (data-definition/palette/contrast)
-// and the active palette's generated <style>. SSR-rendered (no FOUC), reactive on the client.
-// Pinia unwraps the store's computeds on access, so re-wrap them in local
-// `computed`s to keep the head reactive (a plain read would freeze at setup).
-const theme = useThemeStore()
+const theme = useMaterialTheme()
 useHead({
   htmlAttrs: computed(() => theme.htmlAttrs),
   style: [{ id: 'material-kit-theme', innerHTML: computed(() => theme.themeCss) }],

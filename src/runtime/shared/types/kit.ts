@@ -1,3 +1,5 @@
+import type { BreakpointKey } from '../constants/breakpoints'
+
 export type TThemeVariant
   = 'tonalSpot' | 'neutral' | 'vibrant' | 'expressive'
     | 'monochrome' | 'fidelity' | 'content' | 'rainbow' | 'fruitSalad'
@@ -59,21 +61,39 @@ export interface ICookie {
   }
 }
 
-export interface MaterialKitOptions {
-  breakpoints?: Partial<Record<'desktop' | 'desktop-xs' | 'tablet' | 'tablet-xs' | 'mobile' | 'mobile-xs', string>>
-  cookie?: Partial<ICookie>
-  /** @deprecated use `defaultPalette` */
-  defaultTheme?: string // Default palette key (legacy alias)
-  defaultDefinition?: TDefinition // Default definition (built-in: 'dark')
-  defaultPalette?: string // Default palette key
-  defaultContrast?: TThemeContrast // Default contrast
-  defaultVariant?: TThemeVariant // Default variant for themes without one
-  defaultNeutralChroma?: number // Default neutral chroma for themes without one
+/** App-level lock switches. `true` = the corresponding capability is disabled. */
+export interface IMaterialKitRestrict {
+  /** Disables runtime custom (HEX/from-image) palettes; a hand-set cookie is ignored on resolve. */
+  customPalette?: boolean
+}
+
+/** Build-time default theme selection; runtime cookies override these. */
+export interface IThemeDefaults {
+  definition?: TDefinition // Default definition (built-in: 'dark')
+  palette?: string // Default palette key
+  contrast?: TThemeContrast // Default contrast
+  variant?: TThemeVariant // Default variant for themes without one
+  neutralChroma?: number // Default neutral chroma for themes without one
+}
+
+/** Theme configuration group: palettes, defaults and semantic seeds. */
+export interface IMaterialKitTheme {
+  themes?: TTheme[] // List of available themes
+  default?: IThemeDefaults
   /** Global semantic seeds (harmonized to each palette). Defaults to success/warning/info. */
   semanticColors?: TSemanticColors
   /** Global default for semantic `blend`. Default `true`. */
   semanticBlend?: boolean
-  themes?: TTheme[] // List of available themes
+}
+
+export interface MaterialKitOptions {
+  /** Reserved keys are hinted; consumers may add their own named breakpoints. */
+  breakpoints?: Partial<Record<BreakpointKey, string | number>> & Record<string, string | number>
+  /** App-level lockdown of capabilities (currently: custom palette). Cross-cutting, not theme-scoped. */
+  restrict?: IMaterialKitRestrict
+  cookie?: Partial<ICookie>
+  /** All theme-scoped configuration (palettes, defaults, semantic seeds). */
+  theme?: IMaterialKitTheme
   typography?: {
     fontFamily?: string // Base font family
   }

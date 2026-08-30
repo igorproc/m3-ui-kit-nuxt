@@ -1,6 +1,6 @@
 {
   "name": "@pr0s1k/primetime-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "PrimeTime UI Kit — a Nuxt 4 layer & Material Design 3 component library (zero-runtime SCSS tokens).",
   "license": "MIT",
@@ -22,10 +22,6 @@
       "types": "./dist/module.d.mts",
       "import": "./dist/module.mjs"
     },
-    "./defineKit": {
-      "types": "./dist/runtime/shared/utils/setup/defineKit.d.ts",
-      "import": "./dist/runtime/shared/utils/setup/defineKit.js"
-    },
     "./types": {
       "types": "./dist/runtime/shared/types/props.d.ts",
       "import": "./dist/runtime/shared/types/props.js"
@@ -39,10 +35,7 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE",
-    "!app/**/*.spec.ts",
-    "!src/**/*.spec.ts",
-    "!src/**/specs"
+    "LICENSE"
   ],
   "sideEffects": [
     "**/*.scss",
@@ -65,11 +58,8 @@
     "@material/material-color-utilities": "^0.4.0",
     "@nuxt/icon": "^2.2.1",
     "@nuxtjs/device": "^4.0.0",
-    "@pinia/nuxt": "^0.11.3",
     "@vueuse/core": "^14.3.0",
-    "@vueuse/nuxt": "^14.3.0",
     "dayjs": "^1.11.20",
-    "pinia": "^3.0.4",
     "vue-final-modal": "^4.5.5"
   },
   "devDependencies": {
@@ -95,8 +85,8 @@
   },
   "peerDependencies": {
     "nuxt": "^4.4.8",
-    "vue": "3.5.39",
     "vee-validate": "^4.15.0",
+    "vue": "3.5.39",
     "yup": "^1.0.0"
   },
   "peerDependenciesMeta": {

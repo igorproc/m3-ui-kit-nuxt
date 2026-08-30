@@ -77,3 +77,30 @@ export interface StateProps {
 export interface ReadonlyProps {
   readonly?: boolean
 }
+
+/** Reserved breakpoint names in runtime/JS form (camelCase, dot-accessible). */
+export type ReservedBreakpointName
+  = 'desktop' | 'desktopXs' | 'tablet' | 'tabletXs' | 'mobile' | 'mobileXs'
+
+/**
+ * Augmentable registry for consumer-defined breakpoints. A consumer that adds
+ * custom breakpoints to `materialKit.breakpoints` can declare them here to get
+ * typed autocomplete on the `is`/`more`/`less` maps:
+ *
+ * ```ts
+ * declare module '@pr0s1k/primetime-kit/types' {
+ *   interface KitBreakpointRegistry { watch: true, ultrawide: true }
+ * }
+ * ```
+ */
+export interface KitBreakpointRegistry {}
+
+export type BreakpointName = ReservedBreakpointName | keyof KitBreakpointRegistry
+
+/**
+ * A breakpoint flag map (`is`/`more`/`less`). Closed on purpose: an open index
+ * signature would type every typo as `boolean` and silently return `undefined`
+ * at runtime. Consumer-defined breakpoints become accessible by declaring them
+ * in {@link KitBreakpointRegistry}.
+ */
+export type BreakpointFlags = Record<BreakpointName, boolean>

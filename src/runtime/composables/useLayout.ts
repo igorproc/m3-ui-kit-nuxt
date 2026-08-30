@@ -30,10 +30,9 @@ import {
   watchEffect,
   type Ref,
 } from 'vue'
-import { useRuntimeConfig } from '#app'
+import { useNuxtApp } from '#app'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 import { createContext } from '#kit/shared/utils/context/createContext'
-import { resolveBreakpoints } from '#kit/shared/utils/viewport/resolveBreakpoints'
 import { useEventListener } from './useEventListener'
 import { useGlobalListener } from './useGlobalListener'
 import {
@@ -174,9 +173,8 @@ export function createLayout(layoutId: string) {
     sticky: { top: INSET_VARS.top, bottom: INSET_VARS.bottom },
   })
 
-  const runtimeConfig = useRuntimeConfig()
-  const materialKit = runtimeConfig.public?.materialKit as { breakpoints?: Record<string, string | number> } | undefined
-  const breakpoints = resolveBreakpoints(materialKit?.breakpoints)
+  // Same resolved map the breakpoint composables read — resolved once by the plugin.
+  const { breakpoints } = useNuxtApp().$material.breakpoints
   const tabletMin = breakpoints['tablet-xs']
   const desktopMin = breakpoints['desktop-xs']
 

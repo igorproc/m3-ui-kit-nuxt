@@ -1,6 +1,6 @@
 import { hexFromArgb } from '@material/material-color-utilities'
 import type { DynamicScheme, CustomColorGroup } from '@material/material-color-utilities'
-import type { ISchemePair } from './defineKit'
+import type { ISchemePair } from './generateScheme'
 
 /** Flattens a `DynamicScheme` into `{ 'kebab-token': '#hex' }` over all MD3 roles. */
 export const schemeToTokens = (scheme: DynamicScheme): Record<string, string> => {

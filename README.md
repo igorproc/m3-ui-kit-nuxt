@@ -1,171 +1,44 @@
 <div align="center">
   <h1>PrimeTime UI Kit</h1>
-  <p><strong>Enterprise-grade Material Design 3 component library, built on Nuxt 4 with zero-runtime token resolution and fluid typography scaling.</strong></p>
+  <p><strong>A Material Design 3 component library for Nuxt 4, with build-time SCSS token resolution.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/Nuxt-4.x-00DC82?style=flat-square&logo=nuxt.js&logoColor=white" alt="Nuxt 4" />
+    <a href="https://www.npmjs.com/package/@pr0s1k/primetime-kit"><img src="https://img.shields.io/npm/v/@pr0s1k/primetime-kit?style=flat-square&logo=npm&logoColor=white&color=CB3837" alt="npm version" /></a>
+    <a href="https://www.npmjs.com/package/@pr0s1k/primetime-kit"><img src="https://img.shields.io/npm/dm/@pr0s1k/primetime-kit?style=flat-square&logo=npm&logoColor=white&color=CB3837" alt="npm downloads per month" /></a>
+    <img src="https://img.shields.io/badge/Nuxt-4.x-00DC82?style=flat-square&logo=nuxt&logoColor=white" alt="Nuxt 4" />
     <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
     <img src="https://img.shields.io/badge/Material_Design-3-757575?style=flat-square&logo=material-design&logoColor=white" alt="MD3" />
-    <img src="https://img.shields.io/badge/SCSS%20Tokens-Zero%20Runtime-CC6699?style=flat-square&logo=sass&logoColor=white" alt="Zero-Runtime Tokens" />
-    <img src="https://img.shields.io/badge/TypeScript-100%25-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
   </p>
 </div>
 
 ---
 
-## 🎯 Overview
+PrimeTime UI Kit is a Nuxt 4 **module** shipping ~90 auto-imported Material Design 3
+components across 67 component groups. Its distinguishing trait is the styling layer:
+component colors, shapes and states are resolved **at build time** from nested Sass maps,
+so no CSS-in-JS runs and no per-component custom properties cascade at runtime. The only
+runtime-variable surface is the active MD3 palette (`--md-sys-color-*`), which is what
+makes instant theme switching possible.
 
-**PrimeTime UI Kit** is a production-ready Material Design 3 implementation for enterprise applications. Every component is **strictly token-driven**, fully typed, and optimized for performance. The kit prioritizes maintainability, accessibility, and visual consistency through a deterministic build-time token resolution system.
+- **Build-time tokens** — every component owns a nested `$tokens` map; values are picked with the `g()` getter and compiled to static CSS
+- **Full MD3 color system** — light/dark × three contrast levels, generated from a HEX seed via `@material/material-color-utilities`
+- **Runtime theming** — palette, definition and contrast are cookie-backed, SSR-rendered (no FOUC) and switchable without a rebuild
+- **Fluid typography** — `1rem = 1px` at the breakpoint reference width, so design px map to rem one-to-one
+- **Auto-layout** — a CSS-grid app shell that carves zones from DOM order, with zero measurement and zero CLS
+- **SSR-first** — one shared viewport state, one global listener registry, no per-component resize subscriptions
 
-- **✅ Production-ready** — battle-tested component patterns, comprehensive test coverage, zero technical debt in component surfaces
-- **⚡ Zero-runtime overhead** — all token resolution happens at build time; no CSS-in-JS or runtime variable cascading
-- **📐 Fluid typography** — `1rem = 1px` convention with viewport-aware scaling (`root-scale` per breakpoint)
-- **🎨 Material Design 3 complete** — state layers, 30+ late-M3 color roles, dynamic elevation, proper ripple physics
-- **♿ A11y native** — semantic HTML, WAI-ARIA, keyboard navigation, focus management via composables
-- **🔒 Full TypeScript** — 100% coverage on props, emits, slots, composables; strict mode enabled
-
----
-
-## 🏗️ Architecture
-
-### Token System: Build-Time Resolution
-The kit's styling is powered by **nested SCSS `$tokens` maps** resolved at build time via the `g()` getter function. No CSS custom properties for component states — everything is static Sass.
-
-**Structure:**
-```
-assets/stylesheet/
-├── abstracts/          # Global primitives, functions, variables
-│   ├── _functions.scss # g($t, path), material-map(), root-scale()
-│   └── _variables.scss # $theme-color-link, $theme-shape-link, etc.
-├── base/               # MD3 animations, shapes, typography baseline
-├── themes/             # Runtime CSS-variable declarations (--md-sys-color-*, --sys-shape-corner-*, etc.)
-└── components/
-    └── <component>/
-        ├── index.scss  # Nested $tokens map + token resolution
-        └── _*.scss     # (deprecated; index.scss is the single source)
-```
-
-**Token Resolution Pattern:**
-```scss
-// app/assets/stylesheet/components/button/_index.scss
-$tokens: (
-  primary: (
-    container: (color: map.get($theme-color-link, 'primary-container')),
-    label: (type: 'label-large'),
-  ),
-  shape: (medium: map.get($theme-shape-link, 'medium')),
-);
-
-// In button/index.vue <style>
-@use '~/assets/stylesheet/components/button/index' as t;
-
-.ui-button {
-  background-color: g($t, 'primary-container-color');
-  border-radius: g($t, 'shape-medium');
-  
-  // State layers: 8% (hover), 12% (pressed)
-  &:hover {
-    background-color: color-mix(in srgb, map.get($theme-color-link, 'on-primary-container') 8%, map.get($theme-color-link, 'primary-container'));
-  }
-}
-```
-
-**Key Rules:**
-- `g($t, 'path-with-hyphens')` splits by `-` → map nesting must mirror it (`'container-text-color'` → `container:(text:(color:…))`)
-- `color-mix()` opacity **must be percentage** (`8%`, not `0.08`)
-- `map.get()` can be bare or `#{…}` interpolated inside CSS functions
-- No hardcoded colors, no local `$color` variables, no `--component-state` custom properties
-
-### Color Roles & Runtime Binding
-All color resolution happens via the **`$theme-color-link` map**, which binds M3 semantic roles to `--md-sys-color-*` CSS variables. The theme engine (Nuxt module) generates these per light/dark mode:
-
-```scss
-$theme-color-link: (
-  'primary': var(--md-sys-color-primary),
-  'on-primary': var(--md-sys-color-on-primary),
-  'primary-container': var(--md-sys-color-primary-container),
-  // ... 30+ roles including fixed, dim, surface-container variants
-);
-```
-
-At runtime, theme selectors (`[data-definition="light"][data-palette="ocean"]`) write the actual hex values to `--md-sys-color-*`, allowing instant theme switching without recompile.
-
-### Fluid Typography (1rem = 1px)
-The kit uses viewport-aware scaling: `html { font-size: calc(1vw / root-scale(bp)) }`, making `1rem = 1px` at the breakpoint reference. **Design px translates directly to rem** — a 24px icon is `24rem`, not `1.5rem`.
-
-```scss
-// In design files or component specs: 24px
-// In code: font-size: 24rem;
-
-// Breakpoint scaling happens via root-scale() function
-// At desktop, 1rem = 1px; on mobile, rem scales down fluidly
-```
+Requires **Nuxt >= 4.0.0**.
 
 ---
 
-## 📦 Components (30+ production-ready)
+## Install
 
-### Foundation
-- **Button** — filled, outlined, elevated, text, tonal; icon support; loading states
-- **FAB** — primary, secondary, tertiary, surface variants; small/medium/large
-- **Icon** — Iconify integration, custom sizing, semantic labels
-
-### Forms & Input
-- **Text Field** — single/multi-line, error states, leading/trailing icons, counters
-- **Checkbox** — indeterminate state, error handling
-- **Radio** — grouped, labeled, disabled states
-- **Switch** — icon/label support, form integration
-- **Chip** — filter, input, suggestion variants; deletable
-- **Date Picker** — calendar picker, range selection, keyboard entry
-- **Time Picker** — dial + keyboard modes, period selection
-
-### Selection & Navigation
-- **Dropdown** — single/multi-select, custom templates, keyboard nav
-- **Menu** — positioned, nested items, dividers, disabled states
-- **Navigation Rail** — icon-only or labeled, expandable
-- **Navigation Bar** — bottom nav, badge support, indicator animation
-- **Tabs** — scrollable, icon+label, fixed/scrollable layout
-
-### Surfaces & Containers
-- **Card** — elevated, filled, outlined; image headers, action slots
-- **Dialog** — modal/alert flavors, full-screen support, focus trap
-- **Sheet** — bottom sheet, swipeable, scrim overlay
-- **AppBar** — top navigation, nav/action slots, title centering
-- **Search** — expandable, suggestion dropdown, voice input ready
-
-### Display & Data
-- **Tooltip** — positioning, delayed show, rich content
-- **Snackbar** — timed/persistent, action button, queue management
-- **Badge** — icon/text, positioning helpers
-- **Divider** — horizontal/vertical, inset variants
-- **List** — complex items, leading/trailing templates, grouped sections
-- **Table** — sortable columns, pagination, row selection
-- **Expansion Panel** — single/multi, nested, icons
-- **Slider** — continuous, discrete (tickmarks), range, vertical
-- **Progress** — linear, circular; determinate/indeterminate
-
-### Layout
-- **Layout** — header/aside/main/footer grid; responsive helpers
-- **Grid** — CSS Grid wrapper with breakpoint-aware cols
-- **Spacer** — responsive gap management via rem scaling
-- **Ripple** — directive; MD3 physics on any element
-
----
-
-## 🚀 Getting Started
-
-### Consuming the kit (Nuxt module)
-
-The kit is a **Nuxt 4 module**. It ships pre-built (`dist/`), so you register it in `modules` — no build step on your side.
-
-**1 — Install**
 ```bash
-npm i @pr0s1k/primetime-kit                 # from the npm registry
-npm i @pr0s1k/primetime-kit@file:../kit     # local path (side-by-side dev)
-npm i github:igorproc/m3-ui-kit-nuxt        # straight from git
+npm i @pr0s1k/primetime-kit
 ```
 
-**2 — Register the module**
+The package is published built (`dist/`), so there is no build step on your side.
+
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
@@ -173,283 +46,153 @@ export default defineNuxtConfig({
 })
 ```
 
-The module pulls in its own Nuxt dependencies (`@nuxt/icon`, `@pinia/nuxt`, `@vee-validate/nuxt`, `@nuxtjs/device`) via `moduleDependencies` — you don't register them yourself.
+The module declares `@nuxt/icon` and `@nuxtjs/device` through `moduleDependencies` — you do
+not register them yourself. Nothing else is pulled in: there is no state-management
+dependency, and form validation is opt-in (see [Validation](#validation)).
 
-### Required configuration
+## Configure
 
-The theme engine reads the top-level `materialKit` key. Import the typed helper from the `./defineKit` subpath:
+Theme configuration lives under the top-level `materialKit` key, typed by the module
+itself — no helper to import:
 
 ```ts
 // nuxt.config.ts
-import { defineMaterialKit } from '@pr0s1k/primetime-kit/defineKit'
-
 export default defineNuxtConfig({
   modules: ['@pr0s1k/primetime-kit'],
-  materialKit: defineMaterialKit({
-    themes: [{ key: 'm3', name: 'M3 Baseline', color: '#6750A4' }],
-    cookie: { theme: { definition: 'md-def', palette: 'md-pal', contrast: 'md-con' } },
-  }),
+
+  materialKit: {
+    theme: {
+      themes: [
+        { key: 'm3', name: 'M3 Baseline', color: '#6750A4' },
+        { key: 'ocean', name: 'Ocean', color: '#0061A4' },
+      ],
+      default: { definition: 'dark', palette: 'm3', contrast: 'medium' },
+    },
+    cookie: {
+      theme: { definition: 'md-def', palette: 'md-pal', contrast: 'md-con' },
+    },
+  },
 })
 ```
 
-Public prop types are available from the `./types` subpath:
-```ts
-import type { MColor, MVariant } from '@pr0s1k/primetime-kit/types'
-```
+Each theme's `color` is an MD3 **seed**: the full tonal palette for both definitions and all
+three contrast levels is derived from it. Every option is documented in
+[docs/configuration.md](docs/configuration.md).
 
-### Required infrastructure (overlays & modals)
+## Use
 
-Overlay components (`MDialog`, `MMenu`, `MSnackbar`, …) teleport into a host and use `vue-final-modal`. If you provide your **own** `app.vue`, mount the kit's overlay scope inside it:
+Components from `components/ui` are auto-imported under an `M` prefix — write `<m-button>`
+and Nuxt resolves it, so only what a page actually uses ends up in its bundle.
+`<MApp>` is the root: it owns the theme's `<head>` payload (html attributes and the active
+palette's `<style>`) and mounts the overlay host that dialogs, menus and snackbars teleport
+into.
 
 ```vue
 <!-- app/app.vue -->
 <template>
-  <div>
-    <div id="ui-overlay-host" class="ui-overlay-host" />
-    <NuxtLayout><NuxtPage /></NuxtLayout>
-    <client-only><core-scope /></client-only>
-  </div>
+  <m-app>
+    <nuxt-layout>
+      <nuxt-page />
+    </nuxt-layout>
+  </m-app>
 </template>
 ```
 
-### Local development (working on the kit itself)
-```bash
-npm install
-npm run build:module   # build dist/ (module.mjs + runtime + types)
-```
-
-The runtime lives in `src/runtime/`; the module entry is `src/module.ts`. Consumers see the built `dist/`, so rebuild (`npm run build:module`) after changing kit sources — there is no module HMR through `dist`. A consumer linked via `file:` must restart its dev server to pick up a rebuild.
-
-### Commands
-```bash
-npm run dev          # Nuxt dev server (auto-HMR)
-npm run build        # Production build
-npm run preview      # Preview built site
-npm run test         # Vitest (unit, SSR-aware)
-npm run test:e2e     # Playwright
-npm run lint         # ESLint (must pass 0 errors)
-npm run lint:style   # Stylelint (must pass 0 errors)
-```
-
-### Basic Usage
-Components are auto-imported with the `m` prefix (e.g., `<MButton>`, `<MChip>`):
-
 ```vue
 <template>
-  <m-button variant="filled" color="primary" @click="submit">
-    Submit
-  </m-button>
-  
-  <m-text-field
-    v-model="email"
-    label="Email"
-    type="email"
-    :error="!!emailError"
-    :helper-text="emailError"
-  />
-  
-  <m-card title="Card Title" subtitle="Subtitle">
-    <p>Card content goes here.</p>
+  <m-card title="Sign in">
+    <m-text-field v-model="email" label="Email" type="email" />
+
     <template #actions>
-      <m-button variant="text">Action</m-button>
+      <m-button variant="filled" color="primary" @click="submit">
+        Submit
+      </m-button>
     </template>
   </m-card>
 </template>
 
 <script setup lang="ts">
 const email = ref('')
-const emailError = ref('')
-
-const submit = () => {
-  // Validation, API calls, etc.
-}
+const submit = () => {}
 </script>
 ```
 
-### Theming & Customization
+If you do not use `<MApp>`, you must mount `<core-scope />` yourself — it renders
+`#ui-overlay-host`, without which every overlay component has nowhere to teleport.
 
-**Color Schemes:**
-Switch themes at runtime via the theme store:
+Public prop types come from the `./types` subpath:
 
-```typescript
-// app/store/theme.ts
-const theme = useThemeStore()
-theme.setTheme('light')     // 'light' | 'dark'
-theme.setPalette('ocean')   // custom palette key
-theme.setContrast('standard')
+```ts
+import type { MColor, MVariant } from '@pr0s1k/primetime-kit/types'
 ```
 
-**Token Customization:**
-Override component tokens in your own SCSS:
+## Theming at runtime
 
-```scss
-// app/components/custom-button.vue
-@use '~/assets/stylesheet/components/button/index' as t;
+`useMaterialTheme()` returns one shared, cookie-backed controller — the same instance for
+every caller, so a write in one component is visible everywhere immediately. It is a
+`reactive` object, so properties are read and assigned directly:
 
-$tokens: map.merge(t.$tokens, (
-  primary: (
-    container: (color: #ff5722), // Custom override
-  ),
-));
+```ts
+const theme = useMaterialTheme()
 
-.custom-button {
-  background-color: g($t, 'primary-container-color');
-}
+theme.definition = 'light'    // 'light' | 'dark' | 'system'
+theme.palette = 'ocean'       // a key from `theme.themes`
+theme.setContrast('high')     // 'standard' | 'medium' | 'high'
+
+theme.setCustomColor('#B3261E')   // runtime palette from an arbitrary HEX seed
+theme.setVariant('vibrant')       // MD3 scheme variant
+theme.availableThemes             // configured palettes, for a theme picker
+
+await theme.setColorFromImage(img)  // async: the image quantizer is loaded on demand
 ```
 
----
+Custom palettes can be locked off application-wide with `restrict: { customPalette: true }`,
+which also sanitizes a hand-set cookie rather than trusting it. See
+[docs/configuration.md](docs/configuration.md).
 
-## 🧪 Quality Assurance
+## Validation
 
-### Linting & Code Standards
-- **ESLint** — Nuxt config + Vue plugin; 0-error gate
-- **Stylelint** — SCSS + Vue `<style>` blocks; 0-error gate (pre-existing legacy issues marked as debt)
-- **TypeScript** — strict mode; full coverage on component APIs
+Form components work without any validation library. To wire one up, install an adapter
+once, near the root:
 
-### Testing
-- **Unit Tests** (Vitest) — component rendering, state, interactions in Nuxt SSR context
-- **E2E Tests** (Playwright) — real browser, user flows, accessibility checks
-- **Coverage** — critical paths: form submission, theme switching, responsive layout
+```ts
+import { provideValidationAdapter, veeValidateAdapter } from '@pr0s1k/primetime-kit/validation'
 
-### CI/CD
-- Pre-commit hooks (ESLint, Stylelint) — enforced locally before push
-- GitHub Actions — test suite, lint gate, build verification on PRs
-
----
-
-## 🔧 Architecture Decisions
-
-### Why Zero-Runtime Tokens?
-- **Build-time resolution** eliminates cascading complexity and runtime lookups
-- **Static CSS** means smaller bundle, faster first paint, no layout thrashing
-- **Type safety** — token paths are compile-time verified (via `g()` function)
-
-### Why `map.get()` over CSS variables?
-- **Determinism** — no fallback chain ambiguity; every role is resolved once
-- **Themeing is explicit** — runtime `--md-sys-color-*` variables are the only moving parts
-- **DX** — typos in role names are caught at build time, not runtime
-
-### Why 1rem = 1px?
-- **Designer-to-code fidelity** — copy the px value directly; no mental arithmetic
-- **Fluid scaling** — breakpoints adjust the root font-size, not individual properties
-- **Maintenance** — one global rule scales the entire design consistently
-
-### Nuxt Module Architecture
-The kit is a **Nuxt module** built with `@nuxt/module-builder`. `src/module.ts` registers the
-components, auto-imports, plugins, SCSS pipeline and MD3 theming; `src/runtime/` holds everything
-shipped to the consumer. It's published built (`dist/`), and its own Nuxt dependencies are declared
-via `moduleDependencies`. This gives:
-- **Zero-config consumption** — register in `modules`, dependencies install themselves
-- **Theme centralization** — one `materialKit` config drives the generated MD3 SCSS
-- **Reusable patterns** — components, composables, utilities exposed via auto-import
-
----
-
-## 🌍 Browser Support
-
-Requires modern CSS support:
-- **Chrome/Edge** — 120+
-- **Firefox** — 121+
-- **Safari** — 17+
-
-Features used: CSS variables, `color-mix()`, `calc()`, Grid/Flexbox, `contain`.
-
----
-
-## 📚 Key Files & Conventions
-
-| File | Purpose |
-|------|---------|
-| `app/components/ui/` | Public library components (`<MButton>`, `<MCard>`, etc.) |
-| `app/components/fragments/` | Private component leaves imported explicitly by their owners |
-| `app/components/core/` | Internal application and overlay runtime infrastructure |
-| `app/assets/stylesheet/abstracts/` | `g()` function, `material-map()`, `$theme-*` links |
-| `app/assets/stylesheet/components/` | Per-component `$tokens` map + styles |
-| `app/modules/kit/module.ts` | Theme build engine; generates `--md-sys-color-*` |
-| `app/store/theme.ts` | Runtime theme state (light/dark, palette, contrast) |
-| `.cursor/rules/` | Migration guides, M3 token architecture |
-
----
-
-## 📖 For Developers
-
-### Adding a Component
-1. Create the public root at `app/components/ui/<name>/index.vue`
-2. Create `app/assets/stylesheet/components/<name>/index.scss` with `$tokens` map
-3. Import and resolve tokens via `g($t, 'path')`
-4. Add `@use '~/assets/stylesheet/components/<name>/index' as t;` to `<style>`
-5. Place private leaves under `app/components/fragments/<name>/` and import them explicitly
-6. Place component unit tests next to their owner as `index.spec.ts`
-7. Run `npm run lint && npm run lint:style` — must pass 0 errors
-
-Every `.vue` file under `app/components/ui/` is part of the public `M*`
-auto-import surface. Private leaves must never be placed there. The Nuxt scanner
-only reads `.vue` files from `ui/` and `core/`; support files such as `props.ts`
-and `types.ts` are imported normally and are not components.
-
-### Migrating a Component to M3 Tokens
-- See `.cursor/rules/migration_workflow.md`
-- Follow the pattern: no local vars, all colors via `map.get($theme-color-link, role)`
-- Use `color-mix()` for states (8% hover, 12% pressed)
-- No `--custom-properties` for component states
-
-### Debugging Tokens
-Token paths that resolve to `null` silently drop CSS declarations (no build error). Validate offline:
-```typescript
-// replicate g() locally
-const path = 'primary-container-color'
-const map = { primary: { container: { color: '#...' } } }
-const result = path.split('-').reduce((m, k) => m?.[k], map)
-console.log(result) // should not be null/undefined
+provideValidationAdapter(veeValidateAdapter())
 ```
 
----
+`vee-validate` and `yup` are the kit's dev dependencies only — an app that never calls
+`provideValidationAdapter` ships neither.
 
-## 🗂️ Project Structure
+## Responsive
 
-```
-kit/
-├── app/
-│   ├── components/
-│   │   ├── ui/              # Public library components (<MButton>, …)
-│   │   ├── fragments/       # Private leaves, explicit imports only
-│   │   └── core/            # Overlay/modals infrastructure (core-scope)
-│   ├── composables/         # Vue 3 Composition API utilities
-│   ├── assets/stylesheet/   # Token system + styling
-│   ├── modules/
-│   │   └── kit/
-│   │       └── module.ts    # Theme color generation (build-time SCSS)
-│   ├── plugins/
-│   ├── store/               # Pinia (theme state)
-│   └── app.vue              # Root: overlay host + page outlet (for consumers)
-├── shared/
-│   ├── constants/
-│   ├── types/               # Public prop types (props.ts) + kit config types
-│   └── utils/               # propsFactory, props/, defineKit, …
-├── nuxt.config.ts           # Layer entry (package "." export)
-├── tests/                   # Vitest + Playwright
-└── CLAUDE.md                # Development guide
+```ts
+const { is, more, less } = useBreakpoint()
 ```
 
----
+Flags are camelCased breakpoint names. Defaults are `mobile-xs: 0`, `mobile: 767`,
+`tablet-xs: 768`, `tablet: 1199`, `desktop-xs: 1200`, `desktop: 1920`; override or extend
+them via `materialKit.breakpoints`. The underlying viewport state is shared app-wide and
+updated by a single listener.
 
-## 🚀 Roadmap
+For the application shell — app bars, rails, sticky footers, the 4/8/12-column grid — see
+[docs/layout.md](docs/layout.md).
 
-- [x] **Phase 0** — Token system foundation (abstracts, Zero-Runtime pattern)
-- [x] **Phase 1** — Core components (button, field, chip, card, etc.)
-- [x] **Phase 2** — Complete M3 (30+ components, all states, dark mode)
-- [x] **Phase 3** — Production hardening (lint, test, color-role sweep, type safety)
-- [ ] **Phase 4** — Docs site launch (isolated showcase, live Storybook-style playground)
-- [ ] **Phase 5** — Theming portal (visual palette editor, export configs)
+## Documentation
 
----
+| Document | Contents |
+| :--- | :--- |
+| [docs/configuration.md](docs/configuration.md) | Every `materialKit` option, cookies, breakpoints, restrictions |
+| [docs/architecture.md](docs/architecture.md) | Token system, `g()`, color roles, fluid typography, theming pipeline |
+| [docs/layout.md](docs/layout.md) | Auto-layout carving engine, zones, sticky mechanics, column system |
+| [docs/contributing.md](docs/contributing.md) | Repository layout, conventions, adding a component, quality gates |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Planned work |
 
-## 📄 License
+## Browser support
+
+Chrome/Edge 120+, Firefox 121+, Safari 17+. The kit relies on `color-mix()`, CSS custom
+properties, `calc()`, Grid with `subgrid`, and `contain`.
+
+## License
 
 MIT — see [LICENSE](./LICENSE).
-
----
-
-<div align="center">
-  Built with ❤️ by the PrimeTime Team
-</div>
