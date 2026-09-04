@@ -147,9 +147,17 @@ export default defineNuxtModule<MaterialKitOptions>({
 
     nuxt.options.build.transpile.push('@material/material-color-utilities')
 
-    // Deliberately not global: global registration puts all ~90 components in the
-    // entry graph, so a page rendering one button still downloads and parses every
-    // chunk. Auto-import resolves `<m-*>` in consumer templates without it.
+    const runtimeDir = runtime('.').replace(/\\/g, '/')
+
+    nuxt.options.build.transpile.push(runtimeDir)
+
+    nuxt.options.imports ||= {}
+    nuxt.options.imports.transform ||= {}
+    nuxt.options.imports.transform.include ||= []
+    nuxt.options.imports.transform.include.push(
+      new RegExp(`^${runtimeDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+    )
+
     addComponentsDir({
       path: runtime('components/ui'),
       extensions: ['vue'],
