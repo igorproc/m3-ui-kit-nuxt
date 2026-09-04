@@ -1,8 +1,175 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NUMBER INPUT COMPONENT TOKENS
+// ==========================================
+// Anatomy: a floating label (mechanics shared with `<MTextField>`), a container
+// that owns the border and the surface, and stepper zones that span the full
+// height of that container.
+// The full-height zone is the load-bearing decision. Centred icon buttons sat
+// on the container's mid-line while the value sat lower — pushed down by the
+// padding that makes room for the raised label — so the two never lined up. A
+// zone that spans the whole box has no mid-line to disagree about, and it adds
+// no height of its own the way a button with its own min-size did.
+// ==========================================
+
+// One source of truth for the default height: the container token and the
+// `default` density entry are the same number by construction.
+$field-height: 56rem;
 $tokens: (
-  controls: (
+  container: (
+    height: $field-height,
     gap: 4rem,
-    stacked: (
-      gap: 0,
+    padding: (inline: 16rem),
+    border: (width: 1rem, color: map.get($theme-color-link, outline)),
+    surface: transparent,
+  ),
+  typography: (
+    label: 'body-large',
+    input: 'body-large',
+    support: 'body-small',
+    unit: 'label-large',
+    scrub: 'label-large',
+  ),
+  label: (
+    left: 16rem,
+    color: map.get($theme-color-link, on-surface-variant),
+    // Leading split zone pushes the label past it, so the two never overlap.
+    split: (left: 60rem),
+    // Raised label lifts by transform only — no reflow, no font-size animation.
+    active: (scale: 0.75, raise: (filled: 18rem)),
+    required: (color: map.get($theme-color-link, error)),
+  ),
+  input: (
+    color: map.get($theme-color-link, on-surface),
+    placeholder: (color: map.get($theme-color-link, on-surface-variant)),
+  ),
+  adornment: (
+    gap: 8rem,
+    color: map.get($theme-color-link, on-surface-variant),
+    size: 24rem,
+  ),
+  // Trailing suffix. Part of the container — one focus ring, one label, no
+  // alignment drift against a separate control. Plain text on the field's own
+  // surface: a tinted box with a rule down its left edge is `input-group`, and
+  // Material separates by tone and shape, never by a hairline inside a control.
+  unit: (
+    color: map.get($theme-color-link, on-surface-variant),
+    gap: 4rem,
+    padding: (inline: 8rem, block: 6rem),
+    caret: (size: 18rem),
+    selected: (color: map.get($theme-color-link, primary)),
+    menu: (min-width: 96rem),
+  ),
+  // Stepper zones. Separated from the value by tone and corner radius — never
+  // by a divider: a hairline inside a control is the one thing Material never
+  // draws, and three of them in a row is exactly what reads as a form toolkit.
+  stepper: (
+    color: map.get($theme-color-link, on-surface-variant),
+    inset: 4rem,
+    // Transparent containers can step up to the next surface tone. `filled`
+    // already sits on the highest one, so there its zone is a state layer.
+    surface: map.get($theme-color-link, surface-container-high),
+    filled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, transparent)),
+    disabled: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent)),
+    // Touch-safe zones at both edges, value between them.
+    split: (width: 40rem, height: 40rem, size: 24rem),
+    // One narrow column of arrows at the trailing edge. Desktop only.
+    stacked: (width: 30rem, height: 44rem, size: 16rem),
+    // One tier rounder than the container it sits in, so the zone always reads
+    // as an object placed inside the box rather than a slice cut out of it.
+    radius: (
+      sharp: map.get($theme-shape-link, 'extra-small'),
+      small: map.get($theme-shape-link, 'medium'),
+      medium: map.get($theme-shape-link, 'large'),
+      large: map.get($theme-shape-link, 'extra-large'),
+      pill: map.get($theme-shape-link, 'full'),
     ),
+  ),
+  // MD3 state layer: an overlay in the element's own ink, never a background
+  // swap — the tone underneath has to keep showing through.
+  layer: (hover: 0.08, pressed: 0.12),
+  // The label doubles as a horizontal drag target; the dotted rule is the only
+  // hint the gesture exists, so it is always visible, never hover-only.
+  scrub: (
+    color: map.get($theme-color-link, primary),
+    padding: (inline: 12rem),
+    gap: 2rem,
+    border: (width: 1rem, style: dotted),
+    active: (color: map.get($theme-color-link, primary)),
+  ),
+  support: (
+    padding: (inline: 16rem),
+    margin: (top: 4rem),
+    color: map.get($theme-color-link, on-surface-variant),
+  ),
+  // Vertical scale. Height and padding only — type size never changes, so a
+  // compact field and a comfortable one still align their values. `compact`
+  // keeps its stepper zone at 32rem, clear of the 24rem WCAG 2.5.8 floor.
+  density: (
+    compact: (
+      height: 44rem,
+      label: (raise: 14rem),
+      input: (padding: (top: 18rem, bottom: 4rem)),
+      stepper: (split: 32rem, stacked: 36rem),
+    ),
+    default: (
+      height: $field-height,
+      label: (raise: 18rem),
+      input: (padding: (top: 24rem, bottom: 8rem)),
+      stepper: (split: 40rem, stacked: 44rem),
+    ),
+    comfortable: (
+      height: 64rem,
+      label: (raise: 20rem),
+      input: (padding: (top: 28rem, bottom: 10rem)),
+      stepper: (split: 40rem, stacked: 48rem),
+    ),
+  ),
+  state: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
+  // Focus moves the border hue and nothing else — a width change has to be paid
+  // back in padding, and neither of the two transitions smoothly.
+  focused: (
+    border: (color: map.get($theme-color-link, primary)),
+    label: (color: map.get($theme-color-link, primary)),
+  ),
+  error: (
+    border: (color: map.get($theme-color-link, error)),
+    color: map.get($theme-color-link, error),
+  ),
+  disabled: (
+    surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent),
+    border: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) 12%, transparent)),
+    color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent),
+  ),
+  filled: (
+    surface: map.get($theme-color-link, surface-container-highest),
+    border: (color: map.get($theme-color-link, on-surface-variant)),
+    // Asymmetric on purpose: the raised label occupies the top of the box.
+    input: (padding: (top: 24rem, bottom: 8rem)),
+    hover: (
+      surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, map.get($theme-color-link, surface-container-highest)),
+      border: (color: map.get($theme-color-link, on-surface)),
+    ),
+    disabled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent)),
+  ),
+  outlined: (
+    label: (
+      padding: (inline: 4rem),
+      margin: (left: -4rem),
+      surface: map.get($theme-color-link, surface),
+    ),
+    hover: (border: (color: map.get($theme-color-link, on-surface))),
+  ),
+  rounded: (
+    sharp: map.get($theme-shape-link, 'none'),
+    small: map.get($theme-shape-link, 'extra-small'),
+    medium: map.get($theme-shape-link, 'medium'),
+    large: map.get($theme-shape-link, 'large'),
+    pill: map.get($theme-shape-link, 'full'),
   ),
 );

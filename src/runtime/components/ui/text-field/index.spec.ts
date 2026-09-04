@@ -151,3 +151,59 @@ describe('m-text-field', () => {
     expect(wrapper.attributes('data-append')).toBeDefined()
   })
 })
+
+async function mount(props: Record<string, unknown> = {}) {
+  return mountSuspended(MTextField, { props })
+}
+
+describe('m-text-field · axes', () => {
+  describe('label placement', () => {
+    it('defaults to float, the placement this field shipped with', async () => {
+      const wrapper = await mount({ label: 'Name' })
+
+      expect(wrapper.classes()).toContain('ui-text-field--label-float')
+    })
+
+    it.each(['top', 'float', 'inset', 'hidden'] as const)('carries %s on the root, independent of the shape', async (placement) => {
+      const wrapper = await mount({ label: 'Name', labelPlacement: placement, variant: 'outlined' })
+
+      expect(wrapper.classes()).toContain(`ui-text-field--label-${placement}`)
+      expect(wrapper.classes()).toContain('ui-text-field--outlined')
+    })
+
+    it('keeps a hidden label in the document, and keeps it associated', async () => {
+      const wrapper = await mount({ label: 'Search', labelPlacement: 'hidden' })
+      const label = wrapper.find('label.ui-text-field__label')
+
+      expect(label.exists()).toBe(true)
+      expect(label.attributes('for')).toBe(wrapper.find('input').attributes('id'))
+    })
+
+    it('renders no label element at all when there is no label to place', async () => {
+      const wrapper = await mount({ labelPlacement: 'top' })
+
+      expect(wrapper.find('label.ui-text-field__label').exists()).toBe(false)
+    })
+  })
+
+  describe('density', () => {
+    it('defaults to the scale this field shipped with', async () => {
+      const wrapper = await mount()
+
+      expect(wrapper.classes()).toContain('ui-text-field--density-default')
+    })
+
+    it.each(['compact', 'default', 'comfortable'] as const)('carries %s on the root', async (density) => {
+      const wrapper = await mount({ density })
+
+      expect(wrapper.classes()).toContain(`ui-text-field--density-${density}`)
+    })
+
+    it('is independent of placement — the two axes never collapse into one', async () => {
+      const wrapper = await mount({ label: 'Name', density: 'compact', labelPlacement: 'inset' })
+
+      expect(wrapper.classes()).toContain('ui-text-field--density-compact')
+      expect(wrapper.classes()).toContain('ui-text-field--label-inset')
+    })
+  })
+})

@@ -51,7 +51,8 @@
     "preview": "nuxt preview",
     "test": "vitest",
     "lint": "eslint .",
-    "lint:style": "stylelint **/*.{vue,css,scss}"
+    "lint:style": "stylelint **/*.{vue,css,scss}",
+    "lint:scss": "node scripts/scss-smoke.mjs"
   },
   "dependencies": {
     "@iconify-json/ic": "^1.2.4",

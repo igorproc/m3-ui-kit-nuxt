@@ -163,7 +163,7 @@ export function useSlider(
     let minDiff = Infinity
 
     for (let idx = 0; idx < currentValues.length; idx++) {
-      const diff = Math.abs(currentValues?.[idx] || 0 - value)
+      const diff = Math.abs((currentValues[idx] ?? 0) - value)
 
       if (diff < minDiff) {
         minDiff = diff

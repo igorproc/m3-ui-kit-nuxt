@@ -77,7 +77,52 @@
 
   $keys: list.append($keys, $remaining);
 
-  @return map.get($map, $keys...);
+  // Walk key by key rather than calling `map.get` with the whole path: a miss
+  // used to return `null`, Sass then dropped the declaration, and the rule
+  // silently vanished from the build. Failing here names the exact segment that
+  // broke and what was available beside it.
+  $cursor: $map;
+  $walked: '';
+
+  // A miss is reported differently per separator, and the reason is not taste.
+  // The legacy dash form cannot address a key that itself contains a dash
+  // (`grid-name`, `min-height`, `hover-color`) — it splits the key apart — so
+  // it has been resolving to null, and Sass has been dropping those
+  // declarations, since long before this check existed. Failing on the
+  // canonical dot form makes new code strict; warning on the dash form surfaces
+  // that backlog on every build without bricking it.
+  @each $key in $keys {
+    $where: if(sass($walked == ''): '(root)'; else: $walked);
+
+    @if meta.type-of($cursor) != 'map' {
+      $detail: 'Token path `#{$path}` continues past a leaf value at `#{$where}`.';
+
+      @if $separator == '.' {
+        @error $detail;
+      }
+
+      @warn $detail;
+      @return null;
+    }
+
+    $next: map.get($cursor, $key);
+
+    @if not $next {
+      $detail: 'Unknown token segment `#{$key}` in path `#{$path}`. Available under `#{$where}`: #{map.keys($cursor)}.';
+
+      @if $separator == '.' {
+        @error $detail;
+      }
+
+      @warn $detail;
+      @return null;
+    }
+
+    $walked: if(sass($walked == ''): $key; else: '#{$walked}.#{$key}');
+    $cursor: $next;
+  }
+
+  @return $cursor;
 }
 
 

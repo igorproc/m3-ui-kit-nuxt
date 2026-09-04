@@ -1,6 +1,5 @@
 <template>
   <div
-    ref="thumbRef"
     class="ui-slider-thumb"
     :class="[
       { 'ui-slider-thumb--vertical': orientation === 'vertical' },
@@ -8,21 +7,6 @@
       { 'ui-slider-thumb--disabled': disabled },
       { 'ui-slider-thumb--readonly': readonly },
     ]"
-    role="slider"
-    :tabindex="disabled ? -1 : 0"
-    :aria-valuenow="value"
-    :aria-valuemin="valueMin"
-    :aria-valuemax="valueMax"
-    :aria-orientation="ariaOrientation || orientation"
-    :aria-disabled="disabled ? 'true' : undefined"
-    :aria-readonly="readonly ? 'true' : undefined"
-    :aria-label="ariaLabel"
-    :aria-labelledby="ariaLabelledby"
-    :aria-valuetext="ariaValuetext || String(value)"
-    :data-state="isDragging ? 'dragging' : 'idle'"
-    :style="positionStyle"
-    @pointerdown="onPointerdown"
-    @keydown="onKeydown"
   >
     <div class="ui-slider-thumb__state-layer" />
 
@@ -45,68 +29,28 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * Presentation only. Role, tabindex, `aria-value*`, axis position and the
+ * pointer/keyboard handlers arrive as fallthrough attrs from
+ * `useSliderControl().getThumbAttrs(index)` — the same bag any consumer can
+ * spread onto their own markup.
+ */
 interface Props {
   value: number
-  pct: number
   showValue?: boolean
   disabled?: boolean
   readonly?: boolean
   orientation?: 'horizontal' | 'vertical'
-  ariaOrientation?: 'horizontal' | 'vertical'
   isDragging?: boolean
-  ariaLabel?: string
-  ariaLabelledby?: string
-  ariaValuetext?: string
-  valueMin?: number
-  valueMax?: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   showValue: false,
   disabled: false,
   readonly: false,
   orientation: 'horizontal',
-  ariaOrientation: undefined,
   isDragging: false,
-  ariaLabel: undefined,
-  ariaLabelledby: undefined,
-  ariaValuetext: undefined,
-  valueMin: 0,
-  valueMax: 100,
 })
-
-const emit = defineEmits<{
-  (e: 'pointerdown', event: PointerEvent, thumbEl: HTMLElement): void
-  (e: 'keydown', event: KeyboardEvent): void
-}>()
-
-const thumbRef = ref<HTMLElement | null>(null)
-
-const positionStyle = computed(() => {
-  const isVertical = props.orientation === 'vertical'
-  return {
-    [isVertical ? 'bottom' : 'left']: `calc(${props.pct}% - 24rem)`,
-    'touch-action': 'none',
-  }
-})
-
-const onPointerdown = (e: PointerEvent) => {
-  if (props.disabled || props.readonly) {
-    return
-  }
-
-  if (thumbRef.value) {
-    emit('pointerdown', e, thumbRef.value)
-  }
-}
-
-const onKeydown = (e: KeyboardEvent) => {
-  if (props.disabled || props.readonly) {
-    return
-  }
-
-  emit('keydown', e)
-}
 </script>
 
 <style lang="scss">
@@ -119,7 +63,10 @@ $prefix: 'ui-slider-thumb';
 
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
+
+  // The control bag positions the box edge (`left`/`bottom: <percent>`); the
+  // translate is what puts the knob's centre on that percentage.
+  transform: translate(-50%, -50%);
   width: 48rem;
   height: 48rem;
   display: flex;
@@ -133,7 +80,7 @@ $prefix: 'ui-slider-thumb';
   &--vertical {
     top: auto;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, 50%);
   }
 
   &--disabled {

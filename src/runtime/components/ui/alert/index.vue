@@ -150,7 +150,7 @@ const close = () => {
   }
 
   &__content {
-    flex: 1 1 g($t, 'content.min-width');
+    flex: 1 1 g($t, 'content.min.width');
     min-width: 0;
   }
 

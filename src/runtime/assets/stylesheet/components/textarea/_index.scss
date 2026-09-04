@@ -1,38 +1,126 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TEXTAREA COMPONENT TOKENS
+// ==========================================
+// Anatomy: a static top label, a container that owns the border/surface, and a
+// support row that carries the message on the left and the counter on the
+// right. The label never animates and never overlays the value — a multi-line
+// control has no free first line to float into.
+// State chrome mirrors `<MTextField>` on purpose (border tone on hover, border
+// width on focus) so the two fields read as one family.
+// ==========================================
 
 $tokens: (
   container: (
-    min: (
-      height: 96rem,
+    gap: 4rem,
+    border: (width: 1rem, color: map.get($theme-color-link, outline)),
+    surface: transparent,
+    padding: (inline: 16rem, block: 12rem),
+  ),
+  typography: (
+    label: 'body-medium',
+    input: 'body-large',
+    support: 'body-small',
+  ),
+  label: (
+    gap: 16rem,
+    color: map.get($theme-color-link, on-surface-variant),
+    required: (color: map.get($theme-color-link, error)),
+    active: (scale: 0.75),
+    // Overlay placements: where the label sits inside the box, and how much
+    // room the value gives up for it.
+    inset: (top: 8rem, body-padding: 26rem),
+    notch: (
+      surface: map.get($theme-color-link, surface),
+      padding: (inline: 4rem),
+      margin: (left: -4rem),
     ),
   ),
   input: (
-    min: (
-      height: 72rem,
-    ),
-    padding: (
-      block: 8rem,
-    ),
-    line: (
-      height: 24rem,
-    ),
-    resize: (
-      none: none,
-      vertical: vertical,
-      horizontal: horizontal,
-      both: both,
-    ),
+    color: map.get($theme-color-link, on-surface),
+    line-height: 24rem,
+    rows: 3,
+    placeholder: (color: map.get($theme-color-link, on-surface-variant)),
   ),
-  counter: (
-    padding: (
-      inline: 16rem,
-    ),
-    margin: (
-      top: 4rem,
-    ),
-    color: map.get($theme-color-link, 'on-surface-variant'),
-    typography: 'body-small',
+  adornment: (
+    gap: 8rem,
+    color: map.get($theme-color-link, on-surface-variant),
+    size: 20rem,
+  ),
+  support: (
+    gap: 16rem,
+    // Spacing between the error glyph and its message.
+    icon: (gap: 6rem, size: 16rem),
+    min-height: 18rem,
+    margin: (top: 4rem),
+    padding: (inline: 16rem),
+    color: map.get($theme-color-link, on-surface-variant),
+  ),
+  counter: (color: map.get($theme-color-link, on-surface-variant)),
+  // Toolbar row the container absorbs. Separated from the value by a step of
+  // tone, never by a rule: a hairline inside a control is the one thing
+  // Material does not draw. `filled` already sits on the highest surface, so
+  // there the step is a state layer instead of the next tone.
+  footer: (
+    gap: 8rem,
+    padding: (inline: 10rem, block: 7rem),
+    surface: map.get($theme-color-link, surface-container-high),
+    filled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, transparent)),
+  ),
+  // Drag handle — the same grabber a bottom sheet uses, centred on the bottom
+  // edge. The old corner mark was the native OS resize glyph, which Material
+  // has no equivalent of, and at 10rem it was too small to find: that is what
+  // read as "Tab does nothing". The bar is wide, and its hit area is wider.
+  grip: (
+    width: 44rem,
+    height: 5rem,
+    inset: 6rem,
+    // Vertical space reserved under the value so the two never collide.
+    band: 20rem,
+    hit: (width: 72rem, height: 16rem),
+    color: map.get($theme-color-link, outline-variant),
+    hover: (color: map.get($theme-color-link, on-surface-variant)),
+    focus: (color: map.get($theme-color-link, primary)),
+  ),
+  // MD3 state layer: an overlay in the element's own ink, never a background
+  // swap — whatever tone sits underneath has to keep showing through.
+  layer: (hover: 0.08, pressed: 0.12),
+  state: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+    grow: (duration: 120ms, easing: ease-out),
+  ),
+  // Focus moves the border hue and nothing else: a width change would have to be
+  // paid back in padding, and neither of the two can transition smoothly.
+  focused: (
+    border: (color: map.get($theme-color-link, primary)),
+    label: (color: map.get($theme-color-link, primary)),
+  ),
+  error: (
+    border: (color: map.get($theme-color-link, error)),
+    color: map.get($theme-color-link, error),
+  ),
+  disabled: (
+    surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent),
+    border: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) 12%, transparent)),
+    color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent),
+  ),
+  filled: (
+    surface: map.get($theme-color-link, surface-container-highest),
+    border: (color: map.get($theme-color-link, on-surface-variant)),
+    hover: (border: (color: map.get($theme-color-link, on-surface))),
+    disabled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent)),
+  ),
+  outlined: (
+    hover: (border: (color: map.get($theme-color-link, on-surface))),
+  ),
+  rounded: (
+    sharp: map.get($theme-shape-link, 'none'),
+    small: map.get($theme-shape-link, 'extra-small'),
+    medium: map.get($theme-shape-link, 'medium'),
+    large: map.get($theme-shape-link, 'large'),
+    pill: map.get($theme-shape-link, 'full'),
   ),
 );
-

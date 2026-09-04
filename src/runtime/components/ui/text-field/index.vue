@@ -1,7 +1,12 @@
 <template>
   <div
     class="ui-text-field"
-    :class="[`ui-text-field--${variant}`, `ui-text-field--${rounded}`]"
+    :class="[
+      `ui-text-field--${variant}`,
+      `ui-text-field--${rounded}`,
+      `ui-text-field--label-${labelPlacement}`,
+      `ui-text-field--density-${density}`,
+    ]"
     :data-focused="isFocused || undefined"
     :data-populated="isPopulated || undefined"
     :data-error="isError || undefined"
@@ -124,6 +129,22 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/text-field' as t;
 
+$t-field: material-map(t.$tokens, 'm-text-field');
+
+// The two raised positions, named once so the placement branches below stay a
+// list of selectors instead of a list of copied transforms.
+@mixin field-label-raised-inside($raise) {
+  transform: translateY(calc(-50% - #{$raise})) scale(g($t-field, 'label.active.scale'));
+}
+
+@mixin field-label-raised-notch($height) {
+  background-color: g($t-field, 'outlined.label.bg');
+
+  // Lift the label's center by exactly half the control height so it lands on
+  // the top border (origin is centered, so no scale fudge).
+  transform: translateY(calc(-50% - #{$height} / 2)) scale(g($t-field, 'label.active.scale'));
+}
+
 .ui-text-field {
   $t: material-map(t.$tokens, 'm-text-field');
 
@@ -139,16 +160,17 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
     @include typescale(g($t, 'typography.label'));
   }
 
-  // Every shape shares one absolutely-overlaid label, moved by transform
-  // only — position/font-size never animate (no reflow, no jump).
-  &--filled,
-  &--outlined,
-  &--underline,
-  &--ghost {
+  // ── label placement · an axis of its own, independent of the shape ──
+  // Base is `top`: the label is a block above the container. Everything else is
+  // an override, so a placement can never be half-applied by a missing branch.
+
+  // Overlay placements. The label is lifted out of flow and onto the container;
+  // it moves by transform only, so position and font-size never animate.
+  &--label-float,
+  &--label-inset {
     > .ui-text-field__label {
       position: absolute;
       left: g($t, 'label.left');
-      top: calc(#{g($t, 'container.height')} / 2);
       z-index: 1;
       max-width: calc(100% - 32rem);
       overflow: hidden;
@@ -166,7 +188,18 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
     }
   }
 
-  &[data-prepend] > .ui-text-field__label {
+  // Present for assistive tech, absent for the eye.
+  &--label-hidden > .ui-text-field__label {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  &--label-float[data-prepend] > .ui-text-field__label,
+  &--label-inset[data-prepend] > .ui-text-field__label {
     left: g($t, 'label.prepend.left');
   }
 
@@ -174,7 +207,6 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
     position: relative;
     display: flex;
     align-items: center;
-    min-height: g($t, 'container.height');
     padding-inline: g($t, 'container.padding.inline');
     border: g($t, 'container.border.width') solid transparent;
     transition:
@@ -258,11 +290,6 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
     border-radius: g($t, 'filled.radius');
     background-color: g($t, 'filled.bg');
 
-    .ui-text-field__input {
-      padding-top: g($t, 'filled.input.padding.top');
-      padding-bottom: g($t, 'filled.input.padding.bottom');
-    }
-
     &:hover {
       border-bottom-color: g($t, 'filled.hover.border.bottom.color');
       background-color: g($t, 'filled.hover.bg');
@@ -271,7 +298,7 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
 
   &--outlined .ui-text-field__control {
     border-color: g($t, 'outlined.border.color');
-    border-radius: g($t, 'outlined.radius');
+    border-radius: g($t, 'outlined.border.radius');
     background-color: transparent;
 
     &:hover {
@@ -279,7 +306,8 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
     }
   }
 
-  &--outlined > .ui-text-field__label {
+  &--label-float.ui-text-field--outlined > .ui-text-field__label,
+  &--label-inset.ui-text-field--outlined > .ui-text-field__label {
     padding-inline: g($t, 'outlined.label.padding.inline');
     margin-left: g($t, 'outlined.label.margin.left');
   }
@@ -297,73 +325,81 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
     }
   }
 
-  &--underline > .ui-text-field__label {
+  &--label-float.ui-text-field--underline > .ui-text-field__label,
+  &--label-inset.ui-text-field--underline > .ui-text-field__label {
     left: 0;
   }
 
   &--underline[data-focused] .ui-text-field__control {
     border-bottom-color: g($t, 'outlined.focused.border.color');
-    border-bottom-width: g($t, 'outlined.focused.border.width');
-  }
-
-  // ── ghost: dashed hint at rest, firms into the outlined box on interaction ──
-  &--ghost .ui-text-field__control {
-    border-style: dashed;
-    border-color: g($t, 'outlined.border.color');
-    border-radius: g($t, 'outlined.radius');
-    background-color: transparent;
-
-    &:hover {
-      border-style: solid;
-      border-color: g($t, 'outlined.hover.border.color');
-      background-color: color-mix(in srgb, #{g($t, 'input.color')} 4%, transparent);
-    }
-  }
-
-  &--ghost[data-focused] .ui-text-field__control {
-    padding-inline: g($t, 'outlined.focused.padding.inline');
-    border-style: solid;
-    border-width: g($t, 'outlined.focused.border.width');
-    border-color: g($t, 'outlined.focused.border.color');
   }
 
   // Shared focused label accent for the added shapes.
-  &--underline[data-focused] > .ui-text-field__label,
-  &--ghost[data-focused] > .ui-text-field__label {
+  &--underline[data-focused] > .ui-text-field__label {
     color: g($t, 'outlined.focused.label.color');
   }
 
-  // ── raised label (focused OR populated) — transform only ──────
-  // Translate-raise shapes: label lifts above the value — transform only.
-  &--filled[data-focused] > .ui-text-field__label,
-  &--filled[data-populated] > .ui-text-field__label,
-  &--underline[data-focused] > .ui-text-field__label,
-  &--underline[data-populated] > .ui-text-field__label {
-    transform: translateY(calc(-50% - #{g($t, 'label.active.raise.filled')})) scale(g($t, 'label.active.scale'));
+  // ── density · height, padding and the raise that follows from them ────
+  // Every height-dependent rule is emitted here, once per step, so a density
+  // can never be half-applied by a branch someone forgot to add.
+  @each $d in compact, default, comfortable {
+    $height: g($t, 'density.#{$d}.height');
+    $raise: g($t, 'density.#{$d}.label.raise');
+
+    &--density-#{$d} .ui-text-field__control {
+      min-height: $height;
+    }
+
+    &--density-#{$d}.ui-text-field--label-float > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-inset > .ui-text-field__label {
+      top: calc(#{$height} / 2);
+    }
+
+    // The asymmetric padding exists only to clear a label sitting inside the
+    // box. With the label above, beside, or gone, the value returns to centre.
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--filled .ui-text-field__input,
+    &--density-#{$d}.ui-text-field--label-inset.ui-text-field--filled .ui-text-field__input {
+      padding-top: g($t, 'density.#{$d}.input.padding.top');
+      padding-bottom: g($t, 'density.#{$d}.input.padding.bottom');
+    }
+
+    // `inset` holds the raised position always; `float` reaches it once the
+    // field is focused or has a value. Same transform — only the when differs.
+    &--density-#{$d}.ui-text-field--label-inset.ui-text-field--filled > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-inset.ui-text-field--underline > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--filled[data-focused] > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--filled[data-populated] > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--underline[data-focused] > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--underline[data-populated] > .ui-text-field__label {
+      @include field-label-raised-inside($raise);
+    }
+
+    // Notch shapes: the label rises onto the top border, with a surface patch
+    // behind it so the outline reads as notched rather than crossed out.
+    &--density-#{$d}.ui-text-field--label-inset.ui-text-field--outlined > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--outlined[data-focused] > .ui-text-field__label,
+    &--density-#{$d}.ui-text-field--label-float.ui-text-field--outlined[data-populated] > .ui-text-field__label {
+      @include field-label-raised-notch($height);
+    }
   }
 
-  // Notch shapes: label rises onto the top border — transform only — with a
-  // surface patch behind it so the outline reads as notched.
-  &--outlined[data-focused] > .ui-text-field__label,
-  &--outlined[data-populated] > .ui-text-field__label,
-  &--ghost[data-focused] > .ui-text-field__label,
-  &--ghost[data-populated] > .ui-text-field__label {
-    background-color: g($t, 'outlined.label.bg');
-
-    // Lift the label's center by exactly half the control height so it lands on
-    // the top border (origin is centered, so no scale fudge).
-    transform: translateY(calc(-50% - #{g($t, 'container.height')} / 2)) scale(g($t, 'label.active.scale'));
-  }
-
-  &[data-focused] .ui-text-field__input::placeholder,
-  &[data-populated] .ui-text-field__input::placeholder {
+  // A placeholder is hidden only while a floating label is sitting on top of
+  // it. Every other placement leaves the first line free.
+  &--label-float[data-focused] .ui-text-field__input::placeholder,
+  &--label-float[data-populated] .ui-text-field__input::placeholder,
+  &--label-top .ui-text-field__input::placeholder,
+  &--label-inset .ui-text-field__input::placeholder,
+  &--label-hidden .ui-text-field__input::placeholder {
     opacity: 1;
   }
 
   // ── focused chrome ────────────────────────────────────────────
+  // Focus moves the border hue and nothing else, the same as `<MTextarea>` and
+  // `<MNumberInput>`. A width bump has to be paid back in padding, neither of
+  // the two is in the `transition` list, so both snapped while the colour eased
+  // — and three fields in one form were speaking two focus languages.
   &--filled[data-focused] .ui-text-field__control {
     border-bottom-color: g($t, 'filled.focused.border.bottom.color');
-    border-bottom-width: g($t, 'filled.focused.border.width');
     background-color: g($t, 'filled.focused.bg');
 
     .ui-text-field__label {
@@ -372,8 +408,6 @@ const describedBy = computed(() => displayMessage.value ? messageId.value : unde
   }
 
   &--outlined[data-focused] .ui-text-field__control {
-    padding-inline: g($t, 'outlined.focused.padding.inline');
-    border-width: g($t, 'outlined.focused.border.width');
     border-color: g($t, 'outlined.focused.border.color');
   }
 

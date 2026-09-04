@@ -5,8 +5,11 @@
 // TEXT FIELD M3 COMPONENT TOKENS (NESTED M3 COMPLIANT)
 // ==========================================
 
+// One source of truth for the default height: the container token and the
+// `default` density entry are the same number by construction.
+$field-height: 56rem;
 $tokens: (
-  container: (height: 56rem,
+  container: (height: $field-height,
     gap: 4rem,
     padding: (inline: 16rem,
       prepend: 12rem,
@@ -45,6 +48,22 @@ $tokens: (
     ),
     min-height: 18rem,
     color: map.get($theme-color-link, on-surface-variant),
+  ),
+  // Vertical scale. Height and padding only — type size never changes, so a
+  // compact field and a comfortable one still align their values.
+  density: (
+    compact: (height: 44rem,
+      label: (raise: 14rem),
+      input: (padding: (top: 18rem, bottom: 4rem)),
+    ),
+    default: (height: $field-height,
+      label: (raise: 18rem),
+      input: (padding: (top: 24rem, bottom: 8rem)),
+    ),
+    comfortable: (height: 64rem,
+      label: (raise: 20rem),
+      input: (padding: (top: 28rem, bottom: 10rem)),
+    ),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),

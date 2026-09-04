@@ -274,7 +274,7 @@ const iconClasses = (position: 'prepend' | 'append') => [
 
     &.ui-field__control--outlined {
       border-color: g($t, 'outlined.border.color');
-      border-radius: g($t, 'outlined.radius');
+      border-radius: g($t, 'outlined.border.radius');
       background-color: transparent;
 
       .ui-field__label {
@@ -360,7 +360,7 @@ const iconClasses = (position: 'prepend' | 'append') => [
     &.ui-field__control--focused {
       &.ui-field__control--filled {
         border-bottom-color: g($t, 'filled.focused.border.bottom.color');
-        border-bottom-width: g($t, 'filled.focused.border.width');
+        border-bottom-width: g($t, 'filled.focused.border.bottom.width');
         background-color: g($t, 'filled.focused.bg');
 
         .ui-field__label {
