@@ -182,6 +182,7 @@ For the application shell — app bars, rails, sticky footers, the 4/8/12-column
 
 | Document | Contents |
 | :--- | :--- |
+| [docs/system/](docs/system/README.md) | The design system itself: axes, colour roles, behaviour contract, decision register (en-US / ru-RU) |
 | [docs/configuration.md](docs/configuration.md) | Every `materialKit` option, cookies, breakpoints, restrictions |
 | [docs/architecture.md](docs/architecture.md) | Token system, `g()`, color roles, fluid typography, theming pipeline |
 | [docs/layout.md](docs/layout.md) | Auto-layout carving engine, zones, sticky mechanics, column system |
