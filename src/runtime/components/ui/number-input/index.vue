@@ -25,7 +25,7 @@
           v-bind="decrementAttrs"
           class="ui-number-input__stepper ui-number-input__stepper--decrement"
         >
-          <MIcon name="round-remove" />
+          <MIcon :name="ICONS.remove" />
         </button>
       </slot>
 
@@ -85,7 +85,7 @@
           v-bind="incrementAttrs"
           class="ui-number-input__stepper ui-number-input__stepper--increment"
         >
-          <MIcon name="round-add" />
+          <MIcon :name="ICONS.add" />
         </button>
       </slot>
 
@@ -102,7 +102,7 @@
             v-bind="incrementAttrs"
             class="ui-number-input__stepper ui-number-input__stepper--increment"
           >
-            <MIcon name="round-keyboard-arrow-up" />
+            <MIcon :name="ICONS.keyboardArrowUp" />
           </button>
         </slot>
 
@@ -115,7 +115,7 @@
             v-bind="decrementAttrs"
             class="ui-number-input__stepper ui-number-input__stepper--decrement"
           >
-            <MIcon name="round-keyboard-arrow-down" />
+            <MIcon :name="ICONS.keyboardArrowDown" />
           </button>
         </slot>
       </span>
@@ -145,6 +145,7 @@
 
 <script setup lang="ts">
 import MIcon from '#kit/components/ui/icon/index.vue'
+import { ICONS } from '#kit/shared/constants/icons'
 import MNumberInputUnit from './unit.vue'
 import { useNumberInputControl } from '#kit/composables/number-input/useNumberInputControl'
 import { mNumberInputProps } from './props'

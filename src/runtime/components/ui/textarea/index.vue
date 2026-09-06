@@ -57,7 +57,7 @@
       >
         <MIcon
           v-if="isError && !$slots.error"
-          name="round-error"
+          :name="ICONS.error"
           class="ui-textarea__message-icon"
           aria-hidden="true"
         />
@@ -95,6 +95,7 @@
 
 <script setup lang="ts">
 import MIcon from '#kit/components/ui/icon/index.vue'
+import { ICONS } from '#kit/shared/constants/icons'
 import { textareaFieldStateKey, useTextareaControl } from '#kit/composables/textarea/useTextareaControl'
 import { mTextareaProps } from './props'
 

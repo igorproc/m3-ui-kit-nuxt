@@ -119,7 +119,7 @@ export interface TextareaControlProps extends TextareaResizeProps {
   autofocus?: boolean
   autocomplete?: string
   spellcheck?: boolean
-  wrap?: MTextareaWrap
+  wrap: MTextareaWrap
   maxlength?: number
   /** `true` counts against `maxlength`; a number sets a display-only limit. */
   counter?: boolean | number
@@ -209,7 +209,7 @@ export function useTextareaControl(
     'id': fieldId,
     'name': props.name ?? props.path,
     'placeholder': props.placeholder,
-    'rows': Math.max(props.rows ?? 3, 1),
+    'rows': Math.max(props.rows, 1),
     'maxlength': props.maxlength,
     'disabled': Boolean(props.disabled),
     'readonly': Boolean(props.readonly),
@@ -217,7 +217,7 @@ export function useTextareaControl(
     'autofocus': Boolean(props.autofocus),
     'autocomplete': props.autocomplete,
     'spellcheck': props.spellcheck,
-    'wrap': props.wrap ?? 'soft',
+    'wrap': props.wrap,
     'aria-invalid': !field.meta.valid || field.isError.value ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,

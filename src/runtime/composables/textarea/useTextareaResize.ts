@@ -34,16 +34,21 @@ const FALLBACK_ROW_HEIGHT = 24
 const KEYBOARD_STEP = 1
 const KEYBOARD_PAGE_STEP = 5
 
-const DEFAULT_ROWS = 3
-
 /**
  * The height-related slice of `<MTextarea>`'s props. Pass the reactive props
  * object straight through — every read happens inside a computed, so a plain
  * object works too for a consumer that has no component around it.
+ *
+ * It is a resolved configuration, not a wish list: `rows` and `resizeLabel` are
+ * required because their defaults belong to the component's props. A fallback
+ * here would be a second copy of the same decision, invisible in the API table
+ * and kept in step by nothing.
  */
 export interface TextareaResizeProps {
-  /** Minimum (and initial) height in rows. @default 3 */
-  rows?: number
+  /** Minimum (and initial) height in rows. */
+  rows: number
+  /** `aria-label` for the grip. */
+  resizeLabel: string
   /** Growth ceiling in rows; `undefined` means uncapped. */
   maxRows?: number
   /** Grow with content instead of staying at `rows`. */
@@ -54,8 +59,6 @@ export interface TextareaResizeProps {
   disabled?: boolean
   /** Read-only fields accept no interaction either. */
   readonly?: boolean
-  /** `aria-label` for the grip. @default 'Resize' */
-  resizeLabel?: string
 }
 
 export interface TextareaGripAttrs {
@@ -111,7 +114,7 @@ export function useTextareaResize(
   const height = shallowRef<number | null>(null)
   const isResizing = shallowRef(false)
 
-  const minRows = computed(() => Math.max(props.rows ?? DEFAULT_ROWS, 1))
+  const minRows = computed(() => Math.max(props.rows, 1))
   const maxRows = computed(() => props.maxRows === undefined
     ? undefined
     : Math.max(props.maxRows, minRows.value))
@@ -261,7 +264,7 @@ export function useTextareaResize(
     'role': 'separator',
     'tabindex': isInactive.value ? -1 : 0,
     'aria-orientation': 'horizontal',
-    'aria-label': props.resizeLabel ?? 'Resize',
+    'aria-label': props.resizeLabel,
     'aria-valuenow': currentRows.value,
     'aria-valuemin': minRows.value,
     'aria-valuemax': maxRows.value,

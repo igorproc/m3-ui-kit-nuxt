@@ -12,6 +12,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { mFieldProps } from '#kit/components/ui/text-field/props'
+import { MESSAGES } from '#kit/shared/constants/messages'
 import type { MFieldLabelPlacement } from '#kit/components/ui/text-field/props'
 import type { MTextareaWrap } from '#kit/composables/textarea/useTextareaControl'
 
@@ -40,7 +41,7 @@ export const mTextareaProps = {
    */
   resizable: { type: Boolean, default: false },
   /** Accessible name of the resize grip. */
-  resizeLabel: { type: String, default: 'Resize' },
+  resizeLabel: { type: String, default: MESSAGES.textareaResize },
   maxlength: { type: Number, default: undefined },
   /** `true` counts against `maxlength`; a number sets a display-only limit. */
   counter: { type: [Boolean, Number] as PropType<boolean | number>, default: false },

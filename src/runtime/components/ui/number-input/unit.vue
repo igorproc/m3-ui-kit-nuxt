@@ -23,7 +23,7 @@
       <slot>{{ current }}</slot>
 
       <MIcon
-        name="round-keyboard-arrow-down"
+        :name="ICONS.keyboardArrowDown"
         class="ui-number-input__unit-caret"
       />
     </button>
@@ -61,6 +61,7 @@
  * value the user typed without being asked is worse than not converting.
  */
 import MIcon from '#kit/components/ui/icon/index.vue'
+import { ICONS } from '#kit/shared/constants/icons'
 import MMenu from '#kit/components/ui/menu/index.vue'
 import type { MNumberInputUnit } from './props'
 

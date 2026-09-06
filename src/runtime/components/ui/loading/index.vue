@@ -29,6 +29,7 @@
       class="ui-loading__expressive"
       :name="currentShape"
       :sequence="expressiveSequence"
+      :transition="transition"
     />
   </span>
 </template>
@@ -37,6 +38,7 @@
 import { computed, ref, watch } from 'vue'
 import { useTimer } from '#kit/composables/useTimer'
 import MShape from '#kit/components/ui/shape/index.vue'
+import { resolveTransition } from '#kit/utils/motion'
 import { mLoadingProps } from './props'
 import type { M3ShapeName } from '#kit/assets/icon/shapes'
 
@@ -61,10 +63,18 @@ const currentShape = computed(() =>
   expressiveSequence[currentShapeIndex.value] ?? 'circle',
 )
 
+// The cycle waits exactly as long as the morph takes to settle, plus the
+// transition's own rest. A hardcoded interval either clips the morph or leaves
+// the shape sitting still for the remainder, which reads as a stutter.
+const transition = computed(() => resolveTransition(props.transition))
+
 const cycle = useTimer(() => {
   currentShapeIndex.value
     = (currentShapeIndex.value + 1) % expressiveSequence.length
-}, { duration: 1000, repeat: true })
+}, {
+  duration: () => transition.value.duration + transition.value.hold,
+  repeat: true,
+})
 
 watch(() => props.type, (type) => {
   if (type === 'expressive') {
@@ -125,9 +135,9 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
     animation-duration: $linear-rotate-duration;
   }
 
+  // The expressive indicator's rotation rides on the morph itself (each
+  // transition carries its own turn), so no CSS rotation is layered on top.
   &--expressive {
-    animation: linear infinite ui-loading-linear-rotate;
-    animation-duration: 4s; // M3 slow rotation for expressive shapes
     color: g($t, 'spinner-color');
   }
 

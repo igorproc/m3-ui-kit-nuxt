@@ -14,6 +14,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { fieldDensityProp, mFieldProps } from '#kit/components/ui/text-field/props'
+import { MESSAGES } from '#kit/shared/constants/messages'
 
 export type MNumberInputVariant = 'filled' | 'outlined'
 
@@ -59,11 +60,11 @@ export const mNumberInputProps = {
    */
   units: { type: Array as PropType<MNumberInputUnit[]>, default: undefined },
   /** Accessible name of the unit menu trigger. */
-  unitLabel: { type: String, default: 'Change unit' },
+  unitLabel: { type: String, default: MESSAGES.numberUnit },
   /** Accessible name of the increase control. */
-  incrementLabel: { type: String, default: 'Increase value' },
+  incrementLabel: { type: String, default: MESSAGES.numberIncrement },
   /** Accessible name of the decrease control. */
-  decrementLabel: { type: String, default: 'Decrease value' },
+  decrementLabel: { type: String, default: MESSAGES.numberDecrement },
 }
 
 export type MNumberInputProps = ExtractPublicPropTypes<typeof mNumberInputProps>

@@ -49,8 +49,8 @@ export interface NumberInputControlProps extends NumberValueProps, NumberScrubPr
   autofocus?: boolean
   autocomplete?: string
   /** Accessible names for the stepper buttons — the only user-facing copy here. */
-  incrementLabel?: string
-  decrementLabel?: string
+  incrementLabel: string
+  decrementLabel: string
 }
 
 export interface NumberInputAttrs {
@@ -244,7 +244,7 @@ export function useNumberInputControl(
   const incrementAttrs = computed<NumberStepperAttrs>(() => ({
     'type': 'button',
     'disabled': !value.canIncrement.value,
-    'aria-label': props.incrementLabel ?? 'Increase value',
+    'aria-label': props.incrementLabel,
     'tabindex': -1,
     'onClick': increment,
   }))
@@ -252,7 +252,7 @@ export function useNumberInputControl(
   const decrementAttrs = computed<NumberStepperAttrs>(() => ({
     'type': 'button',
     'disabled': !value.canDecrement.value,
-    'aria-label': props.decrementLabel ?? 'Decrease value',
+    'aria-label': props.decrementLabel,
     'tabindex': -1,
     'onClick': decrement,
   }))
