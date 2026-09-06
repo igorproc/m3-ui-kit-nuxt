@@ -39,6 +39,22 @@ export interface PathInterpolatorOptions {
    * @default Math.PI / 8
    */
   cornerThreshold?: number
+  /**
+   * Hold the contour's enclosed area across the morph, so it reads as a
+   * constant-volume substance rather than a drawing that deflates halfway.
+   * @default false
+   */
+  preserveArea?: boolean
+  /**
+   * Return the canonical target `d` once `t` reaches `1 - 1e-4`.
+   *
+   * Set `false` for an easing that overshoots: a spring crosses `1` early and
+   * springs back, and snapping on the crossing would freeze the morph on its
+   * target and swallow the whole rebound. With it off the caller settles on the
+   * canonical geometry itself when time runs out.
+   * @default true
+   */
+  snapEnd?: boolean
 }
 
 /**
@@ -57,7 +73,7 @@ export function createPathInterpolator(
   toD: string,
   options: PathInterpolatorOptions = {},
 ): (t: number) => string {
-  const { samples = 96, cornerThreshold } = options
+  const { samples = 96, cornerThreshold, preserveArea = false, snapEnd = true } = options
 
   const from = samplePath(parsePath(fromD), samples, cornerThreshold)
   const to = samplePath(parsePath(toD), samples, cornerThreshold)
@@ -66,8 +82,9 @@ export function createPathInterpolator(
 
   return (t) => {
     if (t <= EPSILON) return fromD
-    if (t >= 1 - EPSILON) return toD
-    interpPolar(plan, t, out)
+    if (snapEnd && t >= 1 - EPSILON) return toD
+    if (!snapEnd && t === 1) return toD
+    interpPolar(plan, t, out, preserveArea)
     return serialize(out, plan.closed)
   }
 }

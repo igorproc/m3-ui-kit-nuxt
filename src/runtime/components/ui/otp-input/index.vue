@@ -1,256 +1,224 @@
 <template>
-  <div
-    class="ui-otp-input"
-    :class="{ 'ui-otp-input--focused': focused, 'ui-otp-input--error': error || errorMessage }"
-  >
+  <div :class="rootClasses">
     <label
-      :id="labelId"
-      :for="inputId"
+      v-bind="labelAttrs"
       class="ui-otp-input__label"
-    >{{ label }}</label>
+    >
+      <slot name="label">{{ label }}</slot>
+    </label>
+
     <div class="ui-otp-input__visual">
-      <OtpGroup
-        v-for="(range, groupIndex) in ranges"
-        :key="`${range.start}-${range.end}`"
+      <template
+        v-for="(cells, groupIndex) in groups"
+        :key="groupIndex"
       >
-        <slot
-          name="group"
-          :start="range.start"
-          :end="range.end"
-          :index="groupIndex"
-          :complete="model.length === safeLength"
-        >
-          <OtpField
-            v-for="index in indexes(range)"
-            :key="index"
-            :index="index"
-            :character="model[index] ?? ''"
-            :active="focused && activeIndex === index"
-            :error="error || Boolean(errorMessage)"
-            :disabled="disabled"
-            :readonly="readonly"
-            :masked="Boolean(mask)"
-            :mask-character="typeof mask === 'string' ? mask : '•'"
-            @select="focusAt"
+        <span class="ui-otp-input__group">
+          <slot
+            name="group"
+            :cells="cells"
+            :index="groupIndex"
+            :start="cells[0]?.index ?? 0"
+            :end="(cells.at(-1)?.index ?? -1) + 1"
+            :complete="isComplete"
           >
-            <template #default="state">
+            <span
+              v-for="cell in cells"
+              :key="cell.index"
+              v-bind="cellAttrs(cell.index)"
+              :class="cellClasses(cell)"
+            >
               <slot
                 name="field"
-                v-bind="state"
+                v-bind="cell"
               >
                 <slot
-                  v-if="state.filled && mask"
+                  v-if="cell.masked"
                   name="mask"
-                  v-bind="state"
-                >
-                  {{ typeof mask === 'string' ? mask : '•' }}
-                </slot>
-                <template v-else>
-                  {{ state.character }}
-                </template>
+                  v-bind="cell"
+                >{{ cell.maskCharacter }}</slot>
+                <template v-else>{{ cell.character }}</template>
               </slot>
-            </template>
-          </OtpField>
-        </slot>
-        <OtpSeparator
-          v-if="groupIndex < ranges.length - 1"
-          :value="separator"
+            </span>
+          </slot>
+        </span>
+
+        <span
+          v-if="groupIndex < groups.length - 1 && (separator || $slots.separator)"
+          class="ui-otp-input__separator"
+          aria-hidden="true"
         >
           <slot
-            v-if="$slots.separator"
             name="separator"
             :index="groupIndex"
-          />
-          <template v-else>
-            {{ separator }}
-          </template>
-        </OtpSeparator>
-      </OtpGroup>
+          >{{ separator }}</slot>
+        </span>
+      </template>
+
       <input
-        :id="inputId"
-        ref="input"
+        ref="element"
+        v-bind="inputAttrs"
         class="ui-otp-input__native"
-        :value="model"
-        :name="name ?? path"
-        :disabled="disabled"
-        :readonly="readonly"
-        :autofocus="autofocus"
-        :inputmode="mode === 'numeric' ? 'numeric' : 'text'"
-        autocomplete="one-time-code"
-        :maxlength="safeLength"
-        :aria-labelledby="labelId"
-        :aria-invalid="error || Boolean(errorMessage)"
-        :aria-describedby="errorMessage ? messageId : undefined"
-        @focus="focused = true"
-        @blur="focused = false"
-        @input="onInput"
-        @click="syncCaret"
-        @keyup="syncCaret"
-        @compositionstart="composing = true"
-        @compositionend="onCompositionEnd"
       >
     </div>
+
     <p
-      v-if="errorMessage"
-      :id="messageId"
+      v-if="message"
+      v-bind="supportAttrs"
       class="ui-otp-input__message"
-      role="alert"
     >
-      {{ errorMessage }}
+      {{ message }}
     </p>
+
+    <div
+      v-if="$slots.support"
+      class="ui-otp-input__support"
+    >
+      <slot name="support" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import OtpField from '#kit/components/fragments/otp-input/Field.vue'
-import OtpGroup from '#kit/components/fragments/otp-input/Group.vue'
-import OtpSeparator from '#kit/components/fragments/otp-input/Separator.vue'
+import { useOtpControl } from '#kit/composables/otp-input/useOtpControl'
+import type { OtpCell } from '#kit/composables/otp-input/useOtpControl'
 import { mOtpInputProps } from './props'
 
 const props = defineProps(mOtpInputProps)
+const slots = useSlots()
+
 const model = defineModel<string>({ default: '' })
-const focused = defineModel<boolean>('focused', { default: false })
+const focusedModel = defineModel<boolean>('focused', { default: false })
+
 const emit = defineEmits<{
   (event: 'complete', value: string): void
   (event: 'invalid', input: string, rejected: string[]): void
   (event: 'clear'): void
 }>()
 
-const input = ref<HTMLInputElement>()
-const composing = ref(false)
-const activeIndex = ref(0)
-const inputId = useId()
-const labelId = `${inputId}-label`
-const messageId = `${inputId}-message`
-const safeLength = computed(() => Math.max(1, Math.floor(props.length)))
-const ranges = computed(() => {
-  const valid = props.groups.filter(size => Number.isInteger(size) && size > 0)
-  if (!valid.length || valid.reduce((sum, size) => sum + size, 0) !== safeLength.value) {
-    return [{ start: 0, end: safeLength.value }]
-  }
-  let start = 0
-  return valid.map((size) => {
-    const range = { start, end: start + size }
-    start += size
-    return range
+const {
+  element,
+  groups,
+  isComplete,
+  isError,
+  message,
+  inputAttrs,
+  labelAttrs,
+  supportAttrs,
+  cellAttrs,
+} = useOtpControl(model, focusedModel, props, {
+  onComplete: value => emit('complete', value),
+  onInvalid: (input, rejected) => emit('invalid', input, rejected),
+  onClear: () => emit('clear'),
+})
+
+const rootClasses = computed(() => [
+  'ui-otp-input',
+  `ui-otp-input--label-${props.labelPlacement}`,
+  {
+    'ui-otp-input--focused': focusedModel.value,
+    'ui-otp-input--error': isError.value,
+    'ui-otp-input--complete': isComplete.value,
+  },
+])
+
+// The kit ships no default label: it would be English in a kit with no i18n.
+// Silence would mean an unnamed field reaching a screen reader, so say it here,
+// where it costs a build warning instead of a broken form.
+if (import.meta.dev) {
+  watchEffect(() => {
+    if (!props.label && !slots.label) {
+      console.warn('[m-otp-input] has no accessible name: pass `label` or fill the #label slot.')
+    }
   })
-})
-
-const indexes = (range: { start: number, end: number }) => Array.from(
-  { length: range.end - range.start },
-  (_, offset) => range.start + offset,
-)
-
-function sanitize(raw: string) {
-  const normalized = raw.normalize('NFKC')
-    .replace(/[\u0660-\u0669]/g, char => String(char.charCodeAt(0) - 0x0660))
-    .replace(/[\u06F0-\u06F9]/g, char => String(char.charCodeAt(0) - 0x06F0))
-  const allowed = props.mode === 'numeric' ? /\d/ : /[0-9a-z]/i
-  const chars = Array.from(normalized)
-  const rejected = chars.filter(char => !allowed.test(char))
-  return { value: chars.filter(char => allowed.test(char)).join('').slice(0, safeLength.value), rejected }
 }
 
-function applyInput(target: HTMLInputElement) {
-  const previousLength = model.value.length
-  const raw = target.value
-  const result = sanitize(raw)
-  model.value = result.value
-  target.value = result.value
-  activeIndex.value = Math.min(target.selectionStart ?? result.value.length, safeLength.value - 1)
-  if (result.rejected.length) emit('invalid', raw, result.rejected)
-  if (previousLength < safeLength.value && result.value.length === safeLength.value) emit('complete', result.value)
-  if (previousLength > 0 && result.value.length === 0) emit('clear')
-}
-
-function onInput(event: Event) {
-  if (!composing.value) applyInput(event.target as HTMLInputElement)
-}
-
-function onCompositionEnd(event: CompositionEvent) {
-  composing.value = false
-  applyInput(event.target as HTMLInputElement)
-}
-
-function syncCaret() {
-  activeIndex.value = Math.min(input.value?.selectionStart ?? model.value.length, safeLength.value - 1)
-}
-
-function focusAt(index: number) {
-  if (props.disabled) return
-  input.value?.focus()
-  input.value?.setSelectionRange(index, index)
-  activeIndex.value = index
-}
-
-watch(safeLength, (length) => {
-  if (model.value.length > length) model.value = model.value.slice(0, length)
-})
+const cellClasses = (cell: OtpCell) => [
+  'ui-otp-input__field',
+  {
+    'ui-otp-input__field--filled': cell.filled,
+    'ui-otp-input__field--active': cell.active,
+    'ui-otp-input__field--error': cell.error,
+    'ui-otp-input__field--disabled': cell.disabled,
+  },
+]
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/otp-input' as t;
 
 .ui-otp-input {
-  $t: material-map(t.$tokens, 'md-otp-input');
+  $t: material-map(t.$tokens, 'm-otp-input');
 
   display: inline-flex;
   flex-direction: column;
 
   &__label {
-    margin-bottom: g($t, 'root-gap');
+    margin-bottom: g($t, 'root.gap');
+  }
+
+  // The name has to exist even when it is not shown: `hidden` takes it out of
+  // the layout, never out of the accessibility tree.
+  &--label-hidden > &__label {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   &__visual {
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: g($t, 'root-gap');
+    gap: g($t, 'root.gap');
   }
 
   &__group {
     display: inline-flex;
     align-items: center;
-    gap: g($t, 'group-gap');
+    gap: g($t, 'group.gap');
   }
 
   &__field {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: g($t, 'field-size');
-    height: g($t, 'field-size');
-    border: 1rem solid g($t, 'field-outline');
-    border-radius: g($t, 'field-shape');
-    color: g($t, 'field-color');
+    width: g($t, 'field.size');
+    height: g($t, 'field.size');
+    border: 1rem solid g($t, 'field.outline');
+    border-radius: g($t, 'field.shape');
+    color: g($t, 'field.color');
     cursor: text;
 
-    @include typescale(g($t, 'field-typography'));
+    @include typescale(g($t, 'field.typography'));
 
     &--filled {
-      background: g($t, 'field-filled-container');
+      background: g($t, 'field.filled-container');
     }
 
     &--active {
-      border-width: g($t, 'field-active-width');
-      border-color: g($t, 'field-active-outline');
+      border-width: g($t, 'field.active-width');
+      border-color: g($t, 'field.active-outline');
     }
 
     &--error {
-      border-color: g($t, 'field-error-outline');
+      border-color: g($t, 'field.error-outline');
     }
 
     &--disabled {
-      opacity: g($t, 'field-disabled-opacity');
+      opacity: g($t, 'field.disabled-opacity');
       cursor: default;
     }
   }
 
   &__separator {
     height: fit-content;
-    color: g($t, 'separator-color');
+    color: g($t, 'separator.color');
   }
 
+  // The real field, laid over the whole grid: one input, so paste, SMS autofill
+  // and the caret work without being re-implemented per cell.
   &__native {
     position: absolute;
     inset: 0;
@@ -260,11 +228,20 @@ watch(safeLength, (length) => {
     cursor: text;
   }
 
-  &__message {
-    margin: g($t, 'message-margin-top') 0 0;
-    color: g($t, 'message-color');
+  // Whatever stands beside the field: a resend action, a countdown, a paste
+  // button. Actions, not static text — which is why this is a slot, not a prop.
+  &__support {
+    display: flex;
+    align-items: center;
+    gap: g($t, 'group.gap');
+    margin-top: g($t, 'message.margin-top');
+  }
 
-    @include typescale(g($t, 'message-typography'));
+  &__message {
+    margin: g($t, 'message.margin-top') 0 0;
+    color: g($t, 'message.color');
+
+    @include typescale(g($t, 'message.typography'));
   }
 }
 </style>

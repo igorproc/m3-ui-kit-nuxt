@@ -88,22 +88,27 @@ let checked = 0
 const failures = []
 
 /**
- * Deprecations get their own bucket. They arrive on the same channel as the
- * legacy-token warnings, and there are ~99 of those — a deprecation printed
- * among them is a deprecation nobody reads.
+ * Two buckets on one channel. Deprecations fail the check; the legacy-token
+ * warnings from `g()` only get counted, because there are ~99 of them and a
+ * deprecation printed in that stream is a deprecation nobody reads.
  */
 const deprecations = new Map()
+const tokenWarnings = new Map()
+
+// A `@warn` raised inside a function carries no span, so the only reliable
+// attribution is the entry being compiled when it fired.
+let currentFile = 'unknown'
 
 const logger = {
   warn(message, options) {
-    if (!options?.deprecation) return
+    const bucket = options?.deprecation ? deprecations : tokenWarnings
+    const label = options?.deprecation
+      ? `${options.deprecationType?.id ?? 'deprecation'}: ${message.split('\n')[0]}`
+      : message.split('\n')[0]
 
-    const where = options.span?.url ? fileURLToPath(options.span.url) : 'unknown'
-    const key = `${options.deprecationType?.id ?? 'deprecation'}: ${message.split('\n')[0]}`
-    const seen = deprecations.get(key) ?? new Set()
-
-    seen.add(where.startsWith(root) ? where.slice(root.length + 1) : where)
-    deprecations.set(key, seen)
+    const seen = bucket.get(label) ?? new Set()
+    seen.add(currentFile)
+    bucket.set(label, seen)
   },
 }
 
@@ -112,6 +117,7 @@ for await (const file of walk(join(runtime, 'components'))) {
 
   for (const [, css] of source.matchAll(STYLE)) {
     checked += 1
+    currentFile = file.slice(root.length + 1)
     try {
       sass.compileString(prelude + css, {
         loadPaths: [join(runtime, 'assets/stylesheet'), runtime],
@@ -144,6 +150,14 @@ if (deprecations.size) {
   }
   console.error('\nDeprecations fail this check: they are warnings today and errors on the next Sass major.')
   process.exit(1)
+}
+
+if (tokenWarnings.size) {
+  console.log(`\n${tokenWarnings.size} unresolved legacy token path(s) — these rules render nothing:`)
+  for (const [message, files] of tokenWarnings) {
+    console.log(`\n  ${message}\n    ${[...files].join('\n    ')}`)
+  }
+  console.log('')
 }
 
 console.log(`${checked} style blocks compiled, no deprecations.`)

@@ -46,6 +46,10 @@ export interface MorphPlan {
   theta: number
   /** Natural log of the optimal scale A→B. */
   lnSigma: number
+  /** Enclosed area of A's sampled ring. */
+  areaA: number
+  /** Enclosed area of B's sampled ring. */
+  areaB: number
   /** Whether the morphed subpath is a closed loop (appends `Z`). */
   closed: boolean
 }
