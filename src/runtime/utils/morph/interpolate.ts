@@ -11,6 +11,9 @@
  * per-frame allocation).
  */
 
+// Utilities
+import { scaleToArea } from './area'
+
 // Types
 import type { MorphPlan } from './types'
 
@@ -25,9 +28,17 @@ export function allocOutput(plan: MorphPlan): Float64Array {
  * @param plan The morph plan.
  * @param t Progress (0→1; may exceed for overshoot).
  * @param out Preallocated buffer of length `2 * plan.n`.
+ * @param preserveArea Rescale the result to the area interpolated between the
+ *   endpoints, so the contour keeps its visual volume instead of deflating
+ *   mid-flight. Leaves both endpoints untouched (there the correction is 1).
  */
-export function interpPolar(plan: MorphPlan, t: number, out: Float64Array): void {
-  const { n, aC, bT, ca, cb, theta, lnSigma } = plan
+export function interpPolar(
+  plan: MorphPlan,
+  t: number,
+  out: Float64Array,
+  preserveArea = false,
+): void {
+  const { n, aC, bT, ca, cb, theta, lnSigma, areaA, areaB } = plan
   const s = Math.exp(lnSigma * t)
   const ang = theta * t
   const cos = Math.cos(ang) * s
@@ -41,4 +52,6 @@ export function interpPolar(plan: MorphPlan, t: number, out: Float64Array): void
     out[2 * i] = cx + px * cos - py * sin
     out[2 * i + 1] = cy + px * sin + py * cos
   }
+
+  if (preserveArea) scaleToArea(out, areaA + (areaB - areaA) * t, cx, cy)
 }

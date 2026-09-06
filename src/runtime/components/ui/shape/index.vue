@@ -3,6 +3,7 @@
     class="ui-shape"
     viewBox="0 0 380 380"
     fill="none"
+    :style="style"
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
@@ -18,6 +19,7 @@
 import { computed } from 'vue'
 import { useShapeMorph } from '#kit/composables/useShapeMorph'
 import { M3_SHAPES, type M3ShapeName } from '#kit/assets/icon/shapes'
+import type { MorphTransitionInput } from '#kit/utils/motion'
 
 const props = defineProps<{
   name: M3ShapeName
@@ -29,8 +31,13 @@ const props = defineProps<{
    */
   sequence?: readonly M3ShapeName[]
   /**
-   * Morph duration in milliseconds for each transition.
-   * @default 600
+   * How each morph moves — a transition name or partial options.
+   * @default 'expressive'
+   */
+  transition?: MorphTransitionInput
+  /**
+   * Override the transition's own duration, in milliseconds. Leave unset to
+   * let the spring derive it.
    */
   duration?: number
 }>()
@@ -41,10 +48,17 @@ const sequence = computed(() =>
   props.sequence?.map(name => M3_SHAPES[name] || M3_SHAPES['circle']),
 )
 
-const { d } = useShapeMorph(target, {
-  duration: () => props.duration ?? 600,
+const { d, rotate, transition } = useShapeMorph(target, {
+  transition: () => props.transition,
+  duration: () => props.duration,
   sequence,
 })
+
+const style = computed(() =>
+  rotate.value ? { transform: `rotate(${rotate.value.toFixed(2)}deg)` } : undefined,
+)
+
+defineExpose({ rotate, transition })
 </script>
 
 <style lang="scss">

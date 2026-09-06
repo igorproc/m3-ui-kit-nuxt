@@ -9,6 +9,7 @@
 
 // Utilities
 import { alignPair } from './align'
+import { ringArea } from './area'
 
 // Types
 import type { MorphPlan, SampledPath } from './types'
@@ -47,6 +48,8 @@ export function buildPlan(from: SampledPath, to: SampledPath): MorphPlan {
     cb: al.cb,
     theta: al.theta,
     lnSigma: Math.log(al.sigma),
+    areaA: ringArea(al.a),
+    areaB: ringArea(al.b),
     closed: from.closed && to.closed,
   }
 }
