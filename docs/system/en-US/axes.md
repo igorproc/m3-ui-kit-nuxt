@@ -67,10 +67,16 @@ the element choice carries meaning.
 
 ## Current state
 
-Narrowing correctly today: `alert` (`variant`), `avatar` (`variant`, `shape`).
+Narrowing correctly today: `alert` (`variant`), `avatar` (`variant`, `shape`), `dropdown`
+and `autocomplete` (`variant`, to `filled | outlined`).
 
 Family axes shared correctly: `mFieldProps` across `text-field`, `textarea`, `number-input`,
-`autocomplete`, `file-input`.
+`dropdown`, `autocomplete`, `file-input`.
+
+An axis can also be *borrowed* by a component outside the family that has to line up with
+it: `MListItemDensity` is `MFieldDensity`, taken whole, because a dropdown row and the field
+that opens it must be the same height at the same density. Borrowing means aliasing the
+existing type, never re-typing its members.
 
 `<MOtpInput>` deliberately does **not** spread `mFieldProps`, and the reasoning is worth
 reading before you assume a field-shaped component should: three inherited props against
@@ -78,7 +84,7 @@ four that must be neutered or overridden. The shared look travels through the to
 instead — see [craft.md](craft.md).
 
 Free-standing unions that overlap a canonical axis: `text-field`, `textarea`,
-`number-input`, `dropdown`, `surface`, `banner`. The field trio is the documented exception
+`number-input`, `surface`, `banner`. The field trio is the documented exception
 above; the rest are tracked in [decisions.md](decisions.md) with their migrations pending.
 
 ## Open questions

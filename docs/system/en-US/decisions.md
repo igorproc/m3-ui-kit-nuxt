@@ -19,6 +19,8 @@ would otherwise have to re-derive.
 | `complete` visual state in `<MOtpInput>` | `primary` means *active*; painting a finished code in it merges two roles, and at completion there is no active cell. Confirmation belongs to the application. The `complete` **event** stays. | — |
 | `hideLabel: boolean` | An enum of one pretending to be a flag. Became `labelPlacement`. | — |
 | `MFieldGroup` (the spec's `row` shape) | Deferred, not rejected. | Taken up as its own task; `inline` placement returns with it. |
+| `underline` for the selection family (`<MDropdown>`, `<MAutocomplete>`) | It is the only field shape with no container, and these put chips, a clear button and a menu anchor *inside* the box; a row of chips on a bare line has nothing holding it. It is also the Material 2 "standard" field, which M3 dropped. | Never for these two. If `underline` itself is reconsidered, that is a question for the whole field family. |
+| Primitive arrays as `items` (`['Moscow', 'SPb']`) | `id` is mandatory on an item, so a bare string cannot be one. One `.map(v => ({ id: v, label: v }))` at the call site buys a resolver with no `typeof` branch in it. | — |
 
 ## Architectural trades
 
@@ -34,6 +36,12 @@ would otherwise have to re-derive.
 | `sanitize()` keeps NFKC normalisation and Arabic-Indic → ASCII digit mapping | A code pasted from an Arabic SMS must work. |
 | `g()` dot separator is canonical; dash is legacy and warns | A dash path cannot address a key containing a dash, and resolved to `null` silently for ~99 call sites. |
 | `createRangeKeyboardController` left as a second keyboard controller | Known duplication with `useSliderControl`, consciously not touched. Do not add a third. |
+| Selection in the dropdown family is **model-first**, not registry-first | A field holds a value before it holds options: a form loads `countryId` and the list arrives two ticks later. A selection that exists only as a registered ticket drops that value the moment the first option registers — and, worse, emits the shortened array back. Values with no matching item stay in the model and render from a fallback row. |
+| Keyboard order comes from the data, not from the registry | `createRegistry.register` appends at the end, so an item inserted into the middle of a mounted list lands last in the registry while sitting third in the DOM. The rows are already `v-for`-ed from an array; that array is the order. Children still report their own state through the context. |
+| An item's identity is its `id`, and the default comparator uses it | Two fetches of one record are two objects, so `===` loses the selection on every refetch. `id` is the one thing an item is required to declare. |
+| Rows blocked by `max` are skipped by the arrows, not just marked | APG allows either. At the limit the only legal move is to deselect, and walking onto rows that cannot be chosen offers moves that do nothing. They keep `aria-disabled` and the disabled look. |
+| The panel's `maxHeight` travels as a custom property | Live geometry supplied at runtime — the one case the zero-runtime rule allows. The token is the fallback, so a hundred options are capped without a prop. |
+| Clamping the panel to the space actually available is `<MMenu>`'s job, not the dropdown's | Neither of the menu's two positioning paths clamps today, and the same gap affects tooltip and popover through `usePopover`. Fixing it inside the dropdown would fix one of three. |
 
 ## Settled, migration pending
 
@@ -46,7 +54,12 @@ the migration lands.
 | `density` is the kit's only word for scale | `size` (`sm \| md \| lg`), `MLoadingSize` (`small \| medium \| large`) and `MFieldDensity` (`compact \| default \| comfortable`) were three spellings of one idea. The word is settled; the step set is not — see [axes.md](axes.md#oq-1-the-step-set-for-density). | Rename `size` → `density` across `avatar`, `loading`, `progress`; retire `MSize`. Values wait on OQ-1. |
 | `plain` joins the canonical `MVariant` | `MSurfaceVariant` already added it as a free-standing member. It is a legitimate fifth surface treatment, not a component quirk. | Add to `MVariant`; `MSurfaceVariant` becomes `Extract<MVariant, …>`. |
 | `MBannerVariant`'s `surface` member is a naming mistake | `surface` names a component, not a treatment. The value it means already exists in the canonical union. | Rename to the canonical member and narrow with `Extract<>`. |
-| `<MDropdown>` keeps its own `variant` for now | It re-declares the field boundary axis without being a field. The component is queued for its own rework, and deciding its family before that work starts would prejudge it. | Revisit when the dropdown rework begins: either it takes `mFieldProps` or its axis earns a documented justification. |
+
+## Resolved
+
+| Decision | How it landed |
+|---|---|
+| `<MDropdown>` keeps its own `variant` for now | Closed by the dropdown rework: it spreads `mFieldProps` + `fieldDensityProp` and narrows `variant` to `Extract<MTextFieldVariant, 'filled' \| 'outlined'>`. `<MAutocomplete>` is the same component plus a filter, so it takes the same props from `mDropdownProps`. |
 
 ## Open
 

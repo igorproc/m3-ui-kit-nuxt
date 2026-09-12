@@ -67,10 +67,16 @@ export type MAvatarShape = Extract<MShape, 'full' | 'large' | 'medium' | 'small'
 
 ## Как обстоит сейчас
 
-Сужают правильно: `alert` (`variant`), `avatar` (`variant`, `shape`).
+Сужают правильно: `alert` (`variant`), `avatar` (`variant`, `shape`), `dropdown` и
+`autocomplete` (`variant` до `filled | outlined`).
 
 Оси семейства раздаются правильно: `mFieldProps` в `text-field`, `textarea`, `number-input`,
-`autocomplete`, `file-input`.
+`dropdown`, `autocomplete`, `file-input`.
+
+Ось можно ещё и **одолжить** — компоненту вне семейства, которому нужно с ним совпадать:
+`MListItemDensity` — это `MFieldDensity`, взятая целиком, потому что строка дропдауна и
+открывающее её поле обязаны быть одной высоты при одной плотности. Одолжить значит
+сослаться на существующий тип, а не перепечатать его члены.
 
 `<MOtpInput>` **сознательно не** раздаёт `mFieldProps`, и это рассуждение стоит прочитать
 прежде, чем решить, что компонент в форме поля обязан их брать: три унаследованных пропа
@@ -78,7 +84,7 @@ export type MAvatarShape = Extract<MShape, 'full' | 'large' | 'medium' | 'small'
 токены — см. [craft.md](craft.md).
 
 Самостоятельные юнионы, пересекающиеся с канонической осью: `text-field`, `textarea`,
-`number-input`, `dropdown`, `surface`, `banner`. Тройка полей — задокументированное
+`number-input`, `surface`, `banner`. Тройка полей — задокументированное
 исключение выше; остальные учтены в [decisions.md](decisions.md) с ожидающими миграциями.
 
 ## Открытые вопросы
