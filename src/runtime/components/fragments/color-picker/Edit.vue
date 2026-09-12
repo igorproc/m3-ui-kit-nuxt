@@ -136,8 +136,8 @@ function setHslChannel(channel: HslChannel, value: number | null) {
 
   &__channels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(g($t, 'edit-channel-min-width'), 1fr));
-    gap: g($t, 'edit-gap');
+    grid-template-columns: repeat(auto-fit, minmax(g($t, 'edit.channel.min.width'), 1fr));
+    gap: g($t, 'edit.gap');
   }
 }
 </style>

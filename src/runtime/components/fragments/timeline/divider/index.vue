@@ -73,13 +73,13 @@ defineProps({
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: g($t, 'rail-width');
+  width: g($t, 'rail.width');
   height: 100%;
 
   &__line {
-    width: g($t, 'line-width');
+    width: g($t, 'line.width');
     flex: 1 1 auto;
-    background: g($t, 'line-color');
+    background: g($t, 'line.color');
 
     &.is-hidden { visibility: hidden; }
   }
@@ -88,8 +88,8 @@ defineProps({
     // A repeating gradient renders the dashed connector without a border.
     background: repeating-linear-gradient(
       to bottom,
-      #{g($t, 'line-color')} 0,
-      #{g($t, 'line-color')} 4rem,
+      #{g($t, 'line.color')} 0,
+      #{g($t, 'line.color')} 4rem,
       transparent 4rem,
       transparent 8rem
     );
@@ -102,14 +102,14 @@ defineProps({
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: g($t, 'dot-size');
-    height: g($t, 'dot-size');
+    width: g($t, 'dot.size');
+    height: g($t, 'dot.size');
     border-radius: var(--sys-shape-corner-full);
-    background: g($t, 'dot-color');
-    color: g($t, 'dot-on-color');
+    background: g($t, 'dot.color');
+    color: g($t, 'dot.on-color');
 
     // A ring in the surface color lifts the dot off the connector line.
-    box-shadow: 0 0 0 g($t, 'dot-ring-width') g($t, 'dot-surface');
+    box-shadow: 0 0 0 g($t, 'dot.ring.width') g($t, 'dot.surface');
 
     &--empty {
       background: transparent;
@@ -117,13 +117,13 @@ defineProps({
     }
   }
 
-  &__icon { font-size: g($t, 'dot-icon-size'); }
+  &__icon { font-size: g($t, 'dot.icon.size'); }
 
   // Marker color roles.
   @each $name in ('primary', 'secondary', 'tertiary', 'error') {
     &--#{$name} .ui-timeline-divider__dot {
-      background: g($t, 'dot-color-#{$name}-color');
-      color: g($t, 'dot-color-#{$name}-on');
+      background: g($t, 'dot-color.#{$name}.color');
+      color: g($t, 'dot-color.#{$name}.on');
     }
   }
 }

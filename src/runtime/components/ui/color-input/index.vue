@@ -215,18 +215,18 @@ watch(open, (isOpen) => {
   }
 
   &__trigger {
-    padding: g($t, 'trigger-padding');
+    padding: g($t, 'trigger.padding');
   }
 
   &__swatch {
     display: block;
-    width: g($t, 'swatch-size');
-    height: g($t, 'swatch-size');
-    border-radius: g($t, 'swatch-shape');
-    box-shadow: inset 0 0 0 g($t, 'swatch-outline-width') g($t, 'swatch-outline');
+    width: g($t, 'swatch.size');
+    height: g($t, 'swatch.size');
+    border-radius: g($t, 'swatch.shape');
+    box-shadow: inset 0 0 0 g($t, 'swatch.outline-width') g($t, 'swatch.outline');
     background:
       linear-gradient(var(--swatch-color), var(--swatch-color)),
-      conic-gradient(g($t, 'checker-a') 0 25%, g($t, 'checker-b') 0 50%, g($t, 'checker-a') 0 75%, g($t, 'checker-b') 0) 0 0 / #{g($t, 'checker-size')} #{g($t, 'checker-size')};
+      conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')};
   }
 
   &__picker {

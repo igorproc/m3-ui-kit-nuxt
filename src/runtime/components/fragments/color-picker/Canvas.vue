@@ -103,16 +103,16 @@ function onKeydown(event: KeyboardEvent) {
 
   position: relative;
   width: 100%;
-  height: g($t, 'canvas-height');
-  border-radius: g($t, 'canvas-radius');
+  height: g($t, 'canvas.height');
+  border-radius: g($t, 'canvas.radius');
   cursor: crosshair;
   touch-action: none;
   outline: none;
   overflow: hidden;
 
   &:focus-visible {
-    outline: g($t, 'canvas-focus-width') solid g($t, 'canvas-focus-color');
-    outline-offset: g($t, 'canvas-focus-offset');
+    outline: g($t, 'canvas.focus.width') solid g($t, 'canvas.focus.color');
+    outline-offset: g($t, 'canvas.focus.offset');
   }
 
   &__saturation,
@@ -123,20 +123,20 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   &__saturation {
-    background: linear-gradient(to right, #{g($t, 'canvas-saturation-color')}, transparent);
+    background: linear-gradient(to right, #{g($t, 'canvas.saturation-color')}, transparent);
   }
 
   &__value {
-    background: linear-gradient(to top, #{g($t, 'canvas-value-color')}, transparent);
+    background: linear-gradient(to top, #{g($t, 'canvas.value-color')}, transparent);
   }
 
   &__thumb {
     position: absolute;
-    width: g($t, 'canvas-thumb-size');
-    height: g($t, 'canvas-thumb-size');
-    border: g($t, 'canvas-thumb-border-width') solid g($t, 'canvas-thumb-border');
+    width: g($t, 'canvas.thumb.size');
+    height: g($t, 'canvas.thumb.size');
+    border: g($t, 'canvas.thumb.border-width') solid g($t, 'canvas.thumb.border');
     border-radius: 50%;
-    box-shadow: g($t, 'canvas-thumb-shadow');
+    box-shadow: g($t, 'canvas.thumb.shadow');
     transform: translate(-50%, -50%);
     pointer-events: none;
   }

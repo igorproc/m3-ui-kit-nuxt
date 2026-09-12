@@ -16,7 +16,7 @@ useAppBarContext()
 @use '#kit/assets/stylesheet/components/app-bar/index' as *;
 
 .ui-app-bar__actions {
-  grid-area: #{g($actions, 'grid-name')};
+  grid-area: #{g($actions, 'area')};
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;

@@ -9,7 +9,7 @@
 // On scroll a color fill — NOT a drop shadow — separates the bar from content.
 // Tokens are split per region so each leaf (<MAppBarNav/Title/Actions>) reads
 // only its own map; the grid-area name each leaf claims lives in that same map
-// (`grid-name`), keeping placement and styling in one place.
+// (`area`), keeping placement and styling in one place.
 
 // Container chrome — surface, scroll fill, padding.
 $container: (
@@ -26,28 +26,25 @@ $container: (
   ),
 );
 
-// Height variants keyed by size, with a taller counterpart when a subtitle shows.
+// Height variants keyed by size; each carries a taller `subtitle` counterpart
+// shown when a subtitle is present.
+// ASSUMPTION: exact subtitle dp absent from the saved MD3 specs (lazy-loaded); tune if needed.
 $height: (
-  small: 64rem,
-  // ASSUMPTION: exact dp absent from the saved MD3 specs (lazy-loaded); tune if needed.
-  small-with-subtitle: 72rem,
-  medium: 112rem,
-  medium-with-subtitle: 136rem,
-  large: 120rem,
-  large-with-subtitle: 152rem,
+  small: (base: 64rem, subtitle: 72rem),
+  medium: (base: 112rem, subtitle: 136rem),
+  large: (base: 120rem, subtitle: 152rem),
 );
 
 // Leading region — <MAppBarNav>.
 $nav: (
-  grid-name: nav,
-  min-width: 48rem,
-  min-height: 48rem,
+  area: nav,
+  min: (width: 48rem, height: 48rem),
   margin: 8rem,
 );
 
 // Headline region — <MAppBarTitle>.
 $title: (
-  grid-name: headline,
+  area: headline,
   gap: 2rem,
   color: map.get($theme-color-link, on-surface),
   padding-bottom: (
@@ -67,7 +64,7 @@ $title: (
 
 // Trailing region — <MAppBarActions>.
 $actions: (
-  grid-name: actions,
+  area: actions,
   gap: 4rem,
   margin: 8rem,
 );

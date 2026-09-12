@@ -16,12 +16,12 @@ useAppBarContext()
 @use '#kit/assets/stylesheet/components/app-bar/index' as *;
 
 .ui-app-bar__nav {
-  grid-area: #{g($nav, 'grid-name')};
+  grid-area: #{g($nav, 'area')};
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: g($nav, 'min-width');
-  min-height: g($nav, 'min-height');
+  min-width: g($nav, 'min.width');
+  min-height: g($nav, 'min.height');
   margin-inline-end: g($nav, 'margin');
 }
 </style>

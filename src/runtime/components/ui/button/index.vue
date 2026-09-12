@@ -120,20 +120,20 @@ $t: material-map(t.$tokens, $prefix);
   border: none;
   background-color: transparent;
   outline: none;
-  gap: g($t, 'container-gap');
-  min-height: g($t, 'container-height');
-  border-radius: g($t, 'container-shape');
-  padding-inline: g($t, 'container-padding-inline');
+  gap: g($t, 'container.gap');
+  min-height: g($t, 'container.height');
+  border-radius: g($t, 'container.shape');
+  padding-inline: g($t, 'container.padding.inline');
 
   // Typography
   @include typescale('label-large');
 
   transition:
-    background-color g($t, 'state-duration') g($t, 'state-easing'),
-    color g($t, 'state-duration') g($t, 'state-easing'),
-    box-shadow g($t, 'state-duration') g($t, 'state-easing'),
-    border-color g($t, 'state-duration') g($t, 'state-easing'),
-    transform g($t, 'state-duration') g($t, 'state-easing');
+    background-color g($t, 'state.duration') g($t, 'state.easing'),
+    color g($t, 'state.duration') g($t, 'state.easing'),
+    box-shadow g($t, 'state.duration') g($t, 'state.easing'),
+    border-color g($t, 'state.duration') g($t, 'state.easing'),
+    transform g($t, 'state.duration') g($t, 'state.easing');
 
   // Keyboard focus ring (restores the visible indicator removed by
   // `outline: none`). Color comes from the theme, not a hardcoded hex.
@@ -154,14 +154,14 @@ $t: material-map(t.$tokens, $prefix);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: g($t, 'icon-size');
+    font-size: g($t, 'icon.size');
     line-height: 0;
     z-index: 1;
   }
 
   &__spinner {
-    width: g($t, 'icon-size');
-    height: g($t, 'icon-size');
+    width: g($t, 'icon.size');
+    height: g($t, 'icon.size');
     border: 2rem solid currentcolor;
     border-top-color: transparent;
     border-radius: 50%;
@@ -170,16 +170,16 @@ $t: material-map(t.$tokens, $prefix);
   }
 
   &--has-prepend {
-    padding-left: g($t, 'container-padding-with-icon');
+    padding-left: g($t, 'container.padding.with-icon');
   }
 
   &--has-append {
-    padding-right: g($t, 'container-padding-with-icon');
+    padding-right: g($t, 'container.padding.with-icon');
   }
 
   &--icon-only {
-    padding-inline: g($t, 'container-padding-icon-only');
-    width: g($t, 'container-height');
+    padding-inline: g($t, 'container.padding.icon-only');
+    width: g($t, 'container.height');
   }
 
   // ПРИМЕНЕНИЕ СХЕМ (MD3 color roles)

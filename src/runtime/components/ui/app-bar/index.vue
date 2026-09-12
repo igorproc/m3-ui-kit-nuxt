@@ -95,17 +95,17 @@ defineExpose({ scrolled })
 .ui-app-bar {
   // Area names are owned by each region's map — single source of truth shared
   // with the leaves that claim them.
-  $nav-area: g($nav, 'grid-name');
-  $headline-area: g($title, 'grid-name');
-  $actions-area: g($actions, 'grid-name');
+  $nav-area: g($nav, 'area');
+  $headline-area: g($title, 'area');
+  $actions-area: g($actions, 'area');
 
   @at-root :root {
-    --ui-app-bar-height-small: #{g($height, 'small')};
-    --ui-app-bar-height-small-subtitle: #{g($height, 'small-with-subtitle')};
-    --ui-app-bar-height-medium: #{g($height, 'medium')};
-    --ui-app-bar-height-medium-subtitle: #{g($height, 'medium-with-subtitle')};
-    --ui-app-bar-height-large: #{g($height, 'large')};
-    --ui-app-bar-height-large-subtitle: #{g($height, 'large-with-subtitle')};
+    --ui-app-bar-height-small: #{g($height, 'small.base')};
+    --ui-app-bar-height-small-subtitle: #{g($height, 'small.subtitle')};
+    --ui-app-bar-height-medium: #{g($height, 'medium.base')};
+    --ui-app-bar-height-medium-subtitle: #{g($height, 'medium.subtitle')};
+    --ui-app-bar-height-large: #{g($height, 'large.base')};
+    --ui-app-bar-height-large-subtitle: #{g($height, 'large.subtitle')};
   }
 
   display: grid;

@@ -70,9 +70,9 @@ defineExpose({ rootElement: rootElement?.value })
 .ui-app {
   $t: material-map(t.$tokens, 'md-app');
 
-  min-height: g($t, 'root-min-height');
-  background-color: g($t, 'root-background');
-  color: g($t, 'root-color');
+  min-height: g($t, 'root.min-height');
+  background-color: g($t, 'root.background');
+  color: g($t, 'root.color');
 
   &__overlay-host {
     position: fixed;

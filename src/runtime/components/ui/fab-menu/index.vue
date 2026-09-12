@@ -159,9 +159,9 @@ useClickOutside(rootRef, () => close())
     align-items: center;
     justify-content: center;
     position: relative;
-    width: g($t, 'icon-size');
-    height: g($t, 'icon-size');
-    transition: transform g($t, 'motion-icon-duration') g($t, 'motion-icon-easing');
+    width: g($t, 'icon.size');
+    height: g($t, 'icon.size');
+    transition: transform g($t, 'motion.icon.duration') g($t, 'motion.icon.easing');
 
     &.is-open {
       transform: rotate(90deg);
@@ -170,12 +170,12 @@ useClickOutside(rootRef, () => close())
 
   &__icon {
     position: absolute;
-    font-size: g($t, 'icon-size');
+    font-size: g($t, 'icon.size');
 
     &.ui-fab-menu-icon-enter-active,
     &.ui-fab-menu-icon-leave-active {
-      transition: opacity g($t, 'motion-icon-duration') g($t, 'motion-icon-easing'),
-                  transform g($t, 'motion-icon-duration') g($t, 'motion-icon-easing');
+      transition: opacity g($t, 'motion.icon.duration') g($t, 'motion.icon.easing'),
+                  transform g($t, 'motion.icon.duration') g($t, 'motion.icon.easing');
     }
 
     &.ui-fab-menu-icon-enter-from {
@@ -193,7 +193,7 @@ useClickOutside(rootRef, () => close())
     position: absolute;
     bottom: 100%;
     right: 0;
-    margin-bottom: g($t, 'drawer-margin-bottom');
+    margin-bottom: g($t, 'drawer.margin.bottom');
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -208,7 +208,7 @@ useClickOutside(rootRef, () => close())
 
     &.ui-fab-menu-drawer-enter-active,
     &.ui-fab-menu-drawer-leave-active {
-      transition: opacity g($t, 'motion-drawer-duration') g($t, 'motion-drawer-easing');
+      transition: opacity g($t, 'motion.drawer.duration') g($t, 'motion.drawer.easing');
     }
 
     &.ui-fab-menu-drawer-enter-from,
@@ -220,7 +220,7 @@ useClickOutside(rootRef, () => close())
   &__list {
     display: flex;
     flex-direction: column;
-    gap: g($t, 'list-gap');
+    gap: g($t, 'list.gap');
     align-items: flex-end;
 
     .ui-fab-menu--left & {
@@ -232,12 +232,12 @@ useClickOutside(rootRef, () => close())
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: g($t, 'item-gap');
+    gap: g($t, 'item.gap');
     border: none;
-    border-radius: g($t, 'item-border-radius');
-    padding: g($t, 'item-padding');
+    border-radius: g($t, 'item.border.radius');
+    padding: g($t, 'item.padding');
     cursor: pointer;
-    box-shadow: g($t, 'item-shadow');
+    box-shadow: g($t, 'item.shadow');
     white-space: nowrap;
     position: relative;
 
@@ -245,38 +245,38 @@ useClickOutside(rootRef, () => close())
     // cut; the reveal animates the LEFT edge in from 100% (unfolds from right).
     clip-path: inset(-40rem -40rem -40rem -40rem);
 
-    @include typescale(g($t, 'item-type'));
+    @include typescale(g($t, 'item.type'));
 
     &-icon {
-      font-size: g($t, 'item-icon-size');
+      font-size: g($t, 'item.icon.size');
     }
 
     // Staggered reveal — bottom-most item (nearest the FAB) leads via the
     // inline `--ui-fab-stagger` index; step + easing come from $tokens.
     &.ui-fab-menu-item-enter-active {
-      transition: opacity g($t, 'motion-item-duration') g($t, 'motion-item-easing'),
-                  clip-path g($t, 'motion-item-duration') g($t, 'motion-item-easing'),
-                  transform g($t, 'motion-item-duration') g($t, 'motion-item-easing');
-      transition-delay: calc(#{g($t, 'motion-item-stagger')} * var(--ui-fab-stagger, 0));
+      transition: opacity g($t, 'motion.item.duration') g($t, 'motion.item.easing'),
+                  clip-path g($t, 'motion.item.duration') g($t, 'motion.item.easing'),
+                  transform g($t, 'motion.item.duration') g($t, 'motion.item.easing');
+      transition-delay: calc(#{g($t, 'motion.item.stagger')} * var(--ui-fab-stagger, 0));
     }
 
     &.ui-fab-menu-item-leave-active {
-      transition: opacity g($t, 'motion-item-leave-duration') g($t, 'motion-item-leave-easing'),
-                  clip-path g($t, 'motion-item-leave-duration') g($t, 'motion-item-leave-easing'),
-                  transform g($t, 'motion-item-leave-duration') g($t, 'motion-item-leave-easing');
-      transition-delay: calc(#{g($t, 'motion-item-stagger')} * var(--ui-fab-stagger, 0));
+      transition: opacity g($t, 'motion.item.leave.duration') g($t, 'motion.item.leave.easing'),
+                  clip-path g($t, 'motion.item.leave.duration') g($t, 'motion.item.leave.easing'),
+                  transform g($t, 'motion.item.leave.duration') g($t, 'motion.item.leave.easing');
+      transition-delay: calc(#{g($t, 'motion.item.stagger')} * var(--ui-fab-stagger, 0));
     }
 
     &.ui-fab-menu-item-enter-from,
     &.ui-fab-menu-item-leave-to {
       opacity: 0;
       clip-path: inset(-40rem -40rem -40rem 100%);
-      transform: translateX(g($t, 'motion-item-shift'));
+      transform: translateX(g($t, 'motion.item.shift'));
 
       // Mirror the unfold so it grows from whichever edge items align to.
       .ui-fab-menu--left & {
         clip-path: inset(-40rem 100% -40rem -40rem);
-        transform: translateX(calc(-1 * #{g($t, 'motion-item-shift')}));
+        transform: translateX(calc(-1 * #{g($t, 'motion.item.shift')}));
       }
     }
 
@@ -285,15 +285,15 @@ useClickOutside(rootRef, () => close())
   // Drawer-item pill scheme per MD3 color role.
   @mixin apply-item-scheme($scheme) {
     .ui-fab-menu__item {
-      background-color: g($t, 'item-scheme-#{$scheme}-bg-color');
-      color: g($t, 'item-scheme-#{$scheme}-text-color');
+      background-color: g($t, 'item-scheme.#{$scheme}.bg.color');
+      color: g($t, 'item-scheme.#{$scheme}.text.color');
 
       &:hover {
-        background-color: g($t, 'item-scheme-#{$scheme}-hover-color');
+        background-color: g($t, 'item-scheme.#{$scheme}.hover.color');
       }
 
       &:active {
-        background-color: g($t, 'item-scheme-#{$scheme}-pressed-color');
+        background-color: g($t, 'item-scheme.#{$scheme}.pressed.color');
       }
     }
   }

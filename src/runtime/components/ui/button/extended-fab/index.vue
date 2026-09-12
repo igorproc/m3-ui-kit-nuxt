@@ -46,12 +46,12 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   position: relative;
   overflow: hidden;
   outline: none;
-  padding-inline: g($t, 'container-padding-md');
-  gap: g($t, 'container-gap-md');
-  box-shadow: g($t, 'container-elevation-resting');
+  padding-inline: g($t, 'container.padding.md');
+  gap: g($t, 'container.gap.md');
+  box-shadow: g($t, 'container.elevation.resting');
   transition:
-    box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),
-    background-color g($t, 'motion-duration') g($t, 'motion-easing');
+    box-shadow g($t, 'motion.duration') g($t, 'motion.easing'),
+    background-color g($t, 'motion.duration') g($t, 'motion.easing');
 
   @include typescale('label-large');
 
@@ -65,8 +65,8 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   }
 
   &__spinner {
-    width: g($t, 'icon-size-md');
-    height: g($t, 'icon-size-md');
+    width: g($t, 'icon.size.md');
+    height: g($t, 'icon.size.md');
     border: 2rem solid currentcolor;
     border-top-color: transparent;
     border-radius: 50%;
@@ -75,23 +75,23 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
 
   // Applies one variant's surface treatment for the active scheme.
   @mixin apply-surface($scheme, $variant) {
-    $base: '#{$scheme}-#{$variant}';
+    $base: '#{$scheme}.#{$variant}';
 
-    background-color: g($t, '#{$base}-container-color');
-    color: g($t, '#{$base}-content-color');
+    background-color: g($t, '#{$base}.container.color');
+    color: g($t, '#{$base}.content.color');
 
     &:hover:not(.ui-extended-fab--disabled) {
-      background-color: g($t, '#{$base}-container-hover-color');
+      background-color: g($t, '#{$base}.container.hover-color');
     }
 
     &:focus-visible:not(.ui-extended-fab--disabled),
     &:active:not(.ui-extended-fab--disabled) {
-      background-color: g($t, '#{$base}-container-pressed-color');
+      background-color: g($t, '#{$base}.container.pressed-color');
     }
 
     &.ui-extended-fab--disabled {
-      background-color: g($t, '#{$base}-container-disabled-color');
-      color: g($t, '#{$base}-content-disabled-color');
+      background-color: g($t, '#{$base}.container.disabled-color');
+      color: g($t, '#{$base}.content.disabled-color');
     }
   }
 
@@ -106,18 +106,18 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   }
 
   @mixin apply-size($size) {
-    height: g($t, 'container-height-#{$size}');
-    border-radius: g($t, 'container-shape-#{$size}');
-    padding-inline: g($t, 'container-padding-#{$size}');
-    gap: g($t, 'container-gap-#{$size}');
+    height: g($t, 'container.height.#{$size}');
+    border-radius: g($t, 'container.shape.#{$size}');
+    padding-inline: g($t, 'container.padding.#{$size}');
+    gap: g($t, 'container.gap.#{$size}');
 
     .ui-extended-fab__icon {
-      font-size: g($t, 'icon-size-#{$size}');
+      font-size: g($t, 'icon.size.#{$size}');
     }
 
     .ui-extended-fab__spinner {
-      width: g($t, 'icon-size-#{$size}');
-      height: g($t, 'icon-size-#{$size}');
+      width: g($t, 'icon.size.#{$size}');
+      height: g($t, 'icon.size.#{$size}');
     }
   }
 
@@ -134,11 +134,11 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
 
   // Interactions
   &:hover:not(.ui-extended-fab--disabled) {
-    box-shadow: g($t, 'container-elevation-hover');
+    box-shadow: g($t, 'container.elevation.hover');
   }
 
   &:active:not(.ui-extended-fab--disabled) {
-    box-shadow: g($t, 'container-elevation-pressed');
+    box-shadow: g($t, 'container.elevation.pressed');
   }
 
   &--disabled,

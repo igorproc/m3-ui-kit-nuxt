@@ -24,24 +24,24 @@ const ctx = useColorPickerContext()
 
   display: flex;
   align-items: center;
-  gap: g($t, 'preview-gap');
+  gap: g($t, 'preview.gap');
 
   &__swatch {
     position: relative;
-    width: g($t, 'preview-size');
-    height: g($t, 'preview-size');
-    border-radius: g($t, 'preview-radius');
-    box-shadow: inset 0 0 0 g($t, 'preview-outline-width') g($t, 'preview-outline');
+    width: g($t, 'preview.size');
+    height: g($t, 'preview.size');
+    border-radius: g($t, 'preview.radius');
+    box-shadow: inset 0 0 0 g($t, 'preview.outline-width') g($t, 'preview.outline');
     background:
       linear-gradient(var(--preview-color), var(--preview-color)),
-      conic-gradient(g($t, 'checker-a') 0 25%, g($t, 'checker-b') 0 50%, g($t, 'checker-a') 0 75%, g($t, 'checker-b') 0) 0 0 / #{g($t, 'checker-size')} #{g($t, 'checker-size')};
+      conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')};
   }
 
   &__value {
-    color: g($t, 'preview-value-color');
+    color: g($t, 'preview.value.color');
     font-variant-numeric: tabular-nums;
 
-    @include typescale(g($t, 'preview-value-type'));
+    @include typescale(g($t, 'preview.value.type'));
   }
 }
 </style>

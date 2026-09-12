@@ -54,30 +54,30 @@ function select(value: string) {
 
   display: flex;
   flex-wrap: wrap;
-  gap: g($t, 'swatches-gap');
+  gap: g($t, 'swatches.gap');
 
   &__item {
-    width: g($t, 'swatches-size');
-    height: g($t, 'swatches-size');
+    width: g($t, 'swatches.size');
+    height: g($t, 'swatches.size');
     padding: 0;
     border: none;
-    border-radius: g($t, 'swatches-radius');
-    box-shadow: inset 0 0 0 g($t, 'swatches-outline-width') g($t, 'swatches-outline');
+    border-radius: g($t, 'swatches.radius');
+    box-shadow: inset 0 0 0 g($t, 'swatches.outline-width') g($t, 'swatches.outline');
     background-color: var(--swatch-color);
     cursor: pointer;
-    transition: transform g($t, 'swatches-motion-duration') g($t, 'swatches-motion-easing');
+    transition: transform g($t, 'swatches.motion-duration') g($t, 'swatches.motion-easing');
 
     &:hover {
-      transform: scale(g($t, 'swatches-hover-scale'));
+      transform: scale(g($t, 'swatches.hover-scale'));
     }
 
     &--selected {
-      box-shadow: 0 0 0 g($t, 'swatches-selected-width') g($t, 'swatches-selected');
+      box-shadow: 0 0 0 g($t, 'swatches.selected-width') g($t, 'swatches.selected');
     }
 
     &:disabled {
       cursor: default;
-      opacity: g($t, 'swatches-disabled-opacity');
+      opacity: g($t, 'swatches.disabled-opacity');
     }
   }
 }

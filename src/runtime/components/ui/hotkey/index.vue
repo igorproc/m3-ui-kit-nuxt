@@ -111,50 +111,50 @@ $prefix: 'md-hotkey';
 
   display: inline-flex;
   align-items: center;
-  gap: g($t, 'container-gap');
+  gap: g($t, 'container.gap');
   vertical-align: middle;
 
   &__key {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: g($t, 'key-min-width');
-    padding: g($t, 'key-padding-block') g($t, 'key-padding-inline');
-    border-radius: g($t, 'key-radius');
-    border: 1rem solid g($t, 'key-enabled-border');
-    background-color: g($t, 'key-enabled-bg');
-    color: g($t, 'key-enabled-color');
+    min-width: g($t, 'key.min-width');
+    padding: g($t, 'key.padding-block') g($t, 'key.padding-inline');
+    border-radius: g($t, 'key.radius');
+    border: 1rem solid g($t, 'key.enabled.border');
+    background-color: g($t, 'key.enabled.bg');
+    color: g($t, 'key.enabled.color');
     font-family: inherit;
     transition:
       background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
       color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
       transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-    @include typescale(g($t, 'key-typography'));
+    @include typescale(g($t, 'key.typography'));
 
     &--pressed {
-      background-color: g($t, 'key-pressed-bg');
-      color: g($t, 'key-pressed-color');
+      background-color: g($t, 'key.pressed.bg');
+      color: g($t, 'key.pressed.color');
       border-color: transparent;
       transform: translateY(1rem);
     }
   }
 
   &__separator {
-    color: g($t, 'separator-color');
+    color: g($t, 'separator.color');
 
-    @include typescale(g($t, 'key-typography'));
+    @include typescale(g($t, 'key.typography'));
   }
 
   &--disabled {
     .ui-hotkey__key {
       border-color: transparent;
-      color: color-mix(in srgb, #{g($t, 'key-disabled-color')} 38%, transparent);
-      background-color: color-mix(in srgb, #{g($t, 'key-disabled-color')} 12%, transparent);
+      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} 38%, transparent);
+      background-color: color-mix(in srgb, #{g($t, 'key.disabled.color')} 12%, transparent);
     }
 
     .ui-hotkey__separator {
-      color: color-mix(in srgb, #{g($t, 'key-disabled-color')} 38%, transparent);
+      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} 38%, transparent);
     }
   }
 }

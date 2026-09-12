@@ -112,46 +112,46 @@ function onFormat(value: string | number | (string | number)[]) {
 
   display: flex;
   flex-direction: column;
-  width: g($t, 'root-width');
+  width: g($t, 'root.width');
   max-width: 100%;
-  gap: g($t, 'root-gap');
-  padding: g($t, 'root-padding');
-  border-radius: g($t, 'root-radius');
-  background-color: g($t, 'root-surface');
-  color: g($t, 'root-color');
-  box-shadow: g($t, 'root-elevation');
+  gap: g($t, 'root.gap');
+  padding: g($t, 'root.padding');
+  border-radius: g($t, 'root.radius');
+  background-color: g($t, 'root.surface');
+  color: g($t, 'root.color');
+  box-shadow: g($t, 'root.elevation');
 
   &__sliders {
     display: flex;
     flex-direction: column;
-    gap: g($t, 'slider-gap');
+    gap: g($t, 'slider.gap');
   }
 
   &__hue,
   &__alpha {
     width: 100%;
-    height: g($t, 'slider-height');
-    border-radius: g($t, 'slider-radius');
+    height: g($t, 'slider.height');
+    border-radius: g($t, 'slider.radius');
     appearance: none;
     cursor: pointer;
     outline: none;
 
     &::-webkit-slider-thumb {
       appearance: none;
-      width: g($t, 'slider-thumb-size');
-      height: g($t, 'slider-thumb-size');
-      border: g($t, 'slider-thumb-border-width') solid g($t, 'slider-thumb-border');
+      width: g($t, 'slider.thumb.size');
+      height: g($t, 'slider.thumb.size');
+      border: g($t, 'slider.thumb.border-width') solid g($t, 'slider.thumb.border');
       border-radius: 50%;
-      box-shadow: g($t, 'slider-thumb-shadow');
+      box-shadow: g($t, 'slider.thumb.shadow');
       cursor: pointer;
     }
 
     &::-moz-range-thumb {
-      width: g($t, 'slider-thumb-size');
-      height: g($t, 'slider-thumb-size');
-      border: g($t, 'slider-thumb-border-width') solid g($t, 'slider-thumb-border');
+      width: g($t, 'slider.thumb.size');
+      height: g($t, 'slider.thumb.size');
+      border: g($t, 'slider.thumb.border-width') solid g($t, 'slider.thumb.border');
       border-radius: 50%;
-      box-shadow: g($t, 'slider-thumb-shadow');
+      box-shadow: g($t, 'slider.thumb.shadow');
       cursor: pointer;
     }
   }
@@ -164,17 +164,17 @@ function onFormat(value: string | number | (string | number)[]) {
   &__alpha {
     background:
       linear-gradient(to right, transparent, var(--alpha-color)),
-      conic-gradient(g($t, 'checker-a') 0 25%, g($t, 'checker-b') 0 50%, g($t, 'checker-a') 0 75%, g($t, 'checker-b') 0) 0 0 / #{g($t, 'checker-size')} #{g($t, 'checker-size')};
+      conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')};
   }
 
   &__inputs {
     display: flex;
     flex-direction: column;
-    gap: g($t, 'edit-inputs-gap');
+    gap: g($t, 'edit.inputs-gap');
   }
 
   &--disabled {
-    opacity: g($t, 'disabled-opacity');
+    opacity: g($t, 'disabled.opacity');
     pointer-events: none;
   }
 }

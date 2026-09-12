@@ -231,46 +231,46 @@ watch(open, (value, previous) => {
   display: flex;
   position: fixed;
   flex-direction: column;
-  min-width: g($t, 'surface-min-width');
-  max-width: g($t, 'surface-max-width');
-  margin: g($t, 'surface-margin');
-  padding: g($t, 'surface-padding');
-  gap: g($t, 'surface-gap');
-  border-radius: g($t, 'surface-shape');
-  background: g($t, 'surface-container');
-  color: g($t, 'surface-color');
-  box-shadow: g($t, 'surface-elevation');
+  min-width: g($t, 'surface.min-width');
+  max-width: g($t, 'surface.max-width');
+  margin: g($t, 'surface.margin');
+  padding: g($t, 'surface.padding');
+  gap: g($t, 'surface.gap');
+  border-radius: g($t, 'surface.shape');
+  background: g($t, 'surface.container');
+  color: g($t, 'surface.color');
+  box-shadow: g($t, 'surface.elevation');
 
   &__title {
     margin: 0;
 
-    @include typescale(g($t, 'title-typography'));
+    @include typescale(g($t, 'title.typography'));
   }
 
   &__body {
     display: flex;
     flex-direction: column;
-    gap: g($t, 'surface-gap');
+    gap: g($t, 'surface.gap');
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
-    gap: g($t, 'actions-gap');
+    gap: g($t, 'actions.gap');
   }
 
   &__error {
-    color: g($t, 'error-color');
+    color: g($t, 'error.color');
   }
 
   &__conflict {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: g($t, 'conflict-padding');
-    border-radius: g($t, 'conflict-shape');
-    background: g($t, 'conflict-container');
-    color: g($t, 'conflict-color');
+    padding: g($t, 'conflict.padding');
+    border-radius: g($t, 'conflict.shape');
+    background: g($t, 'conflict.container');
+    color: g($t, 'conflict.color');
   }
 }
 </style>

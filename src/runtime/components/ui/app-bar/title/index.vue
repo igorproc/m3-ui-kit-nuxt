@@ -40,7 +40,7 @@ onScopeDispose(ctx.registerSubtitle(hasSubtitle))
 @use '#kit/assets/stylesheet/components/app-bar/index' as *;
 
 .ui-app-bar__headline {
-  grid-area: #{g($title, 'grid-name')};
+  grid-area: #{g($title, 'area')};
   display: flex;
   flex-direction: column;
   justify-content: center;
