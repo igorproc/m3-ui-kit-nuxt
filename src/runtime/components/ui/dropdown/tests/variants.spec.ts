@@ -59,7 +59,7 @@ describe('m-dropdown · axes', () => {
   it('shows the error state and message on the field', async () => {
     const wrapper = await mount({ ...base, error: true, errorMessage: 'Pick one' })
 
-    expect(wrapper.find('.ui-text-field').attributes('data-error')).toBeDefined()
+    expect(wrapper.find('.ui-text-field').classes()).toContain('ui-text-field--error')
     expect(wrapper.find('.ui-text-field__support').text()).toBe('Pick one')
   })
 })

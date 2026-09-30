@@ -1,38 +1,65 @@
 @use 'sass:map';
+@use 'sass:math';
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
 // TEXT FIELD M3 COMPONENT TOKENS (NESTED M3 COMPLIANT)
 // ==========================================
 
-// One source of truth for the default height: the container token and the
-// `default` density entry are the same number by construction.
+// The default height, named once for the `default` density step.
 $field-height: 56rem;
+
+// Shared by the label and the outline notch, which has to reproduce the raised
+// label's footprint in layout terms.
+$border-width: 1rem;
+$label-typescale: 'body-large';
+$label-left: 16rem;
+$label-prepend-left: 52rem;
+$label-raised-scale: 0.75;
+$notch-padding-inline: 4rem;
+
+// One density step. The label rests centred on the control (`top` is half the
+// height) and is raised by transform only: `inside` lifts it by `$raise` for the
+// shapes that keep it in the box, `notch` lifts its centre by half the height so
+// it lands on the top border. Scaling is around the vertical centre, so the lift
+// is pure height math.
+@function density-step($height, $raise, $padding-top, $padding-bottom) {
+  $top: math.div($height, 2);
+
+  @return (height: $height,
+    label: (top: $top,
+      raise: $raise,
+      transform: (inside: translateY(calc(-50% - #{$raise})) scale($label-raised-scale),
+        notch: translateY(calc(-50% - #{$top})) scale($label-raised-scale),
+      )),
+    input: (padding: (top: $padding-top, bottom: $padding-bottom)),
+  );
+}
+
 $tokens: (
-  container: (height: $field-height,
-    gap: 4rem,
+  container: (gap: 4rem,
     padding: (inline: 16rem,
       prepend: 12rem,
       append: 12rem,
     ),
-    border: (width: 1rem,
+    border: (width: $border-width,
     ),
     field: (gap: 8rem,
       input-min-width: 60rem,
     )),
-  typography: (label: 'body-large',
+  typography: (label: $label-typescale,
     input: 'body-large',
     helper: 'body-small',
   ),
-  label: (left: 16rem,
+  label: (left: $label-left,
+    max-width: calc(100% - #{2 * $label-left}),
     color: map.get($theme-color-link, on-surface-variant),
-    active: (scale: 0.75,
-      top: 8rem,
-      raise: (filled: 18rem,
-      ),
-    ),
-    prepend: (left: 52rem,
-    )),
+    // The resting label follows a prepend; the raised one returns to the start
+    // edge, because nothing bounds what a prepend holds and the notch must not
+    // depend on it.
+    prepend: (left: $label-prepend-left,
+      notch: (shift: calc(var(--ui-text-field-inset) - #{$label-prepend-left}),
+      ))),
   input: (color: map.get($theme-color-link, on-surface),
   ),
   icon: (color: map.get($theme-color-link, on-surface-variant),
@@ -52,18 +79,9 @@ $tokens: (
   // Vertical scale. Height and padding only — type size never changes, so a
   // compact field and a comfortable one still align their values.
   density: (
-    compact: (height: 44rem,
-      label: (raise: 14rem),
-      input: (padding: (top: 18rem, bottom: 4rem)),
-    ),
-    default: (height: $field-height,
-      label: (raise: 18rem),
-      input: (padding: (top: 24rem, bottom: 8rem)),
-    ),
-    comfortable: (height: 64rem,
-      label: (raise: 20rem),
-      input: (padding: (top: 28rem, bottom: 10rem)),
-    ),
+    compact: density-step(44rem, 14rem, 18rem, 4rem),
+    default: density-step($field-height, 18rem, 24rem, 8rem),
+    comfortable: density-step(64rem, 20rem, 28rem, 10rem),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
@@ -74,18 +92,11 @@ $tokens: (
     border: (
       bottom: (color: map.get($theme-color-link, on-surface-variant))
     ),
-    radius: 4rem 4rem 0 0,
-    input: (padding: (top: 24rem,
-        bottom: 8rem,
-      )),
-    active: (label: (top: 8rem,
-      )),
     hover: (bg: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, map.get($theme-color-link, surface-container-highest)),
       border: (bottom: (color: map.get($theme-color-link, on-surface),
         ))),
     focused: (bg: map.get($theme-color-link, surface-container-highest),
       border: (bottom: (color: map.get($theme-color-link, primary),
-          width: 2rem,
         )),
       label: (color: map.get($theme-color-link, primary),
       )),
@@ -107,26 +118,32 @@ $tokens: (
       hover: (border: (bottom: (color: map.get($theme-color-link, error),
           ))),
       focused: (border: (bottom: (color: map.get($theme-color-link, error),
-            width: 2rem,
           )),
         label: (color: map.get($theme-color-link, error),
         )))),
   outlined: (bg: transparent,
     border: (color: map.get($theme-color-link, outline),
-      radius: 4rem,
     ),
-    label: (padding: (inline: 4rem,
+    // Where content starts. A large or pill corner curves past the default
+    // start, and a notch cut into that curve reads as a broken corner — so the
+    // content (and with it the notch) starts past the effective radius. A `full`
+    // radius is capped by the box to half its height.
+    inset: max(#{$label-left}, min(var(--ui-text-field-radius), var(--ui-text-field-height) / 2) + #{$notch-padding-inline}),
+    // The `<fieldset>` that draws the border, laid over the control's own. Its
+    // start padding puts the legend where the raised label's padding box begins.
+    outline: (inset: -1 * $border-width,
+      padding: (start: calc(var(--ui-text-field-inset) - #{$notch-padding-inline + $border-width}),
+      )),
+    // The gap cut into the top border behind a raised label: the label text at
+    // its raised size (a real font size — only layout size widens the gap),
+    // plus breathing room on either side.
+    notch: (padding: (inline: $notch-padding-inline,
       ),
-      margin: (left: -4rem,
-      ),
-      bg: map.get($theme-color-link, surface),
+      font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
     ),
     hover: (border: (color: map.get($theme-color-link, on-surface),
       )),
     focused: (border: (color: map.get($theme-color-link, primary),
-        width: 2rem,
-      ),
-      padding: (inline: 15rem,
       ),
       label: (color: map.get($theme-color-link, primary),
       )),
@@ -147,7 +164,6 @@ $tokens: (
       hover: (border: (color: map.get($theme-color-link, error),
         )),
       focused: (border: (color: map.get($theme-color-link, error),
-          width: 2rem,
         ),
         label: (color: map.get($theme-color-link, error),
         )))),
