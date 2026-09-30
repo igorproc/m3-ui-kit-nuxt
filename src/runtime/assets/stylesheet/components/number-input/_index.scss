@@ -1,4 +1,5 @@
 @use 'sass:map';
+@use 'sass:math';
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
@@ -17,28 +18,62 @@
 // One source of truth for the default height: the container token and the
 // `default` density entry are the same number by construction.
 $field-height: 56rem;
+
+// Shared by the label and the outline notch, which has to reproduce the raised
+// label's footprint in layout terms.
+$border-width: 1rem;
+$padding-inline: 16rem;
+$label-typescale: 'body-large';
+$label-split-left: 60rem;
+$label-raised-scale: 0.75;
+$notch-padding-inline: 4rem;
+
+// One density step. The label rests centred on the control (`top` is half the
+// height) and is raised by transform only: `inside` lifts it by `$raise` for
+// `filled`, `notch` lifts its centre by half the height onto the top border.
+// With a label inside the box the value sits lower than the box centre, so the
+// zones ride down by half that imbalance to line up with the digits.
+@function density-step($height, $raise, $padding-top, $padding-bottom, $split, $stacked) {
+  $top: math.div($height, 2);
+
+  @return (height: $height,
+    label: (top: $top,
+      raise: $raise,
+      transform: (inside: translateY(calc(-50% - #{$raise})) scale($label-raised-scale),
+        notch: translateY(calc(-50% - #{$top})) scale($label-raised-scale),
+      )),
+    input: (padding: (top: $padding-top, bottom: $padding-bottom)),
+    stepper: (split: $split, stacked: $stacked, offset: math.div($padding-top - $padding-bottom, 2)),
+  );
+}
+
 $tokens: (
   container: (
     height: $field-height,
     gap: 4rem,
-    padding: (inline: 16rem),
-    border: (width: 1rem, color: map.get($theme-color-link, outline)),
+    padding: (inline: $padding-inline),
+    border: (width: $border-width, color: map.get($theme-color-link, outline)),
     surface: transparent,
   ),
   typography: (
-    label: 'body-large',
+    label: $label-typescale,
     input: 'body-large',
     support: 'body-small',
     unit: 'label-large',
     scrub: 'label-large',
   ),
   label: (
-    left: 16rem,
+    left: $padding-inline,
+    max-width: calc(100% - #{2 * $padding-inline}),
     color: map.get($theme-color-link, on-surface-variant),
-    // Leading split zone pushes the label past it, so the two never overlap.
-    split: (left: 60rem),
+    // A leading split zone pushes the resting label past it, so the two never
+    // overlap. Raised onto the border it returns to the content start: the
+    // notch does not follow the zone.
+    split: (left: $label-split-left,
+      notch: (shift: calc(var(--ui-number-input-inset) - #{$label-split-left})),
+    ),
     // Raised label lifts by transform only — no reflow, no font-size animation.
-    active: (scale: 0.75, raise: (filled: 18rem)),
+    active: (scale: $label-raised-scale, raise: (filled: 18rem)),
     required: (color: map.get($theme-color-link, error)),
   ),
   input: (
@@ -108,24 +143,9 @@ $tokens: (
   // compact field and a comfortable one still align their values. `compact`
   // keeps its stepper zone at 32rem, clear of the 24rem WCAG 2.5.8 floor.
   density: (
-    compact: (
-      height: 44rem,
-      label: (raise: 14rem),
-      input: (padding: (top: 18rem, bottom: 4rem)),
-      stepper: (split: 32rem, stacked: 36rem),
-    ),
-    default: (
-      height: $field-height,
-      label: (raise: 18rem),
-      input: (padding: (top: 24rem, bottom: 8rem)),
-      stepper: (split: 40rem, stacked: 44rem),
-    ),
-    comfortable: (
-      height: 64rem,
-      label: (raise: 20rem),
-      input: (padding: (top: 28rem, bottom: 10rem)),
-      stepper: (split: 40rem, stacked: 48rem),
-    ),
+    compact: density-step(44rem, 14rem, 18rem, 4rem, 32rem, 36rem),
+    default: density-step($field-height, 18rem, 24rem, 8rem, 40rem, 44rem),
+    comfortable: density-step(64rem, 20rem, 28rem, 10rem, 40rem, 48rem),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
@@ -158,10 +178,23 @@ $tokens: (
     disabled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent)),
   ),
   outlined: (
-    label: (
-      padding: (inline: 4rem),
-      margin: (left: -4rem),
-      surface: map.get($theme-color-link, surface),
+    // Where content starts. A large or pill corner curves past the default
+    // start, and a notch cut into that curve reads as a broken corner — so the
+    // content (and with it the notch) starts past the effective radius. A `full`
+    // radius is capped by the box to half its height.
+    inset: max(#{$padding-inline}, min(var(--ui-number-input-radius), var(--ui-number-input-height) / 2) + #{$notch-padding-inline}),
+    // The control trades its own border for padding of the same width, so its
+    // `overflow: hidden` clips at the outer edge and the outline drawn inside
+    // that ring is never cut.
+    frame: $border-width,
+    // The `<fieldset>` that draws the border. Its start padding puts the legend
+    // where the raised label's padding box begins.
+    outline: (padding: (start: calc(var(--ui-number-input-inset) - #{$notch-padding-inline + $border-width}))),
+    // The gap cut into the top border behind a raised label: the label text at
+    // its raised size (a real font size — only layout size widens the gap),
+    // plus breathing room on either side.
+    notch: (padding: (inline: $notch-padding-inline),
+      font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
     ),
     hover: (border: (color: map.get($theme-color-link, on-surface))),
   ),

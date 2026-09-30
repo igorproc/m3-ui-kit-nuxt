@@ -136,6 +136,9 @@ $t: material-map(t.$tokens, 'm-number-input');
     overflow: hidden;
     padding: g($t, 'unit.padding.block') g($t, 'unit.padding.inline');
     border: none;
+
+    // Set by `<MNumberInput>` from its `rounded` axis, one tier rounder.
+    border-radius: var(--ui-number-input-zone-radius);
     background-color: transparent;
     color: inherit;
     font: inherit;

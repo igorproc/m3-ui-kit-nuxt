@@ -15,6 +15,19 @@
     </label>
 
     <div class="ui-number-input__control">
+      <fieldset
+        v-if="variant === 'outlined'"
+        class="ui-number-input__outline"
+        aria-hidden="true"
+      >
+        <legend
+          v-if="label && !isScrub"
+          class="ui-number-input__notch"
+        >
+          <span class="ui-number-input__notch-text">{{ notchText }}</span>
+        </legend>
+      </fieldset>
+
       <slot
         v-if="controls === 'split'"
         name="decrement"
@@ -186,6 +199,8 @@ const {
 })
 
 const isScrub = computed(() => props.controls === 'scrub')
+// The notch is sized by this copy of the label, so it carries the asterisk too.
+const notchText = computed(() => props.required ? `${props.label} *` : props.label)
 const hasUnit = computed(() => Boolean(unitModel.value) || Boolean(props.units?.length))
 
 const rootClasses = computed(() => [
@@ -227,28 +242,50 @@ defineExpose({ element })
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/number-input' as t;
 
-$t-number: material-map(t.$tokens, 'm-number-input');
-
-// The two raised positions, named once so the placement branches stay a list of
-// selectors instead of a list of copied transforms.
-@mixin number-label-raised-inside($raise) {
-  transform: translateY(calc(-50% - #{$raise})) scale(g($t-number, 'label.active.scale'));
-}
-
-@mixin number-label-raised-notch($height) {
-  background-color: g($t-number, 'outlined.label.surface');
-  transform: translateY(calc(-50% - #{$height} / 2)) scale(g($t-number, 'label.active.scale'));
-}
-
 .ui-number-input {
   $t: material-map(t.$tokens, 'm-number-input');
-  $pad-inline: g($t, 'container.padding.inline');
+
+  --ui-number-input-inset: #{g($t, 'container.padding.inline')};
 
   position: relative;
   display: flex;
   flex-direction: column;
   gap: g($t, 'container.gap');
   min-width: 0;
+
+  // ── axes · a modifier only picks values; every rule below reads them once ──
+  @each $d in compact, default, comfortable {
+    &--density-#{$d} {
+      --ui-number-input-height: #{g($t, 'density.#{$d}.height')};
+      --ui-number-input-label-top: #{g($t, 'density.#{$d}.label.top')};
+      --ui-number-input-label-raised-inside: #{g($t, 'density.#{$d}.label.transform.inside')};
+      --ui-number-input-label-raised-notch: #{g($t, 'density.#{$d}.label.transform.notch')};
+      --ui-number-input-input-padding-top: #{g($t, 'density.#{$d}.input.padding.top')};
+      --ui-number-input-input-padding-bottom: #{g($t, 'density.#{$d}.input.padding.bottom')};
+      --ui-number-input-stepper-size: #{g($t, 'density.#{$d}.stepper.split')};
+      --ui-number-input-stacked-height: #{g($t, 'density.#{$d}.stepper.stacked')};
+      --ui-number-input-zone-offset: #{g($t, 'density.#{$d}.stepper.offset')};
+    }
+  }
+
+  // The zones ride the same axis, one tier rounder — so `rounded="pill"` turns
+  // them into pills without a second visual language to maintain.
+  @each $r in sharp, small, medium, large, pill {
+    &--#{$r} {
+      --ui-number-input-radius: #{g($t, 'rounded.#{$r}')};
+      --ui-number-input-zone-radius: #{g($t, 'stepper.radius.#{$r}')};
+    }
+  }
+
+  // A filled box has a flat bottom, so a full radius would dome it — cap `pill`
+  // at the large tier for filled only.
+  &--filled.ui-number-input--pill {
+    --ui-number-input-radius: #{g($t, 'rounded.large')};
+  }
+
+  &--outlined {
+    --ui-number-input-inset: #{g($t, 'outlined.inset')};
+  }
 
   // ── label · base is `top`, a block above the container ──
   &__label {
@@ -266,11 +303,12 @@ $t-number: material-map(t.$tokens, 'm-number-input');
   // moves by transform only, so position and font-size never animate.
   &--label-float,
   &--label-inset {
-    > .ui-number-input__label {
+    .ui-number-input__label {
       position: absolute;
-      left: g($t, 'label.left');
+      top: var(--ui-number-input-label-top);
+      left: var(--ui-number-input-inset);
       z-index: 1;
-      max-width: calc(100% - 32rem);
+      max-width: g($t, 'label.max-width');
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -288,12 +326,15 @@ $t-number: material-map(t.$tokens, 'm-number-input');
 
   // A leading split zone would sit under an overlaid label; start it past the
   // zone. In flow the label is above the box, so nothing overlaps.
-  &--label-float.ui-number-input--split > &__label,
-  &--label-inset.ui-number-input--split > &__label {
-    left: g($t, 'label.split.left');
+  &--split {
+    --ui-number-input-label-notch-shift: #{g($t, 'label.split.notch.shift')};
+
+    .ui-number-input__label {
+      left: g($t, 'label.split.left');
+    }
   }
 
-  &--label-hidden > &__label {
+  &--label-hidden .ui-number-input__label {
     position: absolute;
     width: 1rem;
     height: 1rem;
@@ -309,8 +350,10 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     position: relative;
     display: flex;
     align-items: stretch;
+    min-height: var(--ui-number-input-height);
     overflow: hidden;
     border: g($t, 'container.border.width') solid g($t, 'container.border.color');
+    border-radius: var(--ui-number-input-radius);
     background-color: g($t, 'container.surface');
     transition:
       border-color g($t, 'state.duration') g($t, 'state.easing'),
@@ -323,7 +366,18 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     align-items: center;
     gap: g($t, 'adornment.gap');
     min-width: 0;
-    padding-inline: $pad-inline;
+    padding-inline: var(--ui-number-input-inset);
+  }
+
+  // A zone at an edge takes the corner, so the content beside it keeps the
+  // default start instead of clearing the curve.
+  &--split .ui-number-input__body {
+    padding-inline: g($t, 'container.padding.inline');
+  }
+
+  &--stacked .ui-number-input__body,
+  &--unit .ui-number-input__body {
+    padding-inline-end: g($t, 'container.padding.inline');
   }
 
   &__input {
@@ -343,7 +397,6 @@ $t-number: material-map(t.$tokens, 'm-number-input');
 
     &::placeholder {
       color: g($t, 'input.placeholder.color');
-      opacity: 0;
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
   }
@@ -354,6 +407,50 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     align-items: center;
     color: g($t, 'adornment.color');
     font-size: g($t, 'adornment.size');
+  }
+
+  // ── outline · rendered by the outlined shape only ─────────────
+  // A `<fieldset>` over the control's frame, so the browser cuts the notch: the
+  // hidden `<legend>` holds the label text at the raised size, and the border
+  // breaks exactly where it sits. No patch is painted behind the label, so the
+  // field reads right on any surface, and the gap is correct in the
+  // server-rendered HTML — nothing is measured. Its colour is the control's own
+  // border colour, so every state below writes one property for both shapes.
+  &__outline {
+    position: absolute;
+    inset: 0;
+    min-width: 0;
+    padding-block: 0;
+    padding-inline: g($t, 'outlined.outline.padding.start') 0;
+    margin: 0;
+    border-width: g($t, 'container.border.width');
+    border-style: solid;
+    border-color: inherit;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color g($t, 'state.duration') g($t, 'state.easing');
+  }
+
+  // As tall as the border it sits on, so the fieldset never shifts its top edge
+  // to centre a taller legend. Its width is the only thing that matters.
+  &__notch {
+    display: block;
+    width: auto;
+    max-width: 0.01rem;
+    height: g($t, 'container.border.width');
+    padding: 0;
+    overflow: hidden;
+    visibility: hidden;
+    white-space: nowrap;
+    transition: max-width g($t, 'state.duration') g($t, 'state.easing');
+
+    @include typescale(g($t, 'typography.label'));
+  }
+
+  &__notch-text {
+    display: inline-block;
+    padding-inline: g($t, 'outlined.notch.padding.inline');
+    font-size: g($t, 'outlined.notch.font-size');
   }
 
   // ── stepper zones · tone and shape, never a divider ──
@@ -370,6 +467,7 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     overflow: hidden;
     padding: 0;
     border: none;
+    border-radius: var(--ui-number-input-zone-radius);
     background-color: g($t, 'stepper.surface');
     color: g($t, 'stepper.color');
     cursor: pointer;
@@ -386,11 +484,11 @@ $t-number: material-map(t.$tokens, 'm-number-input');
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
 
-    &:hover:not(:disabled)::after {
+    &:enabled:hover::after {
       opacity: g($t, 'layer.hover');
     }
 
-    &:active:not(:disabled)::after {
+    &:enabled:active::after {
       opacity: g($t, 'layer.pressed');
     }
 
@@ -400,13 +498,9 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     }
   }
 
-  // On the highest surface a step up has nowhere to go, so the zone is drawn as
-  // a state layer over the container instead of as the next tone.
-  &--filled &__stepper {
-    background-color: g($t, 'stepper.filled.surface');
-  }
-
-  &--split &__stepper {
+  &--split .ui-number-input__stepper {
+    width: var(--ui-number-input-stepper-size);
+    height: var(--ui-number-input-stepper-size);
     margin-inline: g($t, 'stepper.inset');
     font-size: g($t, 'stepper.split.size');
   }
@@ -420,7 +514,9 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     align-self: center;
     gap: g($t, 'container.border.width');
     width: g($t, 'stepper.stacked.width');
+    height: var(--ui-number-input-stacked-height);
     margin-inline: g($t, 'stepper.inset');
+    border-radius: var(--ui-number-input-zone-radius);
 
     .ui-number-input__stepper {
       flex: 1;
@@ -428,6 +524,14 @@ $t-number: material-map(t.$tokens, 'm-number-input');
       width: 100%;
       margin: 0;
       font-size: g($t, 'stepper.stacked.size');
+    }
+
+    .ui-number-input__stepper--increment {
+      border-radius: var(--ui-number-input-zone-radius) var(--ui-number-input-zone-radius) 0 0;
+    }
+
+    .ui-number-input__stepper--decrement {
+      border-radius: 0 0 var(--ui-number-input-zone-radius) var(--ui-number-input-zone-radius);
     }
   }
 
@@ -452,144 +556,82 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     padding-block: 0;
   }
 
-  // ── shape · filled ──
-  &--filled &__control {
-    border-color: transparent;
-    border-bottom-color: g($t, 'filled.border.color');
-    background-color: g($t, 'filled.surface');
-  }
-
-  // ── shape · outlined · the raised label notches the top border ──
-  &--label-float.ui-number-input--outlined > &__label,
-  &--label-inset.ui-number-input--outlined > &__label {
-    padding-inline: g($t, 'outlined.label.padding.inline');
-    margin-left: g($t, 'outlined.label.margin.left');
-  }
-
-  // ── density · height, padding, zones, and the raise that follows ──
-  // Every height-dependent rule is emitted here, once per step, so a density
-  // can never be half-applied by a branch someone forgot to add.
-  @each $d in compact, default, comfortable {
-    $height: g($t, 'density.#{$d}.height');
-    $raise: g($t, 'density.#{$d}.label.raise');
-    $pad-top: g($t, 'density.#{$d}.input.padding.top');
-    $pad-bottom: g($t, 'density.#{$d}.input.padding.bottom');
-
-    &--density-#{$d} .ui-number-input__control {
-      min-height: $height;
-    }
-
-    &--density-#{$d}.ui-number-input--split .ui-number-input__stepper {
-      width: g($t, 'density.#{$d}.stepper.split');
-      height: g($t, 'density.#{$d}.stepper.split');
-    }
-
-    &--density-#{$d} .ui-number-input__stacked {
-      height: g($t, 'density.#{$d}.stepper.stacked');
-    }
-
-    &--density-#{$d}.ui-number-input--label-float > .ui-number-input__label,
-    &--density-#{$d}.ui-number-input--label-inset > .ui-number-input__label {
-      top: calc(#{$height} / 2);
-    }
-
-    // The asymmetric padding exists only to clear a label sitting inside the
-    // box. With the label above, beside, or gone, the value returns to centre.
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--filled .ui-number-input__input,
-    &--density-#{$d}.ui-number-input--label-inset.ui-number-input--filled .ui-number-input__input {
-      padding-top: $pad-top;
-      padding-bottom: $pad-bottom;
-    }
-
-    // With a label inside the box the value sits lower than the box centre.
-    // Ride the zones down by exactly half that imbalance so they line up with
-    // the digits instead of with the container.
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--filled .ui-number-input__stepper,
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--filled .ui-number-input__stacked,
-    &--density-#{$d}.ui-number-input--label-inset.ui-number-input--filled .ui-number-input__stepper,
-    &--density-#{$d}.ui-number-input--label-inset.ui-number-input--filled .ui-number-input__stacked {
-      margin-top: calc((#{$pad-top} - #{$pad-bottom}) / 2);
-    }
-
-    // `inset` holds the raised position always; `float` reaches it once the
-    // field is focused or has a value. Same transform — only the when differs.
-    &--density-#{$d}.ui-number-input--label-inset.ui-number-input--filled > .ui-number-input__label,
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--filled.ui-number-input--focused > .ui-number-input__label,
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--filled.ui-number-input--populated > .ui-number-input__label {
-      @include number-label-raised-inside($raise);
-    }
-
-    &--density-#{$d}.ui-number-input--label-inset.ui-number-input--outlined > .ui-number-input__label,
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--outlined.ui-number-input--focused > .ui-number-input__label,
-    &--density-#{$d}.ui-number-input--label-float.ui-number-input--outlined.ui-number-input--populated > .ui-number-input__label {
-      @include number-label-raised-notch($height);
-    }
-  }
-
-  // A placeholder is hidden only while a floating label sits on top of it.
-  &--label-float.ui-number-input--focused &__input::placeholder,
-  &--label-float.ui-number-input--populated &__input::placeholder,
-  &--label-top &__input::placeholder,
-  &--label-inset &__input::placeholder,
-  &--label-hidden &__input::placeholder,
-  &--scrub &__input::placeholder {
-    opacity: 1;
-  }
-
-  // ── hover · moves the border tone, and only that ──
-  &--interactive {
-    .ui-number-input__control:hover {
-      border-color: g($t, 'outlined.hover.border.color');
-    }
-
-    &.ui-number-input--filled .ui-number-input__control:hover {
+  // ── shapes · base → hover → focused → error → disabled ──
+  // Hover and focus answer an editable field only. `:where()` gates them on
+  // `--interactive` without adding weight, so every state rule in a shape
+  // carries the same weight and the later one wins.
+  &--filled {
+    .ui-number-input__control {
       border-color: transparent;
+      border-bottom-color: g($t, 'filled.border.color');
+      border-bottom-right-radius: 0;
+      border-bottom-left-radius: 0;
+      background-color: g($t, 'filled.surface');
+    }
+
+    // On the highest surface a step up has nowhere to go, so the zone is drawn
+    // as a state layer over the container instead of as the next tone.
+    .ui-number-input__stepper {
+      background-color: g($t, 'stepper.filled.surface');
+    }
+
+    &:where(.ui-number-input--interactive) .ui-number-input__control:hover {
       border-bottom-color: g($t, 'filled.hover.border.color');
       background-color: g($t, 'filled.hover.surface');
     }
+
+    &.ui-number-input--focused:where(.ui-number-input--interactive) .ui-number-input__control {
+      border-bottom-color: g($t, 'focused.border.color');
+    }
+
+    &.ui-number-input--error .ui-number-input__control {
+      border-bottom-color: g($t, 'error.border.color');
+    }
+
+    &.ui-number-input--disabled .ui-number-input__control {
+      border-bottom-color: g($t, 'disabled.border.color');
+      background-color: g($t, 'filled.disabled.surface');
+    }
   }
 
-  // ── focus · the border hue moves, and nothing else ──
-  &--focused:not(.ui-number-input--readonly) {
+  &--outlined {
     .ui-number-input__control {
+      padding: g($t, 'outlined.frame');
+      border-width: 0;
+    }
+
+    &:where(.ui-number-input--interactive) .ui-number-input__control:hover {
+      border-color: g($t, 'outlined.hover.border.color');
+    }
+
+    &.ui-number-input--focused:where(.ui-number-input--interactive) .ui-number-input__control {
       border-color: g($t, 'focused.border.color');
     }
 
-    > .ui-number-input__label {
-      color: g($t, 'focused.label.color');
-    }
-
-    &.ui-number-input--filled .ui-number-input__control {
-      border-color: transparent;
-      border-bottom-color: g($t, 'focused.border.color');
-    }
-  }
-
-  // ── validity ──
-  &--error {
-    .ui-number-input__control {
+    &.ui-number-input--error .ui-number-input__control {
       border-color: g($t, 'error.border.color');
     }
 
-    > .ui-number-input__label,
-    .ui-number-input__support {
-      color: g($t, 'error.color');
-    }
-
-    &.ui-number-input--filled .ui-number-input__control {
-      border-color: transparent;
-      border-bottom-color: g($t, 'error.border.color');
-    }
-  }
-
-  // ── disabled · the surface recedes and nothing responds ──
-  &--disabled {
-    .ui-number-input__control {
+    &.ui-number-input--disabled .ui-number-input__control {
       border-color: g($t, 'disabled.border.color');
       background-color: g($t, 'disabled.surface');
     }
+  }
 
-    > .ui-number-input__label,
+  // ── content · the same ink in every shape, states ascending ──
+  &--focused:where(.ui-number-input--interactive) .ui-number-input__label {
+    color: g($t, 'focused.label.color');
+  }
+
+  &--error {
+    .ui-number-input__label,
+    .ui-number-input__support {
+      color: g($t, 'error.color');
+    }
+  }
+
+  &--disabled {
+    .ui-number-input__label,
     .ui-number-input__input,
     .ui-number-input__adornment,
     .ui-number-input__unit,
@@ -602,12 +644,54 @@ $t-number: material-map(t.$tokens, 'm-number-input');
       border-bottom-color: g($t, 'disabled.color');
       cursor: default;
     }
+  }
 
-    &.ui-number-input--filled .ui-number-input__control {
-      border-color: transparent;
-      border-bottom-color: g($t, 'disabled.border.color');
-      background-color: g($t, 'filled.disabled.surface');
+  // ── raised label · `inset` always, `float` once focused or filled ──
+  &--label-inset,
+  &--label-float.ui-number-input--focused,
+  &--label-float.ui-number-input--populated {
+    &.ui-number-input--filled .ui-number-input__label {
+      transform: var(--ui-number-input-label-raised-inside);
     }
+
+    // The label rises onto the top border, into the gap the legend opens for it.
+    &.ui-number-input--outlined {
+      .ui-number-input__label {
+        transform: translateX(var(--ui-number-input-label-notch-shift, 0)) var(--ui-number-input-label-raised-notch);
+      }
+
+      .ui-number-input__notch {
+        max-width: 100%;
+      }
+    }
+  }
+
+  // The asymmetric padding exists only to clear a label sitting inside the box.
+  // The zones ride down with the value so they line up with the digits.
+  &--label-float.ui-number-input--filled,
+  &--label-inset.ui-number-input--filled {
+    .ui-number-input__input {
+      padding-top: var(--ui-number-input-input-padding-top);
+      padding-bottom: var(--ui-number-input-input-padding-bottom);
+    }
+
+    .ui-number-input__stepper,
+    .ui-number-input__stacked {
+      margin-top: var(--ui-number-input-zone-offset);
+    }
+  }
+
+  // A placeholder is hidden only while a resting floating label sits on top of
+  // it. Every other placement — and scrub, which has no overlaid label — leaves
+  // the first line free.
+  &--label-float .ui-number-input__input::placeholder {
+    opacity: 0;
+  }
+
+  &--label-float.ui-number-input--focused .ui-number-input__input::placeholder,
+  &--label-float.ui-number-input--populated .ui-number-input__input::placeholder,
+  &--scrub .ui-number-input__input::placeholder {
+    opacity: 1;
   }
 
   // ── read-only · the container stays, the interaction does not ──
@@ -629,44 +713,12 @@ $t-number: material-map(t.$tokens, 'm-number-input');
     @include typescale(g($t, 'typography.support'));
   }
 
-  // ── corner radius (rounded prop) · pulled from the shape scale ──
-  // filled keeps a flat bottom (MD3), so its top corners carry the tier alone.
-  @each $r in sharp, small, medium, large, pill {
-    &--#{$r} .ui-number-input__control {
-      border-radius: g($t, 'rounded.#{$r}');
-    }
-
-    &--#{$r}.ui-number-input--filled .ui-number-input__control {
-      border-radius: g($t, 'rounded.#{$r}') g($t, 'rounded.#{$r}') 0 0;
-    }
-
-    // The zones ride the same axis, one tier rounder — so `rounded="pill"`
-    // turns them into pills without a second visual language to maintain.
-    &--#{$r} .ui-number-input__stepper,
-    &--#{$r} .ui-number-input__stacked,
-    &--#{$r} .ui-number-input__unit-trigger {
-      border-radius: g($t, 'stepper.radius.#{$r}');
-    }
-
-    &--#{$r} .ui-number-input__stacked .ui-number-input__stepper--increment {
-      border-radius: g($t, 'stepper.radius.#{$r}') g($t, 'stepper.radius.#{$r}') 0 0;
-    }
-
-    &--#{$r} .ui-number-input__stacked .ui-number-input__stepper--decrement {
-      border-radius: 0 0 g($t, 'stepper.radius.#{$r}') g($t, 'stepper.radius.#{$r}');
-    }
-  }
-
-  // A filled box has a flat bottom, so a full radius would dome it — cap `pill`
-  // at the large tier for filled only.
-  &--pill.ui-number-input--filled .ui-number-input__control {
-    border-radius: g($t, 'rounded.large') g($t, 'rounded.large') 0 0;
-  }
-
   // Motion is feedback only: colour, and the label's raise.
   @media (prefers-reduced-motion: reduce) {
     &__control,
     &__label,
+    &__outline,
+    &__notch,
     &__stepper,
     &__input::placeholder {
       transition: none;
