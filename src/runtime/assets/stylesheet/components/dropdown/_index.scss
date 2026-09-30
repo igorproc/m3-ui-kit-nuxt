@@ -2,25 +2,41 @@
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
-// DROPDOWN M3 COMPONENT TOKENS (NESTED M3 COMPLIANT)
+// DROPDOWN M3 COMPONENT TOKENS
 // ==========================================
+// The field is `<MTextField>` and the row is `<MListItem>`; both bring their
+// own tokens. What is owned here is the chrome between them: the arrow, the
+// panel's box, the keyboard-active highlight and the empty/loading row.
 
 $tokens: (
   arrow: (
     size: 24rem,
     color: map.get($theme-color-link, on-surface-variant),
   ),
-  menu: (
-    margin: (
-      top: 4rem,
-    ),
+  panel: (
+    margin-top: 4rem,
+    // A hundred options must not run off the screen. Overridable per instance
+    // through `maxHeight`, which arrives as a custom property.
+    max-height: 320rem,
+    padding-block: 8rem,
   ),
-  list: (
-    padding: (
-      vertical: 8rem,
-    ),
+  option: (
+    active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} 8%, transparent),
+  ),
+  chip: (
+    active-outline: map.get($theme-color-link, primary),
+  ),
+  // The clear control is an affordance at rest, not the thing being acted on:
+  // `primary` is reserved for activity, so it only arrives with hover/focus.
+  clear: (
+    color: map.get($theme-color-link, on-surface-variant),
+    active-color: map.get($theme-color-link, on-surface),
   ),
   state: (
+    padding: 24rem,
+    color: map.get($theme-color-link, on-surface-variant),
+  ),
+  motion: (
     duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
   ),

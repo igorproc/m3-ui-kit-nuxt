@@ -18,4 +18,9 @@ export const MESSAGES = {
   numberIncrement: 'Increase value',
   numberDecrement: 'Decrease value',
   numberUnit: 'Change unit',
+  dropdownClear: 'Clear selection',
+  dropdownToggle: 'Toggle options',
+  dropdownLoading: 'Loading options',
+  dropdownEmpty: 'No options',
+  dropdownNoResults: 'No results',
 } as const

@@ -35,6 +35,22 @@ describe('m-list-item', () => {
     expect(wrapper.text()).toContain('Body')
   })
 
+  it('defaults to the default density and reads the lines modifier alongside it', async () => {
+    const wrapper = await mountSuspended(MListItem, { props: { headline: 'One line' } })
+
+    expect(wrapper.classes()).toContain('ui-list-item--density-default')
+    expect(wrapper.classes()).toContain('ui-list-item--lines-1')
+  })
+
+  it('applies an explicit density without touching the line count', async () => {
+    const wrapper = await mountSuspended(MListItem, {
+      props: { headline: 'Title', supportingText: 'Subtitle', density: 'compact' },
+    })
+
+    expect(wrapper.classes()).toContain('ui-list-item--density-compact')
+    expect(wrapper.classes()).toContain('ui-list-item--lines-2')
+  })
+
   it('applies the selected modifier', async () => {
     const wrapper = await mountSuspended(MListItem, {
       props: { selected: true },

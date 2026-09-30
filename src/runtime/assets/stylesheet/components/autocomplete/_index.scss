@@ -22,6 +22,11 @@ $tokens: (
   chip: (
     active-outline: map.get($theme-color-link, primary),
   ),
+  // Rest is an affordance, not an action: `primary` belongs to activity alone.
+  clear: (
+    color: map.get($theme-color-link, on-surface-variant),
+    active-color: map.get($theme-color-link, on-surface),
+  ),
   state: (
     padding: 24rem,
     color: map.get($theme-color-link, on-surface-variant),

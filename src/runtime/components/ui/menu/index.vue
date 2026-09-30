@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { computed, ref, onMounted, nextTick, watch } from 'vue'
 import { useMenu } from '#kit/composables/menu/useMenu'
 import { useStack } from '#kit/composables/useStack'
 import { useClickOutside } from '#kit/composables/useClickOutside'
@@ -77,13 +77,16 @@ const menu = useMenu(modelValue, {
   matchWidth: () => props.matchWidth,
 })
 
+/** The explicit anchor wins; otherwise the parent element is the trigger. */
+const anchorEl = computed<HTMLElement | null>(() => props.anchor ?? anchorRef.value?.parentElement ?? null)
+
 // DOM measurement stays in the component (the composable is DOM-free).
 const updatePosition = () => {
   if (!modelValue.value || !anchorRef.value || !props.absolute || menu.isAnchorSupported.value) {
     return
   }
 
-  const trigger = anchorRef.value.parentElement
+  const trigger = anchorEl.value
   if (!trigger) {
     return
   }
@@ -186,12 +189,14 @@ watch(modelValue, async (val) => {
   }
 })
 
-// Inject the anchor-name onto the trigger when CSS anchor positioning is supported.
-watch(anchorRef, (el) => {
-  if (menu.isAnchorSupported.value && el?.parentElement) {
-    el.parentElement.style.setProperty('anchor-name', menu.anchorName)
-  }
-})
+// Inject the anchor-name onto the trigger when CSS anchor positioning is
+// supported. The previous element gives the name back, so a changed anchor
+// cannot leave two elements claiming it.
+watch(anchorEl, (el, previous) => {
+  if (!menu.isAnchorSupported.value) return
+  previous?.style.removeProperty('anchor-name')
+  el?.style.setProperty('anchor-name', menu.anchorName)
+}, { immediate: true })
 
 // Menu is autonomous: it owns outside-click detection and notifies consumers
 // (e.g. Dropdown, SplitButton) via `click-outside` so they can sync their own

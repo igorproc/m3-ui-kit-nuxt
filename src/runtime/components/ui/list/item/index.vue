@@ -9,6 +9,7 @@
       'ui-list-item--disabled': disabled,
       'ui-list-item--selected': selected,
       [`ui-list-item--lines-${computedLines}`]: true,
+      [`ui-list-item--density-${resolvedDensity}`]: true,
     }"
     :disabled="disabled"
     :role="a11yRole"
@@ -86,12 +87,18 @@
 import { computed, defineAsyncComponent, ref, useSlots } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import { type MListItemProps, mListItemProps } from './props'
+import { useListContext } from '../context'
 
 const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
 
 const props = defineProps(mListItemProps)
 
 const slots = useSlots()
+
+// The row's own prop wins; absent, the enclosing `<MList>` decides. A row with
+// no list ancestor gets the context's fallback.
+const list = useListContext()
+const resolvedDensity = computed(() => props.density ?? list.density.value)
 
 const rootRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
 
@@ -161,20 +168,19 @@ const tag = computed(() => {
 @use '#kit/assets/stylesheet/components/list/item/index' as t;
 
 .ui-list-item {
-  $prefix: 'md-list-item';
-  $t: material-map(t.$tokens, $prefix);
+  $t: t.$tokens;
 
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: g($t, 'padding-between');
-  padding: g($t, 'padding-top') g($t, 'padding-trailing') g($t, 'padding-bottom') g($t, 'padding-leading');
+  gap: g($t, 'padding.between');
+  padding: g($t, 'padding.top') g($t, 'padding.trailing') g($t, 'padding.bottom') g($t, 'padding.leading');
   border-radius: g($t, 'shape');
-  background-color: g($t, 'container-color');
+  background-color: g($t, 'container.color');
   border: none;
   width: 100%;
   text-align: left;
-  color: g($t, 'label-text-color');
+  color: g($t, 'label.text.color');
   text-decoration: none;
   box-sizing: border-box;
   position: relative;
@@ -184,17 +190,18 @@ const tag = computed(() => {
     color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     outline var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-  // Line counts
-  &--lines-1 {
-    min-height: g($t, 'height-one');
-  }
-
-  &--lines-2 {
-    min-height: g($t, 'height-two');
+  // Line count decides the shape of the row; density decides how tall that
+  // shape is drawn. Emitted as one matrix so a density can never be
+  // half-applied by a branch someone forgot to add.
+  @each $d in compact, default, comfortable {
+    @each $line, $key in (1: one, 2: two, 3: three) {
+      &--density-#{$d}.ui-list-item--lines-#{$line} {
+        min-height: g($t, 'density.#{$d}.height.#{$key}');
+      }
+    }
   }
 
   &--lines-3 {
-    min-height: g($t, 'height-three');
     align-items: flex-start;
 
     .ui-list-item__leading {
@@ -210,67 +217,67 @@ const tag = computed(() => {
     cursor: pointer;
 
     &:hover {
-      background-color: color-mix(in srgb, g($t, 'state-hover-color') g($t, 'state-hover-opacity'), transparent);
+      background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), transparent);
     }
 
     &:active {
-      background-color: color-mix(in srgb, g($t, 'state-pressed-color') g($t, 'state-pressed-opacity'), transparent);
+      background-color: color-mix(in srgb, g($t, 'state.pressed.color') g($t, 'state.pressed.opacity'), transparent);
     }
 
     &:focus-visible {
-      background-color: color-mix(in srgb, g($t, 'state-focus-color') g($t, 'state-focus-opacity'), transparent);
-      outline: g($t, 'state-focus-indicator-thickness') solid g($t, 'state-focus-indicator-color');
-      outline-offset: g($t, 'state-focus-indicator-offset');
+      background-color: color-mix(in srgb, g($t, 'state.focus.color') g($t, 'state.focus.opacity'), transparent);
+      outline: g($t, 'state.focus.indicator.thickness') solid g($t, 'state.focus.indicator.color');
+      outline-offset: g($t, 'state.focus.indicator.offset');
     }
   }
 
   // Selected State
   &--selected {
-    background-color: g($t, 'container-selected-color');
-    color: g($t, 'label-text-selected-color');
+    background-color: g($t, 'container.selected.color');
+    color: g($t, 'label.text.selected.color');
 
     .ui-list-item__headline {
-      color: g($t, 'label-text-selected-color');
+      color: g($t, 'label.text.selected.color');
     }
 
     .ui-list-item__supporting {
-      color: g($t, 'supporting-text-selected-color');
+      color: g($t, 'supporting.text.selected.color');
     }
 
     .ui-list-item__overline {
-      color: g($t, 'overline-selected-color');
+      color: g($t, 'overline.selected.color');
     }
 
     .ui-list-item__leading {
-      color: g($t, 'leading-icon-selected-color');
+      color: g($t, 'leading.icon.selected.color');
     }
 
     .ui-list-item__trailing {
-      color: g($t, 'trailing-icon-selected-color');
+      color: g($t, 'trailing.icon.selected.color');
 
       &-supporting {
-        color: g($t, 'trailing-supporting-text-selected-color');
+        color: g($t, 'trailing.supporting.text.selected.color');
       }
     }
 
     &.ui-list-item--interactive {
       &:hover {
-        background-color: color-mix(in srgb, g($t, 'state-hover-color') g($t, 'state-hover-opacity'), g($t, 'container-selected-color'));
+        background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), g($t, 'container.selected.color'));
       }
 
       &:active {
-        background-color: color-mix(in srgb, g($t, 'state-pressed-color') g($t, 'state-pressed-opacity'), g($t, 'container-selected-color'));
+        background-color: color-mix(in srgb, g($t, 'state.pressed.color') g($t, 'state.pressed.opacity'), g($t, 'container.selected.color'));
       }
 
       &:focus-visible {
-        background-color: color-mix(in srgb, g($t, 'state-focus-color') g($t, 'state-focus-opacity'), g($t, 'container-selected-color'));
+        background-color: color-mix(in srgb, g($t, 'state.focus.color') g($t, 'state.focus.opacity'), g($t, 'container.selected.color'));
       }
     }
   }
 
   &--disabled {
     cursor: default;
-    opacity: g($t, 'container-disabled-opacity');
+    opacity: g($t, 'container.disabled.opacity');
     pointer-events: none;
   }
 
@@ -278,20 +285,20 @@ const tag = computed(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: g($t, 'leading-icon-color');
-    font-size: g($t, 'leading-icon-size');
+    color: g($t, 'leading.icon.color');
+    font-size: g($t, 'leading.icon.size');
     min-width: 24rem;
 
     img {
-      width: g($t, 'leading-image-width');
-      height: g($t, 'leading-image-height');
-      border-radius: g($t, 'leading-image-shape');
+      width: g($t, 'leading.image.width');
+      height: g($t, 'leading.image.height');
+      border-radius: g($t, 'leading.image.shape');
       object-fit: cover;
     }
 
     .ui-avatar {
-      width: g($t, 'leading-avatar-size');
-      height: g($t, 'leading-avatar-size');
+      width: g($t, 'leading.avatar.size');
+      height: g($t, 'leading.avatar.size');
       border-radius: map.get($theme-shape-link, full);
     }
   }
@@ -304,29 +311,29 @@ const tag = computed(() => {
   }
 
   &__overline {
-    color: g($t, 'overline-color');
+    color: g($t, 'overline.color');
     margin-bottom: 4rem;
 
-    @include apply-typography(g($t, 'overline-typography'));
+    @include apply-typography(g($t, 'overline.typography'));
   }
 
   &__headline {
-    color: g($t, 'label-text-color');
+    color: g($t, 'label.text.color');
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 
-    @include apply-typography(g($t, 'label-text-typography'));
+    @include apply-typography(g($t, 'label.text.typography'));
   }
 
   &__supporting {
-    color: g($t, 'supporting-text-color');
+    color: g($t, 'supporting.text.color');
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 4rem;
 
-    @include apply-typography(g($t, 'supporting-text-typography'));
+    @include apply-typography(g($t, 'supporting.text.typography'));
   }
 
   &__trailing {
@@ -334,14 +341,14 @@ const tag = computed(() => {
     align-items: center;
     justify-content: center;
     gap: 8rem;
-    color: g($t, 'trailing-icon-color');
-    font-size: g($t, 'trailing-icon-size');
+    color: g($t, 'trailing.icon.color');
+    font-size: g($t, 'trailing.icon.size');
   }
 
   &__trailing-supporting {
-    color: g($t, 'trailing-supporting-text-color');
+    color: g($t, 'trailing.supporting.text.color');
 
-    @include apply-typography(g($t, 'trailing-supporting-text-typography'));
+    @include apply-typography(g($t, 'trailing.supporting.text.typography'));
   }
 }
 </style>

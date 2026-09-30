@@ -80,6 +80,18 @@ export const mFieldProps = {
   autocomplete: { type: String, default: undefined },
 }
 
+/**
+ * The two elements `<MTextField>` exposes to a composite field built on it.
+ *
+ * A popover anchors to `control`, not to the component root: the root's box
+ * also holds the label and the support line, so anchoring to it would drop the
+ * surface below the helper text. Focus belongs to `input`.
+ */
+export interface MFieldParts {
+  control: HTMLElement | null
+  input: HTMLInputElement | null
+}
+
 export const mTextFieldProps = {
   ...mFieldProps,
   ...fieldDensityProp,

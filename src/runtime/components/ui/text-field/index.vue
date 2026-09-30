@@ -22,7 +22,10 @@
       {{ label }}
     </label>
 
-    <div class="ui-text-field__control">
+    <div
+      ref="controlRef"
+      class="ui-text-field__control"
+    >
       <span
         v-if="hasPrepend"
         class="ui-text-field__icon ui-text-field__icon--prepend"
@@ -38,6 +41,7 @@
 
         <input
           :id="fieldId"
+          ref="inputRef"
           v-model="modelValue"
           class="ui-text-field__input"
           v-bind="inputAttrs"
@@ -60,6 +64,7 @@
       <input
         v-else
         :id="fieldId"
+        ref="inputRef"
         v-model="modelValue"
         class="ui-text-field__input"
         v-bind="inputAttrs"
@@ -105,6 +110,9 @@ import { mTextFieldProps } from './props'
 const props = defineProps(mTextFieldProps)
 const slots = useSlots()
 
+const controlRef = ref<HTMLElement | null>(null)
+const inputRef = ref<HTMLInputElement | null>(null)
+
 const modelValue = defineModel<string>({ default: '' })
 const isFocused = defineModel<boolean>('focused', { default: false })
 const fieldId = useId()
@@ -124,6 +132,13 @@ const isPopulated = computed(() => props.populated || Boolean(modelValue.value))
 const displayMessage = computed(() => errorMessage.value || (props.error ? props.helperText : undefined) || props.helperText)
 const messageId = computed(() => isError.value ? `${fieldId}-error` : `${fieldId}-helper`)
 const describedBy = computed(() => displayMessage.value ? messageId.value : undefined)
+
+/**
+ * The two boxes a composite field needs to reach: `control` is the drawn
+ * container — what a popover anchors to, since the support line sits outside it
+ * — and `input` is where focus belongs.
+ */
+defineExpose({ control: controlRef, input: inputRef })
 </script>
 
 <style lang="scss">

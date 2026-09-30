@@ -6,11 +6,20 @@
 // ==========================================
 
 $tokens: (
-  // Base Heights
-  height: (
-    one: 56rem,
-    two: 72rem,
-    three: 88rem,
+  // Vertical scale. The steps mirror the field family's density ladder
+  // (-12rem / +8rem around `default`), so a one-line row and a field of the
+  // same density are exactly the same height — which is what lets a dropdown
+  // panel line up with the field that opens it.
+  density: (
+    compact: (
+      height: (one: 44rem, two: 60rem, three: 76rem),
+    ),
+    default: (
+      height: (one: 56rem, two: 72rem, three: 88rem),
+    ),
+    comfortable: (
+      height: (one: 64rem, two: 80rem, three: 96rem),
+    ),
   ),
   // Spaces / Padding
   padding: (

@@ -164,12 +164,21 @@ describe('m-autocomplete · variants', () => {
       expect(options()[0]!.textContent).toContain('★ Alpha')
     })
 
-    it('renders a custom selection slot for chips', async () => {
+    it('renders a custom chip slot per selected value', async () => {
       const wrapper = await mount(
         { ...base, multiple: true, modelValue: [1] },
-        { selection: ({ title }: { title: string }) => `#${title}` },
+        { chip: ({ title }: { title: string }) => `#${title}` },
       )
       expect(wrapper.text()).toContain('#Alpha')
+    })
+
+    it('replaces the whole selection block through the selection slot', async () => {
+      const wrapper = await mount(
+        { ...base, multiple: true, modelValue: [1, 3] },
+        { selection: ({ entries }: { entries: { title: string }[] }) => entries.map(e => e.title).join(' + ') },
+      )
+      expect(wrapper.text()).toContain('Alpha + Gamma')
+      expect(wrapper.findAll('.ui-autocomplete__chip')).toHaveLength(0)
     })
 
     it('renders the empty slot when there are no items', async () => {

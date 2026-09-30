@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
 import MList from './index.vue'
+import MListItem from './item/index.vue'
 
 describe('m-list', () => {
   it('renders a container with the ui-list class', async () => {
@@ -36,5 +37,20 @@ describe('m-list', () => {
     expect(rows).toHaveLength(3)
     expect(rows[0]!.text()).toBe('0:Alpha')
     expect(rows[2]!.text()).toBe('2:Gamma')
+  })
+
+  it('passes its density down to rows that do not set one', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      render: () => h(MList, { density: 'comfortable' as const }, {
+        default: () => [
+          h(MListItem, { headline: 'Inherits' }),
+          h(MListItem, { headline: 'Overrides', density: 'compact' as const }),
+        ],
+      }),
+    }))
+
+    const rows = wrapper.findAll('.ui-list-item')
+    expect(rows[0]!.classes()).toContain('ui-list-item--density-comfortable')
+    expect(rows[1]!.classes()).toContain('ui-list-item--density-compact')
   })
 })
