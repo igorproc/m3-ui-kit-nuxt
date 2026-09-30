@@ -12,15 +12,30 @@
 // width on focus) so the two fields read as one family.
 // ==========================================
 
+// Shared by the box, the label and the outline notch, which has to reproduce the
+// raised label's footprint in layout terms.
+$border-width: 1rem;
+$padding-inline: 16rem;
+$padding-block: 12rem;
+$line-height: 24rem;
+$rows: 3;
+$grip-band: 20rem;
+$label-typescale: 'body-medium';
+$label-raised-scale: 0.75;
+$notch-padding-inline: 4rem;
+
+// A multi-line box has no height CSS can read at the root, so a `full` corner is
+// capped by the default box: `$rows` lines plus the block padding, halved.
+$radius-cap: ($rows * $line-height + 2 * $padding-block) * 0.5;
 $tokens: (
   container: (
     gap: 4rem,
-    border: (width: 1rem, color: map.get($theme-color-link, outline)),
+    border: (width: $border-width, color: map.get($theme-color-link, outline)),
     surface: transparent,
-    padding: (inline: 16rem, block: 12rem),
+    padding: (inline: $padding-inline, block: $padding-block),
   ),
   typography: (
-    label: 'body-medium',
+    label: $label-typescale,
     input: 'body-large',
     support: 'body-small',
   ),
@@ -28,20 +43,16 @@ $tokens: (
     gap: 16rem,
     color: map.get($theme-color-link, on-surface-variant),
     required: (color: map.get($theme-color-link, error)),
-    active: (scale: 0.75),
+    max-width: calc(100% - #{2 * $padding-inline}),
+    active: (scale: $label-raised-scale),
     // Overlay placements: where the label sits inside the box, and how much
     // room the value gives up for it.
     inset: (top: 8rem, body-padding: 26rem),
-    notch: (
-      surface: map.get($theme-color-link, surface),
-      padding: (inline: 4rem),
-      margin: (left: -4rem),
-    ),
   ),
   input: (
     color: map.get($theme-color-link, on-surface),
-    line-height: 24rem,
-    rows: 3,
+    line-height: $line-height,
+    rows: $rows,
     placeholder: (color: map.get($theme-color-link, on-surface-variant)),
   ),
   adornment: (
@@ -78,7 +89,8 @@ $tokens: (
     height: 5rem,
     inset: 6rem,
     // Vertical space reserved under the value so the two never collide.
-    band: 20rem,
+    band: $grip-band,
+    body: (padding: (bottom: $padding-block + $grip-band)),
     hit: (width: 72rem, height: 16rem),
     color: map.get($theme-color-link, outline-variant),
     hover: (color: map.get($theme-color-link, on-surface-variant)),
@@ -113,7 +125,28 @@ $tokens: (
     hover: (border: (color: map.get($theme-color-link, on-surface))),
     disabled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent)),
   ),
+  // Height bounds in rows. The row counts come from the component at runtime.
+  growth: (
+    min-height: calc(var(--m-textarea-rows, #{$rows}) * 1lh + #{2 * $padding-block}),
+    max-height: calc(var(--m-textarea-max-rows) * 1lh + #{2 * $padding-block}),
+  ),
   outlined: (
+    // Where content starts. A large or pill corner curves past the default
+    // start, and a notch cut into that curve reads as a broken corner — so the
+    // content (and with it the notch) starts past the effective radius.
+    inset: max(#{$padding-inline}, min(var(--ui-textarea-radius), #{$radius-cap}) + #{$notch-padding-inline}),
+    // The control trades its own border for padding of the same width, so its
+    // `overflow: hidden` clips at the outer edge and the outline drawn inside
+    // that ring is never cut.
+    frame: $border-width,
+    // The `<fieldset>` that draws the border. Its start padding puts the legend
+    // where the raised label's padding box begins.
+    outline: (padding: (start: calc(var(--ui-textarea-inset) - #{$notch-padding-inline + $border-width}))),
+    // The gap cut into the top border behind the raised label: the label text
+    // at its raised size, plus breathing room on either side.
+    notch: (padding: (inline: $notch-padding-inline),
+      font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
+    ),
     hover: (border: (color: map.get($theme-color-link, on-surface))),
   ),
   rounded: (
