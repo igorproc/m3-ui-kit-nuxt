@@ -158,7 +158,7 @@ const cellClasses = (cell: OtpCell) => [
 
   // The name has to exist even when it is not shown: `hidden` takes it out of
   // the layout, never out of the accessibility tree.
-  &--label-hidden > &__label {
+  &--label-hidden &__label {
     position: absolute;
     width: 1rem;
     height: 1rem;
@@ -186,7 +186,7 @@ const cellClasses = (cell: OtpCell) => [
     justify-content: center;
     width: g($t, 'field.size');
     height: g($t, 'field.size');
-    border: 1rem solid g($t, 'field.outline');
+    border: g($t, 'field.border-width') solid g($t, 'field.outline');
     border-radius: g($t, 'field.shape');
     color: g($t, 'field.color');
     cursor: text;

@@ -11,6 +11,7 @@ $tokens: (
   field: (
     size: 48rem,
     shape: var(--sys-shape-corner-medium),
+    border-width: 1rem,
     outline: map.get($theme-color-link, outline),
     color: map.get($theme-color-link, on-surface),
     active-outline: map.get($theme-color-link, primary),
