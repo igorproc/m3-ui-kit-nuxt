@@ -149,6 +149,19 @@ test.describe('MDropdown', () => {
     await expect(listbox(page)).toHaveCount(0)
   })
 
+  test('an error does not change the field height and is not colour alone', async ({ page }) => {
+    await openFixture(page, 'dropdown/matrix')
+    const root = (id: string) => combobox(page, id).locator(`xpath=ancestor::div[contains(concat(' ', @class, ' '), ' ui-dropdown ')][1]`)
+
+    for (const variant of ['filled', 'outlined']) {
+      const enabled = (await root(`enabled-${variant}`).boundingBox())!
+      const invalid = (await root(`error-${variant}`).boundingBox())!
+      expect(invalid.height, variant).toBeCloseTo(enabled.height, 0)
+      await expect(combobox(page, `error-${variant}`)).toHaveAttribute('aria-invalid', 'true')
+      await expect(root(`flagged-${variant}`).locator('.ui-text-field__support-icon')).toBeVisible()
+    }
+  })
+
   test('read-only takes focus but does not open', async ({ page }) => {
     await openFixture(page, 'dropdown/matrix')
     await combobox(page, 'readonly-filled').focus()

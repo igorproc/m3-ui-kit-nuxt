@@ -123,6 +123,18 @@ test.describe('MAutocomplete', () => {
     await expect(field).toBeFocused()
   })
 
+  test('an error does not change the field height', async ({ page }) => {
+    await openFixture(page, 'autocomplete/matrix')
+    const root = (id: string) => combobox(page, id).locator(`xpath=ancestor::div[contains(concat(' ', @class, ' '), ' ui-autocomplete ')][1]`)
+
+    for (const variant of ['filled', 'outlined']) {
+      const enabled = (await root(`enabled-${variant}`).boundingBox())!
+      const invalid = (await root(`error-${variant}`).boundingBox())!
+      expect(invalid.height, variant).toBeCloseTo(enabled.height, 0)
+      await expect(combobox(page, `error-${variant}`)).toHaveAttribute('aria-invalid', 'true')
+    }
+  })
+
   test('below the minimum length the panel stays closed', async ({ page }) => {
     await openFixture(page, 'autocomplete/matrix')
     const field = combobox(page, 'min-length-filled')
