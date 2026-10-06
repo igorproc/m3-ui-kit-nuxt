@@ -13,7 +13,7 @@
  *
  * - displayed message: field error → `props.errorMessage` → `helperText`
  * - `isError`: `props.error || !!props.errorMessage || field.hasError`
- * - `aria-invalid`: `!meta.valid || props.error || !!props.errorMessage`
+ * - `aria-invalid`: follows `isError` — only what the user can see is announced
  *
  * @example
  * ```ts
@@ -50,7 +50,7 @@ export interface UseTextFieldReturn {
   errorMessage: ComputedRef<string | undefined>
   /** Combined error flag: `error` prop, external `errorMessage`, or a field error. */
   isError: ComputedRef<boolean>
-  /** vee-validate meta (drives `aria-invalid` via `meta.valid`). */
+  /** Field meta (valid / touched / dirty) from the validation adapter. */
   meta: FieldMeta<string>
   /** Focus handler — sets the `focused` model to `true`. */
   onFocus: () => void

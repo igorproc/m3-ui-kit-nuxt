@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { defineComponent, h, ref } from 'vue'
+import { provideValidationAdapter } from '#kit/composables/validation/context'
+import type { ValidationAdapter } from '#kit/composables/validation/types'
 import MTextField from './index.vue'
 
 describe('m-text-field', () => {
@@ -120,6 +123,26 @@ describe('m-text-field', () => {
     expect(support.attributes('role')).toBe('alert')
     expect(input.attributes('aria-invalid')).toBe('true')
     expect(wrapper.classes()).toContain('ui-text-field--error')
+  })
+
+  it('does not announce invalid before the error is shown', async () => {
+    // An engine that has already validated silently: invalid meta, no message yet.
+    const silentlyInvalid: ValidationAdapter = {
+      bindField: <T>() => ({
+        value: ref('') as never,
+        errorMessage: ref<string | undefined>(undefined),
+        meta: { required: true, touched: false, dirty: false, valid: false, validated: true, pending: false } as never,
+      }) as never,
+      createForm: () => { throw new Error('unused') },
+    }
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        provideValidationAdapter(silentlyInvalid)
+        return () => h(MTextField, { path: 'email', label: 'Email' })
+      },
+    }))
+
+    expect(wrapper.find('input.ui-text-field__input').attributes('aria-invalid')).toBeUndefined()
   })
 
   it('exposes a single root-owned label and applies the rounded tier', async () => {

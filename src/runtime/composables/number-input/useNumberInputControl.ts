@@ -218,7 +218,7 @@ export function useNumberInputControl(
     'aria-valuemax': props.max,
     'aria-valuenow': model.value ?? undefined,
     'aria-valuetext': model.value === null ? undefined : value.codec.value.format(model.value),
-    'aria-invalid': !field.meta.valid || isError.value ? 'true' : undefined,
+    'aria-invalid': isError.value ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,
     'onFocus': value.onFocus,

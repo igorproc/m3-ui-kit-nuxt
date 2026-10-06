@@ -218,7 +218,7 @@ export function useTextareaControl(
     'autocomplete': props.autocomplete,
     'spellcheck': props.spellcheck,
     'wrap': props.wrap,
-    'aria-invalid': !field.meta.valid || field.isError.value ? 'true' : undefined,
+    'aria-invalid': field.isError.value ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,
     'style': resize.style.value,
