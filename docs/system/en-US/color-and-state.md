@@ -27,11 +27,22 @@ complete there is no active cell. Confirmation is the application's job, not the
 ## States
 
 Every interactive component handles five: **initial, hover, pressed, focused, disabled**.
-Hover and pressed are `color-mix` at the MD3 opacities (8% and 12%), resolved at build time:
+Hover and pressed are `color-mix` at the MD3 opacities, resolved at build time. The
+opacities live in one map (`$theme-state-link`: hover 8%, focus 10%, pressed 12%,
+dragged 16%, disabled container 12% / content 38%) and are read with `state-opacity()` —
+never a literal:
 
 ```scss
-background: color-mix(in srgb, #{$color} 8%, transparent);
+@include can-hover {
+  &:hover {
+    background: color-mix(in srgb, #{$color} state-opacity(hover), transparent);
+  }
+}
 ```
+
+Every `:hover` rule sits inside `@include can-hover` (`@media (hover: hover)`), so a tap on
+a touch screen does not leave the state stuck. Keep `:focus-visible` and other states
+outside it. `npm run lint:scss` fails on a bare `:hover`.
 
 ### One property per state
 

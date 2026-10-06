@@ -28,12 +28,22 @@
 ## Состояния
 
 Любой интерактивный компонент обрабатывает пять: **обычное, hover, pressed, focused,
-disabled**. Hover и pressed — это `color-mix` на непрозрачностях MD3 (8% и 12%), разрешаемый
-на этапе сборки:
+disabled**. Hover и pressed — это `color-mix` на непрозрачностях MD3, разрешаемый на этапе
+сборки. Непрозрачности живут в одной карте (`$theme-state-link`: hover 8%, focus 10%,
+pressed 12%, dragged 16%, disabled — контейнер 12% / контент 38%) и читаются через
+`state-opacity()`, никогда не литералом:
 
 ```scss
-background: color-mix(in srgb, #{$color} 8%, transparent);
+@include can-hover {
+  &:hover {
+    background: color-mix(in srgb, #{$color} state-opacity(hover), transparent);
+  }
+}
 ```
+
+Любое правило с `:hover` лежит внутри `@include can-hover` (`@media (hover: hover)`), чтобы
+тап на тач-экране не оставлял состояние «залипшим». `:focus-visible` и прочие состояния —
+снаружи. `npm run lint:scss` падает на «голом» `:hover`.
 
 ### Одно свойство на состояние
 

@@ -24,8 +24,12 @@
   @return 0;
 }
 
-@function spacing($value) {
-  @return $spacing-base * $value
+@function spacing($step) {
+  @if not map.has-key($theme-spacing-link, $step) {
+    @error 'Spacing `#{$step}` is off the 4-unit scale. Available: #{map.keys($theme-spacing-link)}.';
+  }
+
+  @return map.get($theme-spacing-link, $step);
 }
 
 @function strip-unit($value) {

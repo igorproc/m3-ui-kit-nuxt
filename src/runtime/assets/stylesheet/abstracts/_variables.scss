@@ -23,6 +23,23 @@ $theme-state-link: (
   'disabled-container': 12%,
   'disabled-content': 38%,
 );
+
+/// Spacing on the MD3 4-unit grid, keyed by design pixels: `spacing(16)` → 16rem.
+/// Read through `spacing($step)`; a step off the scale fails the build.
+$theme-spacing-link: (
+  0: 0,
+  2: 2rem,
+  4: 4rem,
+  8: 8rem,
+  12: 12rem,
+  16: 16rem,
+  20: 20rem,
+  24: 24rem,
+  32: 32rem,
+  40: 40rem,
+  48: 48rem,
+  64: 64rem,
+);
 $z-indexes: (
   dialog: 100,
   backdrop: 99,
