@@ -181,7 +181,7 @@
                 :blocked="entry.blocked"
                 :active="control.activeId.value === entry.id"
               >
-                {{ entry.title }}
+                <span class="ui-autocomplete__option-title">{{ entry.title }}</span>
               </slot>
             </MListItem>
           </MList>
@@ -409,6 +409,13 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
     @include forced-colors {
       outline-color: Highlight;
     }
+  }
+
+  // A row wraps rather than truncating — a choice has to be readable — and an
+  // unbreakable string (a URL, an e-mail) breaks too, instead of widening the
+  // panel into a horizontal scroll.
+  &__option-title {
+    overflow-wrap: anywhere;
   }
 
   &__state {
