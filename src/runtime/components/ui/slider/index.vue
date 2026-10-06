@@ -73,10 +73,6 @@ import { mSliderProps } from './props'
 
 const props = defineProps(mSliderProps)
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: number | number[]): void
-}>()
-
 const modelValue = defineModel<number | number[]>({ default: 0 })
 
 /**
@@ -109,7 +105,6 @@ const {
   readonly: () => props.readonly,
   orientation: () => props.orientation,
   ariaLabel: thumbAriaLabel,
-  onUpdate: value => emit('update:modelValue', value),
 })
 </script>
 

@@ -49,6 +49,16 @@ describe('m-slider', () => {
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual([45])
   })
 
+  it('emits update:modelValue exactly once per step', async () => {
+    const wrapper = await mountSuspended(MSlider, {
+      props: { modelValue: 40, step: 5 },
+    })
+
+    await wrapper.find('[role="slider"]').trigger('keydown', { key: 'ArrowRight' })
+
+    expect(wrapper.emitted('update:modelValue')).toEqual([[45]])
+  })
+
   it('decrements the value with ArrowLeft', async () => {
     const wrapper = await mountSuspended(MSlider, {
       props: { modelValue: 40, step: 5 },
