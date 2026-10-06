@@ -1,0 +1,61 @@
+name: Release
+
+# Publishes to npm when a version tag is pushed:
+#   vX.Y.Z               → dist-tag `latest`,     commit must be on main
+#   vX.Y.Z-nightwatch.N  → dist-tag `nightwatch`, commit must be on nightwatch
+# Auth is npm Trusted Publishing (OIDC): no token is stored in the repository.
+# The package must have this repository + workflow registered as a trusted
+# publisher on npmjs.com, otherwise `npm publish` is rejected.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          # npm >= 11.5.1 is required for trusted publishing; Node 24 ships it.
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Resolve dist-tag and guard the release
+        id: release
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+            exit 1
+          fi
+
+          case "${version}" in
+            *-nightwatch.*) dist_tag=nightwatch; branch=nightwatch ;;
+            *-*) echo "::error::Only -nightwatch.N prereleases are published"; exit 1 ;;
+            *) dist_tag=latest; branch=main ;;
+          esac
+
+          if ! git branch -r --contains "${GITHUB_SHA}" | grep -qx "  origin/${branch}"; then
+            echo "::error::${GITHUB_REF_NAME} is not on origin/${branch}"
+            exit 1
+          fi
+
+          echo "dist_tag=${dist_tag}" >> "${GITHUB_OUTPUT}"
+
+      - run: npm ci
+      - run: npm run dev:prepare
+      - run: npm run typecheck
+      - run: npx vitest run --coverage.enabled=false
+
+      # prepack builds dist/ before packing.
+      - run: npm publish --tag ${{ steps.release.outputs.dist_tag }}
