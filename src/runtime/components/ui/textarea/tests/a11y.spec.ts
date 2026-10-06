@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { VueWrapper } from '@vue/test-utils'
+import { defineComponent, h, ref } from 'vue'
+import { provideValidationAdapter } from '#kit/composables/validation/context'
+import type { ValidationAdapter } from '#kit/composables/validation/types'
 import MTextarea from '../index.vue'
 
 let current: { unmount: () => void } | null = null
@@ -74,7 +77,20 @@ describe('m-textarea · a11y', () => {
       const wrapper = await mount({ errorMessage: 'Too short' })
 
       expect(wrapper.find('textarea').attributes('aria-invalid')).toBe('true')
-      expect(wrapper.find('.ui-textarea__message').attributes('role')).toBe('alert')
+      expect(wrapper.find('.ui-textarea__message [role="alert"]').text()).toBe('Too short')
+    })
+
+    it('keeps the alert region mounted before there is an error to write into it', async () => {
+      const wrapper = await mount({ helperText: 'Hint' })
+      const region = wrapper.find('.ui-textarea__message [role="alert"]')
+
+      expect(region.exists()).toBe(true)
+      expect(region.text()).toBe('')
+
+      await wrapper.setProps({ errorMessage: 'Too short' })
+
+      expect(wrapper.find('[role="alert"]').element).toBe(region.element)
+      expect(region.text()).toBe('Too short')
     })
 
     it('treats the error prop as invalid even without a message', async () => {
@@ -87,8 +103,8 @@ describe('m-textarea · a11y', () => {
       const wrapper = await mount({ helperText: 'Markdown supported' })
 
       expect(wrapper.find('textarea').attributes('aria-invalid')).toBeUndefined()
-      expect(wrapper.find('.ui-textarea__message').attributes('role')).toBeUndefined()
-      expect(wrapper.find('.ui-textarea__message').attributes('aria-live')).toBeUndefined()
+      expect(wrapper.find('.ui-textarea__message').text()).toBe('Markdown supported')
+      expect(wrapper.find('[role="alert"]').text()).toBe('')
     })
 
     it('exposes required through both the native attribute and ARIA', async () => {
@@ -143,26 +159,35 @@ describe('m-textarea · a11y', () => {
   })
 
   describe('counter announcements', () => {
-    it('stays silent while the limit is far away — no chatter per keystroke', async () => {
-      const wrapper = await mount({ counter: true, maxlength: 500, modelValue: 'abc' })
-      const counter = wrapper.find('.ui-textarea__counter')
-
-      expect(counter.attributes('aria-live')).toBeUndefined()
-      expect(counter.attributes('aria-atomic')).toBeUndefined()
-    })
-
-    it('becomes a live region once the value approaches the limit', async () => {
-      const wrapper = await mount({ counter: true, maxlength: 20, modelValue: 'a'.repeat(11) })
-      const counter = wrapper.find('.ui-textarea__counter')
-
-      expect(counter.attributes('aria-live')).toBe('polite')
-      expect(counter.attributes('aria-atomic')).toBe('true')
-    })
-
-    it('never goes live without a limit to approach', async () => {
-      const wrapper = await mount({ counter: true, modelValue: 'a'.repeat(400) })
+    it('keeps the visible counter out of any live region', async () => {
+      const wrapper = await mount({ counter: true, maxlength: 20, modelValue: 'a'.repeat(15) })
 
       expect(wrapper.find('.ui-textarea__counter').attributes('aria-live')).toBeUndefined()
+    })
+
+    it('stays silent while the limit is far away — no chatter per keystroke', async () => {
+      const wrapper = await mount({ counter: true, maxlength: 500, modelValue: 'abc' })
+      const live = wrapper.find('.ui-textarea__counter-live')
+
+      expect(live.attributes('aria-live')).toBe('polite')
+      expect(live.text()).toBe('')
+    })
+
+    it('speaks through a region that was already mounted once the value nears the limit', async () => {
+      const wrapper = await mount({ counter: true, maxlength: 20, modelValue: 'abc' })
+      const live = wrapper.find('.ui-textarea__counter-live')
+
+      await wrapper.setProps({ modelValue: 'a'.repeat(11) })
+
+      expect(wrapper.find('.ui-textarea__counter-live').element).toBe(live.element)
+      expect(live.attributes('aria-atomic')).toBe('true')
+      expect(live.text()).toBe('11 / 20')
+    })
+
+    it('never speaks without a limit to approach', async () => {
+      const wrapper = await mount({ counter: true, modelValue: 'a'.repeat(400) })
+
+      expect(wrapper.find('.ui-textarea__counter-live').text()).toBe('')
     })
   })
 
@@ -215,5 +240,26 @@ describe('m-textarea · a11y', () => {
 
       expect(wrapper.find('.ui-textarea__grip').attributes('aria-valuemax')).toBeUndefined()
     })
+  })
+})
+
+describe('m-textarea · pending validation', () => {
+  it('reports the control busy while the adapter validates asynchronously', async () => {
+    const pending: ValidationAdapter = {
+      bindField: () => ({
+        value: ref(''),
+        errorMessage: ref<string | undefined>(undefined),
+        meta: { required: false, touched: true, dirty: true, valid: true, validated: false, pending: true },
+      }) as never,
+      createForm: () => { throw new Error('unused') },
+    }
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        provideValidationAdapter(pending)
+        return () => h(MTextarea, { path: 'notes', label: 'Notes' })
+      },
+    }))
+
+    expect(wrapper.find('textarea').attributes('aria-busy')).toBe('true')
   })
 })

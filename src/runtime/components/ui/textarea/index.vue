@@ -78,33 +78,48 @@
           aria-hidden="true"
         />
 
+        <!-- Mounted whether or not there is an error: a region that appears
+             together with its text is not reliably announced. -->
+        <span
+          v-bind="alertAttrs"
+          class="ui-textarea__alert"
+        >
+          <slot
+            v-if="isError"
+            name="error"
+            :message="message"
+          >
+            {{ message }}
+          </slot>
+        </span>
+
         <slot
-          v-if="isError && $slots.error"
-          name="error"
-          :message="message"
-        />
-        <slot
-          v-else-if="!isError && $slots.helper"
+          v-if="!isError"
           name="helper"
           :message="message"
-        />
-        <template v-else>
+        >
           {{ message }}
-        </template>
+        </slot>
       </p>
 
-      <span
-        v-if="counter"
-        v-bind="counterAttrs"
-        class="ui-textarea__counter"
-      >
-        <slot
-          name="counter"
-          v-bind="counter"
+      <template v-if="counter">
+        <span
+          v-bind="counterAttrs"
+          class="ui-textarea__counter"
         >
-          {{ counter.text }}
-        </slot>
-      </span>
+          <slot
+            name="counter"
+            v-bind="counter"
+          >
+            {{ counter.text }}
+          </slot>
+        </span>
+
+        <span
+          v-bind="counterLiveAttrs"
+          class="ui-textarea__counter-live"
+        >{{ counterAnnouncement }}</span>
+      </template>
     </div>
   </div>
 </template>
@@ -133,11 +148,14 @@ const {
   isError,
   message,
   counter,
+  counterAnnouncement,
   fieldState,
   inputAttrs,
   labelAttrs,
   supportAttrs,
+  alertAttrs,
   counterAttrs,
+  counterLiveAttrs,
   gripAttrs,
   isResizing,
 } = useTextareaControl(modelValue, focusedModel, props)
@@ -473,16 +491,28 @@ function focusFromBox(event: PointerEvent) {
   &__message {
     display: flex;
     align-items: center;
-    gap: g($t, 'support.icon.gap');
     min-width: 0;
     margin: 0;
+
+    // A URL or an address in a message has no break opportunity of its own.
+    overflow-wrap: anywhere;
   }
 
   // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
-  // message has nothing but this glyph to say it.
+  // message has nothing but this glyph to say it. A margin, not a flex gap: the
+  // alert region beside it is empty whenever the helper is shown.
   &__message-icon {
     flex: 0 0 auto;
+    margin-inline-end: g($t, 'support.icon.gap');
     font-size: g($t, 'support.icon.size');
+  }
+
+  &__alert {
+    min-width: 0;
+  }
+
+  &__counter-live {
+    @include sr-only;
   }
 
   &__counter {

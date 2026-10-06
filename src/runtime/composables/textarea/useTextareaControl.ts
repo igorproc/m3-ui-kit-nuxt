@@ -3,8 +3,9 @@
  *
  * @remarks
  * Behavior layer of the textarea. Turns a string model into ready-to-spread attr
- * bags — `inputAttrs`, `labelAttrs`, `supportAttrs`, `counterAttrs`, `gripAttrs`
- * — carrying the whole non-visual surface: validation binding, focus state, the
+ * bags — `inputAttrs`, `labelAttrs`, `supportAttrs`, `alertAttrs`,
+ * `counterAttrs`, `counterLiveAttrs`, `gripAttrs` — carrying the whole
+ * non-visual surface: validation binding, focus state, the
  * character counter, growth/resize and every ARIA relationship between them.
  * It renders nothing and assumes no markup.
  *
@@ -17,11 +18,22 @@
  * Presentation is deliberately absent: no classes and no `data-*` are produced
  * here, only state a consumer turns into whatever its own markup needs.
  *
+ * Live regions get bags of their own, for elements that stay mounted: a
+ * region has to exist before its text changes, or the first announcement is
+ * lost. The error is written into the `alertAttrs` element and the helper sits
+ * outside it; the visible counter stays silent and `counterAnnouncement`
+ * repeats it into the `counterLiveAttrs` element only near the limit.
+ *
  * @example
  * ```vue
  * <label v-bind="labelAttrs">Release notes</label>
  * <textarea ref="element" v-model="value" v-bind="inputAttrs" />
+ * <p v-bind="supportAttrs">
+ *   <span v-bind="alertAttrs">{{ isError ? message : '' }}</span>
+ *   <template v-if="!isError">{{ message }}</template>
+ * </p>
  * <span v-bind="counterAttrs">{{ counter?.text }}</span>
+ * <span v-bind="counterLiveAttrs" class="sr-only">{{ counterAnnouncement }}</span>
  * ```
  * ```ts
  * const control = useTextareaControl(model, focused, props)
@@ -79,6 +91,7 @@ export interface TextareaInputAttrs {
   'spellcheck': boolean | undefined
   'wrap': MTextareaWrap
   'aria-invalid': 'true' | undefined
+  'aria-busy': 'true' | undefined
   'aria-required': 'true' | undefined
   'aria-describedby': string | undefined
   'style': Record<string, string>
@@ -93,13 +106,21 @@ export interface TextareaLabelAttrs {
 
 export interface TextareaSupportAttrs {
   id: string
-  role: 'alert' | undefined
+}
+
+/** The persistent region the error is written into. */
+export interface TextareaAlertAttrs {
+  role: 'alert'
 }
 
 export interface TextareaCounterAttrs {
-  'id': string
-  'aria-live': 'polite' | undefined
-  'aria-atomic': 'true' | undefined
+  id: string
+}
+
+/** The persistent, visually hidden region the counter is repeated into near the limit. */
+export interface TextareaCounterLiveAttrs {
+  'aria-live': 'polite'
+  'aria-atomic': 'true'
 }
 
 /**
@@ -138,12 +159,16 @@ export interface UseTextareaControlReturn extends Pick<
   /** Support-line text: field error, then `errorMessage`, then `helperText`. */
   message: ComputedRef<string | undefined>
   counter: ComputedRef<TextareaCounterState | undefined>
+  /** The counter text once it is near the limit, otherwise empty. */
+  counterAnnouncement: ComputedRef<string>
   /** Interaction state, also provided to descendants under {@link textareaFieldStateKey}. */
   fieldState: ComputedRef<TextareaFieldState>
   inputAttrs: ComputedRef<TextareaInputAttrs>
   labelAttrs: ComputedRef<TextareaLabelAttrs>
   supportAttrs: ComputedRef<TextareaSupportAttrs>
+  alertAttrs: ComputedRef<TextareaAlertAttrs>
   counterAttrs: ComputedRef<TextareaCounterAttrs>
+  counterLiveAttrs: ComputedRef<TextareaCounterLiveAttrs>
   gripAttrs: ComputedRef<TextareaGripAttrs>
 }
 
@@ -219,6 +244,7 @@ export function useTextareaControl(
     'spellcheck': props.spellcheck,
     'wrap': props.wrap,
     'aria-invalid': field.isError.value ? 'true' : undefined,
+    'aria-busy': field.meta.pending ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,
     'style': resize.style.value,
@@ -234,16 +260,12 @@ export function useTextareaControl(
   // The support line is one slot shared by helper text and the error. Only the
   // error is announced: a description the user has not asked for should not
   // interrupt them mid-sentence.
-  const supportAttrs = computed<TextareaSupportAttrs>(() => ({
-    id: supportId,
-    role: field.isError.value ? 'alert' : undefined,
-  }))
+  const supportAttrs = computed<TextareaSupportAttrs>(() => ({ id: supportId }))
+  const alertAttrs = computed<TextareaAlertAttrs>(() => ({ role: 'alert' }))
 
-  const counterAttrs = computed<TextareaCounterAttrs>(() => ({
-    'id': counterId,
-    'aria-live': counter.value?.nearLimit ? 'polite' : undefined,
-    'aria-atomic': counter.value?.nearLimit ? 'true' : undefined,
-  }))
+  const counterAttrs = computed<TextareaCounterAttrs>(() => ({ id: counterId }))
+  const counterLiveAttrs = computed<TextareaCounterLiveAttrs>(() => ({ 'aria-live': 'polite', 'aria-atomic': 'true' }))
+  const counterAnnouncement = computed(() => counter.value?.nearLimit ? counter.value.text : '')
 
   watch(
     () => [model.value, props.rows, props.maxRows, props.autoGrow] as const,
@@ -259,11 +281,14 @@ export function useTextareaControl(
     isError: field.isError,
     message,
     counter,
+    counterAnnouncement,
     fieldState,
     inputAttrs,
     labelAttrs,
     supportAttrs,
+    alertAttrs,
     counterAttrs,
+    counterLiveAttrs,
     gripAttrs: resize.gripAttrs,
     isResizing: resize.isResizing,
     hasManualHeight: resize.hasManualHeight,

@@ -29,7 +29,11 @@ function createHarness(model: Ref<string>, props: Partial<TextareaControlProps> 
           value: model.value,
         }),
         h('span', control!.counterAttrs.value, control!.counter.value?.text),
-        h('p', control!.supportAttrs.value, control!.message.value),
+        h('p', control!.supportAttrs.value, [
+          h('b', control!.alertAttrs.value, control!.isError.value ? control!.message.value : ''),
+          control!.isError.value ? null : control!.message.value,
+        ]),
+        h('em', control!.counterLiveAttrs.value, control!.counterAnnouncement.value),
         h('i', control!.gripAttrs.value),
       ])
     },
@@ -73,7 +77,7 @@ describe('useTextareaControl', () => {
     const wrapper = await mountSuspended(component)
 
     expect(wrapper.find('p').text()).toBe('External failure')
-    expect(wrapper.find('p').attributes('role')).toBe('alert')
+    expect(wrapper.find('[role="alert"]').text()).toBe('External failure')
   })
 
   it('derives the counter limit from maxlength when the counter is a plain flag', async () => {
@@ -186,7 +190,9 @@ describe('useTextareaControl', () => {
       getControl().inputAttrs.value,
       getControl().labelAttrs.value,
       getControl().supportAttrs.value,
+      getControl().alertAttrs.value,
       getControl().counterAttrs.value,
+      getControl().counterLiveAttrs.value,
       getControl().gripAttrs.value,
     ]
 
