@@ -78,6 +78,7 @@ export interface OtpInputAttrs {
   'onBlur': () => void
   'onClick': (event: MouseEvent) => void
   'onInput': (event: Event) => void
+  'onPaste': (event: ClipboardEvent) => void
   'onCompositionstart': () => void
   'onCompositionend': (event: CompositionEvent) => void
 }
@@ -214,6 +215,26 @@ export function useOtpControl(
     syncCaret(target.selectionStart)
   }
 
+  // `maxlength` cuts a paste down to the length *before* it is sanitised, so a
+  // code sent as "123-456" or "123 456" arrived one digit short. The paste is
+  // spliced into the value here and sanitised whole instead.
+  function applyPaste(event: ClipboardEvent) {
+    const target = event.target as HTMLInputElement
+    const pasted = event.clipboardData?.getData('text') ?? ''
+    if (!pasted || target.readOnly || target.disabled) return
+
+    event.preventDefault()
+
+    const start = target.selectionStart ?? target.value.length
+    const end = target.selectionEnd ?? start
+    const committed = value.commit(target.value.slice(0, start) + pasted + target.value.slice(end))
+    const caret = Math.min(committed.length, start + value.sanitize(pasted).value.length)
+
+    target.value = committed
+    target.setSelectionRange(caret, caret)
+    syncCaret(caret)
+  }
+
   function focusAt(index: number) {
     if (props.disabled) return
 
@@ -274,6 +295,7 @@ export function useOtpControl(
 
       applyInput(event.target as HTMLInputElement)
     },
+    'onPaste': applyPaste,
     'onCompositionstart': () => {
       composing.value = true
     },

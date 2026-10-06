@@ -47,6 +47,27 @@ describe('m-otp-input · interaction', () => {
       expect(last(wrapper, 'update:modelValue')).toEqual(['1234'])
     })
 
+    // maxlength would cut "123-456" to "123-45" before anything is sanitised.
+    it('sanitises a paste before the length cuts it', async () => {
+      const wrapper = await mount({ length: 6 })
+
+      await wrapper.find('input').trigger('paste', { clipboardData: { getData: () => '123-456' } })
+
+      expect(last(wrapper, 'update:modelValue')).toEqual(['123456'])
+      expect(last(wrapper, 'complete')).toEqual(['123456'])
+    })
+
+    it('splices a paste in at the caret', async () => {
+      const wrapper = await mount({ length: 6, modelValue: '12' })
+      const input = wrapper.find('input').element as HTMLInputElement
+      input.setSelectionRange(1, 1)
+
+      await wrapper.find('input').trigger('paste', { clipboardData: { getData: () => '9 9' } })
+
+      expect(last(wrapper, 'update:modelValue')).toEqual(['1992'])
+      expect(input.selectionStart).toBe(3)
+    })
+
     it('drops the characters the alphabet does not allow, and says which', async () => {
       const wrapper = await mount({ length: 4 })
 
