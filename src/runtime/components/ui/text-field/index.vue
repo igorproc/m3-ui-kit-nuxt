@@ -434,7 +434,7 @@ defineExpose({ control: controlRef, input: inputRef })
 
     &.ui-text-field--error {
       .ui-text-field__control {
-        border-color: g($t, 'filled.error.border.bottom.color');
+        border-bottom-color: g($t, 'filled.error.border.bottom.color');
       }
 
       .ui-text-field__label {
@@ -448,7 +448,7 @@ defineExpose({ control: controlRef, input: inputRef })
 
     &.ui-text-field--disabled {
       .ui-text-field__control {
-        border-color: g($t, 'filled.disabled.border.bottom.color');
+        border-bottom-color: g($t, 'filled.disabled.border.bottom.color');
         background-color: g($t, 'filled.disabled.bg');
       }
 
@@ -534,7 +534,7 @@ defineExpose({ control: controlRef, input: inputRef })
 
     &.ui-text-field--error {
       .ui-text-field__control {
-        border-color: g($t, 'filled.error.border.bottom.color');
+        border-bottom-color: g($t, 'filled.error.border.bottom.color');
       }
 
       .ui-text-field__label {
@@ -548,7 +548,7 @@ defineExpose({ control: controlRef, input: inputRef })
 
     &.ui-text-field--disabled {
       .ui-text-field__control {
-        border-color: g($t, 'filled.disabled.border.bottom.color');
+        border-bottom-color: g($t, 'filled.disabled.border.bottom.color');
       }
 
       .ui-text-field__label {
