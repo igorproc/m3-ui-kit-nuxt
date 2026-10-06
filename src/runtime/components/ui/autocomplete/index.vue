@@ -280,6 +280,12 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   &__chip--active {
     // Inset ring so the highlight is never clipped by the field's overflow.
     box-shadow: inset 0 0 0 2rem g($t, 'chip.active-outline');
+
+    // The ring is a shadow, which forced colours drop.
+    @include forced-colors {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
   }
 
   // `.ui-button` is repeated to outweigh the button's own two-class colour rule
@@ -309,6 +315,15 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
 
   &__option--active:not(.ui-list-item--selected) {
     background-color: g($t, 'option.active-bg');
+  }
+
+  // The active option is a fill alone, which forced colours drop. The outline
+  // does not compete with the selected item's look, so it marks any active one.
+  &__option--active {
+    @include forced-colors {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
   }
 
   &__state {

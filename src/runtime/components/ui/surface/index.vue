@@ -44,6 +44,15 @@ $prefix: 'md-surface';
     box-shadow: g($t, 'elevated-elevation');
   }
 
+  // `plain` matches the page in any mode and `outlined` already has an edge;
+  // these two are set apart only by a tone or a shadow.
+  &--filled,
+  &--elevated {
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
+  }
+
   &--outlined {
     border-width: g($t, 'outlined-outline-width');
     border-color: g($t, 'outlined-outline-color');

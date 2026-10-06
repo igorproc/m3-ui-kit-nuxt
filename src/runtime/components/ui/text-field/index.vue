@@ -608,5 +608,49 @@ defineExpose({ control: controlRef, input: inputRef })
       color: g($t, 'filled.error.helper.color');
     }
   }
+
+  // ── forced colours · every edge turns CanvasText, so the states that were a
+  // colour change alone are restated in system colours ──
+  @include forced-colors {
+    // The control's transparent border under the outline is forced visible
+    // too, and would run straight through the label's notch.
+    &--outlined .ui-text-field__control {
+      border-color: Canvas;
+    }
+
+    // `.ui-text-field` is repeated to match the error + focused rule's weight,
+    // so source order alone decides — and focus outranks error.
+    &.ui-text-field--error {
+      &.ui-text-field--filled .ui-text-field__control,
+      &.ui-text-field--underline .ui-text-field__control,
+      &.ui-text-field--outlined .ui-text-field__outline {
+        border-color: Mark;
+      }
+    }
+
+    &.ui-text-field--focused {
+      &.ui-text-field--filled .ui-text-field__control,
+      &.ui-text-field--underline .ui-text-field__control {
+        border-bottom-color: Highlight;
+      }
+
+      &.ui-text-field--outlined .ui-text-field__outline {
+        border-color: Highlight;
+      }
+    }
+
+    &.ui-text-field--disabled {
+      &.ui-text-field--filled .ui-text-field__control,
+      &.ui-text-field--underline .ui-text-field__control,
+      &.ui-text-field--outlined .ui-text-field__outline {
+        border-color: GrayText;
+      }
+
+      .ui-text-field__label,
+      .ui-text-field__input {
+        color: GrayText;
+      }
+    }
+  }
 }
 </style>

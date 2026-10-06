@@ -523,6 +523,10 @@ function onConfirm() {
   max-width: 360rem;
   width: calc(100vw - 32rem);
 
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   &__container {
     display: flex;
     flex-direction: column;

@@ -61,6 +61,10 @@ defineExpose({ id, close })
   box-shadow: g($t, 'shadow');
   overflow: hidden;
 
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   &__container {
     display: flex;
     flex-direction: column;

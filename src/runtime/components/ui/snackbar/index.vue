@@ -141,6 +141,10 @@ function onAction() {
     display: flex;
     align-items: center;
     gap: g($t, 'surface-gap');
+
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
   }
 
   &__label {

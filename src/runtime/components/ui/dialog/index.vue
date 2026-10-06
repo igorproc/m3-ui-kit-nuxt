@@ -95,6 +95,10 @@ defineExpose({ id, close })
   overflow: hidden;
   transform-origin: center;
 
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   &__container {
     display: flex;
     flex-direction: column;

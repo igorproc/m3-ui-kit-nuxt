@@ -715,6 +715,46 @@ defineExpose({ element })
     @include typescale(g($t, 'typography.support'));
   }
 
+  // ── forced colours · every edge turns CanvasText, so the states that were a
+  // colour change alone are restated in system colours. The outline is named
+  // directly, not reached through its `inherit`, which forcing may override. ──
+  @include forced-colors {
+    &--error {
+      &.ui-number-input--filled .ui-number-input__control {
+        border-bottom-color: Mark;
+      }
+
+      .ui-number-input__outline {
+        border-color: Mark;
+      }
+    }
+
+    &--focused:where(.ui-number-input--interactive) {
+      &.ui-number-input--filled .ui-number-input__control {
+        border-bottom-color: Highlight;
+      }
+
+      .ui-number-input__outline {
+        border-color: Highlight;
+      }
+    }
+
+    &--disabled {
+      &.ui-number-input--filled .ui-number-input__control {
+        border-bottom-color: GrayText;
+      }
+
+      .ui-number-input__outline {
+        border-color: GrayText;
+      }
+
+      .ui-number-input__label,
+      .ui-number-input__input {
+        color: GrayText;
+      }
+    }
+  }
+
   // Motion is feedback only: colour, and the label's raise.
   @media (prefers-reduced-motion: reduce) {
     &__control,

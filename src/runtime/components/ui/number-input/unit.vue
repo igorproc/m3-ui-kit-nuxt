@@ -185,6 +185,16 @@ $t: material-map(t.$tokens, 'm-number-input');
 
   &-option[aria-checked='true'] {
     color: g($t, 'unit.selected.color');
+
+    // The checked unit is marked by its ink alone, which forced colours flatten.
+    // `.ui-menu__item` outweighs the menu's own hover fill, which would otherwise
+    // force to Canvas under HighlightText.
+    @include forced-colors {
+      &.ui-menu__item {
+        background-color: Highlight;
+        color: HighlightText;
+      }
+    }
   }
 
   &-menu {

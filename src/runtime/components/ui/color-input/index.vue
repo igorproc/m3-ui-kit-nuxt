@@ -227,6 +227,11 @@ watch(open, (isOpen) => {
     background:
       linear-gradient(var(--swatch-color), var(--swatch-color)),
       conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')};
+
+    // The swatch is the value itself: forcing would paint every colour Canvas.
+    @include forced-colors {
+      forced-color-adjust: none;
+    }
   }
 
   &__picker {

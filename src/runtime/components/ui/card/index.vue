@@ -115,6 +115,14 @@ $prefix: 'md-card';
     }
   }
 
+  // Set apart by a shadow or a tone; their border is already there, transparent.
+  &--elevated,
+  &--filled {
+    @include forced-colors {
+      border-color: CanvasText;
+    }
+  }
+
   &__media {
     overflow: hidden;
     margin: calc(#{g($t, 'padding')} * -1) calc(#{g($t, 'padding')} * -1) 0; // Full width media

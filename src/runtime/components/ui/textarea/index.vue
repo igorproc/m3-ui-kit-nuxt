@@ -611,6 +611,59 @@ function focusFromBox(event: PointerEvent) {
     }
   }
 
+  // ── forced colours · every edge turns CanvasText, so the states that were a
+  // colour change alone are restated in system colours. The outline is named
+  // directly, not reached through its `inherit`, which forcing may override. ──
+  @include forced-colors {
+    // The grip is drawn by its fill alone, which forced colours drop.
+    .ui-textarea__grip {
+      background-color: CanvasText;
+
+      &:focus-visible {
+        background-color: Highlight;
+      }
+    }
+
+    &--error {
+      &.ui-textarea--filled .ui-textarea__control {
+        border-bottom-color: Mark;
+      }
+
+      .ui-textarea__outline {
+        border-color: Mark;
+      }
+    }
+
+    &--focused:where(.ui-textarea--interactive) {
+      &.ui-textarea--filled .ui-textarea__control {
+        border-bottom-color: Highlight;
+      }
+
+      .ui-textarea__outline {
+        border-color: Highlight;
+      }
+    }
+
+    &--disabled {
+      &.ui-textarea--filled .ui-textarea__control {
+        border-bottom-color: GrayText;
+      }
+
+      .ui-textarea__outline {
+        border-color: GrayText;
+      }
+
+      .ui-textarea__grip {
+        background-color: GrayText;
+      }
+
+      .ui-textarea__label,
+      .ui-textarea__input {
+        color: GrayText;
+      }
+    }
+  }
+
   // Motion is feedback only: colour, and the height of a growing box. Nothing
   // in the field moves position, so there is nothing else to switch off here.
   @media (prefers-reduced-motion: reduce) {

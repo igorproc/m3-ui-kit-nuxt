@@ -173,6 +173,10 @@ const getPropsForItem = (item: ToolbarItem) => {
   gap: 8rem;
   transition: all 0.2s ease;
 
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   // Types
   &--type-standard {
     background-color: g($t, 'standard-container-color');

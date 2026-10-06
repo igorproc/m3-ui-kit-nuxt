@@ -205,6 +205,22 @@ const cellClasses = (cell: OtpCell) => [
       opacity: g($t, 'field.disabled-opacity');
       cursor: default;
     }
+
+    // Every cell edge turns CanvasText, so the cell states are restated in
+    // system colours — the active cell after the error so focus stays visible.
+    @include forced-colors {
+      &--error {
+        border-color: Mark;
+      }
+
+      &--active {
+        border-color: Highlight;
+      }
+
+      &--disabled {
+        border-color: GrayText;
+      }
+    }
   }
 
   &__separator {

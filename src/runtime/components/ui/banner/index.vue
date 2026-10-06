@@ -219,11 +219,25 @@ const closeSlotProps = computed<MBannerCloseSlot>(() => ({
 
     // M3 separates a page-level banner from following content with a divider.
     box-shadow: inset 0 calc(-1 * #{g($t, 'surface-divider-width')}) 0 0 g($t, 'surface-divider-color');
+
+    // Forced colours drop the shadow that draws the divider. `.ui-surface`
+    // outweighs the root's own `border-width: 0` above.
+    @include forced-colors {
+      &.ui-surface {
+        border-block-end: 1px solid CanvasText;
+      }
+    }
   }
 
   &--tonal {
     color: g($t, 'tonal-content-color');
     background-color: g($t, 'tonal-container-color');
+
+    @include forced-colors {
+      &.ui-surface {
+        border: 1px solid CanvasText;
+      }
+    }
   }
 
   & &__close {

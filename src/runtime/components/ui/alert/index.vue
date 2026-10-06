@@ -212,5 +212,13 @@ const close = () => {
       }
     }
   }
+
+  // Tonal is set apart by its fill alone. `.ui-surface` outweighs the
+  // surface's own `border-width: 0` whichever stylesheet loads last.
+  &--tonal.ui-surface {
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
+  }
 }
 </style>

@@ -126,6 +126,12 @@ defineExpose({ scrolled })
     background-color var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard),
     box-shadow var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
 
+  // Content scrolls under the bar, which is set apart by a tone and a shadow
+  // only. Drawn at rest too, so scrolling never adds a pixel to a sticky bar.
+  @include forced-colors {
+    border-block-end: 1px solid CanvasText;
+  }
+
   &--small {
     min-height: var(--ui-app-bar-height-small);
   }

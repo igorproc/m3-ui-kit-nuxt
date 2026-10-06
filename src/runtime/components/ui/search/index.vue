@@ -172,5 +172,19 @@ function onClear() {
     opacity: g($t, 'disabled-opacity');
     cursor: default;
   }
+
+  // Both the edge and its focused colour are box-shadows, which forced colours
+  // drop. An outline sits where the shadow's spread did and takes no room.
+  @include forced-colors {
+    outline: 1px solid CanvasText;
+
+    &--focused {
+      outline-color: Highlight;
+    }
+
+    &:has(.ui-search__input:disabled) {
+      outline-color: GrayText;
+    }
+  }
 }
 </style>

@@ -67,6 +67,10 @@ $t: material-map(t.$tokens, 'md-navigation-drawer');
     background-color: g($t, 'surface-color');
     color: g($t, 'surface-text-color');
     box-shadow: g($t, 'surface-shadow');
+
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
   }
 
   &__header {

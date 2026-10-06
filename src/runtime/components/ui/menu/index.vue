@@ -285,6 +285,10 @@ useClickOutside($menu, requestClose, {
     // Animation properties
     transform-origin: var(--ui-menu-origin);
     will-change: transform, opacity;
+
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
   }
 
   &__item {

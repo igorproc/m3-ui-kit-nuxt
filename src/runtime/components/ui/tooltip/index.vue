@@ -140,6 +140,10 @@ useGlobalListener('window', 'keydown', (event) => {
   box-shadow: g($t, 'content.shadow');
 
   @include typescale(g($t, 'content.text.type'));
+
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
 }
 
 // Vue Transition
