@@ -160,5 +160,21 @@ function onSelect(event: MouseEvent) {
     opacity: g($t, 'disabled-opacity');
     pointer-events: none;
   }
+
+  // The active indicator is only a fill; forced colors would erase it.
+  @include forced-colors {
+    &::after {
+      background-color: Highlight;
+    }
+
+    &--disabled {
+      opacity: 1;
+      color: GrayText;
+    }
+
+    &--disabled::after {
+      background-color: GrayText;
+    }
+  }
 }
 </style>

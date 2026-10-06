@@ -227,6 +227,46 @@ const switchClasses = computed(() => [
     background-color: g($t, 'disabled-checked-thumb-color');
     opacity: 1;
   }
+
+  // The thumb is only a fill and the checked track only a tone, so forced
+  // colors would erase both. `!important` on the thumb beats the hover rules.
+  @include forced-colors {
+    .ui-switch__thumb {
+      background-color: CanvasText !important;
+    }
+
+    &--checked .ui-switch__track {
+      background-color: Highlight;
+      border-color: Highlight;
+    }
+
+    &--checked .ui-switch__thumb {
+      background-color: HighlightText !important;
+    }
+
+    &--disabled .ui-switch__track {
+      border-color: GrayText;
+    }
+
+    &--disabled .ui-switch__thumb {
+      background-color: GrayText !important;
+      opacity: 1;
+    }
+
+    &--disabled .ui-switch__label {
+      color: GrayText;
+      opacity: 1;
+    }
+
+    &--checked.ui-switch--disabled .ui-switch__track {
+      background-color: GrayText;
+      border-color: GrayText;
+    }
+
+    &--checked.ui-switch--disabled .ui-switch__thumb {
+      background-color: Canvas !important;
+    }
+  }
   /* stylelint-enable no-descending-specificity, selector-class-pattern */
 }
 </style>

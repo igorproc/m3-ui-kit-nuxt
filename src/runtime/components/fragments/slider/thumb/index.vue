@@ -103,6 +103,16 @@ $prefix: 'ui-slider-thumb';
     z-index: 2;
   }
 
+  @include forced-colors {
+    &__knob {
+      background-color: Highlight;
+    }
+
+    &--disabled &__knob {
+      background-color: GrayText;
+    }
+  }
+
   // Ripple / Hover State Layer
   &__state-layer {
     position: absolute;

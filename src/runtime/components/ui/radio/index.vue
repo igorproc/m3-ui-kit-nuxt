@@ -249,5 +249,29 @@ if (!group && props.path) {
   &--error &__outer {
     border-color: g($t, 'error-color');
   }
+
+  // The inner dot is only a fill; forced colors would erase the checked state.
+  @include forced-colors {
+    &__inner {
+      background-color: Highlight;
+    }
+
+    &--checked &__outer {
+      border-color: Highlight;
+    }
+
+    &--disabled {
+      opacity: 1;
+      color: GrayText;
+    }
+
+    &--disabled &__outer {
+      border-color: GrayText;
+    }
+
+    &--disabled &__inner {
+      background-color: GrayText;
+    }
+  }
 }
 </style>

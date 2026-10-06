@@ -40,6 +40,12 @@ $prefix: 'md-icon';
 
   .iconify {
     font-size: inherit;
+
+    // CSS-mode icons paint a mask with `background-color: currentcolor`, which
+    // forced colors replaces with Canvas — every glyph would vanish.
+    @include forced-colors {
+      forced-color-adjust: preserve-parent-color;
+    }
   }
 
   svg {

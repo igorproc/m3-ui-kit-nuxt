@@ -105,6 +105,11 @@ $t: material-map(t.$tokens, $prefix);
         }
 
         box-shadow: none !important;
+
+        @include forced-colors {
+          border-color: GrayText;
+          color: GrayText;
+        }
       }
     }
   }
@@ -141,6 +146,12 @@ $t: material-map(t.$tokens, $prefix);
   // Covers the whole family — icon/split inherit `.ui-button`.
   &:focus-visible {
     @include focus-ring;
+  }
+
+  // Filled, tonal, elevated and text buttons draw their edge with a background
+  // or a shadow, which forced colors drops; outlined keeps its own border.
+  @include forced-colors {
+    border: 1px solid ButtonText;
   }
 
   &__label {

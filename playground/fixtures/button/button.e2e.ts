@@ -63,7 +63,6 @@ test.describe('MButton', () => {
   })
 
   test('buttons keep a visible boundary in forced-colors mode', async ({ page }) => {
-    test.fail(true, 'Plan step C7: no forced-colors styles yet, filled/tonal/elevated buttons lose their edge')
     await page.emulateMedia({ forcedColors: 'active' })
     await openFixture(page, 'button/matrix')
 

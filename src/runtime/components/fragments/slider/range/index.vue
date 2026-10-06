@@ -96,6 +96,15 @@ $prefix: 'ui-slider-range';
     opacity: state-opacity(disabled-content);
   }
 
+  @include forced-colors {
+    background-color: Highlight;
+
+    &--disabled {
+      opacity: 1;
+      background-color: GrayText;
+    }
+  }
+
   &__tickmarks {
     position: absolute;
     top: 0;

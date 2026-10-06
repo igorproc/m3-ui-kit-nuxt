@@ -232,5 +232,28 @@ $prefix: 'md-chip';
     cursor: default;
     opacity: g($t, 'blocked-opacity');
   }
+
+  // The transparent border already turns into the chip's edge; selection is
+  // only a fill, and opacity would dim GrayText below the user's palette.
+  @include forced-colors {
+    &--selected {
+      // Hover and pressed state layers out-specify this and would drop the fill.
+      background-color: Highlight !important;
+      border-color: Highlight;
+      color: HighlightText;
+    }
+
+    &--disabled,
+    &--blocked {
+      opacity: 1;
+      border-color: GrayText;
+      color: GrayText;
+    }
+
+    &--selected.ui-chip--disabled {
+      background-color: GrayText !important;
+      color: Canvas;
+    }
+  }
 }
 </style>

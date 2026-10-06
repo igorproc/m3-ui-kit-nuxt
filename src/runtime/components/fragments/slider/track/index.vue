@@ -79,6 +79,21 @@ $prefix: 'ui-slider-track';
     opacity: state-opacity(disabled-content);
   }
 
+  // The track is only a tone; forced colors would leave nothing to aim at.
+  @include forced-colors {
+    &::before {
+      border: 1px solid CanvasText;
+    }
+
+    &--disabled {
+      opacity: 1;
+    }
+
+    &--disabled::before {
+      border-color: GrayText;
+    }
+  }
+
   &--readonly {
     cursor: default;
   }

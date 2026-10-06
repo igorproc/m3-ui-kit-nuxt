@@ -202,5 +202,33 @@ const checkboxClasses = computed(() => [
     opacity: 1;
     transform: scale(1);
   }
+
+  @include forced-colors {
+    &--checked &__control {
+      background-color: Highlight;
+      border-color: Highlight;
+    }
+
+    &--checked &__icon {
+      color: HighlightText;
+    }
+
+    &--disabled {
+      opacity: 1;
+      color: GrayText;
+    }
+
+    &--disabled &__control {
+      border-color: GrayText;
+    }
+
+    &--checked.ui-checkbox--disabled &__control {
+      background-color: GrayText;
+    }
+
+    &--disabled &__icon {
+      color: Canvas;
+    }
+  }
 }
 </style>

@@ -60,6 +60,11 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     @include focus-ring;
   }
 
+  // The container is only a background and a shadow, both dropped by forced colors.
+  @include forced-colors {
+    border: 1px solid ButtonText;
+  }
+
   &__icon,
   &__label,
   &__spinner {
@@ -99,6 +104,11 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     &.ui-extended-fab--disabled {
       background-color: g($t, '#{$base}.container.disabled-color');
       color: g($t, '#{$base}.content.disabled-color');
+
+      @include forced-colors {
+        border-color: GrayText;
+        color: GrayText;
+      }
     }
   }
 

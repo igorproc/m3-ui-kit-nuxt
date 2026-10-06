@@ -203,5 +203,16 @@ if (import.meta.dev) {
   @media (prefers-reduced-motion: reduce) {
     &__fill { transition: none; }
   }
+
+  // Forced colors would paint filled and empty glyphs in one colour, leaving
+  // only the glyph shape; Highlight keeps the value readable at a glance.
+  @include forced-colors {
+    & &__fill { color: Highlight; }
+
+    &--disabled { opacity: 1; }
+
+    &--disabled &__item,
+    &--disabled &__fill { color: GrayText; }
+  }
 }
 </style>
