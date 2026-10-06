@@ -50,10 +50,8 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
     box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),
     background-color g($t, 'motion-duration') g($t, 'motion-easing');
 
-  // Keyboard focus ring — theme color, not a hardcoded hex.
   &:focus-visible {
-    outline: 2rem solid map.get($theme-color-link, 'secondary');
-    outline-offset: 2rem;
+    @include focus-ring;
   }
 
   &__icon {

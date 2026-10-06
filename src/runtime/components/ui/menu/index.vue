@@ -363,4 +363,9 @@ useClickOutside($menu, requestClose, {
     }
   }
 }
+
+// Items fill a surface that clips: the ring goes inside.
+.ui-menu__item:focus-visible {
+  @include focus-ring(inset);
+}
 </style>

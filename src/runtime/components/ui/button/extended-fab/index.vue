@@ -55,6 +55,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
 
   @include typescale('label-large');
 
+  &:focus-visible {
+    @include focus-ring;
+  }
+
   &__icon,
   &__label,
   &__spinner {

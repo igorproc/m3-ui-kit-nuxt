@@ -111,8 +111,7 @@ function onKeydown(event: KeyboardEvent) {
   overflow: hidden;
 
   &:focus-visible {
-    outline: g($t, 'canvas.focus.width') solid g($t, 'canvas.focus.color');
-    outline-offset: g($t, 'canvas.focus.offset');
+    @include focus-ring;
   }
 
   &__saturation,

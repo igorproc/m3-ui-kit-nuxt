@@ -216,10 +216,8 @@ $prefix: 'md-chip';
     }
   }
 
-  // Restores the visible indicator removed by `outline: none` above.
   &:focus-visible {
-    outline: g($t, 'focus-width') solid g($t, 'focus-color');
-    outline-offset: g($t, 'focus-offset');
+    @include focus-ring;
   }
 
   &--disabled {

@@ -5,9 +5,6 @@ $tokens: (
   root: (
     gap: 4rem,
     shape: var(--sys-shape-corner-medium),
-    focus-outline: map.get($theme-color-link, secondary),
-    focus-width: 2rem,
-    focus-offset: 2rem,
     disabled-opacity: state-opacity(disabled-content),
   ),
   item: (

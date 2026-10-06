@@ -163,4 +163,8 @@ defineEmits<{
     }
   }
 }
+
+.ui-navigation-rail-item:focus-visible {
+  @include focus-ring;
+}
 </style>

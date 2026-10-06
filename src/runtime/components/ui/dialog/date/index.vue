@@ -825,4 +825,18 @@ function onConfirm() {
   opacity: 0;
   transform: translateY(4rem);
 }
+
+.ui-date-dialog {
+  &__mode-toggle:focus-visible,
+  &__view-toggle:focus-visible,
+  &__icon-button:focus-visible {
+    @include focus-ring;
+  }
+
+  // Cells sit edge to edge: the ring goes inside.
+  &__day:focus-visible,
+  &__year:focus-visible {
+    @include focus-ring(inset);
+  }
+}
 </style>

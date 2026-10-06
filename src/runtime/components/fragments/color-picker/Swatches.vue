@@ -77,6 +77,10 @@ function select(value: string) {
       box-shadow: 0 0 0 g($t, 'swatches.selected-width') g($t, 'swatches.selected');
     }
 
+    &:focus-visible {
+      @include focus-ring;
+    }
+
     &:disabled {
       cursor: default;
       opacity: g($t, 'swatches.disabled-opacity');

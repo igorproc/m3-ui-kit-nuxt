@@ -130,11 +130,6 @@ $tokens: (
     focus: (
       color: map.get($theme-color-link, on-surface),
       opacity: state-opacity(focus),
-      indicator: (
-        color: map.get($theme-color-link, outline),
-        thickness: 3rem,
-        offset: -3rem,
-      )
     )
   )
 );

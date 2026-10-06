@@ -158,8 +158,7 @@ if (import.meta.dev) {
   touch-action: none;
 
   &:focus-visible {
-    outline: g($t, 'root.focus-width') solid g($t, 'root.focus-outline');
-    outline-offset: g($t, 'root.focus-offset');
+    @include focus-ring;
   }
 
   &--disabled {

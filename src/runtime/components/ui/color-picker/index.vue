@@ -136,6 +136,10 @@ function onFormat(value: string | number | (string | number)[]) {
     cursor: pointer;
     outline: none;
 
+    &:focus-visible {
+      @include focus-ring;
+    }
+
     &::-webkit-slider-thumb {
       appearance: none;
       width: g($t, 'slider.thumb.size');

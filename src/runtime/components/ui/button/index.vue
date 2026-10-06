@@ -137,12 +137,9 @@ $t: material-map(t.$tokens, $prefix);
     border-color g($t, 'state.duration') g($t, 'state.easing'),
     transform g($t, 'state.duration') g($t, 'state.easing');
 
-  // Keyboard focus ring (restores the visible indicator removed by
-  // `outline: none`). Color comes from the theme, not a hardcoded hex.
-  // Covers the whole family — icon/fab/segmented/split inherit `.ui-button`.
+  // Covers the whole family — icon/split inherit `.ui-button`.
   &:focus-visible {
-    outline: 2rem solid map.get($theme-color-link, 'secondary');
-    outline-offset: 2rem;
+    @include focus-ring;
   }
 
   &__label {

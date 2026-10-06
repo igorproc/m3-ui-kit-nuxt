@@ -54,11 +54,6 @@ $tokens: (
     color: map.get($theme-color-link, 'on-surface-variant'),
     hover: (color: color-mix(in srgb, #{$on-surface} #{$hover-opacity}, transparent)),
     pressed: (color: color-mix(in srgb, #{$on-surface} #{$pressed-opacity}, transparent)),
-    focus: (
-      color: map.get($theme-color-link, 'secondary'),
-      width: 2rem,
-      offset: 2rem,
-    ),
   ),
   motion: (
     duration: var(--sys-motion-duration-short-3),

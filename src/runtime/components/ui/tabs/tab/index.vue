@@ -99,6 +99,11 @@ function onSelect(event: MouseEvent) {
 
   @include typescale(g($t, 'typography-label'));
 
+  // Tabs sit edge to edge in a scroll strip that clips: the ring goes inside.
+  &:focus-visible {
+    @include focus-ring(inset);
+  }
+
   &-icon {
     display: inline-flex;
     align-items: center;

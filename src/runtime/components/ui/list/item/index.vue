@@ -228,8 +228,8 @@ const tag = computed(() => {
 
     &:focus-visible {
       background-color: color-mix(in srgb, g($t, 'state.focus.color') g($t, 'state.focus.opacity'), transparent);
-      outline: g($t, 'state.focus.indicator.thickness') solid g($t, 'state.focus.indicator.color');
-      outline-offset: g($t, 'state.focus.indicator.offset');
+
+      @include focus-ring(inset);
     }
   }
 

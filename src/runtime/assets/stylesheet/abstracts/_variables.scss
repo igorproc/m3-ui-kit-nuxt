@@ -24,6 +24,14 @@ $theme-state-link: (
   'disabled-content': 38%,
 );
 
+/// Keyboard focus ring for every control except fields (fields change colour —
+/// docs/system/*/color-and-state.md). Read through `@include focus-ring`.
+$theme-focus-link: (
+  'width': 3rem,
+  'offset': 2rem,
+  'color': var(--md-sys-color-secondary),
+);
+
 /// Spacing on the MD3 4-unit grid, keyed by design pixels: `spacing(16)` → 16rem.
 /// Read through `spacing($step)`; a step off the scale fails the build.
 $theme-spacing-link: (

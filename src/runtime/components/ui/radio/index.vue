@@ -139,6 +139,11 @@ if (!group && props.path) {
     pointer-events: none;
   }
 
+  // The native input is transparent, so the ring goes on the visible control.
+  &__input:focus-visible + &__container &__control {
+    @include focus-ring;
+  }
+
   &__container {
     position: relative;
     display: inline-flex;

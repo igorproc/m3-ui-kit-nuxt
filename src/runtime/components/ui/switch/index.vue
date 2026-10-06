@@ -81,6 +81,11 @@ const switchClasses = computed(() => [
     pointer-events: none;
   }
 
+  // The native input is transparent, so the ring goes on the visible control.
+  &__input:focus-visible + &__track {
+    @include focus-ring;
+  }
+
   &__track {
     position: relative;
     width: g($t, 'track-width');

@@ -211,4 +211,8 @@ function toggle() {
     }
   }
 }
+
+.ui-expansion-panel__header:focus-visible {
+  @include focus-ring;
+}
 </style>

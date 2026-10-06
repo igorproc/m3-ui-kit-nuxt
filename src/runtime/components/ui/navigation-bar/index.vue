@@ -238,4 +238,8 @@ function onKeydown(event: KeyboardEvent) {
     z-index: z(header);
   }
 }
+
+.ui-navigation-bar__item:focus-visible {
+  @include focus-ring;
+}
 </style>

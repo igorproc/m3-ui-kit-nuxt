@@ -18,11 +18,6 @@ $tokens: (
     radius: var(--sys-shape-corner-medium),
     saturation-color: white,
     value-color: black,
-    focus: (
-      width: 2rem,
-      offset: 2rem,
-      color: map.get($theme-color-link, 'primary'),
-    ),
     thumb: (
       size: 14rem,
       border: map.get($theme-color-link, 'surface'),

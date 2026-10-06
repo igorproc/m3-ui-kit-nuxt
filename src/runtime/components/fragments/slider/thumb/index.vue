@@ -122,6 +122,11 @@ $prefix: 'ui-slider-thumb';
     }
   }
 
+  // The thumb is a 48rem hit area; the ring belongs on the visible knob.
+  &:focus-visible &__knob {
+    @include focus-ring;
+  }
+
   &:focus-visible &__state-layer,
   &--dragging &__state-layer {
     opacity: g($t, 'state.layer.pressed.opacity');

@@ -125,6 +125,11 @@ function selectItem(val: string | number) {
       border-right: none;
     }
 
+    // Segments sit edge to edge inside a clipped pill: the ring goes inside.
+    &:focus-visible {
+      @include focus-ring(inset);
+    }
+
     @include can-hover {
       &:hover {
         background-color: g($t, 'unselected-container-hover-color');

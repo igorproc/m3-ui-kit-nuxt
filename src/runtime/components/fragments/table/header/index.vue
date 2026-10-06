@@ -154,4 +154,11 @@ function toggleSort(column: TableColumn<T>) {
     color: g($t, 'header-sort-icon-color');
   }
 }
+
+// Header cells sit edge to edge: the ring goes inside.
+.ui-table {
+  &__header-sort:focus-visible {
+    @include focus-ring(inset);
+  }
+}
 </style>

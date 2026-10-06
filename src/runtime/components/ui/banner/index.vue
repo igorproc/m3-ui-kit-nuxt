@@ -250,8 +250,7 @@ const closeSlotProps = computed<MBannerCloseSlot>(() => ({
     &:active:not(:disabled, .ui-button--disabled) { background-color: g($t, 'close-pressed-color'); }
 
     &:focus-visible {
-      outline: g($t, 'close-focus-width') solid g($t, 'close-focus-color');
-      outline-offset: g($t, 'close-focus-offset');
+      @include focus-ring;
     }
   }
 

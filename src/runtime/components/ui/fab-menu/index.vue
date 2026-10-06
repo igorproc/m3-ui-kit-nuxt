@@ -305,4 +305,8 @@ useClickOutside(rootRef, () => close())
   &--tertiary { @include apply-item-scheme('tertiary'); }
   &--error { @include apply-item-scheme('error'); }
 }
+
+.ui-fab-menu__item:focus-visible {
+  @include focus-ring;
+}
 </style>

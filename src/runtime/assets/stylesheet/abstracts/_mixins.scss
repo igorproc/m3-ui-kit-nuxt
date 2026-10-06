@@ -111,3 +111,13 @@
     letter-spacing: map.get($type-map, 'letter-spacing');
   }
 }
+
+/// Keyboard focus ring (`:focus-visible`) for buttons, chips, items, thumbs —
+/// not fields. `inset` draws it inside the element, for parts whose ancestor
+/// clips (`overflow: hidden`) or that sit edge to edge with their neighbours.
+@mixin focus-ring($offset: map.get($theme-focus-link, 'offset')) {
+  $width: map.get($theme-focus-link, 'width');
+
+  outline: $width solid map.get($theme-focus-link, 'color');
+  outline-offset: if(sass($offset == inset): $width * -1; else: $offset);
+}
