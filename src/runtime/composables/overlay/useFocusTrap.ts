@@ -37,6 +37,12 @@ export interface UseFocusTrapReturn {
   isActive: Readonly<Ref<boolean>>
   activate: () => void
   deactivate: () => void
+  /**
+   * Record the current focus as the return target before showing the surface.
+   * Needed when showing moves focus itself (`showModal()`, `dialog.show()`),
+   * which would otherwise make activation remember an element inside the trap.
+   */
+  rememberFocus: () => void
 }
 
 const FOCUSABLE = [
@@ -71,6 +77,7 @@ export function useFocusTrap(
 ): UseFocusTrapReturn {
   const isActive = shallowRef(false)
   let previouslyFocused: HTMLElement | null = null
+  let remembered: HTMLElement | null = null
   let boundRoot: HTMLElement | null = null
 
   function onKeydown(event: KeyboardEvent) {
@@ -99,7 +106,8 @@ export function useFocusTrap(
     const root = toValue(target)
     if (!IN_BROWSER || !root || isActive.value) return
 
-    previouslyFocused = document.activeElement as HTMLElement | null
+    previouslyFocused = remembered ?? document.activeElement as HTMLElement | null
+    remembered = null
     boundRoot = root
     root.addEventListener('keydown', onKeydown)
     isActive.value = true
@@ -133,5 +141,9 @@ export function useFocusTrap(
 
   onScopeDispose(deactivate)
 
-  return { isActive, activate, deactivate }
+  function rememberFocus() {
+    if (IN_BROWSER && !isActive.value) remembered = document.activeElement as HTMLElement | null
+  }
+
+  return { isActive, activate, deactivate, rememberFocus }
 }

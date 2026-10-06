@@ -146,6 +146,7 @@ function toTransitionProps(transition: MOverlayTransition | undefined): Transiti
 
 function show() {
   ticket.select()
+  if (shouldTrapFocus.value) focusTrap.rememberFocus()
   topLayer.show()
   if (isInertModal.value && props.lockScroll) scrollLock.lock(props.reserveScrollBarGap)
   if (isModal.value) modalService.markOpened(overlayId, showScrim.value)

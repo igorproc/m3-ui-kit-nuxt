@@ -37,6 +37,23 @@ describe('useFocusTrap', () => {
     scope.stop()
   })
 
+  it('returns focus to the element remembered before the surface took it', async () => {
+    const { outside, panel, last } = buildPanel()
+    outside.focus()
+    const scope = effectScope()
+    const trap = scope.run(() => useFocusTrap(panel))!
+
+    trap.rememberFocus()
+    // `showModal()` moves focus into the dialog before the trap activates.
+    last.focus()
+    trap.activate()
+    trap.deactivate()
+    await nextTick()
+
+    expect(document.activeElement).toBe(outside)
+    scope.stop()
+  })
+
   it('wraps Tab from the last focusable to the first and back', () => {
     const { panel, first, last } = buildPanel()
     const scope = effectScope()
