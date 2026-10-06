@@ -75,6 +75,8 @@ $tokens: (
     ),
     min-height: 18rem,
     color: map.get($theme-color-link, on-surface-variant),
+    // The error glyph — the same size and spacing as the textarea's.
+    icon: (size: 16rem, gap: 6rem),
   ),
   // Vertical scale. Height and padding only — type size never changes, so a
   // compact field and a comfortable one still align their values.

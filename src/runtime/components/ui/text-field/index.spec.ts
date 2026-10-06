@@ -120,9 +120,68 @@ describe('m-text-field', () => {
     expect(support.exists()).toBe(true)
     expect(support.classes()).toContain('ui-text-field__support--error')
     expect(support.text()).toBe('Required')
-    expect(support.attributes('role')).toBe('alert')
+    expect(support.find('[role="alert"]').text()).toBe('Required')
     expect(input.attributes('aria-invalid')).toBe('true')
+    expect(input.attributes('aria-describedby')).toBe(support.attributes('id'))
     expect(wrapper.classes()).toContain('ui-text-field--error')
+  })
+
+  it('reserves the support line even with nothing to say, so an error never shifts the form', async () => {
+    const wrapper = await mountSuspended(MTextField)
+
+    expect(wrapper.find('.ui-text-field__support').exists()).toBe(true)
+    expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+  })
+
+  it('keeps one alert region mounted and writes the error into it', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { helperText: 'Hint' } })
+    const region = wrapper.find('[role="alert"]')
+
+    // The region exists, empty, before there is anything to announce.
+    expect(region.exists()).toBe(true)
+    expect(region.text()).toBe('')
+
+    await wrapper.setProps({ errorMessage: 'Too short' })
+
+    expect(wrapper.find('[role="alert"]').element).toBe(region.element)
+    expect(region.text()).toBe('Too short')
+    expect(wrapper.find('.ui-text-field__support').text()).not.toContain('Hint')
+  })
+
+  it('keeps the helper outside the alert region — it is not announced', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { helperText: 'Hint' } })
+
+    expect(wrapper.find('.ui-text-field__support').text()).toBe('Hint')
+    expect(wrapper.find('[role="alert"]').text()).toBe('')
+  })
+
+  it('shows a decorative error glyph, so the state is not colour alone', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { error: true } })
+    const icon = wrapper.find('.ui-text-field__support-icon')
+
+    expect(icon.exists()).toBe(true)
+    expect(icon.attributes('aria-hidden')).toBe('true')
+  })
+
+  it('leaves the glyph out of a valid field and out of a custom error slot', async () => {
+    const valid = await mountSuspended(MTextField, { props: { helperText: 'Hint' } })
+    expect(valid.find('.ui-text-field__support-icon').exists()).toBe(false)
+
+    const custom = await mountSuspended(MTextField, {
+      props: { errorMessage: 'Too short' },
+      slots: { error: (scope: { message: string }) => `custom: ${scope.message}` },
+    })
+    expect(custom.find('.ui-text-field__support-icon').exists()).toBe(false)
+    expect(custom.find('[role="alert"]').text()).toBe('custom: Too short')
+  })
+
+  it('hands the helper text to a helper slot', async () => {
+    const wrapper = await mountSuspended(MTextField, {
+      props: { helperText: 'Hint' },
+      slots: { helper: (scope: { message: string }) => `custom: ${scope.message}` },
+    })
+
+    expect(wrapper.find('.ui-text-field__support').text()).toBe('custom: Hint')
   })
 
   it('passes attributes and listeners to the native input, keeps class on the root', async () => {

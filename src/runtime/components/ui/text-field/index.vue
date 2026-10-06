@@ -96,20 +96,47 @@
       </span>
     </div>
 
+    <!-- Always rendered: the line keeps its height, and the alert region exists
+         before an error is written into it, so the first one is announced. -->
     <p
-      v-if="displayMessage"
-      :id="messageId"
+      :id="supportId"
       class="ui-text-field__support"
       :class="isError ? 'ui-text-field__support--error' : 'ui-text-field__support--helper'"
-      :role="isError ? 'alert' : undefined"
-      :aria-live="isError ? 'assertive' : 'polite'"
     >
-      {{ displayMessage }}
+      <MIcon
+        v-if="isError && !$slots.error"
+        :name="ICONS.error"
+        class="ui-text-field__support-icon"
+        aria-hidden="true"
+      />
+
+      <span
+        class="ui-text-field__alert"
+        role="alert"
+      >
+        <slot
+          v-if="isError"
+          name="error"
+          :message="displayMessage"
+        >
+          {{ displayMessage }}
+        </slot>
+      </span>
+
+      <slot
+        v-if="!isError"
+        name="helper"
+        :message="displayMessage"
+      >
+        {{ displayMessage }}
+      </slot>
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
+import MIcon from '#kit/components/ui/icon/index.vue'
+import { ICONS } from '#kit/shared/constants/icons'
 import { mTextFieldProps } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 
@@ -155,8 +182,8 @@ const rootClasses = computed(() => [
 ])
 
 const displayMessage = computed(() => errorMessage.value || (props.error ? props.helperText : undefined) || props.helperText)
-const messageId = computed(() => isError.value ? `${fieldId}-error` : `${fieldId}-helper`)
-const describedBy = computed(() => displayMessage.value ? messageId.value : undefined)
+const supportId = `${fieldId}-support`
+const describedBy = computed(() => displayMessage.value ? supportId : undefined)
 
 /**
  * The two boxes a composite field needs to reach: `control` is the drawn
@@ -604,9 +631,15 @@ defineExpose({ control: controlRef, input: inputRef })
 
   // ── support line · reserved height so valid⇄invalid never reflows ──
   &__support {
+    display: flex;
+    align-items: center;
+    min-width: 0;
     min-height: g($t, 'helper.min-height');
     padding-inline: g($t, 'helper.padding.inline');
     margin-top: g($t, 'helper.margin.top');
+
+    // A URL or an address in a message has no break opportunity of its own.
+    overflow-wrap: anywhere;
 
     @include typescale(g($t, 'typography.helper'));
 
@@ -617,6 +650,19 @@ defineExpose({ control: controlRef, input: inputRef })
     &--error {
       color: g($t, 'filled.error.helper.color');
     }
+  }
+
+  // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
+  // message has nothing but this glyph to say it. A margin, not a flex gap: the
+  // alert region beside it is empty whenever the helper is shown.
+  &__support-icon {
+    flex: 0 0 auto;
+    margin-inline-end: g($t, 'helper.icon.gap');
+    font-size: g($t, 'helper.icon.size');
+  }
+
+  &__alert {
+    min-width: 0;
   }
 
   // ── forced colours · every edge turns CanvasText, so the states that were a
