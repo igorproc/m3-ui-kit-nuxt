@@ -240,12 +240,12 @@ function focusFromBox(event: PointerEvent) {
   }
 
   // ── label · base is `top`, a block above the box ──
+  // Above the box a long label wraps, as in the text field: nothing there
+  // bounds its height. Only an overlaid label has one line to live on.
   &__label {
     min-width: 0;
-    overflow: hidden;
     color: g($t, 'label.color');
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
 
     @include typescale(g($t, 'typography.label'));
   }
@@ -263,6 +263,9 @@ function focusFromBox(event: PointerEvent) {
       top: g($t, 'label.inset.top');
       z-index: 1;
       max-width: g($t, 'label.max-width');
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       pointer-events: none;
       transform: scale(g($t, 'label.active.scale'));
       transform-origin: var(--ui-textarea-start) top;
@@ -553,6 +556,7 @@ function focusFromBox(event: PointerEvent) {
   &--capped &__input {
     max-height: g($t, 'growth.max-height');
     overflow-y: auto;
+    scrollbar-gutter: stable;
   }
 
   &--resizing &__input {
