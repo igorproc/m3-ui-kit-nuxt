@@ -9,6 +9,8 @@ export const mMenuProps = {
   absolute: { type: Boolean, default: false },
   origin: { type: String as PropType<UiMenuOrigin>, default: 'top left' },
   matchWidth: { type: Boolean, default: false },
+  /** Lock page scroll while the menu is open. */
+  lockScroll: { type: Boolean, default: true },
   /**
    * Element the surface is positioned against. Defaults to the menu's parent
    * element, which is right whenever the parent *is* the trigger.

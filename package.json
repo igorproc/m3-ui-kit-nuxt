@@ -60,8 +60,7 @@
     "@nuxt/icon": "^2.2.1",
     "@nuxtjs/device": "^4.0.0",
     "@vueuse/core": "^14.3.0",
-    "dayjs": "^1.11.20",
-    "vue-final-modal": "^4.5.5"
+    "dayjs": "^1.11.20"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",

@@ -4,8 +4,8 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MSheet from './index.vue'
 
 describe('m-sheet', () => {
-  // vue-final-modal teleports its content to <body>; clear leftovers between
-  // cases so queries never match a stale node from a previous mount.
+  // <MOverlay> falls back to <body> without an overlay host; clear leftovers
+  // between cases so queries never match a stale node from a previous mount.
   afterEach(() => {
     document.querySelectorAll('.ui-sheet').forEach(node => node.remove())
   })

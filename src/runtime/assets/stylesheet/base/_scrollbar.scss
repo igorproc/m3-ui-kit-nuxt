@@ -5,3 +5,11 @@
 * {
   @include use-scrollbar;
 }
+
+/* Место под скроллбар страницы зарезервировано всегда: переход между страницами
+   с прокруткой и без неё, а также блокировка прокрутки модалкой
+   (useScrollLock: overflow: hidden на <html>) не сдвигают ни контент,
+   ни position: fixed-бары. */
+html {
+  scrollbar-gutter: stable;
+}

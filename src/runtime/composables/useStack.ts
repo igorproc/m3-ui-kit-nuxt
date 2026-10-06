@@ -32,11 +32,14 @@ export interface StackTicketInput {
   onDismiss?: () => void
   /** When `true`, `dismiss()` is a no-op (e.g. modal dialogs requiring an explicit action). */
   blocking?: boolean
+  /** Modal layer (dialog, sheet, drawer) — tracked separately by `topModal`. */
+  modal?: boolean
 }
 
 export interface StackTicket {
   id: string
   blocking: boolean
+  modal: boolean
   onDismiss?: () => void
   /** Computed z-index based on current selection order. */
   zIndex: ComputedRef<number>
@@ -59,6 +62,8 @@ export interface StackContext {
   isActive: Readonly<Ref<boolean>>
   /** The topmost selected ticket, if any. */
   top: Readonly<Ref<StackTicket | undefined>>
+  /** The topmost selected modal ticket — menus/tooltips above it do not count. */
+  topModal: Readonly<Ref<StackTicket | undefined>>
   /** Z-index for a shared scrim (one step below the top overlay). */
   scrimZIndex: Readonly<Ref<number>>
   /** Whether the topmost overlay blocks scrim dismissal. */
@@ -89,6 +94,13 @@ export function createStack(options: StackOptions = {}): StackContext {
   const top = toRef(() => {
     const id = order.value.at(-1)
     return id ? tickets.get(id) : undefined
+  })
+  const topModal = toRef(() => {
+    for (let index = order.value.length - 1; index >= 0; index--) {
+      const ticket = tickets.get(order.value[index]!)
+      if (ticket?.modal) return ticket
+    }
+    return undefined
   })
   const isActive = toRef(() => order.value.length > 0)
   const scrimZIndex = toRef(() => {
@@ -134,6 +146,7 @@ export function createStack(options: StackOptions = {}): StackContext {
     const ticket: StackTicket = {
       id,
       blocking,
+      modal: input.modal ?? false,
       onDismiss: input.onDismiss,
       zIndex,
       globalTop,
@@ -157,6 +170,7 @@ export function createStack(options: StackOptions = {}): StackContext {
   return {
     isActive,
     top,
+    topModal,
     scrimZIndex,
     isBlocking,
     size,
@@ -164,23 +178,15 @@ export function createStack(options: StackOptions = {}): StackContext {
   }
 }
 
-interface StackHost {
-  _m3OverlayStack?: StackContext
-}
-
 /**
  * Returns the overlay stack scoped to the current Nuxt app instance.
  *
- * The stack is stored on `nuxtApp`, not at module scope: on the server each
- * request gets its own instance that is GC'd with the request, so overlay
- * tickets never accumulate across pages during SSR/prerender (SSR unmount
- * hooks — and therefore `onScopeDispose` cleanup — never fire). On the client
- * `nuxtApp` is a per-app singleton, so overlays still share one stack.
+ * The stack lives on `$material.overlays` (created by the `material` plugin), not
+ * at module scope: on the server each request gets its own instance that is GC'd
+ * with the request, so overlay tickets never accumulate across pages during
+ * SSR/prerender (SSR unmount hooks — and therefore `onScopeDispose` cleanup —
+ * never fire). On the client it is a per-app singleton shared by every overlay.
  */
 export function useStack(): StackContext {
-  const nuxtApp = useNuxtApp() as ReturnType<typeof useNuxtApp> & StackHost
-  if (!nuxtApp._m3OverlayStack) {
-    nuxtApp._m3OverlayStack = createStack()
-  }
-  return nuxtApp._m3OverlayStack
+  return useNuxtApp().$material.overlays
 }

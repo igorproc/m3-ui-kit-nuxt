@@ -1,10 +1,7 @@
 /* 1. abstracts */
 @use 'abstracts/forward' as *;
 
-/* 2. vendors */
-@use 'vendors/base' as *;
-
-/* 3. base */
+/* 2. base */
 @use 'base/typography' as *;
 @use 'base/animations' as *;
 @use 'base/reset' as *;
@@ -14,9 +11,9 @@
 @use 'base/adaptive' as *;
 @use 'base/scrollbar' as *;
 
-/* 4. partials - layout */
+/* 3. partials - layout */
 
-/* 5. modules - components */
+/* 4. modules - components */
 
 /* 6. pages */
 

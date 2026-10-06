@@ -1,15 +1,24 @@
 <template>
   <div class="ui-dialog-global-container">
     <client-only>
-      <modals-container />
+      <component
+        :is="renderModal(modal)"
+        v-for="modal in modalService.dynamicModals"
+        :key="modal.id"
+      />
     </client-only>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ModalsContainer } from 'vue-final-modal'
+// Host for programmatic modals created by `useModal()`. Client-only: they are
+// opened from user interaction and must not leave teleport anchors in the SSR
+// output.
+import { h } from 'vue'
+import { useNuxtApp } from '#app'
+import type { DynamicModal } from '#kit/composables/modal/createModalService'
 
-onMounted(() => {
-  import('vue-final-modal/style.css')
-})
+const modalService = useNuxtApp().$material.modal
+
+const renderModal = (modal: DynamicModal) => h(modal.component, modal.props, modal.slots)
 </script>

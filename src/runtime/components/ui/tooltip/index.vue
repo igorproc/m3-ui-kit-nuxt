@@ -1,106 +1,112 @@
 <template>
   <span
     class="ui-tooltip"
-    @mouseenter="onEnter"
-    @mouseleave="onLeave"
-    @focusin="onEnter"
-    @focusout="onLeave"
+    @mouseenter="show"
+    @mouseleave="scheduleHide"
+    @focusin="show"
+    @focusout="hide"
   >
     <span
-      ref="triggerRef"
+      ref="trigger"
       class="ui-tooltip__trigger"
+      :style="popover.anchorStyle.value"
       :aria-describedby="visible ? tooltipId : undefined"
     >
       <slot />
     </span>
 
-    <teleport to="body">
-      <transition name="ui-tooltip-fade">
-        <span
-          v-if="visible"
-          :id="tooltipId"
-          ref="tooltipRef"
-          class="ui-tooltip__content"
-          role="tooltip"
-          :style="tooltipStyle"
+    <client-only>
+      <teleport :to="teleportTarget">
+        <transition
+          name="ui-tooltip-fade"
+          @enter="showInTopLayer"
+          @after-enter="popover.onAfterEnter"
+          @after-leave="popover.onAfterLeave"
         >
-          <slot name="content">
-            {{ text }}
-          </slot>
-        </span>
-      </transition>
-    </teleport>
+          <span
+            v-if="visible"
+            :id="tooltipId"
+            ref="surface"
+            class="ui-tooltip__content"
+            role="tooltip"
+            :popover.attr="usesPopoverLayer ? 'manual' : undefined"
+            :style="[popover.popoverStyle.value, { zIndex: ticket.zIndex.value }]"
+            @mouseenter="hideTimer.stop"
+            @mouseleave="scheduleHide"
+          >
+            <slot name="content">
+              {{ text }}
+            </slot>
+          </span>
+        </transition>
+      </teleport>
+    </client-only>
   </span>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, useId } from 'vue'
+import { shallowRef, useId, watch } from 'vue'
 import { useStack } from '#kit/composables/useStack'
 import { useGlobalListener } from '#kit/composables/useGlobalListener'
+import { usePopover } from '#kit/composables/popover/usePopover'
+import { useTimer } from '#kit/composables/useTimer'
+import { supportsPopover } from '#kit/shared/utils/support'
+import { useOverlayTeleportTarget } from '#kit/composables/overlay/useOverlayTarget'
 import { mTooltipProps } from './props'
 
 defineProps(mTooltipProps)
 
+/** Gap between trigger and tooltip — mirrors the `content.offset` token. */
+const TOOLTIP_OFFSET = 8
+/** Grace period for moving the pointer from the trigger onto the tooltip (WCAG 1.4.13, hoverable). */
+const HIDE_DELAY_MS = 100
+
 const tooltipId = useId()
-const visible = ref(false)
-const triggerRef = ref<HTMLElement | null>(null)
-const tooltipRef = ref<HTMLElement | null>(null)
+const visible = shallowRef(false)
+const trigger = shallowRef<HTMLElement | null>(null)
+const surface = shallowRef<HTMLElement | null>(null)
+
+const popover = usePopover(visible, {
+  placement: 'top',
+  offset: TOOLTIP_OFFSET,
+  trigger,
+  surface,
+})
+
+// Top layer keeps the tooltip above a modal <dialog> and outside any overflow;
+// the teleport puts it inside that dialog, where it is not inert.
+const usesPopoverLayer = supportsPopover()
+const teleportTarget = useOverlayTeleportTarget()
+
+const showInTopLayer = (el: Element) => {
+  if (usesPopoverLayer) (el as HTMLElement).showPopover()
+}
 
 // Overlay stacking: keep the tooltip above whatever overlay it annotates.
 const ticket = useStack().register()
 
-const position = ref({ top: 0, left: 0 })
+watch(visible, value => (value ? ticket.select() : ticket.unselect()))
 
-const tooltipStyle = computed(() => ({
-  top: `${position.value.top}px`,
-  left: `${position.value.left}px`,
-  position: 'fixed' as const,
-  zIndex: ticket.zIndex.value,
-}))
-
-const updatePosition = () => {
-  if (!visible.value || !triggerRef.value || !tooltipRef.value) return
-
-  const triggerRect = triggerRef.value.getBoundingClientRect()
-  const tooltipRect = tooltipRef.value.getBoundingClientRect()
-
-  // Default position: top centered
-  const left = triggerRect.left + (triggerRect.width - tooltipRect.width) / 2
-  let top = triggerRect.top - tooltipRect.height - 8 // 8px offset
-
-  // Boundary checks (prevent clipping)
-  const safeLeft = Math.max(8, Math.min(left, window.innerWidth - tooltipRect.width - 8))
-
-  // If top goes off-screen, fallback to bottom
-  if (top < 8) {
-    top = triggerRect.bottom + 8
-  }
-  const safeTop = Math.max(8, Math.min(top, window.innerHeight - tooltipRect.height - 8))
-
-  position.value = { top: safeTop, left: safeLeft }
-}
-
-async function onEnter() {
+function show() {
+  hideTimer.stop()
   visible.value = true
-  ticket.select()
-  await nextTick()
-  updatePosition()
 }
 
-function onLeave() {
+function hide() {
+  hideTimer.stop()
   visible.value = false
-  ticket.unselect()
+}
+
+const hideTimer = useTimer(hide, { duration: HIDE_DELAY_MS })
+
+function scheduleHide() {
+  hideTimer.start()
 }
 
 // Esc dismisses the tooltip (APG tooltip pattern) without moving focus.
-function onKeydown(event: Event) {
-  if ((event as KeyboardEvent).key === 'Escape' && visible.value) onLeave()
-}
-
-// Reactively reposition tooltip on scroll/resize when visible
-useGlobalListener('window', 'scroll', updatePosition, { capture: true, passive: true })
-useGlobalListener('window', 'resize', updatePosition, { passive: true })
-useGlobalListener('window', 'keydown', onKeydown)
+useGlobalListener('window', 'keydown', (event) => {
+  if ((event as KeyboardEvent).key === 'Escape' && visible.value) hide()
+})
 </script>
 
 <style lang="scss">
@@ -119,15 +125,21 @@ useGlobalListener('window', 'keydown', onKeydown)
 .ui-tooltip__content {
   $t: material-map(t.$tokens, 'md-tooltip');
 
-  padding: g($t, 'content-padding');
-  border-radius: g($t, 'content-border-radius');
-  background-color: g($t, 'content-bg-color');
-  color: g($t, 'content-color');
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: g($t, 'content-shadow');
+  // Neutralise the UA [popover] box; hoverable even inside a popover overlay.
+  pointer-events: auto;
+  margin: 0;
+  border: 0;
+  overflow: visible;
+  max-width: g($t, 'content.max-width');
+  padding: g($t, 'content.padding');
+  border-radius: g($t, 'content.border.radius');
+  background-color: g($t, 'content.bg.color');
+  color: g($t, 'content.color');
+  white-space: normal;
+  overflow-wrap: break-word;
+  box-shadow: g($t, 'content.shadow');
 
-  @include typescale(g($t, 'content-text-type'));
+  @include typescale(g($t, 'content.text.type'));
 }
 
 // Vue Transition

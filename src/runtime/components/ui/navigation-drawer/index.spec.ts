@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MNavigationDrawer from './index.vue'
 
-// vue-final-modal teleports its surface into document.body; assertions target
-// the global document, and the closed/open state is driven by `modelValue`.
+// <MOverlay> teleports the drawer into document.body when there is no overlay
+// host; assertions target the global document, the state is driven by `modelValue`.
 describe('m-navigation-drawer', () => {
   it('mounts without rendering surface content while closed', async () => {
     await mountSuspended(MNavigationDrawer, {

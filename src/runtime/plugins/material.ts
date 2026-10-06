@@ -4,11 +4,19 @@ import { createMaterialTheme } from '#kit/utils/theme/createMaterialTheme'
 import { createBreakpoints } from '#kit/utils/viewport/createBreakpoints'
 import type { MaterialThemeController } from '#kit/utils/theme/createMaterialTheme'
 import type { MaterialBreakpoints } from '#kit/utils/viewport/createBreakpoints'
+import { createStack } from '#kit/composables/useStack'
+import type { StackContext } from '#kit/composables/useStack'
+import { createModalService } from '#kit/composables/modal/createModalService'
+import type { ModalService } from '#kit/composables/modal/createModalService'
 
 /** Everything the kit shares app-wide, injected as `$material`. */
 export interface MaterialRuntime {
   theme: MaterialThemeController
   breakpoints: MaterialBreakpoints
+  /** Overlay stack: activation order, topmost (modal) overlay, fallback z-index. */
+  overlays: StackContext
+  /** Modal registry + programmatic modals (the kit's `$vfm`). */
+  modal: ModalService
 }
 
 declare module '#app' {
@@ -37,6 +45,8 @@ export default defineNuxtPlugin({
       material: {
         theme: createMaterialTheme(),
         breakpoints: createBreakpoints(),
+        overlays: createStack(),
+        modal: createModalService(),
       } satisfies MaterialRuntime,
     },
   }),

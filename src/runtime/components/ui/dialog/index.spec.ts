@@ -12,7 +12,7 @@ beforeEach(() => {
 
 afterEach(() => {
   document.getElementById('ui-overlay-host')?.remove()
-  document.body.style.overflow = ''
+  document.documentElement.style.overflow = ''
   document.body.style.paddingRight = ''
 })
 
@@ -40,13 +40,13 @@ describe('m-dialog', () => {
     expect(document.querySelector('.ui-dialog')).toBeNull()
   })
 
-  it('renders role="dialog" + aria-modal, teleported and named by its title', async () => {
+  it('renders a native modal <dialog> named by its title', async () => {
     const { mount } = mountDialog({ modelValue: true, title: 'Confirm' })
     await mount()
     await nextTick()
 
-    const dialog = document.getElementById('ui-overlay-host')!.querySelector('.ui-dialog')!
-    expect(dialog.getAttribute('role')).toBe('dialog')
+    const dialog = document.getElementById('ui-overlay-host')!.querySelector('dialog.ui-overlay')!
+    expect(dialog.querySelector('.ui-dialog')).not.toBeNull()
     expect(dialog.getAttribute('aria-modal')).toBe('true')
     const headlineId = dialog.getAttribute('aria-labelledby')
     expect(headlineId).toBeTruthy()
@@ -64,8 +64,8 @@ describe('m-dialog', () => {
     expect(model.value).toBe(false)
   })
 
-  it('does not close on scrim click when click-to-close is disabled', async () => {
-    const { model, mount } = mountDialog({ modelValue: true, clickToClose: false })
+  it('does not close on scrim click when close-on-outside is disabled', async () => {
+    const { model, mount } = mountDialog({ modelValue: true, closeOnOutside: false })
     await mount()
     await nextTick()
 

@@ -1,295 +1,280 @@
 <template>
-  <vue-final-modal
+  <MOverlay
+    ref="overlay"
     v-model="modelValue"
-    v-bind="themeAttrs"
-    class="ui-date-dialog-backdrop"
-    content-class="ui-date-dialog"
-    overlay-transition="vfm-fade"
-    content-transition="vfm-fade"
-    :click-to-close="clickToClose"
-    :esc-to-close="escToClose"
+    v-bind="{ ...themeAttrs, ...layerProps }"
+    mode="modal"
+    :content-transition="contentTransition ?? 'ui-date-dialog-fade'"
     :aria-labelledby="headlineId"
     @before-open="onBeforeOpen"
   >
-    <div
-      class="ui-date-dialog__container"
-      :class="`ui-date-dialog__container--${mode}`"
-    >
-      <!-- Dialog Header -->
-      <header class="ui-date-dialog__header">
-        <div class="ui-date-dialog__header-main">
-          <div class="ui-date-dialog__headline">
-            <p
-              :id="headlineId"
-              class="ui-date-dialog__headline-label"
-            >
-              {{ headlineLabel }}
-            </p>
-            <p
-              class="ui-date-dialog__headline-date"
-              :class="{ 'ui-date-dialog__headline-date--placeholder': !localDate }"
-            >
-              {{ formattedHeaderDate }}
-            </p>
-          </div>
+    <div class="ui-date-dialog">
+      <div
+        class="ui-date-dialog__container"
+        :class="`ui-date-dialog__container--${mode}`"
+      >
+        <!-- Dialog Header -->
+        <header class="ui-date-dialog__header">
+          <div class="ui-date-dialog__header-main">
+            <div class="ui-date-dialog__headline">
+              <p
+                :id="headlineId"
+                class="ui-date-dialog__headline-label"
+              >
+                {{ headlineLabel }}
+              </p>
+              <p
+                class="ui-date-dialog__headline-date"
+                :class="{ 'ui-date-dialog__headline-date--placeholder': !localDate }"
+              >
+                {{ formattedHeaderDate }}
+              </p>
+            </div>
 
-          <!-- Mode Switcher -->
-          <button
-            type="button"
-            class="ui-date-dialog__mode-toggle"
-            aria-label="Toggle input mode"
-            @click="toggleMode"
-          >
-            <m-icon :name="mode === 'picker' ? ICONS.edit : ICONS.event" />
-          </button>
-        </div>
-
-        <!-- Month Navigation (Only in picker mode and when in calendar view) -->
-        <div
-          v-if="mode === 'picker' && view === 'calendar'"
-          class="ui-date-dialog__controls"
-        >
-          <button
-            type="button"
-            class="ui-date-dialog__view-toggle"
-            @click="toggleView"
-          >
-            {{ currentMonthYearLabel }}
-            <m-icon
-              :name="view === 'calendar' ? ICONS.arrowDropDown : ICONS.arrowDropUp"
-              class="ui-date-dialog__view-toggle-icon"
-            />
-          </button>
-
-          <div class="ui-date-dialog__month-arrows">
+            <!-- Mode Switcher -->
             <button
               type="button"
-              class="ui-date-dialog__icon-button"
-              aria-label="Previous month"
-              @click="goToPreviousMonth"
+              class="ui-date-dialog__mode-toggle"
+              aria-label="Toggle input mode"
+              @click="toggleMode"
             >
-              <m-icon :name="ICONS.chevronLeft" />
-            </button>
-
-            <button
-              type="button"
-              class="ui-date-dialog__icon-button"
-              aria-label="Next month"
-              @click="goToNextMonth"
-            >
-              <m-icon :name="ICONS.chevronRight" />
+              <m-icon :name="mode === 'picker' ? ICONS.edit : ICONS.event" />
             </button>
           </div>
-        </div>
 
-        <!-- Year Navigation (Only in picker mode and in year view) -->
-        <div
-          v-if="mode === 'picker' && view === 'year'"
-          class="ui-date-dialog__controls"
-        >
-          <button
-            type="button"
-            class="ui-date-dialog__view-toggle"
-            @click="toggleView"
+          <!-- Month Navigation (Only in picker mode and when in calendar view) -->
+          <div
+            v-if="mode === 'picker' && view === 'calendar'"
+            class="ui-date-dialog__controls"
           >
-            {{ currentMonthYearLabel }}
-            <m-icon
-              :name="ICONS.arrowDropUp"
-              class="ui-date-dialog__view-toggle-icon"
-            />
-          </button>
-        </div>
-      </header>
-
-      <!-- Dialog Body Content -->
-      <div class="ui-date-dialog__content">
-        <!-- MODE 1: CALENDAR/YEAR PICKER -->
-        <template v-if="mode === 'picker'">
-          <transition
-            name="ui-date-dialog-fade"
-            mode="out-in"
-          >
-            <!-- Calendar Grid -->
-            <div
-              v-if="view === 'calendar'"
-              key="calendar"
-              class="ui-date-dialog__calendar"
+            <button
+              type="button"
+              class="ui-date-dialog__view-toggle"
+              @click="toggleView"
             >
-              <div class="ui-date-dialog__weekdays">
-                <span
-                  v-for="weekday in weekdayLabels"
-                  :key="weekday"
-                  class="ui-date-dialog__weekday"
+              {{ currentMonthYearLabel }}
+              <m-icon
+                :name="view === 'calendar' ? ICONS.arrowDropDown : ICONS.arrowDropUp"
+                class="ui-date-dialog__view-toggle-icon"
+              />
+            </button>
+
+            <div class="ui-date-dialog__month-arrows">
+              <button
+                type="button"
+                class="ui-date-dialog__icon-button"
+                aria-label="Previous month"
+                @click="goToPreviousMonth"
+              >
+                <m-icon :name="ICONS.chevronLeft" />
+              </button>
+
+              <button
+                type="button"
+                class="ui-date-dialog__icon-button"
+                aria-label="Next month"
+                @click="goToNextMonth"
+              >
+                <m-icon :name="ICONS.chevronRight" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Year Navigation (Only in picker mode and in year view) -->
+          <div
+            v-if="mode === 'picker' && view === 'year'"
+            class="ui-date-dialog__controls"
+          >
+            <button
+              type="button"
+              class="ui-date-dialog__view-toggle"
+              @click="toggleView"
+            >
+              {{ currentMonthYearLabel }}
+              <m-icon
+                :name="ICONS.arrowDropUp"
+                class="ui-date-dialog__view-toggle-icon"
+              />
+            </button>
+          </div>
+        </header>
+
+        <!-- Dialog Body Content -->
+        <div class="ui-date-dialog__content">
+          <!-- MODE 1: CALENDAR/YEAR PICKER -->
+          <template v-if="mode === 'picker'">
+            <transition
+              name="ui-date-dialog-fade"
+              mode="out-in"
+            >
+              <!-- Calendar Grid -->
+              <div
+                v-if="view === 'calendar'"
+                key="calendar"
+                class="ui-date-dialog__calendar"
+              >
+                <div class="ui-date-dialog__weekdays">
+                  <span
+                    v-for="weekday in weekdayLabels"
+                    :key="weekday"
+                    class="ui-date-dialog__weekday"
+                  >
+                    {{ weekday }}
+                  </span>
+                </div>
+
+                <div
+                  ref="dayGridEl"
+                  class="ui-date-dialog__grid"
+                  role="grid"
+                  @keydown="onDayGridKeydown"
                 >
-                  {{ weekday }}
-                </span>
+                  <div
+                    v-for="(week, wIdx) in dayWeeks"
+                    :key="`week-${wIdx}`"
+                    class="ui-date-dialog__week"
+                    role="row"
+                  >
+                    <div
+                      v-for="(day, dIdx) in week"
+                      :key="day.key"
+                      role="gridcell"
+                      :aria-selected="day.isSelected"
+                    >
+                      <button
+                        type="button"
+                        class="ui-date-dialog__day"
+                        :class="{
+                          'ui-date-dialog__day--outside': !day.inCurrentMonth,
+                          'ui-date-dialog__day--today': day.isToday,
+                          'ui-date-dialog__day--selected': day.isSelected,
+                        }"
+                        :aria-label="day.ariaLabel"
+                        :tabindex="isActiveDay(wIdx, dIdx) ? 0 : -1"
+                        @click="onSelect(day.date)"
+                        @focus="activeDay = [wIdx, dIdx]"
+                      >
+                        <span class="ui-date-dialog__day-state" />
+                        <span class="ui-date-dialog__day-label">
+                          {{ day.label }}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
+              <!-- Decade Year List -->
               <div
-                ref="dayGridEl"
-                class="ui-date-dialog__grid"
+                v-else
+                key="year"
+                ref="yearGrid"
+                class="ui-date-dialog__year-grid"
                 role="grid"
-                @keydown="onDayGridKeydown"
+                @keydown="onYearGridKeydown"
               >
                 <div
-                  v-for="(week, wIdx) in dayWeeks"
-                  :key="`week-${wIdx}`"
-                  class="ui-date-dialog__week"
+                  v-for="(row, rIdx) in yearRows"
+                  :key="`year-row-${rIdx}`"
+                  class="ui-date-dialog__year-row"
                   role="row"
                 >
                   <div
-                    v-for="(day, dIdx) in week"
-                    :key="day.key"
+                    v-for="(year, cIdx) in row"
+                    :key="year"
                     role="gridcell"
-                    :aria-selected="day.isSelected"
+                    :aria-selected="year === displayDate.year()"
                   >
                     <button
                       type="button"
-                      class="ui-date-dialog__day"
+                      class="ui-date-dialog__year"
                       :class="{
-                        'ui-date-dialog__day--outside': !day.inCurrentMonth,
-                        'ui-date-dialog__day--today': day.isToday,
-                        'ui-date-dialog__day--selected': day.isSelected,
+                        'ui-date-dialog__year--selected': year === displayDate.year(),
+                        'ui-date-dialog__year--current': year === today.year(),
                       }"
-                      :aria-label="day.ariaLabel"
-                      :tabindex="isActiveDay(wIdx, dIdx) ? 0 : -1"
-                      @click="onSelect(day.date)"
-                      @focus="activeDay = [wIdx, dIdx]"
+                      :tabindex="isActiveYear(rIdx, cIdx) ? 0 : -1"
+                      @click="onSelectYear(year)"
+                      @focus="activeYear = [rIdx, cIdx]"
                     >
-                      <span class="ui-date-dialog__day-state" />
-                      <span class="ui-date-dialog__day-label">
-                        {{ day.label }}
+                      <span class="ui-date-dialog__year-label">
+                        {{ year }}
                       </span>
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
+            </transition>
+          </template>
 
-            <!-- Decade Year List -->
-            <div
-              v-else
-              key="year"
-              ref="yearGrid"
-              class="ui-date-dialog__year-grid"
-              role="grid"
-              @keydown="onYearGridKeydown"
-            >
-              <div
-                v-for="(row, rIdx) in yearRows"
-                :key="`year-row-${rIdx}`"
-                class="ui-date-dialog__year-row"
-                role="row"
-              >
-                <div
-                  v-for="(year, cIdx) in row"
-                  :key="year"
-                  role="gridcell"
-                  :aria-selected="year === displayDate.year()"
-                >
-                  <button
-                    type="button"
-                    class="ui-date-dialog__year"
-                    :class="{
-                      'ui-date-dialog__year--selected': year === displayDate.year(),
-                      'ui-date-dialog__year--current': year === today.year(),
-                    }"
-                    :tabindex="isActiveYear(rIdx, cIdx) ? 0 : -1"
-                    @click="onSelectYear(year)"
-                    @focus="activeYear = [rIdx, cIdx]"
-                  >
-                    <span class="ui-date-dialog__year-label">
-                      {{ year }}
-                    </span>
-                  </button>
-                </div>
-              </div>
+          <!-- MODE 2: TEXT INPUT ENTRY -->
+          <template v-else>
+            <div class="ui-date-dialog__input-pane">
+              <m-text-field
+                v-model="textInputValue"
+                label="Enter date"
+                placeholder="DD.MM.YYYY"
+                :error-message="inputError"
+                @input="onTextInput"
+              />
             </div>
-          </transition>
-        </template>
+          </template>
+        </div>
 
-        <!-- MODE 2: TEXT INPUT ENTRY -->
-        <template v-else>
-          <div class="ui-date-dialog__input-pane">
-            <m-text-field
-              v-model="textInputValue"
-              label="Enter date"
-              placeholder="DD.MM.YYYY"
-              :error-message="inputError"
-              @input="onTextInput"
-            />
-          </div>
-        </template>
+        <!-- Dialog Action Buttons -->
+        <footer class="ui-date-dialog__footer">
+          <m-button
+            variant="text"
+            @click="onCancel"
+          >
+            Cancel
+          </m-button>
+          <m-button
+            variant="text"
+            :disabled="mode === 'input' && !!inputError"
+            @click="onConfirm"
+          >
+            OK
+          </m-button>
+        </footer>
       </div>
-
-      <!-- Dialog Action Buttons -->
-      <footer class="ui-date-dialog__footer">
-        <m-button
-          variant="text"
-          @click="onCancel"
-        >
-          Cancel
-        </m-button>
-        <m-button
-          variant="text"
-          :disabled="mode === 'input' && !!inputError"
-          @click="onConfirm"
-        >
-          OK
-        </m-button>
-      </footer>
     </div>
-  </vue-final-modal>
+  </MOverlay>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, nextTick } from 'vue'
-import type { ComputedRef } from 'vue'
+import { ref, computed, inject, nextTick, useTemplateRef } from 'vue'
+import type { ComputedRef, PropType } from 'vue'
 import type { DayCell } from '#kit/composables/date'
-import { VueFinalModal } from 'vue-final-modal'
+import MOverlay from '#kit/components/ui/overlay/index.vue'
+import { mModalLayerProps, pickModalLayerProps } from '#kit/components/ui/overlay/props'
 import { ICONS } from '#kit/shared/constants/icons'
 import { useDatePicker } from '../../../../composables/date'
-import { useModal } from '#kit/composables/modal/useModal'
-import type { M3ModalContext } from '#kit/composables/modal/useModal'
 import dayjs from 'dayjs'
 
 type DialogMode = 'picker' | 'input'
 
-interface Props {
-  headline?: string
-  clickToClose?: boolean
-  escToClose?: boolean
-  initialMode?: DialogMode
-  parent?: M3ModalContext | null
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  headline: 'Select date',
-  clickToClose: true,
-  escToClose: true,
-  initialMode: 'picker',
-  parent: undefined,
+const props = defineProps({
+  headline: { type: String, default: 'Select date' },
+  initialMode: { type: String as PropType<DialogMode>, default: 'picker' },
+  ...mModalLayerProps,
 })
 
 const modelValue = defineModel<boolean>('modelValue', { default: false })
 
-// Accessible name for the dialog root (vue-final-modal supplies role="dialog"
-// + aria-modal="true"; this points it at the headline label).
+// The native <dialog> root is the accessible dialog; the headline label names it.
 const headlineId = useId()
+const layerProps = computed(() => pickModalLayerProps(props))
+const overlay = useTemplateRef<InstanceType<typeof MOverlay>>('overlay')
 
 const emit = defineEmits<{
   (e: 'cancel'): void
   (e: 'confirm', date: Date | null): void
 }>()
 
-const { close } = useModal({
-  visible: modelValue,
-  parent: props.parent,
-})
+const id = computed(() => overlay.value?.id)
+const close = () => overlay.value?.close() ?? Promise.resolve()
 
-defineExpose({
-  close,
-})
+defineExpose({ id, close })
 
 // Writable v-model date
 const date = defineModel<Date | string | number | null>('date', { default: null })
@@ -521,18 +506,6 @@ function onConfirm() {
 @use 'sass:map';
 @use '#kit/assets/stylesheet/components/date-picker/modal-picker' as mp;
 @use '#kit/assets/stylesheet/components/date-picker/modal-input' as mi;
-
-// Common backdrop
-.ui-date-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: z('dialog');
-  background-color: map.get($theme-color-link, 'scrim');
-  opacity: 1;
-}
 
 .ui-date-dialog {
   $prefix-mp: 'md-date-picker-modal-picker';

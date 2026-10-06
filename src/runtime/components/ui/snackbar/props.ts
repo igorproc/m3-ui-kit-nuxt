@@ -7,6 +7,11 @@ import type { ExtractPublicPropTypes } from 'vue'
 export const mSnackbarProps = {
   label: { type: String, default: '' },
   actionLabel: { type: String, default: '' },
+  /**
+   * Rich snackbar: on open focus moves onto the snackbar and Tab cycles inside
+   * it until it closes, then focus returns to where it was.
+   */
+  trapFocus: { type: Boolean, default: false },
 }
 
 export type MSnackbarProps = ExtractPublicPropTypes<typeof mSnackbarProps>

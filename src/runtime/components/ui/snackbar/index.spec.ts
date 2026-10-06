@@ -1,13 +1,77 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 
+import { defineComponent, h } from 'vue'
 import MSnackbar from './index.vue'
+import MOverlay from '#kit/components/ui/overlay/index.vue'
 
 describe('m-snackbar', () => {
-  // Teleported content is appended to <body>; clear leftovers between cases so
-  // queries never match a stale node from a previous mount.
+  // Teleported into the shared #ui-overlay-host, like every overlay.
+  beforeEach(() => {
+    const host = document.createElement('div')
+    host.id = 'ui-overlay-host'
+    document.body.appendChild(host)
+  })
+
   afterEach(() => {
+    document.getElementById('ui-overlay-host')?.remove()
     document.querySelectorAll('.ui-snackbar').forEach(node => node.remove())
+  })
+
+  it('moves focus onto the snackbar and cycles Tab inside it with trapFocus', async () => {
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+    outside.focus()
+
+    const wrapper = await mountSuspended(MSnackbar, {
+      props: { modelValue: true, label: 'Saved', actionLabel: 'Undo', trapFocus: true },
+    })
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    const snackbar = document.querySelector<HTMLElement>('.ui-snackbar')!
+    const action = document.querySelector<HTMLElement>('.ui-snackbar__action')!
+    expect(document.activeElement).toBe(snackbar)
+
+    action.focus()
+    const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    action.dispatchEvent(tab)
+    expect(tab.defaultPrevented).toBe(true)
+    expect(document.activeElement).toBe(action)
+
+    await wrapper.setProps({ modelValue: false })
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(document.activeElement).toBe(outside)
+    outside.remove()
+  })
+
+  it('leaves focus alone without trapFocus', async () => {
+    await mountSuspended(MSnackbar, {
+      props: { modelValue: true, label: 'Saved', actionLabel: 'Undo' },
+    })
+
+    expect(document.activeElement).not.toBe(document.querySelector('.ui-snackbar'))
+  })
+
+  it('teleports into the overlay host', async () => {
+    await mountSuspended(MSnackbar, {
+      props: { modelValue: true, label: 'Saved' },
+    })
+
+    expect(document.getElementById('ui-overlay-host')!.querySelector('.ui-snackbar')).not.toBeNull()
+  })
+
+  // An open modal makes everything outside it inert, so a snackbar raised
+  // from inside the dialog has to live in the dialog to stay clickable.
+  it('renders inside the modal it is opened from', async () => {
+    const Harness = defineComponent({
+      setup: () => () => h(MOverlay, { modelValue: true }, {
+        default: () => h(MSnackbar, { modelValue: true, label: 'Saved', actionLabel: 'Undo' }),
+      }),
+    })
+    await mountSuspended(Harness, { global: { stubs: { transition: false } } })
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    expect(document.querySelector('dialog.ui-overlay .ui-snackbar__action')).not.toBeNull()
   })
 
   it('renders nothing while the v-model is closed', async () => {

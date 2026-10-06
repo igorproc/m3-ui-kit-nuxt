@@ -1,11 +1,26 @@
 @use 'sass:map';
 @use '../../abstracts/variables' as *;
 
-// Zero-runtime tokens for the `<MOverlay>` scrim. Motion/geometry belong to the
-// consuming dialog/sheet/menu, so only the scrim role + opacity live here.
+// Zero-runtime tokens for the `<MOverlay>` scrim. Content motion/geometry belong
+// to the consuming dialog/sheet/drawer, so only the scrim and the edge guards
+// live here.
 $tokens: (
   scrim: (
     color: map.get($theme-color-link, 'scrim'),
     opacity: 32%,
+    motion: (
+      enter: (
+        duration: var(--sys-motion-duration-medium-2),
+        easing: var(--sys-motion-easing-standard-decelerate),
+      ),
+      exit: (
+        duration: var(--sys-motion-duration-short-4),
+        easing: var(--sys-motion-easing-standard-accelerate),
+      ),
+    ),
+  ),
+  // Invisible strips that swallow iOS back/forward edge swipes.
+  gesture-guard: (
+    width: 16rem,
   ),
 );

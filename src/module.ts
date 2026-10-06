@@ -197,7 +197,6 @@ export default defineNuxtModule<MaterialKitOptions>({
     addPlugin(runtime('plugins/material'), { append: true })
     addPlugin(runtime('plugins/theme-css'), { append: true })
     addPlugin(runtime('plugins/directives'), { append: true })
-    addPlugin({ src: runtime('plugins/vue-final-modal.client'), mode: 'client' }, { append: true })
     addPlugin({ src: runtime('plugins/viewport.client'), mode: 'client' }, { append: true })
 
     registerThemePipeline(options, nuxt)

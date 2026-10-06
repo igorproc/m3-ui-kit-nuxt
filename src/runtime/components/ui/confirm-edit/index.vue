@@ -11,8 +11,6 @@
     v-if="resolvedPresentation === 'dialog'"
     v-model="hostOpen"
     :title="title"
-    :click-to-close="true"
-    :esc-to-close="true"
   >
     <EditorContent />
   </MDialog>
@@ -21,7 +19,7 @@
     v-else
     v-model="hostOpen"
     mode="popover"
-    transition="ui-confirm-edit-pop"
+    content-transition="ui-confirm-edit-pop"
   >
     <section
       :id="surfaceId"
@@ -46,8 +44,8 @@
   <MDialog
     v-model="discardOpen"
     :title="discardTitle"
-    :click-to-close="false"
-    :esc-to-close="false"
+    :close-on-outside="false"
+    :close-on-escape="false"
   >
     <p>{{ discardText }}</p>
     <template #actions>

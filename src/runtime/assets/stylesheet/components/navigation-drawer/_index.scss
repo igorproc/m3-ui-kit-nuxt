@@ -26,4 +26,14 @@ $tokens: (
     padding: 4rem 8rem 12rem,
     typography: 'title-medium',
   ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-medium-4),
+      easing: var(--sys-motion-easing-emphasized-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-emphasized-accelerate),
+    ),
+  ),
 );

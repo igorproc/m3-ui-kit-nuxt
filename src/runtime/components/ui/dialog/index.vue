@@ -1,18 +1,14 @@
 <template>
   <MOverlay
+    ref="overlay"
     v-model="modelValue"
+    v-bind="layerProps"
     mode="modal"
-    :close-on-outside="clickToClose"
-    :close-on-escape="escToClose"
-    transition="ui-dialog-pop"
+    :content-transition="contentTransition ?? 'ui-dialog-pop'"
+    :aria-labelledby="title ? headlineId : undefined"
+    :aria-label="title ? undefined : 'Dialog'"
   >
-    <div
-      class="ui-dialog"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="title ? headlineId : undefined"
-      :aria-label="title ? undefined : 'Dialog'"
-    >
+    <div class="ui-dialog">
       <div class="ui-dialog__container">
         <!-- Icon -->
         <div
@@ -49,45 +45,32 @@
 </template>
 
 <script setup lang="ts">
-import { useId } from 'vue'
+import { computed, useId, useTemplateRef } from 'vue'
 import MOverlay from '#kit/components/ui/overlay/index.vue'
-import { useModal } from '#kit/composables/modal/useModal'
-import type { M3ModalContext } from '#kit/composables/modal/useModal'
+import { mModalLayerProps, pickModalLayerProps } from '#kit/components/ui/overlay/props'
 
-interface Props {
-  title?: string
-  clickToClose?: boolean
-  escToClose?: boolean
-  parent?: M3ModalContext | null
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  title: undefined,
-  clickToClose: true,
-  escToClose: true,
-  parent: undefined,
+const props = defineProps({
+  title: { type: String, default: undefined },
+  ...mModalLayerProps,
 })
 
 const modelValue = defineModel<boolean>({ default: false })
-
-// Supplies the dialog's accessible name (MDialog now owns role="dialog" +
-// aria-modal; stacking, scrim, scroll lock and focus come from <MOverlay>).
-const headlineId = useId()
 
 defineEmits<{
   (e: 'cancel'): void
   (e: 'confirm', data?: unknown): void
 }>()
 
-// Register in the modal Context API for programmatic ($modals) close cascades.
-const { close } = useModal({
-  visible: modelValue,
-  parent: props.parent,
-})
+// The native <dialog> root is the accessible dialog; the headline names it.
+// Lifecycle events (`opened`, `closed`, …) fall through to <MOverlay>.
+const headlineId = useId()
+const layerProps = computed(() => pickModalLayerProps(props))
+const overlay = useTemplateRef<InstanceType<typeof MOverlay>>('overlay')
 
-defineExpose({
-  close,
-})
+const id = computed(() => overlay.value?.id)
+const close = () => overlay.value?.close() ?? Promise.resolve()
+
+defineExpose({ id, close })
 </script>
 
 <style lang="scss">

@@ -8,6 +8,8 @@
 $tokens: (
   content: (
     offset: 8rem,
+    // M3 plain tooltip: long text wraps instead of running off the screen.
+    max-width: 200rem,
     padding: 4rem 8rem,
     border: (
       radius: var(--sys-shape-corner-small),

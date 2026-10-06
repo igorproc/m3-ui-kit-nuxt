@@ -3,6 +3,9 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 
 import MTooltip from './index.vue'
 
+/** Longer than the tooltip's hide grace period. */
+const waitForHideDelay = () => new Promise(resolve => setTimeout(resolve, 150))
+
 describe('m-tooltip', () => {
   // Teleported content is appended to <body>; clear leftovers between cases so
   // queries never match a stale node from a previous mount.
@@ -36,7 +39,24 @@ describe('m-tooltip', () => {
     expect(content!.textContent).toContain('Hint')
 
     await wrapper.trigger('mouseleave')
+    // Hoverable (WCAG 1.4.13): a short grace period to reach the tooltip.
+    expect(document.querySelector('.ui-tooltip__content')).not.toBeNull()
+    await waitForHideDelay()
     expect(document.querySelector('.ui-tooltip__content')).toBeNull()
+  })
+
+  it('stays open while the pointer is over the tooltip content', async () => {
+    const wrapper = await mountSuspended(MTooltip, {
+      props: { text: 'Hint' },
+      slots: { default: () => 'Trigger' },
+    })
+
+    await wrapper.trigger('mouseenter')
+    await wrapper.trigger('mouseleave')
+    document.querySelector('.ui-tooltip__content')!.dispatchEvent(new MouseEvent('mouseenter'))
+    await waitForHideDelay()
+
+    expect(document.querySelector('.ui-tooltip__content')).not.toBeNull()
   })
 
   it('wires aria-describedby from the trigger to the tooltip id while visible', async () => {

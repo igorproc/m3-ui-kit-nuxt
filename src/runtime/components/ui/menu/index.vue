@@ -7,20 +7,24 @@
   />
 
   <!--
-    Client-only: each menu teleports into the shared #ui-overlay-host. Rendering
-    teleports during SSR leaves mismatched teleport anchor comments in the host,
-    so hydration only wires up the first menu and silently breaks the rest
+    Client-only: each menu teleports into the shared #ui-overlay-host (or the
+    overlay it sits in — see useOverlayTeleportTarget). Rendering teleports
+    during SSR leaves mismatched teleport anchor comments in the host, so
+    hydration only wires up the first menu and silently breaks the rest
     ("only one menu opens"). Overlays need no SSR, so skip it entirely.
   -->
   <client-only>
-    <teleport to="#ui-overlay-host">
+    <teleport :to="teleportTarget">
       <transition
         name="ui-menu-anim"
+        @enter="showInTopLayer"
         @after-enter="menu.onAfterEnter"
         @after-leave="menu.onAfterLeave"
       >
         <div
           v-if="modelValue"
+          ref="$positioned"
+          :popover.attr="usesPopoverLayer ? 'manual' : undefined"
           class="ui-menu"
           :class="{ 'ui-menu--absolute': absolute }"
           :style="[menu.menuStyle.value, { zIndex: ticket.zIndex.value }]"
@@ -49,11 +53,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, nextTick, watch } from 'vue'
+import { computed, ref, nextTick, watch } from 'vue'
 import { useMenu } from '#kit/composables/menu/useMenu'
 import { useStack } from '#kit/composables/useStack'
+import { useScrollLock } from '#kit/composables/overlay/useScrollLock'
+import { supportsPopover } from '#kit/shared/utils/support'
+import { useOverlayTeleportTarget } from '#kit/composables/overlay/useOverlayTarget'
+import { useFocusTrap } from '#kit/composables/overlay/useFocusTrap'
 import { useClickOutside } from '#kit/composables/useClickOutside'
-import { useGlobalListener } from '#kit/composables/useGlobalListener'
 import { mMenuProps } from './props'
 
 // Multiple root nodes (anchor + teleport): forward fallthrough attrs (class,
@@ -67,44 +74,39 @@ const emit = defineEmits<{
 }>()
 
 const $menu = shallowRef<null | HTMLElement>(null)
+const $positioned = shallowRef<null | HTMLElement>(null)
 const modelValue = defineModel<boolean>({ default: false })
 const anchorRef = ref<HTMLElement | null>(null)
-
-// Pure FSM + positioning math; this component owns all DOM interaction.
-const menu = useMenu(modelValue, {
-  absolute: () => props.absolute,
-  origin: () => props.origin,
-  matchWidth: () => props.matchWidth,
-})
 
 /** The explicit anchor wins; otherwise the parent element is the trigger. */
 const anchorEl = computed<HTMLElement | null>(() => props.anchor ?? anchorRef.value?.parentElement ?? null)
 
-// DOM measurement stays in the component (the composable is DOM-free).
-const updatePosition = () => {
-  if (!modelValue.value || !anchorRef.value || !props.absolute || menu.isAnchorSupported.value) {
-    return
-  }
+// Top layer: above a modal <dialog> (which makes everything else inert) and
+// free of any ancestor's overflow. Without the Popover API the stack z-index
+// keeps the order instead.
+const usesPopoverLayer = supportsPopover()
+const teleportTarget = useOverlayTeleportTarget()
 
-  const trigger = anchorEl.value
-  if (!trigger) {
-    return
-  }
-
-  const rect = trigger.getBoundingClientRect()
-  menu.setRect({
-    top: rect.top,
-    bottom: rect.bottom,
-    left: rect.left,
-    right: rect.right,
-    width: rect.width,
-  })
+const showInTopLayer = (el: Element) => {
+  if (usesPopoverLayer) (el as HTMLElement).showPopover()
 }
+
+// The composable owns placement: native anchoring, or — when unsupported —
+// measuring these two elements and re-measuring on scroll/resize.
+const menu = useMenu(modelValue, {
+  absolute: () => props.absolute,
+  origin: () => props.origin,
+  matchWidth: () => props.matchWidth,
+  trigger: () => anchorEl.value,
+  surface: () => $positioned.value,
+})
 
 // --- Menu keyboard navigation (APG menu pattern) --------------------------
 // Items are slotted by the consumer (typically `<button class="ui-menu__item">`).
-// On open we promote them to `role="menuitem"`, make them roving-tabbable, and
-// move focus to the first one; Arrow/Home/End move focus, Esc/Tab close.
+// On open the focus trap moves focus onto the menu surface and keeps Tab
+// inside it; the menu then decides inner focus itself: it promotes the items
+// to `role="menuitem"`, makes them roving-tabbable and focuses the first one.
+// Arrow/Home/End move focus, Esc closes.
 // When the menu hosts another composite widget (e.g. the dropdown's
 // `role="listbox"`), that consumer owns keyboard/focus — the menu must not
 // promote items or steal focus.
@@ -143,24 +145,30 @@ const closeAndRestoreFocus = () => {
   nextTick(() => trigger?.focus())
 }
 
+const focusNextItem = (items: HTMLElement[]) => {
+  const current = items.findIndex(el => el === document.activeElement)
+  focusItemAt(items, current < 0 ? 0 : (current + 1) % items.length)
+}
+
+const focusPreviousItem = (items: HTMLElement[]) => {
+  const current = items.findIndex(el => el === document.activeElement)
+  focusItemAt(items, current <= 0 ? items.length - 1 : current - 1)
+}
+
+const focusTrap = useFocusTrap($menu, { initialFocus: () => $menu.value ?? false })
+
 const onSurfaceKeydown = (event: KeyboardEvent) => {
   const items = getMenuItems()
 
   switch (event.key) {
-    case 'ArrowDown': {
+    case 'ArrowDown':
       event.preventDefault()
-      if (!items.length) return
-      const current = items.findIndex(el => el === document.activeElement)
-      focusItemAt(items, current < 0 ? 0 : (current + 1) % items.length)
+      if (items.length) focusNextItem(items)
       break
-    }
-    case 'ArrowUp': {
+    case 'ArrowUp':
       event.preventDefault()
-      if (!items.length) return
-      const current = items.findIndex(el => el === document.activeElement)
-      focusItemAt(items, current <= 0 ? items.length - 1 : current - 1)
+      if (items.length) focusPreviousItem(items)
       break
-    }
     case 'Home':
       event.preventDefault()
       if (items.length) focusItemAt(items, 0)
@@ -173,20 +181,20 @@ const onSurfaceKeydown = (event: KeyboardEvent) => {
       event.preventDefault()
       closeAndRestoreFocus()
       break
-    case 'Tab':
-      event.preventDefault()
-      closeAndRestoreFocus()
-      break
   }
 }
 
 watch(modelValue, async (val) => {
-  if (val) {
-    await nextTick()
-    updatePosition()
-    const items = prepareMenuItems()
-    items[0]?.focus()
+  if (!val) {
+    focusTrap.deactivate()
+    return
   }
+
+  await nextTick()
+  // A hosted composite (dropdown listbox) keeps focus in its own field.
+  if (hostsForeignWidget()) return
+  focusTrap.activate()
+  prepareMenuItems()[0]?.focus()
 })
 
 // Inject the anchor-name onto the trigger when CSS anchor positioning is
@@ -213,11 +221,17 @@ const requestClose = () => {
 // number, and dismiss via the shared stack so the topmost overlay closes first.
 const ticket = useStack().register({ onDismiss: requestClose })
 
+// Shared, reference-counted lock (same holder type as MOverlay): a menu opened
+// inside a modal does not release the page when it closes.
+const scrollLock = useScrollLock()
+
 watch(modelValue, (val) => {
   if (val) {
     ticket.select()
+    if (props.lockScroll) scrollLock.lock()
   } else {
     ticket.unselect()
+    scrollLock.unlock()
   }
 }, { immediate: true })
 
@@ -228,15 +242,6 @@ watch(modelValue, (val) => {
 useClickOutside($menu, requestClose, {
   ignore: [() => anchorRef.value?.parentElement],
 })
-
-onMounted(() => {
-  if (props.absolute) {
-    updatePosition()
-  }
-})
-
-useGlobalListener('window', 'scroll', updatePosition, { capture: true, passive: true })
-useGlobalListener('window', 'resize', updatePosition, { passive: true })
 </script>
 
 <style lang="scss">
@@ -247,6 +252,17 @@ useGlobalListener('window', 'resize', updatePosition, { passive: true })
 
   position: fixed;
   inset: 0;
+
+  // Neutralise the UA [popover] box; the surface below draws the menu.
+  pointer-events: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+  width: auto;
+  height: auto;
 
   &__backdrop {
     position: absolute;
@@ -310,7 +326,7 @@ useGlobalListener('window', 'resize', updatePosition, { passive: true })
 
   &--absolute {
     position: fixed;
-    inset: unset;
+    inset: auto;
 
     // Hug the content by default; `match-width` overrides via inline width
     // (rect width in the JS fallback, anchor-size() under CSS anchoring).

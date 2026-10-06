@@ -1,60 +1,49 @@
 <template>
-  <vue-final-modal
-    v-bind="{ modelValue }"
-    content-class="ui-navigation-drawer__surface"
-    :overlay-transition="overlayTransition"
-    :content-transition="contentTransition"
-    :click-to-close="clickToClose"
-    :esc-to-close="escToClose"
+  <MOverlay
+    ref="overlay"
+    v-model="modelValue"
+    v-bind="layerProps"
+    mode="modal"
+    :content-transition="contentTransition ?? `ui-navigation-drawer-slide-${side}`"
+    :content-class="['ui-navigation-drawer', `ui-navigation-drawer--${side}`, containerClass, contentClass]"
     :aria-labelledby="$slots.header ? headerId : undefined"
     :aria-label="$slots.header ? undefined : 'Navigation drawer'"
-    @update:model-value="onUpdateModelValue"
   >
-    <header
-      v-if="$slots.header"
-      :id="headerId"
-      class="ui-navigation-drawer__header"
-    >
-      <slot name="header" />
-    </header>
+    <div class="ui-navigation-drawer__surface">
+      <header
+        v-if="$slots.header"
+        :id="headerId"
+        class="ui-navigation-drawer__header"
+      >
+        <slot name="header" />
+      </header>
 
-    <div :class="['ui-navigation-drawer__content', backdropClass]">
-      <slot />
+      <div class="ui-navigation-drawer__content">
+        <slot />
+      </div>
     </div>
-  </vue-final-modal>
+  </MOverlay>
 </template>
 
 <script setup lang="ts">
-import { VueFinalModal } from 'vue-final-modal'
+import { computed, useId, useTemplateRef } from 'vue'
+import MOverlay from '#kit/components/ui/overlay/index.vue'
+import { pickModalLayerProps } from '#kit/components/ui/overlay/props'
 import { mNavigationDrawerProps } from './props'
 
 const props = defineProps(mNavigationDrawerProps)
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
-
 const modelValue = defineModel<boolean>({ default: false })
 
-// vue-final-modal already emits role="dialog" + aria-modal="true"; supply the
-// accessible name from the header slot when present.
+// The native <dialog> root is the accessible dialog; the header slot names it.
 const headerId = useId()
+const layerProps = computed(() => pickModalLayerProps(props))
+const overlay = useTemplateRef<InstanceType<typeof MOverlay>>('overlay')
 
-const overlayTransition = 'vfm-fade'
-const contentTransition = computed(() =>
-  props.side === 'right' ? 'vfm-slide-right' : 'vfm-slide-left',
-)
+const id = computed(() => overlay.value?.id)
+const close = () => overlay.value?.close() ?? Promise.resolve()
 
-const backdropClass = computed(() => [
-  'ui-navigation-drawer',
-  `ui-navigation-drawer--${props.side}`,
-  props.containerClass,
-])
-
-function onUpdateModelValue(value: boolean) {
-  modelValue.value = value
-  emit('update:modelValue', value)
-}
+defineExpose({ id, close })
 </script>
 
 <style lang="scss">
@@ -64,6 +53,9 @@ $t: material-map(t.$tokens, 'md-navigation-drawer');
 
 .ui-navigation-drawer {
   &__surface {
+    // A flex child of the <MOverlay> panel: full height, pinned to its side.
+    align-self: stretch;
+    margin-inline-end: auto;
     display: flex;
     flex-direction: column;
     gap: g($t, 'surface-gap');
@@ -86,7 +78,44 @@ $t: material-map(t.$tokens, 'md-navigation-drawer');
 
 .ui-navigation-drawer--right {
   .ui-navigation-drawer__surface {
+    margin-inline: auto 0;
     border-radius: g($t, 'surface-shape-right');
+  }
+}
+
+// Slide in from the drawer's own edge; the scrim fades separately. The panel
+// carries the same timing (Vue reads it to know when the phase ends) while the
+// surface moves by its own width.
+.ui-navigation-drawer-slide-left,
+.ui-navigation-drawer-slide-right {
+  &-enter-active,
+  &-enter-active .ui-navigation-drawer__surface {
+    transition: transform g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
+  }
+
+  &-leave-active,
+  &-leave-active .ui-navigation-drawer__surface {
+    transition: transform g($t, 'motion.exit.duration') g($t, 'motion.exit.easing');
+  }
+}
+
+.ui-navigation-drawer-slide-left-enter-from .ui-navigation-drawer__surface,
+.ui-navigation-drawer-slide-left-leave-to .ui-navigation-drawer__surface {
+  transform: translateX(-100%);
+}
+
+.ui-navigation-drawer-slide-right-enter-from .ui-navigation-drawer__surface,
+.ui-navigation-drawer-slide-right-leave-to .ui-navigation-drawer__surface {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-navigation-drawer-slide-left-enter-active,
+  .ui-navigation-drawer-slide-left-leave-active,
+  .ui-navigation-drawer-slide-right-enter-active,
+  .ui-navigation-drawer-slide-right-leave-active,
+  .ui-navigation-drawer__surface {
+    transition-duration: 0s;
   }
 }
 </style>
