@@ -74,11 +74,11 @@ const aliasImporter = {
   },
 }
 
-async function* walk(dir) {
+async function* walk(dir, extension = '.vue') {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name)
-    if (entry.isDirectory()) yield* walk(full)
-    else if (entry.name.endsWith('.vue')) yield full
+    if (entry.isDirectory()) yield* walk(full, extension)
+    else if (entry.name.endsWith(extension)) yield full
   }
 }
 
@@ -90,7 +90,9 @@ const STYLE = /<style([^>]*lang="scss"[^>]*)>([\s\S]*?)<\/style>/g
  * nested under a pseudo-class (`&:hover { &-state }` → `.a:hover-state`).
  */
 const VUE_SCOPED_PSEUDO = /:(?:deep|slotted|global)\(/
-const PSEUDO_SUFFIX = /:(?:hover|active|disabled|checked|focus(?!-visible|-within)|focus-visible|focus-within)-[a-z]/
+/** A Sass function that is not in scope is emitted verbatim as a CSS function. */
+const KIT_FUNCTION_LEAK = /\b(?:state-opacity|spacing|g|z)\(/
+const PSEUDO_SUFFIX =/:(?:hover|active|disabled|checked|focus(?!-visible|-within)|focus-visible|focus-within)-[a-z]/
 
 let checked = 0
 const failures = []
@@ -120,36 +122,55 @@ const logger = {
   },
 }
 
+function compileEntry(css, file) {
+  checked += 1
+  currentFile = file.slice(root.length + 1)
+
+  try {
+    const { css: output } = sass.compileString(prelude + css, {
+      loadPaths: [join(runtime, 'assets/stylesheet'), runtime],
+      importers: [aliasImporter],
+      url: pathToFileURL(file),
+      // No `quietDeps`: everything here is the kit's own code reached through
+      // the custom importer, and Sass counts that as a dependency — silencing
+      // it hides deprecations in the very files this check exists to guard.
+      silenceDeprecations: ['import', 'global-builtin', 'color-functions'],
+      logger,
+    })
+
+    const unresolved = output.match(KIT_FUNCTION_LEAK)
+    if (unresolved) {
+      failures.push({ file: currentFile, message: `"${unresolved[0]}…" reached the CSS: the kit function is not in scope here.` })
+    }
+
+    const broken = output.match(PSEUDO_SUFFIX)
+    if (broken) {
+      failures.push({ file: currentFile, message: `Invalid selector "${broken[0]}…": a parent suffix nested under a pseudo-class.` })
+    }
+  } catch (error) {
+    failures.push({ file: currentFile, message: error.message })
+  }
+}
+
 for await (const file of walk(join(runtime, 'components'))) {
   const source = await readFile(file, 'utf8')
 
   for (const [, attrs, css] of source.matchAll(STYLE)) {
-    checked += 1
-    currentFile = file.slice(root.length + 1)
-
     if (!/\bscoped\b/.test(attrs) && VUE_SCOPED_PSEUDO.test(css)) {
-      failures.push({ file: currentFile, message: ':deep()/:slotted()/:global() only work in <style scoped>; the browser drops this rule.' })
+      failures.push({ file: file.slice(root.length + 1), message: ':deep()/:slotted()/:global() only work in <style scoped>; the browser drops this rule.' })
     }
 
-    try {
-      const { css: output } = sass.compileString(prelude + css, {
-        loadPaths: [join(runtime, 'assets/stylesheet'), runtime],
-        importers: [aliasImporter],
-        url: pathToFileURL(file),
-        // No `quietDeps`: everything here is the kit's own code reached through
-        // the custom importer, and Sass counts that as a dependency — silencing
-        // it hides deprecations in the very files this check exists to guard.
-        silenceDeprecations: ['import', 'global-builtin', 'color-functions'],
-        logger,
-      })
+    compileEntry(css, file)
+  }
+}
 
-      const broken = output.match(PSEUDO_SUFFIX)
-      if (broken) {
-        failures.push({ file: currentFile, message: `Invalid selector "${broken[0]}…": a parent suffix nested under a pseudo-class.` })
-      }
-    } catch (error) {
-      failures.push({ file: file.slice(root.length + 1), message: error.message })
-    }
+// Stylesheets imported from TypeScript (e.g. the ripple directive) get the same
+// prelude from the module but are not inside any SFC.
+const TS_SCSS_IMPORT = /import\s+'#kit\/([^']+\.scss)'/g
+for await (const file of walk(runtime, '.ts')) {
+  for (const [, path] of (await readFile(file, 'utf8')).matchAll(TS_SCSS_IMPORT)) {
+    const entry = join(runtime, path)
+    compileEntry(await readFile(entry, 'utf8'), entry)
   }
 }
 
@@ -157,7 +178,7 @@ if (failures.length) {
   for (const { file, message } of failures) {
     console.error(`\n✖ ${file}\n${message}`)
   }
-  console.error(`\n${failures.length} of ${checked} style blocks failed to compile.`)
+  console.error(`\n${failures.length} of ${checked} stylesheets failed the check.`)
   process.exit(1)
 }
 
@@ -178,4 +199,4 @@ if (tokenWarnings.size) {
   console.log('')
 }
 
-console.log(`${checked} style blocks compiled, no deprecations.`)
+console.log(`${checked} stylesheets compiled, no deprecations.`)
