@@ -200,5 +200,22 @@ watch([safeLength, model], () => {
 
     @include apply-typography(g($t, 'ellipsis-typography'));
   }
+
+  // Tonal vs text differ only by container colour, which forced colors drop.
+  // System colours survive forcing on their own, so the button keeps its
+  // forced focus ring. The list ancestor lifts these above the button's own
+  // hover and pressed fills, which would otherwise be forced to Canvas.
+  @include forced-colors {
+    &__list &__page.ui-button[aria-current='page'] {
+      background-color: Highlight;
+      color: HighlightText;
+
+      &:active { background-color: Highlight; }
+
+      @include can-hover {
+        &:hover { background-color: Highlight; }
+      }
+    }
+  }
 }
 </style>

@@ -95,6 +95,12 @@ if (import.meta.dev) {
 
     &--current { color: g($t, 'item-current-color'); }
     &--disabled { color: g($t, 'item-disabled-color'); }
+
+    // Forcing turns every non-link crumb CanvasText; links become LinkText.
+    // GrayText keeps a disabled crumb from reading as the current page.
+    @include forced-colors {
+      &--disabled { color: GrayText; }
+    }
   }
 }
 </style>

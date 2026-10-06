@@ -135,6 +135,13 @@ const {
   &--circular.ui-progress--indeterminate &__svg-value {
     animation: ui-progress-circular-dash 1.5s ease-in-out infinite;
   }
+
+  // Track and value differ only by theme colour; forced colors either keep
+  // those themed strokes or flatten both to one colour, so name the two roles.
+  @include forced-colors {
+    &__svg-track { stroke: CanvasText; }
+    &__svg-value { stroke: Highlight; }
+  }
 }
 
 // --- KEYFRAMES ---

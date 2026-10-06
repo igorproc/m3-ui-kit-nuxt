@@ -191,4 +191,34 @@ function onClick(day: DayCell) {
 .ui-date-picker__grid [role='gridcell'] {
   display: contents;
 }
+
+// The selected circle is a background and today's ring a shadow; forced
+// colors drop both. The grid ancestor outranks the selected-day hover fill.
+.ui-date-picker {
+  @include forced-colors {
+    &__grid &__day--selected &__day-state {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
+
+    @include can-hover {
+      &__grid &__day--selected:hover &__day-state {
+        background-color: Highlight;
+      }
+    }
+
+    &__grid &__day--selected &__day-label {
+      color: HighlightText;
+    }
+
+    &__grid &__day--today &__day-label {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+
+    &__grid &__day--today.ui-date-picker__day--selected &__day-label {
+      outline-color: HighlightText;
+    }
+  }
+}
 </style>

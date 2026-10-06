@@ -237,6 +237,18 @@ function onKeydown(event: KeyboardEvent) {
   &--anchored {
     z-index: z(header);
   }
+
+  // Forced colors drop the elevation shadow, and the active destination has no
+  // indicator of its own — only a colour, which is forced away too.
+  @include forced-colors {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+
+    &__item--active {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+  }
 }
 
 .ui-navigation-bar__item:focus-visible {

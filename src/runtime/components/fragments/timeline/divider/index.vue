@@ -126,5 +126,25 @@ defineProps({
       color: g($t, 'dot-color.#{$name}.on');
     }
   }
+
+  // Connector and dot are backgrounds and the dot's ring a shadow — all
+  // dropped by forced colors. The colour roles collapse into one there.
+  @include forced-colors {
+    &__line {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+
+    &--line-dashed &__line {
+      background: repeating-linear-gradient(to bottom, CanvasText 0, CanvasText 4rem, transparent 4rem, transparent 8rem);
+    }
+
+    &__dot:not(.ui-timeline-divider__dot--empty) {
+      forced-color-adjust: none;
+      background: CanvasText;
+      color: Canvas;
+      box-shadow: 0 0 0 g($t, 'dot.ring.width') Canvas;
+    }
+  }
 }
 </style>

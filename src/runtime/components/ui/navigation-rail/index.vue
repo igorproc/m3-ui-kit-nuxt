@@ -221,5 +221,11 @@ function onKeydown(event: KeyboardEvent) {
     position: static;
     z-index: auto;
   }
+
+  // The container edge is a shadow ring, which forced colors drop.
+  @include forced-colors {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
 }
 </style>

@@ -158,4 +158,16 @@ defineExpose({ element: rootEl })
   display: contents;
 }
 /* stylelint-enable selector-class-pattern */
+
+// The selected year is only a fill, and the owner sets it `!important`, so the
+// forced restatement has to be too. System colours survive forcing on their
+// own, which leaves the button's focus ring to the user's colours.
+.ui-date-picker {
+  @include forced-colors {
+    &__year-grid &__year--selected {
+      background-color: Highlight !important;
+      color: HighlightText !important;
+    }
+  }
+}
 </style>

@@ -352,5 +352,25 @@ function onPointerUp() {
       color: g($t, 'number-color-active');
     }
   }
+
+  // Face, hand and knob are all backgrounds, so forced colors would leave
+  // bare numbers with nothing pointing at the selected one.
+  @include forced-colors {
+    &__face {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+
+    &__center-dot,
+    &__selector,
+    &__selector-knob {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
+
+    &__number--active {
+      color: HighlightText;
+    }
+  }
 }
 </style>

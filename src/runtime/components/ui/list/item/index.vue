@@ -354,5 +354,19 @@ const tag = computed(() => {
 
     @include apply-typography(g($t, 'trailing.supporting.text.typography'));
   }
+
+  // Selected is only a container tone, which forced colors repaint as Canvas.
+  // An edge keeps slotted content in the user's colours; a focused selected
+  // item turns its ring Highlight so focus does not hide the selection.
+  @include forced-colors {
+    &--selected {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+
+    &--selected.ui-list-item--interactive:focus-visible {
+      outline-color: Highlight;
+    }
+  }
 }
 </style>

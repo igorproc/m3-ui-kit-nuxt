@@ -223,5 +223,13 @@ defineExpose({ activeField, hours, minutes, period })
 
     @include apply-typography(g($t, 'label-typography'));
   }
+
+  // The chosen period is only a fill, which forced colors repaint as Canvas.
+  @include forced-colors {
+    &__ampm-btn--active {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
 }
 </style>

@@ -84,6 +84,13 @@ $prefix: 'm3-badge';
     width: g($t, 'dot-size');
     height: g($t, 'dot-size');
     padding-inline: g($t, 'dot-padding-inline');
+
+    // A dot has no text: its fill is the whole signal, and forced colors
+    // would repaint it as Canvas.
+    @include forced-colors {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
   }
 
   &__label {

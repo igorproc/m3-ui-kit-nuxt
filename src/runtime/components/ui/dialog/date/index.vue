@@ -843,5 +843,39 @@ function onConfirm() {
   &__year:focus-visible {
     @include focus-ring(inset);
   }
+
+  // Selected day and year are fills and today's ring a shadow, all dropped by
+  // forced colors. The year fill is `!important` above, so its restatement is
+  // too; a focusable button keeps forcing and takes system colours directly.
+  @include forced-colors {
+    &__day--selected &__day-state {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
+
+    @include can-hover {
+      &__day--selected:hover &__day-state {
+        background-color: Highlight;
+      }
+    }
+
+    &__day--selected &__day-label {
+      color: HighlightText;
+    }
+
+    &__day--today &__day-label {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+
+    &__day--today.ui-date-dialog__day--selected &__day-label {
+      outline-color: HighlightText;
+    }
+
+    &__year--selected {
+      background-color: Highlight !important;
+      color: HighlightText !important;
+    }
+  }
 }
 </style>

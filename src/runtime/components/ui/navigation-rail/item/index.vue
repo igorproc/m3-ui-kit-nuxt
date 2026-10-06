@@ -163,6 +163,28 @@ defineEmits<{
       text-align: left;
     }
   }
+
+  // The active pill is a bare background. Content drawn on it — the icon, and
+  // the label once expanded — switches to HighlightText; hover is pinned to the
+  // same fill so that pairing never fades out.
+  @include forced-colors {
+    &--active &__indicator {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
+
+    @include can-hover {
+      &--active:hover &__indicator {
+        opacity: 1;
+        background-color: Highlight;
+      }
+    }
+
+    &--active &__icon-wrapper,
+    &--active.ui-navigation-rail-item--expanded &__label {
+      color: HighlightText;
+    }
+  }
 }
 
 .ui-navigation-rail-item:focus-visible {

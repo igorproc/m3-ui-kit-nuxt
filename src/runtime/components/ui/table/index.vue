@@ -149,6 +149,15 @@ provideTableContext({
     &--selected {
       background-color: g($t, 'row-selected-bg');
     }
+
+    // The row tint is forced to Canvas; an edge marks the selection without
+    // recolouring the cells' slotted content.
+    @include forced-colors {
+      &--selected {
+        outline: 1px solid Highlight;
+        outline-offset: -1px;
+      }
+    }
   }
 
   &__cell {

@@ -195,6 +195,20 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
     inset: 0 0 0 -100%;
     animation-delay: calc(-0.5 * $arc-duration), 0ms;
   }
+
+  // The arc is two coloured border sides beside two transparent ones; pinned,
+  // so forcing cannot recolour the transparent pair into a closed ring.
+  @include forced-colors {
+    &__circle {
+      forced-color-adjust: none;
+      border-color: Highlight Highlight transparent transparent;
+    }
+
+    &__expressive {
+      forced-color-adjust: none;
+      color: Highlight;
+    }
+  }
 }
 
 @keyframes ui-loading-expand-arc {

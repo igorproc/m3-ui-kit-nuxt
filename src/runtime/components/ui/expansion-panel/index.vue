@@ -210,6 +210,15 @@ function toggle() {
       }
     }
   }
+
+  // The open panel is lifted only by tone and shadow, both dropped by forced
+  // colors; an edge keeps its content visibly attached to its header.
+  @include forced-colors {
+    &--expanded {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+  }
 }
 
 .ui-expansion-panel__header:focus-visible {

@@ -41,5 +41,11 @@ $prefix: 'md-divider';
   &--inset.ui-divider--horizontal {
     margin-inline-start: g($t, 'inset-margin');
   }
+
+  // The line is a background, which forced colors repaint as Canvas.
+  @include forced-colors {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
 }
 </style>

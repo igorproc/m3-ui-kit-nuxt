@@ -202,6 +202,24 @@ const { clampedValue, linearWavePath } = useProgress({
   &--linear.ui-progress--indeterminate:not(.ui-progress--expressive) &__secondary-bar &__bar-inner {
     animation: ui-progress-linear-secondary-scale 2s infinite linear;
   }
+
+  // Track and bar are bare backgrounds, which forced colors paint as Canvas:
+  // the track becomes an edge, the bar a Highlight fill.
+  @include forced-colors {
+    &--linear:not(.ui-progress--expressive) &__track {
+      border: 1px solid CanvasText;
+    }
+
+    &__bar-inner {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+
+    &--linear.ui-progress--expressive {
+      .ui-progress__wavetrack { stroke: CanvasText; }
+      .ui-progress__waveactive { stroke: Highlight; }
+    }
+  }
 }
 
 // --- KEYFRAMES ---
