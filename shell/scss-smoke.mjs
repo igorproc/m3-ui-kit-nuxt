@@ -92,7 +92,7 @@ const STYLE = /<style([^>]*lang="scss"[^>]*)>([\s\S]*?)<\/style>/g
 const VUE_SCOPED_PSEUDO = /:(?:deep|slotted|global)\(/
 /** A Sass function that is not in scope is emitted verbatim as a CSS function. */
 const KIT_FUNCTION_LEAK = /\b(?:state-opacity|spacing|g|z)\(/
-const PSEUDO_SUFFIX =/:(?:hover|active|disabled|checked|focus(?!-visible|-within)|focus-visible|focus-within)-[a-z]/
+const PSEUDO_SUFFIX = /:(?:hover|active|disabled|checked|focus(?!-visible|-within)|focus-visible|focus-within)-[a-z]/
 
 let checked = 0
 const failures = []
@@ -122,6 +122,36 @@ const logger = {
   },
 }
 
+/**
+ * Selectors using `:hover` that are not nested in `@media (hover: hover)`.
+ * Touch screens keep a tapped element hovered; `@include can-hover` prevents
+ * that. A scrollbar thumb is exempt — touch scrollbars overlay and never stick.
+ */
+function bareHoverSelectors(css) {
+  const found = []
+  const stack = []
+  let buffer = ''
+  for (const char of css.replace(/\/\*[\s\S]*?\*\//g, '')) {
+    if (char === '{') {
+      const prelude = buffer.trim()
+      const insideHoverMedia = stack.some(p => /@media[^{]*hover:\s*hover/.test(p))
+      if (prelude.includes(':hover') && !prelude.startsWith('@') && !insideHoverMedia && !prelude.includes('::-webkit-scrollbar')) {
+        found.push(prelude)
+      }
+      stack.push(prelude)
+      buffer = ''
+    } else if (char === '}') {
+      stack.pop()
+      buffer = ''
+    } else if (char === ';') {
+      buffer = ''
+    } else {
+      buffer += char
+    }
+  }
+  return found
+}
+
 function compileEntry(css, file) {
   checked += 1
   currentFile = file.slice(root.length + 1)
@@ -141,6 +171,11 @@ function compileEntry(css, file) {
     const unresolved = output.match(KIT_FUNCTION_LEAK)
     if (unresolved) {
       failures.push({ file: currentFile, message: `"${unresolved[0]}…" reached the CSS: the kit function is not in scope here.` })
+    }
+
+    const bareHover = bareHoverSelectors(output)
+    if (bareHover.length) {
+      failures.push({ file: currentFile, message: `:hover outside @include can-hover: ${bareHover.join(' | ')}` })
     }
 
     const broken = output.match(PSEUDO_SUFFIX)
