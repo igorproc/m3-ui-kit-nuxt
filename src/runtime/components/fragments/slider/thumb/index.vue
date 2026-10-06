@@ -116,8 +116,10 @@ $prefix: 'ui-slider-thumb';
     z-index: 1;
   }
 
-  &:hover &__state-layer {
-    opacity: g($t, 'state.layer.hover.opacity');
+  @include can-hover {
+    &:hover &__state-layer {
+      opacity: g($t, 'state.layer.hover.opacity');
+    }
   }
 
   &:focus-visible &__state-layer,
@@ -163,7 +165,12 @@ $prefix: 'ui-slider-thumb';
   }
 
   // CSS active triggers for tooltip
-  &:hover &__value-label,
+  @include can-hover {
+    &:hover &__value-label {
+      transform: translateX(-50%) scale(1);
+    }
+  }
+
   &:focus-visible &__value-label,
   &--dragging &__value-label {
     transform: translateX(-50%) scale(1);
@@ -187,7 +194,12 @@ $prefix: 'ui-slider-thumb';
     left: -4rem;
   }
 
-  &--vertical:hover &__value-label,
+  @include can-hover {
+    &--vertical:hover &__value-label {
+      transform: translateY(-50%) scale(1);
+    }
+  }
+
   &--vertical:focus-visible &__value-label,
   &--vertical.ui-slider-thumb--dragging &__value-label {
     transform: translateY(-50%) scale(1);

@@ -195,8 +195,10 @@ if (import.meta.dev) {
   &--tertiary &__fill { color: g($t, 'item.tertiary-color'); }
   &--error &__fill { color: g($t, 'item.error-color'); }
 
-  &:hover &__fill {
-    opacity: g($t, 'item.preview-opacity');
+  @include can-hover {
+    &:hover &__fill {
+      opacity: g($t, 'item.preview-opacity');
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

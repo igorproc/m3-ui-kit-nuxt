@@ -216,8 +216,10 @@ const tag = computed(() => {
   &--interactive {
     cursor: pointer;
 
-    &:hover {
-      background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), transparent);
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), transparent);
+      }
     }
 
     &:active {
@@ -261,8 +263,10 @@ const tag = computed(() => {
     }
 
     &.ui-list-item--interactive {
-      &:hover {
-        background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), g($t, 'container.selected.color'));
+      @include can-hover {
+        &:hover {
+          background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), g($t, 'container.selected.color'));
+        }
       }
 
       &:active {

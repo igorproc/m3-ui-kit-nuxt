@@ -305,8 +305,10 @@ useClickOutside($menu, requestClose, {
     text-align: left;
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-    &:hover {
-      background-color: g($t, 'item-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'item-hover-bg');
+      }
     }
 
     &:active {

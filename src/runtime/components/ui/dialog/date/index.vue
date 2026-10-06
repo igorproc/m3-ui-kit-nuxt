@@ -574,8 +574,10 @@ function onConfirm() {
     color: g($t-mp, 'controls-icon-button-color');
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t-mp, 'controls-icon-button-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t-mp, 'controls-icon-button-hover-bg');
+      }
     }
   }
 
@@ -601,8 +603,10 @@ function onConfirm() {
     border-radius: 999rem;
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t-mp, 'controls-view-toggle-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t-mp, 'controls-view-toggle-hover-bg');
+      }
     }
   }
 
@@ -624,8 +628,10 @@ function onConfirm() {
     cursor: pointer;
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t-mp, 'controls-icon-button-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t-mp, 'controls-icon-button-hover-bg');
+      }
     }
   }
 
@@ -703,8 +709,10 @@ function onConfirm() {
       z-index: 1;
     }
 
-    &:hover &-state {
-      background-color: g($t-mp, 'day-hover-bg');
+    @include can-hover {
+      &:hover &-state {
+        background-color: g($t-mp, 'day-hover-bg');
+      }
     }
   }
 
@@ -729,8 +737,10 @@ function onConfirm() {
     transform: scale(1);
   }
 
-  &__day--selected:hover &__day-state {
-    background-color: g($t-mp, 'day-selected-hover-bg');
+  @include can-hover {
+    &__day--selected:hover &__day-state {
+      background-color: g($t-mp, 'day-selected-hover-bg');
+    }
   }
 
   &__day--selected &__day-label {
@@ -770,8 +780,10 @@ function onConfirm() {
     color: g($t-mp, 'year-color');
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t-mp, 'year-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t-mp, 'year-hover-bg');
+      }
     }
 
     &--selected {

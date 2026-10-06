@@ -154,7 +154,12 @@ $t: material-map(t.$tokens, 'm-number-input');
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
 
-    &:hover:not(:disabled)::after,
+    @include can-hover {
+      &:hover:not(:disabled)::after {
+        opacity: g($t, 'layer.hover');
+      }
+    }
+
     &[aria-expanded='true']::after {
       opacity: g($t, 'layer.hover');
     }

@@ -67,8 +67,10 @@ function select(value: string) {
     cursor: pointer;
     transition: transform g($t, 'swatches.motion-duration') g($t, 'swatches.motion-easing');
 
-    &:hover {
-      transform: scale(g($t, 'swatches.hover-scale'));
+    @include can-hover {
+      &:hover {
+        transform: scale(g($t, 'swatches.hover-scale'));
+      }
     }
 
     &--selected {

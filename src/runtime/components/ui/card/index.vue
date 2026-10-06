@@ -81,9 +81,11 @@ $prefix: 'md-card';
     border-color: transparent;
     box-shadow: g($t, 'elevated-shadow');
 
-    &:hover {
-      background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'elevated-bg')});
-      box-shadow: g($t, 'elevated-hover-shadow');
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'elevated-bg')});
+        box-shadow: g($t, 'elevated-hover-shadow');
+      }
     }
   }
 
@@ -92,9 +94,11 @@ $prefix: 'md-card';
     border-color: transparent;
     box-shadow: g($t, 'filled-shadow');
 
-    &:hover {
-      background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'filled-bg')});
-      box-shadow: g($t, 'filled-hover-shadow');
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'filled-bg')});
+        box-shadow: g($t, 'filled-hover-shadow');
+      }
     }
   }
 
@@ -103,9 +107,11 @@ $prefix: 'md-card';
     border-color: g($t, 'outlined-border-color');
     box-shadow: g($t, 'outlined-shadow');
 
-    &:hover {
-      background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'outlined-bg')});
-      box-shadow: g($t, 'outlined-hover-shadow');
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'outlined-bg')});
+        box-shadow: g($t, 'outlined-hover-shadow');
+      }
     }
   }
 

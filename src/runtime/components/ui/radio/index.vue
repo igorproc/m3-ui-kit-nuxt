@@ -184,9 +184,11 @@ if (!group && props.path) {
     background-color: g($t, 'error-color');
   }
 
-  &:hover &__state-layer {
-    opacity: g($t, 'state-layer-opacity-hover');
-    transform: translate(-50%, -50%) scale(1);
+  @include can-hover {
+    &:hover &__state-layer {
+      opacity: g($t, 'state-layer-opacity-hover');
+      transform: translate(-50%, -50%) scale(1);
+    }
   }
 
   &:active &__state-layer {

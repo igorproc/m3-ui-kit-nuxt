@@ -163,8 +163,10 @@ $prefix: 'md-chip';
     justify-content: center;
   }
 
-  &:hover:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-default')});
+  @include can-hover {
+    &:hover:not(.ui-chip--disabled) {
+      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-default')});
+    }
   }
 
   &:active:not(.ui-chip--disabled) {
@@ -179,8 +181,10 @@ $prefix: 'md-chip';
     border-color: g($t, 'border-color-default');
     color: g($t, 'text-color-default');
 
-    &:hover {
-      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, transparent);
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, transparent);
+      }
     }
 
     &:active {
@@ -193,8 +197,10 @@ $prefix: 'md-chip';
     border-color: transparent;
     box-shadow: g($t, 'suggestion-shadow');
 
-    &:hover {
-      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-suggestion')});
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-suggestion')});
+      }
     }
   }
 
@@ -203,8 +209,10 @@ $prefix: 'md-chip';
     color: g($t, 'text-color-selected');
     border-color: transparent;
 
-    &:hover {
-      background-color: color-mix(in srgb, #{g($t, 'text-color-selected')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-selected')});
+    @include can-hover {
+      &:hover {
+        background-color: color-mix(in srgb, #{g($t, 'text-color-selected')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-selected')});
+      }
     }
   }
 

@@ -122,8 +122,10 @@ function toggleSort(column: TableColumn<T>) {
     &.ui-table__cell--sortable {
       user-select: none;
 
-      &:hover {
-        background-color: g($t, 'header-hover-bg');
+      @include can-hover {
+        &:hover {
+          background-color: g($t, 'header-hover-bg');
+        }
       }
     }
   }

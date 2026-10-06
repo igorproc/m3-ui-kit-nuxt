@@ -82,11 +82,13 @@ $t: material-map(t.$tokens, $prefix);
         box-shadow: g($t, "#{$base}-shadow");
       }
 
-      &:hover:not(.ui-button--disabled) {
-        background-color: g($t, "#{$base}-container-hover-color");
+      @include can-hover {
+        &:hover:not(.ui-button--disabled) {
+          background-color: g($t, "#{$base}-container-hover-color");
 
-        @if $v == 'elevated' {
-          box-shadow: g($t, "#{$base}-hover-shadow");
+          @if $v == 'elevated' {
+            box-shadow: g($t, "#{$base}-hover-shadow");
+          }
         }
       }
 

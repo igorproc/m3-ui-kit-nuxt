@@ -46,6 +46,15 @@
   }
 }
 
+/// Wrap any rule whose selector uses `:hover`. Only devices whose primary
+/// pointer can hover get it, so a tap on a touch screen does not leave the
+/// hover state stuck. Keep `:focus-visible` and other states outside.
+@mixin can-hover {
+  @media (hover: hover) {
+    @content;
+  }
+}
+
 @mixin use-scrollbar($width: $scrollbar-width, $inset: $scrollbar-inline-inset) {
   // Firefox: overlay-скроллбар, край и так не залезает на скругление
   scrollbar-width: thin;

@@ -194,8 +194,10 @@ const close = () => {
         .ui-alert__close {
           color: g($t, '#{$base}.close.color');
 
-          &:hover:not(:disabled, .ui-button--disabled) {
-            background-color: g($t, '#{$base}.close.hover.color');
+          @include can-hover {
+            &:hover:not(:disabled, .ui-button--disabled) {
+              background-color: g($t, '#{$base}.close.hover.color');
+            }
           }
 
           &:active:not(:disabled, .ui-button--disabled) {

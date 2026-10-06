@@ -160,8 +160,10 @@ function onAction() {
 
     color: g($t, 'action-color');
 
-    &:hover {
-      background-color: g($t, 'action-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'action-hover-bg');
+      }
     }
   }
 }

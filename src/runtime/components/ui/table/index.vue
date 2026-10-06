@@ -137,8 +137,10 @@ provideTableContext({
     border-bottom: g($t, 'row-border-width') solid g($t, 'row-border-color');
     transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
 
-    &:hover:not(.ui-table__row--header) {
-      background-color: g($t, 'row-hover-bg');
+    @include can-hover {
+      &:hover:not(.ui-table__row--header) {
+        background-color: g($t, 'row-hover-bg');
+      }
     }
 
     &--selected {

@@ -119,8 +119,10 @@ function onSelect(event: MouseEvent) {
     transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
   }
 
-  &:hover::before {
-    opacity: g($t, 'state-layer-opacity-hover');
+  @include can-hover {
+    &:hover::before {
+      opacity: g($t, 'state-layer-opacity-hover');
+    }
   }
 
   &::after {

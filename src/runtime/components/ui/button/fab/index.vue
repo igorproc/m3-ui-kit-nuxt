@@ -81,8 +81,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
     background-color: g($t, '#{$base}-container-color');
     color: g($t, '#{$base}-icon-color');
 
-    &:hover:not(.ui-fab--disabled) {
-      background-color: g($t, '#{$base}-container-hover-color');
+    @include can-hover {
+      &:hover:not(.ui-fab--disabled) {
+        background-color: g($t, '#{$base}-container-hover-color');
+      }
     }
 
     &:focus-visible:not(.ui-fab--disabled),
@@ -134,8 +136,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
   &--lg { @include apply-size('lg'); }
 
   // Interactions
-  &:hover:not(.ui-fab--disabled) {
-    box-shadow: g($t, 'elevation-hover');
+  @include can-hover {
+    &:hover:not(.ui-fab--disabled) {
+      box-shadow: g($t, 'elevation-hover');
+    }
   }
 
   &:active:not(.ui-fab--disabled) {

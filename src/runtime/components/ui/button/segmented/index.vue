@@ -125,8 +125,10 @@ function selectItem(val: string | number) {
       border-right: none;
     }
 
-    &:hover {
-      background-color: g($t, 'unselected-container-hover-color');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'unselected-container-hover-color');
+      }
     }
 
     &:active {
@@ -146,8 +148,10 @@ function selectItem(val: string | number) {
       background-color: g($t, 'selected-#{$scheme}-container-color');
       color: g($t, 'selected-#{$scheme}-content-color');
 
-      &:hover {
-        background-color: g($t, 'selected-#{$scheme}-container-hover-color');
+      @include can-hover {
+        &:hover {
+          background-color: g($t, 'selected-#{$scheme}-container-hover-color');
+        }
       }
 
       &:active {

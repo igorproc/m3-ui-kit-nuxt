@@ -179,8 +179,10 @@ function confirm() {
     border-radius: 999rem;
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t, 'controls-view-toggle-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'controls-view-toggle-hover-bg');
+      }
     }
   }
 
@@ -202,8 +204,10 @@ function confirm() {
     cursor: pointer;
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t, 'controls-icon-button-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'controls-icon-button-hover-bg');
+      }
     }
   }
 
@@ -270,8 +274,10 @@ function confirm() {
       z-index: 1;
     }
 
-    &:hover &-state {
-      background-color: g($t, 'day-hover-bg');
+    @include can-hover {
+      &:hover &-state {
+        background-color: g($t, 'day-hover-bg');
+      }
     }
   }
 
@@ -305,8 +311,10 @@ function confirm() {
     transform: scale(1);
   }
 
-  &__day--selected:hover &__day-state {
-    background-color: g($t, 'day-selected-hover-bg');
+  @include can-hover {
+    &__day--selected:hover &__day-state {
+      background-color: g($t, 'day-selected-hover-bg');
+    }
   }
 
   &__day--selected &__day-label {
@@ -346,8 +354,10 @@ function confirm() {
     color: g($t, 'year-color');
     transition: background-color 0.2s;
 
-    &:hover {
-      background-color: g($t, 'year-hover-bg');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'year-hover-bg');
+      }
     }
 
     &--selected {

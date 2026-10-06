@@ -360,8 +360,10 @@ defineExpose({ control: controlRef, input: inputRef })
     transition: border-color g($t, 'state.duration') g($t, 'state.easing');
   }
 
-  &__control:hover .ui-text-field__outline {
-    border-color: g($t, 'outlined.hover.border.color');
+  @include can-hover {
+    &__control:hover .ui-text-field__outline {
+      border-color: g($t, 'outlined.hover.border.color');
+    }
   }
 
   // As tall as the border it sits on, so the fieldset never shifts its top edge
@@ -409,9 +411,11 @@ defineExpose({ control: controlRef, input: inputRef })
       border-bottom-left-radius: 0;
       background-color: g($t, 'filled.bg');
 
-      &:hover {
-        border-bottom-color: g($t, 'filled.hover.border.bottom.color');
-        background-color: g($t, 'filled.hover.bg');
+      @include can-hover {
+        &:hover {
+          border-bottom-color: g($t, 'filled.hover.border.bottom.color');
+          background-color: g($t, 'filled.hover.bg');
+        }
       }
     }
 
@@ -505,8 +509,10 @@ defineExpose({ control: controlRef, input: inputRef })
       border-bottom: g($t, 'container.border.width') solid g($t, 'outlined.border.color');
       border-radius: 0;
 
-      &:hover {
-        border-bottom-color: g($t, 'outlined.hover.border.color');
+      @include can-hover {
+        &:hover {
+          border-bottom-color: g($t, 'outlined.hover.border.color');
+        }
       }
     }
 

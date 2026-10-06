@@ -106,12 +106,14 @@ defineEmits<{
     transition: all var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
   }
 
-  &:hover {
-    color: g($t, 'item-hover-color');
+  @include can-hover {
+    &:hover {
+      color: g($t, 'item-hover-color');
 
-    .ui-navigation-rail-item__indicator {
-      opacity: g($t, 'item-indicator-hover-opacity');
-      background-color: g($t, 'item-indicator-hover-color');
+      .ui-navigation-rail-item__indicator {
+        opacity: g($t, 'item-indicator-hover-opacity');
+        background-color: g($t, 'item-indicator-hover-color');
+      }
     }
   }
 
@@ -124,11 +126,13 @@ defineEmits<{
       background-color: g($t, 'item-indicator-color');
     }
 
-    &:hover {
-      color: g($t, 'item-active-color');
+    @include can-hover {
+      &:hover {
+        color: g($t, 'item-active-color');
 
-      .ui-navigation-rail-item__indicator {
-        opacity: g($t, 'item-indicator-active-hover-opacity');
+        .ui-navigation-rail-item__indicator {
+          opacity: g($t, 'item-indicator-active-hover-opacity');
+        }
       }
     }
   }

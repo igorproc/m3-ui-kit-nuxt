@@ -484,8 +484,10 @@ defineExpose({ element })
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
 
-    &:enabled:hover::after {
-      opacity: g($t, 'layer.hover');
+    @include can-hover {
+      &:enabled:hover::after {
+        opacity: g($t, 'layer.hover');
+      }
     }
 
     &:enabled:active::after {
@@ -575,9 +577,11 @@ defineExpose({ element })
       background-color: g($t, 'stepper.filled.surface');
     }
 
-    &:where(.ui-number-input--interactive) .ui-number-input__control:hover {
-      border-bottom-color: g($t, 'filled.hover.border.color');
-      background-color: g($t, 'filled.hover.surface');
+    @include can-hover {
+      &:where(.ui-number-input--interactive) .ui-number-input__control:hover {
+        border-bottom-color: g($t, 'filled.hover.border.color');
+        background-color: g($t, 'filled.hover.surface');
+      }
     }
 
     &.ui-number-input--focused:where(.ui-number-input--interactive) .ui-number-input__control {
@@ -600,8 +604,10 @@ defineExpose({ element })
       border-width: 0;
     }
 
-    &:where(.ui-number-input--interactive) .ui-number-input__control:hover {
-      border-color: g($t, 'outlined.hover.border.color');
+    @include can-hover {
+      &:where(.ui-number-input--interactive) .ui-number-input__control:hover {
+        border-color: g($t, 'outlined.hover.border.color');
+      }
     }
 
     &.ui-number-input--focused:where(.ui-number-input--interactive) .ui-number-input__control {

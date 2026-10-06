@@ -155,13 +155,17 @@ const switchClasses = computed(() => [
   }
 
   // Interaction states never apply while disabled (no thumb grow / state layer).
-  &:not(.ui-switch--disabled):hover &__state-layer {
-    opacity: g($t, 'state-layer-opacity-hover');
-    transform: translate(-50%, -50%) scale(1);
+  @include can-hover {
+    &:not(.ui-switch--disabled):hover &__state-layer {
+      opacity: g($t, 'state-layer-opacity-hover');
+      transform: translate(-50%, -50%) scale(1);
+    }
   }
 
-  &:not(.ui-switch--disabled):hover &__thumb {
-    background-color: g($t, 'thumb-color-hover-off');
+  @include can-hover {
+    &:not(.ui-switch--disabled):hover &__thumb {
+      background-color: g($t, 'thumb-color-hover-off');
+    }
   }
 
   &:not(.ui-switch--disabled):active &__thumb {
@@ -173,8 +177,10 @@ const switchClasses = computed(() => [
     opacity: g($t, 'state-layer-opacity-active');
   }
 
-  &--checked:not(.ui-switch--disabled):hover &__thumb {
-    background-color: g($t, 'thumb-color-hover-on');
+  @include can-hover {
+    &--checked:not(.ui-switch--disabled):hover &__thumb {
+      background-color: g($t, 'thumb-color-hover-on');
+    }
   }
 
   &__label {

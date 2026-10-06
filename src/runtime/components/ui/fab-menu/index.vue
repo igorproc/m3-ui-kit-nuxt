@@ -288,8 +288,10 @@ useClickOutside(rootRef, () => close())
       background-color: g($t, 'item-scheme.#{$scheme}.bg.color');
       color: g($t, 'item-scheme.#{$scheme}.text.color');
 
-      &:hover {
-        background-color: g($t, 'item-scheme.#{$scheme}.hover.color');
+      @include can-hover {
+        &:hover {
+          background-color: g($t, 'item-scheme.#{$scheme}.hover.color');
+        }
       }
 
       &:active {

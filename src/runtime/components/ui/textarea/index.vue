@@ -433,11 +433,13 @@ function focusFromBox(event: PointerEvent) {
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
 
-    &:hover {
-      background-color: g($t, 'grip.hover.color');
+    @include can-hover {
+      &:hover {
+        background-color: g($t, 'grip.hover.color');
 
-      &::before {
-        opacity: g($t, 'layer.hover');
+        &::before {
+          opacity: g($t, 'layer.hover');
+        }
       }
     }
 
@@ -520,8 +522,10 @@ function focusFromBox(event: PointerEvent) {
       background-color: g($t, 'footer.filled.surface');
     }
 
-    &:where(.ui-textarea--interactive) .ui-textarea__control:hover {
-      border-bottom-color: g($t, 'filled.hover.border.color');
+    @include can-hover {
+      &:where(.ui-textarea--interactive) .ui-textarea__control:hover {
+        border-bottom-color: g($t, 'filled.hover.border.color');
+      }
     }
 
     &.ui-textarea--focused:where(.ui-textarea--interactive) .ui-textarea__control {
@@ -544,8 +548,10 @@ function focusFromBox(event: PointerEvent) {
       border-width: 0;
     }
 
-    &:where(.ui-textarea--interactive) .ui-textarea__control:hover {
-      border-color: g($t, 'outlined.hover.border.color');
+    @include can-hover {
+      &:where(.ui-textarea--interactive) .ui-textarea__control:hover {
+        border-color: g($t, 'outlined.hover.border.color');
+      }
     }
 
     &.ui-textarea--focused:where(.ui-textarea--interactive) .ui-textarea__control {
@@ -563,8 +569,10 @@ function focusFromBox(event: PointerEvent) {
   }
 
   // The state layer comes up on hover in every shape.
-  &--interactive .ui-textarea__control:hover::before {
-    opacity: g($t, 'layer.hover');
+  @include can-hover {
+    &--interactive .ui-textarea__control:hover::before {
+      opacity: g($t, 'layer.hover');
+    }
   }
 
   // ── content · the same ink in every shape, states ascending ──

@@ -80,8 +80,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     background-color: g($t, '#{$base}.container.color');
     color: g($t, '#{$base}.content.color');
 
-    &:hover:not(.ui-extended-fab--disabled) {
-      background-color: g($t, '#{$base}.container.hover-color');
+    @include can-hover {
+      &:hover:not(.ui-extended-fab--disabled) {
+        background-color: g($t, '#{$base}.container.hover-color');
+      }
     }
 
     &:focus-visible:not(.ui-extended-fab--disabled),
@@ -133,8 +135,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   &--lg { @include apply-size('lg'); }
 
   // Interactions
-  &:hover:not(.ui-extended-fab--disabled) {
-    box-shadow: g($t, 'container.elevation.hover');
+  @include can-hover {
+    &:hover:not(.ui-extended-fab--disabled) {
+      box-shadow: g($t, 'container.elevation.hover');
+    }
   }
 
   &:active:not(.ui-extended-fab--disabled) {

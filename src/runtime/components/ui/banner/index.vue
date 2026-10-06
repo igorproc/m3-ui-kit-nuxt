@@ -244,7 +244,9 @@ const closeSlotProps = computed<MBannerCloseSlot>(() => ({
 
     .ui-icon { font-size: g($t, 'close-icon-size'); }
 
-    &:hover:not(:disabled, .ui-button--disabled) { background-color: g($t, 'close-hover-color'); }
+    @include can-hover {
+      &:hover:not(:disabled, .ui-button--disabled) { background-color: g($t, 'close-hover-color'); }
+    }
     &:active:not(:disabled, .ui-button--disabled) { background-color: g($t, 'close-pressed-color'); }
 
     &:focus-visible {

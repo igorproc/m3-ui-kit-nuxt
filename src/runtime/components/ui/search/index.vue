@@ -135,12 +135,14 @@ function onClear() {
       cursor: pointer;
       padding: 0;
 
-      &:hover {
-        background-color: color-mix(
-          in srgb,
-          #{map.get($theme-color-link, 'on-surface')} state-opacity(hover),
-          transparent
-        );
+      @include can-hover {
+        &:hover {
+          background-color: color-mix(
+            in srgb,
+            #{map.get($theme-color-link, 'on-surface')} state-opacity(hover),
+            transparent
+          );
+        }
       }
     }
   }
@@ -156,12 +158,14 @@ function onClear() {
     }
   }
 
-  &:hover {
-    background-color: color-mix(
-      in srgb,
-      #{map.get($theme-color-link, 'on-surface')} 4%,
-      g($t, 'bg-color')
-    );
+  @include can-hover {
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        #{map.get($theme-color-link, 'on-surface')} 4%,
+        g($t, 'bg-color')
+      );
+    }
   }
 
   &:has(.ui-search__input:disabled) {

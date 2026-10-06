@@ -288,7 +288,12 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   &__toggle.ui-button.ui-button {
     color: g($t, 'clear.color');
 
-    &:hover:not(.ui-button--disabled),
+    @include can-hover {
+      &:hover:not(.ui-button--disabled) {
+        color: g($t, 'clear.active-color');
+      }
+    }
+
     &:focus-visible {
       color: g($t, 'clear.active-color');
     }

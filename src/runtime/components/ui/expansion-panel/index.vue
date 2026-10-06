@@ -134,8 +134,10 @@ function toggle() {
       opacity: g($t, 'disabled-opacity');
     }
 
-    &:hover:not(:disabled) {
-      background-color: g($t, 'header-hover-bg');
+    @include can-hover {
+      &:hover:not(:disabled) {
+        background-color: g($t, 'header-hover-bg');
+      }
     }
 
     &:active:not(:disabled) {
