@@ -429,6 +429,15 @@ defineExpose({ element })
       color: g($t, 'input.placeholder.color');
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
+
+    // The UA repaints an autofilled input in its own colours (with
+    // `!important`), off the theme. Those are transitions like any other, so
+    // they are deferred out of reach instead of overridden.
+    &:autofill {
+      transition:
+        background-color 0s 600000s,
+        color 0s 600000s;
+    }
   }
 
   &__adornment {
