@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main, nightwatch]
+  pull_request:
+    branches: [main, nightwatch]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run dev:prepare
+
+      - run: npm run lint
+      - run: npm run lint:style
+      - run: npm run lint:scss
+      - run: npm run typecheck
+      - run: npx vitest run --coverage.enabled=false
+      - run: npm run build

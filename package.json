@@ -52,7 +52,7 @@
     "preview": "nuxi preview playground",
     "test": "vitest",
     "lint": "eslint .",
-    "lint:style": "stylelint **/*.{vue,css,scss}",
+    "lint:style": "stylelint \"**/*.{vue,css,scss}\"",
     "lint:scss": "node shell/scss-smoke.mjs",
     "typecheck": "vue-tsc --noEmit"
   },
