@@ -36,3 +36,24 @@
   --sys-motion-duration-extra-long-3: 900ms;
   --sys-motion-duration-extra-long-4: 1000ms;
 }
+
+/*
+ * Reduced motion shortens rather than removes: every duration past short-4
+ * collapses to short-2, so long travel stops while brief state feedback stays.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sys-motion-duration-medium-1: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-medium-2: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-medium-3: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-medium-4: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-long-1: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-long-2: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-long-3: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-long-4: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-extra-long-1: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-extra-long-2: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-extra-long-3: var(--sys-motion-duration-short-2);
+    --sys-motion-duration-extra-long-4: var(--sys-motion-duration-short-2);
+  }
+}
