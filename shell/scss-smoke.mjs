@@ -82,7 +82,15 @@ async function* walk(dir) {
   }
 }
 
-const STYLE = /<style[^>]*lang="scss"[^>]*>([\s\S]*?)<\/style>/g
+const STYLE = /<style([^>]*lang="scss"[^>]*)>([\s\S]*?)<\/style>/g
+
+/**
+ * Selectors Sass compiles happily but the browser drops whole rules for:
+ * Vue's scoped-only pseudos outside `<style scoped>`, and a parent suffix
+ * nested under a pseudo-class (`&:hover { &-state }` → `.a:hover-state`).
+ */
+const VUE_SCOPED_PSEUDO = /:(?:deep|slotted|global)\(/
+const PSEUDO_SUFFIX = /:(?:hover|active|disabled|checked|focus(?!-visible|-within)|focus-visible|focus-within)-[a-z]/
 
 let checked = 0
 const failures = []
@@ -115,11 +123,16 @@ const logger = {
 for await (const file of walk(join(runtime, 'components'))) {
   const source = await readFile(file, 'utf8')
 
-  for (const [, css] of source.matchAll(STYLE)) {
+  for (const [, attrs, css] of source.matchAll(STYLE)) {
     checked += 1
     currentFile = file.slice(root.length + 1)
+
+    if (!/\bscoped\b/.test(attrs) && VUE_SCOPED_PSEUDO.test(css)) {
+      failures.push({ file: currentFile, message: ':deep()/:slotted()/:global() only work in <style scoped>; the browser drops this rule.' })
+    }
+
     try {
-      sass.compileString(prelude + css, {
+      const { css: output } = sass.compileString(prelude + css, {
         loadPaths: [join(runtime, 'assets/stylesheet'), runtime],
         importers: [aliasImporter],
         url: pathToFileURL(file),
@@ -129,6 +142,11 @@ for await (const file of walk(join(runtime, 'components'))) {
         silenceDeprecations: ['import', 'global-builtin', 'color-functions'],
         logger,
       })
+
+      const broken = output.match(PSEUDO_SUFFIX)
+      if (broken) {
+        failures.push({ file: currentFile, message: `Invalid selector "${broken[0]}…": a parent suffix nested under a pseudo-class.` })
+      }
     } catch (error) {
       failures.push({ file: file.slice(root.length + 1), message: error.message })
     }
