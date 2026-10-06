@@ -18,6 +18,12 @@ export const mSplitButtonProps = {
   ...makeStateProps(),
   /** Secondary actions shown in the attached menu. */
   items: { type: Array as PropType<UiSplitMenuItem[]>, default: () => [] },
+  /**
+   * Accessible name of the icon-only half that opens the menu. No default: the
+   * kit does not invent copy in a language it cannot know, and warns in dev
+   * when it is missing.
+   */
+  dropdownAriaLabel: { type: String, default: undefined },
 }
 
 export type MSplitButtonProps = ExtractPublicPropTypes<typeof mSplitButtonProps>

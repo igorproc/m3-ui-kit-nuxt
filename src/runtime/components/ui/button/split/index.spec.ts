@@ -64,4 +64,35 @@ describe('m-split-button', () => {
     expect(wrapper.find('.ui-split-button__action').classes())
       .toContain('ui-button--disabled')
   })
+
+  it('names the dropdown and announces the menu it opens', async () => {
+    const wrapper = await mountSuspended(MSplitButton, {
+      props: { items, dropdownAriaLabel: 'More save options' },
+    })
+    const dropdown = wrapper.find('.ui-split-button__dropdown')
+
+    expect(dropdown.attributes('aria-label')).toBe('More save options')
+    expect(dropdown.attributes('aria-haspopup')).toBe('menu')
+    expect(dropdown.attributes('aria-expanded')).toBe('false')
+
+    await dropdown.trigger('click')
+
+    expect(dropdown.attributes('aria-expanded')).toBe('true')
+  })
+
+  it('claims no popup when there is no menu', async () => {
+    const wrapper = await mountSuspended(MSplitButton, { props: { items: [] } })
+    const dropdown = wrapper.find('.ui-split-button__dropdown')
+
+    expect(dropdown.attributes('aria-haspopup')).toBeUndefined()
+    expect(dropdown.attributes('aria-expanded')).toBeUndefined()
+  })
+
+  it('keeps both halves from submitting a surrounding form', async () => {
+    const wrapper = await mountSuspended(MSplitButton, { props: { items } })
+
+    for (const half of wrapper.findAll('.ui-split-button__wrapper > button')) {
+      expect(half.attributes('type')).toBe('button')
+    }
+  })
 })

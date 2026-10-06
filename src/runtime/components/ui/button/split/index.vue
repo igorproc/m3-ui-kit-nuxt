@@ -12,10 +12,14 @@
       </UiButton>
 
       <UiButton
+        ref="dropdown"
         class="ui-split-button__dropdown"
         :variant="variant"
         :color="color"
         :disabled="disabled"
+        :aria-label="dropdownAriaLabel"
+        :aria-haspopup="hasMenu ? 'menu' : undefined"
+        :aria-expanded="hasMenu ? String(isMenuOpen) : undefined"
         @click="toggleMenu"
       >
         <template #prepend>
@@ -28,7 +32,7 @@
     </div>
 
     <UiMenu
-      v-if="items && items.length > 0"
+      v-if="hasMenu"
       v-model="isMenuOpen"
       absolute
       origin="top"
@@ -38,6 +42,7 @@
       <button
         v-for="(item, index) in items"
         :key="item.value || index"
+        type="button"
         class="ui-menu__item"
         @click="handleItemClick(item)"
       >
@@ -52,11 +57,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import UiButton from '#kit/components/ui/button/index.vue'
 import UiIcon from '#kit/components/ui/icon/index.vue'
 import UiMenu from '#kit/components/ui/menu/index.vue'
+import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
 import { mSplitButtonProps } from './props'
 import type { UiSplitMenuItem } from './props'
 
@@ -68,6 +74,10 @@ const emit = defineEmits<{
 }>()
 
 const isMenuOpen = ref(false)
+const hasMenu = computed(() => props.items.length > 0)
+const dropdown = useTemplateRef<{ $el: HTMLElement }>('dropdown')
+
+useButtonNameWarning('m-button-split', () => props.dropdownAriaLabel)
 
 function toggleMenu() {
   if (props.disabled) return
@@ -86,46 +96,63 @@ function handleItemClick(item: UiSplitMenuItem) {
   emit('select', item)
   closeMenu()
 }
+
+// The menu returns focus to its parent element, which here is the wrapper div
+// and cannot take it. When the menu closes with focus left nowhere (an item
+// picked, Escape), it goes back to the dropdown that opened it; a click that
+// moved focus elsewhere is left alone.
+watch(isMenuOpen, async (open) => {
+  if (open) return
+
+  await nextTick()
+  const active = document.activeElement
+  if (!active || active === document.body) dropdown.value?.$el.focus()
+})
 </script>
 
 <style lang="scss">
-@use 'sass:map';
+@use '#kit/assets/stylesheet/components/button/_index' as t;
+
+$t: material-map(t.$tokens, 'md-button');
 
 .ui-split-button {
   display: inline-flex;
   flex-direction: column;
   position: relative;
 
+  // Not clipped: each half rounds its own outer corners, so a focus ring drawn
+  // outside either half stays visible.
   &__wrapper {
     display: inline-flex;
     align-items: stretch;
-    border-radius: var(--sys-shape-corner-full, 100vmax);
-    overflow: hidden;
+    isolation: isolate;
   }
 
-  // Adjust borders for the two pieces
-  &__action {
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-  }
-
-  &__dropdown {
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    padding-inline: 4rem !important; // Narrower for the icon
-
-    // Add separator if it's a filled/tonal/elevated button
-    border-left: 1rem solid color-mix(in srgb, #{map.get($theme-color-link, 'surface')} 30%, transparent) !important;
-
-    .ui-button__label {
-      display: none; // Hide label, we only show icon
+  // The doubled class outranks `.ui-button`'s own radius and padding without
+  // `!important`; a focused half rises over its neighbour so its ring shows.
+  &__action.ui-button,
+  &__dropdown.ui-button {
+    &:focus-visible {
+      z-index: 1;
     }
+  }
+
+  &__action.ui-button {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  &__wrapper > &__dropdown.ui-button {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    padding-inline: g($t, 'split.dropdown.padding.inline');
+    border-inline-start: g($t, 'split.divider.width') solid g($t, 'split.divider.color');
   }
 
   // The menu teleports out and positions itself (fixed / CSS anchor); only
   // its intrinsic sizing belongs here, never layout offsets.
   &__menu-container {
-    min-width: 150rem;
+    min-width: g($t, 'split.menu.min-width');
   }
 }
 </style>
