@@ -58,9 +58,9 @@ $tokens: (
       lg: 16rem
     ),
     elevation: (
-      resting: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
-      hover: (0 6rem 10rem 4rem rgb(0 0 0 / 15%), 0 2rem 3rem rgb(0 0 0 / 30%)),
-      pressed: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+      resting: elevation(3),
+      hover: elevation(4),
+      pressed: elevation(3),
     ),
   ),
 

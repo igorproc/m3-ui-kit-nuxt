@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 // Zero-runtime tokens for the MColorPicker family (root + private leaves). The
 // chosen color itself is only ever an inline CSS value/gradient, never a token.
@@ -11,7 +11,7 @@ $tokens: (
     radius: var(--sys-shape-corner-large),
     surface: map.get($theme-color-link, 'surface-container-high'),
     color: map.get($theme-color-link, 'on-surface'),
-    elevation: (0 1rem 2rem 0 rgb(0 0 0 / 30%), 0 1rem 3rem 1rem rgb(0 0 0 / 15%)),
+    elevation: elevation(1),
   ),
   canvas: (
     height: 160rem,
@@ -22,7 +22,7 @@ $tokens: (
       size: 14rem,
       border: map.get($theme-color-link, 'surface'),
       border-width: 2rem,
-      shadow: 0 0 0 1rem rgb(0 0 0 / 30%),
+      shadow: 0 0 0 1rem color-mix(in srgb, #{map.get($theme-color-link, 'shadow')} 30%, transparent),
     ),
   ),
   slider: (
@@ -33,7 +33,7 @@ $tokens: (
       size: 16rem,
       border: map.get($theme-color-link, 'surface'),
       border-width: 2rem,
-      shadow: 0 0 0 1rem rgb(0 0 0 / 30%),
+      shadow: 0 0 0 1rem color-mix(in srgb, #{map.get($theme-color-link, 'shadow')} 30%, transparent),
     ),
   ),
   preview: (

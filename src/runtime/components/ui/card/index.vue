@@ -69,7 +69,7 @@ $prefix: 'md-card';
   border-color: transparent;
   background-color: map.get($theme-color-link, 'surface');
   color: map.get($theme-color-link, 'on-surface');
-  box-shadow: 0 1rem 3rem rgb(0 0 0 / 8%);
+  box-shadow: elevation(1);
   transition:
     box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
     background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),

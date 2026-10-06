@@ -15,7 +15,7 @@ $tokens: (
       radius: var(--sys-shape-corner-medium),
     ),
     expanded: (
-      shadow: 0 1rem 3rem rgb(0 0 0 / 8%),
+      shadow: elevation(1),
     ),
   ),
   header: (

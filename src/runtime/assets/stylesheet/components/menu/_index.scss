@@ -22,7 +22,7 @@ $tokens: (
       color: map.get($theme-color-link, 'surface-container'),
     ),
     color: map.get($theme-color-link, 'on-surface'),
-    shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
+    shadow: elevation(2),
   ),
   item: (
     min: (

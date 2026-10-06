@@ -1,0 +1,24 @@
+/* Material Design 3 Elevation Tokens */
+
+/* Source: https://m3.material.io/styles/elevation/tokens */
+
+/* Key (30%) + ambient (15%) shadow pairs. Tinted from the theme's shadow role rather than
+   raw black, so a palette that redefines `shadow` moves every elevation with it. */
+:root {
+  --sys-elevation-level0: none;
+  --sys-elevation-level1:
+    0 1rem 2rem 0 color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+    0 1rem 3rem 1rem color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+  --sys-elevation-level2:
+    0 1rem 2rem 0 color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+    0 2rem 6rem 2rem color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+  --sys-elevation-level3:
+    0 1rem 3rem 0 color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+    0 4rem 8rem 3rem color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+  --sys-elevation-level4:
+    0 2rem 3rem 0 color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+    0 6rem 10rem 4rem color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+  --sys-elevation-level5:
+    0 4rem 4rem 0 color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+    0 8rem 12rem 6rem color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+}

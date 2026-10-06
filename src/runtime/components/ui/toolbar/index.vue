@@ -161,7 +161,6 @@ const getPropsForItem = (item: ToolbarItem) => {
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/toolbar' as t;
 
 .ui-toolbar {
@@ -178,13 +177,7 @@ const getPropsForItem = (item: ToolbarItem) => {
   &--type-standard {
     background-color: g($t, 'standard-container-color');
     border-radius: g($t, 'standard-container-shape');
-
-    $shadow-color: map.get($theme-color-link, 'shadow');
-
-    box-shadow:
-      0 g($t, 'standard-container-elevation-umbra-y') g($t, 'standard-container-elevation-umbra-blur') g($t, 'standard-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-umbra-opacity'), transparent),
-      0 g($t, 'standard-container-elevation-penumbra-y') g($t, 'standard-container-elevation-penumbra-blur') g($t, 'standard-container-elevation-penumbra-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-penumbra-opacity'), transparent),
-      0 g($t, 'standard-container-elevation-ambient-y') g($t, 'standard-container-elevation-ambient-blur') g($t, 'standard-container-elevation-ambient-spread') color-mix(in srgb, $shadow-color g($t, 'standard-container-elevation-ambient-opacity'), transparent);
+    box-shadow: g($t, 'standard-container-elevation');
     height: g($t, 'standard-container-height');
 
     // Floating style implies width fits content usually,
@@ -195,13 +188,7 @@ const getPropsForItem = (item: ToolbarItem) => {
   &--type-baseline {
     background-color: g($t, 'baseline-container-color');
     border-radius: g($t, 'baseline-container-shape');
-
-    $shadow-color: map.get($theme-color-link, 'shadow');
-
-    box-shadow:
-      0 g($t, 'baseline-container-elevation-umbra-y') g($t, 'baseline-container-elevation-umbra-blur') g($t, 'baseline-container-elevation-umbra-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-umbra-opacity'), transparent),
-      0 g($t, 'baseline-container-elevation-penumbra-y') g($t, 'baseline-container-elevation-penumbra-blur') g($t, 'baseline-container-elevation-penumbra-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-penumbra-opacity'), transparent),
-      0 g($t, 'baseline-container-elevation-ambient-y') g($t, 'baseline-container-elevation-ambient-blur') g($t, 'baseline-container-elevation-ambient-spread') color-mix(in srgb, $shadow-color g($t, 'baseline-container-elevation-ambient-opacity'), transparent);
+    box-shadow: g($t, 'baseline-container-elevation');
     height: g($t, 'baseline-container-height');
     width: 100%; // Bottom app bar is usually full width
   }

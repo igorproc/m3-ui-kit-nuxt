@@ -91,7 +91,7 @@ const STYLE = /<style([^>]*lang="scss"[^>]*)>([\s\S]*?)<\/style>/g
  */
 const VUE_SCOPED_PSEUDO = /:(?:deep|slotted|global)\(/
 /** A Sass function that is not in scope is emitted verbatim as a CSS function. */
-const KIT_FUNCTION_LEAK = /\b(?:state-opacity|spacing|g|z)\(/
+const KIT_FUNCTION_LEAK = /\b(?:state-opacity|spacing|elevation|g|z)\(/
 const PSEUDO_SUFFIX = /:(?:hover|active|disabled|checked|focus(?!-visible|-within)|focus-visible|focus-within)-[a-z]/
 
 let checked = 0

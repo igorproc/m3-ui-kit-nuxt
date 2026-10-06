@@ -18,7 +18,7 @@ $tokens: (
   bg: (
     color: map.get($theme-color-link, 'surface-container-high'),
   ),
-  shadow: (0 -4rem 8rem 3rem rgb(0 0 0 / 15%), 0 -1rem 3rem rgb(0 0 0 / 30%)),
+  shadow: elevation(1),
   container: (
     gap: 8rem,
     padding: (16rem 16rem 24rem),

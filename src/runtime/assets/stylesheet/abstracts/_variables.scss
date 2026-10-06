@@ -190,6 +190,17 @@ $theme-shape-link: (
   'extra-large-top': var(--sys-shape-corner-extra-large-top),
   'full': var(--sys-shape-corner-full)
 );
+
+/// MD3 elevation levels 0–5: m3.material.io/styles/elevation/tokens.
+/// Read through `elevation($level)`.
+$theme-elevation-link: (
+  0: var(--sys-elevation-level0),
+  1: var(--sys-elevation-level1),
+  2: var(--sys-elevation-level2),
+  3: var(--sys-elevation-level3),
+  4: var(--sys-elevation-level4),
+  5: var(--sys-elevation-level5),
+);
 $theme-typography-link: (
   'display': (
     'large': (

@@ -16,7 +16,7 @@ $tokens: (
     text: (
       color: map.get($theme-color-link, 'on-surface'),
     ),
-    shadow: (0 0 16rem rgb(0 0 0 / 24%), 0 0 32rem rgb(0 0 0 / 20%)),
+    shadow: elevation(1),
     shape: (
       left: 0 var(--sys-shape-corner-large) var(--sys-shape-corner-large) 0,
       right: var(--sys-shape-corner-large) 0 0 var(--sys-shape-corner-large),

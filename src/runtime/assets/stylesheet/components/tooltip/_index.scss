@@ -18,7 +18,7 @@ $tokens: (
       color: map.get($theme-color-link, 'on-surface'),
     ),
     color: map.get($theme-color-link, 'surface'),
-    shadow: (0 2rem 4rem rgb(0 0 0 / 15%)),
+    shadow: elevation(0),
     text: (
       type: 'body-small',
     ),

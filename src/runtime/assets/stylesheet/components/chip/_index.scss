@@ -41,5 +41,5 @@ $tokens: (
   // Reached the group `max`: unavailable for selection, but not disabled, so it
   // stays more legible than a disabled chip.
   blocked: (opacity: 0.6),
-  suggestion: (shadow: 0 1rem 2rem rgb(0 0 0 / 10%)),
+  suggestion: (shadow: elevation(1)),
 );

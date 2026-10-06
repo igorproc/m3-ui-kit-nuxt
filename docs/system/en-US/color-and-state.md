@@ -73,6 +73,13 @@ judged too rare to buy a new mechanism.
 A floating label sits on the container's top edge and stays there. Animating it makes the
 resting state ambiguous and breaks autofill. `float` is a *position*, not a transition.
 
+### Elevation is a level, never a shadow
+
+A shadow is one of the MD3 levels 0–5, read with `elevation(n)` — never a literal
+`box-shadow`. The levels are `--sys-elevation-level0…5` on `:root`, tinted from the theme's
+`shadow` role. A state that raises a component moves it exactly one level up (elevated
+button and card 1 → 2 on hover, FAB 3 → 4); `elevation()` fails the build on any other key.
+
 ## Tokens
 
 Colour and state values come out of the component's own `$tokens` map via `g($t, 'a.b.c')`.

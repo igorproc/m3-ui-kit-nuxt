@@ -15,6 +15,14 @@
   @return map.get($theme-state-link, $key);
 }
 
+@function elevation($level) {
+  @if not map.has-key($theme-elevation-link, $level) {
+    @error 'Unknown elevation level `#{$level}`. Available: #{map.keys($theme-elevation-link)}.';
+  }
+
+  @return map.get($theme-elevation-link, $level);
+}
+
 @function z($key) {
   @if map.has-key($z-indexes, $key) {
     @return map.get($z-indexes, $key);
@@ -191,8 +199,8 @@
           disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
         )
       ),
-      shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
-      hover: (shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+      shadow: elevation(1),
+      hover: (shadow: elevation(2)),
     ),
     tonal: (
       container: (

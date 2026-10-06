@@ -5,7 +5,7 @@ $tokens: (
   container: (
     bg: map.get($theme-color-link, 'surface-container-highest'),
     radius: map.get($theme-shape-link, extra-large),
-    shadow: var(--sys-elevation-3),
+    shadow: elevation(3),
   ),
   header: (
     padding: 24rem 24rem 12rem,

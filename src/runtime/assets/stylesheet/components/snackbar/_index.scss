@@ -24,7 +24,7 @@ $tokens: (
       color: map.get($theme-color-link, 'surface'),
     ),
     color: map.get($theme-color-link, 'on-surface'),
-    shadow: (0 2rem 4rem rgb(0 0 0 / 16%), 0 6rem 12rem rgb(0 0 0 / 12%)),
+    shadow: elevation(3),
     gap: 16rem,
   ),
   label: (

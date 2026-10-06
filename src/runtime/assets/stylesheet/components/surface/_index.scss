@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 // Zero-runtime M3 tokens for the passive `<MSurface>` primitive. Each preset
 // binds a semantic surface color role and elevation together. `outlined` adds
@@ -16,8 +16,7 @@ $tokens: (
   ),
   elevated: (
     container: (color: map.get($theme-color-link, 'surface-container-low')),
-    // MD3 elevation level 1.
-    elevation: (0 1rem 2rem 0 rgb(0 0 0 / 30%), 0 1rem 3rem 1rem rgb(0 0 0 / 15%)),
+    elevation: elevation(1),
   ),
   outlined: (
     container: (color: map.get($theme-color-link, 'surface')),

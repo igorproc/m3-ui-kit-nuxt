@@ -21,7 +21,7 @@ $tokens: (
   text: (
     color: map.get($theme-color-link, 'on-surface'),
   ),
-  shadow: (0 4rem 8rem 3rem rgb(0 0 0 / 15%), 0 1rem 3rem rgb(0 0 0 / 30%)),
+  shadow: elevation(3),
   padding: 24rem,
   margin: 16rem,
   container: (

@@ -19,18 +19,18 @@ $tokens: (
 
   elevated: (
     bg: map.get($theme-color-link, 'surface-container-low'),
-    shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%)),
-    hover: (shadow: (0 2rem 6rem 2rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+    shadow: elevation(1),
+    hover: (shadow: elevation(2)),
   ),
   filled: (
     bg: map.get($theme-color-link, 'surface-container-highest'),
-    shadow: none,
-    hover: (shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+    shadow: elevation(0),
+    hover: (shadow: elevation(1)),
   ),
   outlined: (
     bg: map.get($theme-color-link, 'surface'),
     border: (color: map.get($theme-color-link, 'outline-variant')),
-    shadow: none,
-    hover: (shadow: (0 1rem 3rem 1rem rgb(0 0 0 / 15%), 0 1rem 2rem rgb(0 0 0 / 30%))),
+    shadow: elevation(0),
+    hover: (shadow: elevation(1)),
   ),
 );
