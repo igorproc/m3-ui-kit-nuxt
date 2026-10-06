@@ -12,42 +12,54 @@
 // width on focus) so the two fields read as one family.
 // ==========================================
 
+// Spacing reads the 4-unit scale through `spacing()`. Values off it stay
+// literal on purpose: sizes (adornment, grip, hit box, support line), the 6rem
+// glyph gap, the footer's 10/7 padding and the 3rem under an inset label.
+
 // Shared by the box, the label and the outline notch, which has to reproduce the
 // raised label's footprint in layout terms.
 $border-width: 1rem;
-$padding-inline: 16rem;
-$padding-block: 12rem;
-$line-height: 24rem;
+$padding-inline: spacing(16);
+$padding-block: spacing(12);
+$input-typescale: 'body-large';
+$line-height: var(--md-sys-typescale-#{$input-typescale}-line-height);
 $rows: 3;
-$grip-band: 20rem;
+$grip-band: spacing(20);
 $label-typescale: 'body-medium';
 $label-raised-scale: 0.75;
-$notch-padding-inline: 4rem;
+$notch-padding-inline: spacing(4);
+
+// An inset label sits this far into the box, and the value starts below its
+// raised line plus a small gap.
+$label-inset-top: spacing(8);
+$label-inset-gap: 3rem;
 
 // A multi-line box has no height CSS can read at the root, so a `full` corner is
 // capped by the default box: `$rows` lines plus the block padding, halved.
-$radius-cap: ($rows * $line-height + 2 * $padding-block) * 0.5;
+$radius-cap: calc((#{$rows} * #{$line-height} + #{2 * $padding-block}) / 2);
 $tokens: (
   container: (
-    gap: 4rem,
+    gap: spacing(4),
     border: (width: $border-width, color: map.get($theme-color-link, outline)),
     surface: transparent,
     padding: (inline: $padding-inline, block: $padding-block),
   ),
   typography: (
     label: $label-typescale,
-    input: 'body-large',
+    input: $input-typescale,
     support: 'body-small',
   ),
   label: (
-    gap: 16rem,
+    gap: spacing(16),
     color: map.get($theme-color-link, on-surface-variant),
     required: (color: map.get($theme-color-link, error)),
     max-width: calc(100% - #{2 * $padding-inline}),
     active: (scale: $label-raised-scale),
     // Overlay placements: where the label sits inside the box, and how much
     // room the value gives up for it.
-    inset: (top: 8rem, body-padding: 26rem),
+    inset: (top: $label-inset-top,
+      body-padding: calc(#{$label-inset-top} + var(--md-sys-typescale-#{$label-typescale}-line-height) * #{$label-raised-scale} + #{$label-inset-gap}),
+    ),
   ),
   input: (
     color: map.get($theme-color-link, on-surface),
@@ -56,17 +68,17 @@ $tokens: (
     placeholder: (color: map.get($theme-color-link, on-surface-variant)),
   ),
   adornment: (
-    gap: 8rem,
+    gap: spacing(8),
     color: map.get($theme-color-link, on-surface-variant),
     size: 20rem,
   ),
   support: (
-    gap: 16rem,
+    gap: spacing(16),
     // Spacing between the error glyph and its message.
     icon: (gap: 6rem, size: 16rem),
     min-height: 18rem,
-    margin: (top: 4rem),
-    padding: (inline: 16rem),
+    margin: (top: spacing(4)),
+    padding: (inline: spacing(16)),
     color: map.get($theme-color-link, on-surface-variant),
   ),
   counter: (color: map.get($theme-color-link, on-surface-variant)),
@@ -75,10 +87,10 @@ $tokens: (
   // Material does not draw. `filled` already sits on the highest surface, so
   // there the step is a state layer instead of the next tone.
   footer: (
-    gap: 8rem,
+    gap: spacing(8),
     padding: (inline: 10rem, block: 7rem),
     surface: map.get($theme-color-link, surface-container-high),
-    filled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, transparent)),
+    filled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(hover), transparent)),
   ),
   // Drag handle — the same grabber a bottom sheet uses, centred on the bottom
   // edge. The old corner mark was the native OS resize glyph, which Material
