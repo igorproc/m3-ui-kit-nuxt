@@ -270,10 +270,8 @@ function confirm() {
       z-index: 1;
     }
 
-    &:hover {
-      &-state {
-        background-color: g($t, 'day-hover-bg');
-      }
+    &:hover &-state {
+      background-color: g($t, 'day-hover-bg');
     }
   }
 
