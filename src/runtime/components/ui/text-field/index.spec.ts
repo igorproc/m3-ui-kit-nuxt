@@ -199,6 +199,12 @@ describe('m-text-field', () => {
     expect(keydowns).toBe(1)
   })
 
+  it('lets a composite field mark the input busy through inputAttrs', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { inputAttrs: { 'aria-busy': true } } })
+
+    expect(wrapper.find('input.ui-text-field__input').attributes('aria-busy')).toBe('true')
+  })
+
   it('does not announce invalid before the error is shown', async () => {
     // An engine that has already validated silently: invalid meta, no message yet.
     const silentlyInvalid: ValidationAdapter = {
