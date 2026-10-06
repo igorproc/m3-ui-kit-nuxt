@@ -300,14 +300,6 @@ defineExpose({ open: control.openPanel, close: control.closePanel, clear: contro
     transform: rotate(180deg);
   }
 
-  &__menu :deep(.ui-menu__surface) {
-    width: 100%;
-    min-width: unset;
-    top: 0;
-    right: 0;
-    margin-top: g($t, 'panel.margin-top');
-  }
-
   &__list {
     max-height: var(--m-dropdown-panel-max-height, #{g($t, 'panel.max-height')});
     padding-block: g($t, 'panel.padding-block');

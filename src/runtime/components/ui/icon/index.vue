@@ -42,7 +42,7 @@ $prefix: 'md-icon';
     font-size: inherit;
   }
 
-  :deep(svg) {
+  svg {
     width: 1em;
     height: 1em;
     fill: g($t, 'fill');

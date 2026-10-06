@@ -294,14 +294,6 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
     }
   }
 
-  &__menu :deep(.ui-menu__surface) {
-    width: 100%;
-    min-width: unset;
-    top: 0;
-    right: 0;
-    margin-top: g($t, 'menu.margin-top');
-  }
-
   &__list {
     max-height: var(--m-dropdown-panel-max-height, #{g($t, 'menu.max-height')});
     padding-block: g($t, 'list.padding-block');

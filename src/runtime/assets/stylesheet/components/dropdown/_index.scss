@@ -14,7 +14,6 @@ $tokens: (
     color: map.get($theme-color-link, on-surface-variant),
   ),
   panel: (
-    margin-top: 4rem,
     // A hundred options must not run off the screen. Overridable per instance
     // through `maxHeight`, which arrives as a custom property.
     max-height: 320rem,
