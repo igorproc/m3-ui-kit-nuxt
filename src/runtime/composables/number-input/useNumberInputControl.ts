@@ -99,6 +99,9 @@ export interface NumberStepperAttrs {
   'type': 'button'
   'disabled': boolean
   'aria-label': string
+  /** The field's label, so two fields' identical "Increase value" buttons can be told apart. */
+  'aria-describedby': string | undefined
+  'aria-controls': string
   /**
    * Kept out of the tab order on purpose: the input is already a `spinbutton`
    * with ArrowUp/ArrowDown, so focusable steppers would add two tab stops per
@@ -158,6 +161,7 @@ export function useNumberInputControl(
 ): UseNumberInputControlReturn {
   const element = shallowRef<HTMLInputElement | null>(null)
   const messageId = `${fieldId}-message`
+  const labelId = `${fieldId}-label`
 
   const field = useField({ path: props.path, model })
   const value = useNumberValue(model, focused, props, hooks)
@@ -244,7 +248,7 @@ export function useNumberInputControl(
   }))
 
   const labelAttrs = computed<NumberLabelAttrs>(() => ({
-    id: `${fieldId}-label`,
+    id: labelId,
     for: fieldId,
   }))
 
@@ -253,21 +257,18 @@ export function useNumberInputControl(
     role: 'alert',
   }))
 
-  const incrementAttrs = computed<NumberStepperAttrs>(() => ({
+  const stepperAttrs = (label: string, enabled: boolean, onClick: () => void): NumberStepperAttrs => ({
     'type': 'button',
-    'disabled': !value.canIncrement.value,
-    'aria-label': props.incrementLabel,
+    'disabled': !enabled,
+    'aria-label': label,
+    'aria-describedby': props.label ? labelId : undefined,
+    'aria-controls': fieldId,
     'tabindex': -1,
-    'onClick': increment,
-  }))
+    'onClick': onClick,
+  })
 
-  const decrementAttrs = computed<NumberStepperAttrs>(() => ({
-    'type': 'button',
-    'disabled': !value.canDecrement.value,
-    'aria-label': props.decrementLabel,
-    'tabindex': -1,
-    'onClick': decrement,
-  }))
+  const incrementAttrs = computed(() => stepperAttrs(props.incrementLabel, value.canIncrement.value, increment))
+  const decrementAttrs = computed(() => stepperAttrs(props.decrementLabel, value.canDecrement.value, decrement))
 
   return {
     element,

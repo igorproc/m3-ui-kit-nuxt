@@ -212,6 +212,25 @@ describe('m-number-input · a11y', () => {
     })
   })
 
+  describe('steppers', () => {
+    it('tie themselves to their field, so two fields\' buttons can be told apart', async () => {
+      const wrapper = await mount({ label: 'Width' })
+      const inputId = wrapper.find('input').attributes('id')
+      const labelId = wrapper.find('label').attributes('id')
+
+      for (const stepper of wrapper.findAll('.ui-number-input__stepper')) {
+        expect(stepper.attributes('aria-controls')).toBe(inputId)
+        expect(stepper.attributes('aria-describedby')).toBe(labelId)
+      }
+    })
+
+    it('describe nothing when the field has no visible label to point at', async () => {
+      const wrapper = await mount({ 'aria-label': 'Width' })
+
+      expect(wrapper.find('.ui-number-input__stepper').attributes('aria-describedby')).toBeUndefined()
+    })
+  })
+
   describe('scrub', () => {
     it('leaves the value typable — the gesture is never the only way in', async () => {
       const wrapper = await mount({ controls: 'scrub', label: 'W', modelValue: 240 })
