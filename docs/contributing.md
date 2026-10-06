@@ -37,8 +37,10 @@ specs keeps them in `<component>/tests/`. There is no root test folder.
 ```bash
 npm run dev:prepare    # generate playground/.nuxt types (run once after install)
 npm run dev            # serve the playground
-npm run build:module   # build dist/ (module.mjs + runtime + types)
+npm run build          # build dist/ (module.mjs + runtime + SFC/TS declarations)
+npm run typecheck      # vue-tsc over src + playground — must pass with 0 errors
 npm run test           # Vitest, Nuxt environment
+npm run test:e2e       # Playwright + axe over playground/fixtures (boots the playground)
 npm run lint           # ESLint — must pass with 0 errors
 npm run lint:style     # Stylelint over **/*.{vue,css,scss} — must pass with 0 errors
 ```
@@ -46,7 +48,7 @@ npm run lint:style     # Stylelint over **/*.{vue,css,scss} — must pass with 0
 Run a single spec with `npm run test -- src/runtime/components/ui/button/index.spec.ts`.
 
 `npm run dev` serves the playground straight from `src/`, so kit edits hot-reload there. The docs
-site consumes the built package by path: after editing kit sources, run `npm run build:module`
+site consumes the built package by path: after editing kit sources, run `npm run build`
 and restart its dev server.
 
 ## Component boundaries
