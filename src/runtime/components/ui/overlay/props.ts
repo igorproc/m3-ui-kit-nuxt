@@ -2,7 +2,7 @@
  * Public prop surface for `<MOverlay>` — the controlled primitive that owns the
  * lifecycle of a transient surface (top layer, stack order, scrim, dismissal,
  * scroll lock, focus trap and return, swipe). It does NOT style content:
- * dialog/sheet/drawer/confirm-edit remain their own components and supply
+ * dialog/sheet/drawer remain their own components and supply
  * geometry, motion and keyboard semantics.
  *
  * `mModalLayerProps` is the shared modal-layer surface: `<MDialog>`, `<MSheet>`,
