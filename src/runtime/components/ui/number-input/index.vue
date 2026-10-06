@@ -65,7 +65,7 @@
         <input
           ref="element"
           v-model="draft"
-          v-bind="{ ...controlAttrs(), ...inputAttrs }"
+          v-bind="controlAttrs(inputAttrs)"
           class="ui-number-input__input"
         >
 

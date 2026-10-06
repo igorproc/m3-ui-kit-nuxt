@@ -45,7 +45,7 @@
         <textarea
           ref="element"
           v-model="modelValue"
-          v-bind="{ ...controlAttrs(), ...inputAttrs }"
+          v-bind="controlAttrs(inputAttrs)"
           class="ui-textarea__input"
         />
 

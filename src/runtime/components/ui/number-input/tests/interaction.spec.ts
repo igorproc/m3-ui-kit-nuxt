@@ -27,6 +27,19 @@ afterEach(() => {
 })
 
 describe('m-number-input · interaction', () => {
+  it('keeps a consumer keydown listener next to its own spinbutton handler', async () => {
+    let consumerKeydowns = 0
+    const wrapper = await mountSuspended(MNumberInput, {
+      props: { modelValue: 1, step: 1 },
+      attrs: { onKeydown: () => { consumerKeydowns++ } },
+    })
+
+    await wrapper.find('input').trigger('keydown', { key: 'ArrowUp' })
+
+    expect(consumerKeydowns).toBe(1)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([2])
+  })
+
   describe('typing', () => {
     it('keeps an incomplete draft visible instead of rewriting it', async () => {
       const wrapper = await mount({ modelValue: 12 })
