@@ -2,12 +2,13 @@ import type { Component } from 'vue'
 
 /**
  * Every fixture under `playground/fixtures/<component>/<case>.vue`, keyed as
- * `<component>/<case>`. Loaded lazily so a fixture page only pulls its own case.
+ * `<component>/<case>`. Eager on purpose: a lazy fixture hydrates after the app
+ * mounts, so a test could press keys before its listeners exist.
  */
-const modules = import.meta.glob<{ default: Component }>('../../fixtures/*/*.vue')
+const modules = import.meta.glob<{ default: Component }>('../../fixtures/*/*.vue', { eager: true })
 
-export const fixtureLoaders: Record<string, () => Promise<{ default: Component }>> = Object.fromEntries(
-  Object.entries(modules).map(([path, load]) => [path.replace(/^.*fixtures\/(.+)\.vue$/, '$1'), load]),
+export const fixtures: Record<string, Component> = Object.fromEntries(
+  Object.entries(modules).map(([path, module]) => [path.replace(/^.*fixtures\/(.+)\.vue$/, '$1'), module.default]),
 )
 
-export const fixtureKeys = Object.keys(fixtureLoaders).sort()
+export const fixtureKeys = Object.keys(fixtures).sort()

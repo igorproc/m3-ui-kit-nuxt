@@ -14,10 +14,10 @@ interface OpenOptions {
   dir?: FixtureDirection
 }
 
-/** Opens `playground/fixtures/<key>.vue` and waits until the app has hydrated. */
+/** Opens `playground/fixtures/<key>.vue` and waits until the fixture has hydrated. */
 export async function openFixture(page: Page, key: string, { theme = 'light', dir = 'ltr' }: OpenOptions = {}) {
   await page.goto(`/${key}?theme=${theme}&dir=${dir}`)
-  await page.waitForFunction(() => Boolean((document.querySelector('#__nuxt') as { __vue_app__?: unknown } | null)?.__vue_app__))
+  await page.locator('[data-fixture-ready]').waitFor()
 }
 
 /** WCAG 2.2 A/AA rules only; every violation is listed with its offending selectors. */

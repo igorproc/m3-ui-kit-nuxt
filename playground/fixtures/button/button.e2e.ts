@@ -55,7 +55,6 @@ test.describe('MButton', () => {
   })
 
   test('keyboard focus ring is at least 2px', async ({ page }) => {
-    test.fail(true, 'Plan step C6: the ring is 2rem, which is under 2 CSS px below 1920px wide')
     await openFixture(page, 'button/matrix')
     await page.keyboard.press('Tab')
 

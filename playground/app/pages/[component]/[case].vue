@@ -1,20 +1,27 @@
 <template>
-  <main class="fixture-page">
+  <main
+    class="fixture-page"
+    :data-fixture-ready="ready || undefined"
+  >
     <component :is="fixture" />
   </main>
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
-import { fixtureLoaders } from '~/utils/fixtures'
+import { onMounted, ref } from 'vue'
+import { fixtures } from '~/utils/fixtures'
 
 const route = useRoute()
 const key = `${route.params.component}/${route.params.case}`
-const load = fixtureLoaders[key]
+const fixture = fixtures[key]
 
-if (!load) throw createError({ statusCode: 404, statusMessage: `No fixture ${key}` })
+if (!fixture) throw createError({ statusCode: 404, statusMessage: `No fixture ${key}` })
 
-const fixture = defineAsyncComponent(load)
+// Set once the fixture is hydrated; e2e waits for it before interacting.
+const ready = ref(false)
+onMounted(() => {
+  ready.value = true
+})
 </script>
 
 <style lang="scss">
