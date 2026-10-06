@@ -61,7 +61,7 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import type { TableColumn, TableData, SortState } from '#kit/components/ui/table/types'
 import { useTableContext } from '#kit/composables/table/useTableContext'
 
-interface Props {
+export interface Props {
   columns: TableColumn<T>[]
   selectable?: boolean
   isAllSelected?: boolean

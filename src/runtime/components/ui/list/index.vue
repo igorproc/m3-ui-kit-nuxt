@@ -18,7 +18,7 @@ import { toRef } from 'vue'
 import { provideListContext } from './context'
 import type { MListItemDensity } from './item/props'
 
-interface Props {
+export interface Props {
   items?: T[]
   /** Vertical scale inherited by every row that does not set its own. */
   density?: MListItemDensity

@@ -82,7 +82,7 @@ import type { TableColumn, TableData, SortState } from './types'
 import { useTableSelection } from '#kit/composables/table/useTableSelection'
 import { provideTableContext } from '#kit/composables/table/useTableContext'
 
-interface Props {
+export interface Props {
   columns: TableColumn<T>[]
   data: T[]
   selectable?: boolean
@@ -93,7 +93,7 @@ interface Props {
   currentPage?: number
 }
 
-interface Emits {
+export interface Emits {
   (e: 'update:selectedRows', rows: T[]): void
   (e: 'update:currentPage', page: number): void
 }

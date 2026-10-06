@@ -198,7 +198,7 @@ import MMenu from '#kit/components/ui/menu/index.vue'
 import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 
-interface Emits {
+export interface Emits {
   (event: 'select' | 'remove', item: TItem): void
   (event: 'clear' | 'open' | 'close'): void
 }

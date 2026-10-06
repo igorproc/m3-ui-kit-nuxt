@@ -59,6 +59,7 @@ import type {
   MChipRegistration,
 } from '#kit/composables/chip-group/context'
 import type { SelectionBlockReason } from '#kit/composables/selection/context'
+import type { ChipGroupSlot, ChipItemSlot } from './types'
 import type { MChipGroupProps } from './props'
 import { mChipGroupProps } from './props'
 
@@ -71,27 +72,6 @@ const props = defineProps(mChipGroupProps) as MChipGroupProps<TItem, TValue> & {
 }
 
 const model = defineModel<TValue | TValue[] | undefined>()
-
-interface ChipGroupSlot<V> {
-  selected: V[]
-  multiple: boolean
-  disabled: boolean
-  selectionLimitReached: boolean
-  select: (value: V) => void
-  unselect: (value: V) => void
-  toggle: (value: V) => void
-}
-
-interface ChipItemSlot<I, V> {
-  item: I
-  index: number
-  value: V
-  selected: boolean
-  disabled: boolean
-  blocked: boolean
-  blockReason: SelectionBlockReason
-  props: { value: V, disabled: boolean }
-}
 
 defineSlots<{
   default: (slot: ChipGroupSlot<TValue>) => unknown
