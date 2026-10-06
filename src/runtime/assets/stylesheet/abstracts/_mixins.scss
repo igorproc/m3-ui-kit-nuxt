@@ -135,3 +135,14 @@
   outline: $width solid map.get($theme-focus-link, 'color');
   outline-offset: if(sass($offset == inset): $width * -1; else: $offset);
 }
+
+/// Windows High Contrast / forced colors. The browser drops backgrounds,
+/// shadows and author colours here, so anything drawn only with a background
+/// (an indicator, a selected fill, a surface edge) must be restated with
+/// system colours (CanvasText, Highlight, ButtonText, GrayText…) — usually as a
+/// border, or with `forced-color-adjust: none` on the one element that needs it.
+@mixin forced-colors {
+  @media (forced-colors: active) {
+    @content;
+  }
+}
