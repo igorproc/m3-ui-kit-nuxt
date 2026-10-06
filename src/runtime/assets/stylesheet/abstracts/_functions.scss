@@ -24,12 +24,11 @@
 }
 
 @function z($key) {
-  @if map.has-key($z-indexes, $key) {
-    @return map.get($z-indexes, $key);
+  @if not map.has-key($z-indexes, $key) {
+    @error 'Unknown layer `#{$key}`. Available: #{map.keys($z-indexes)}.';
   }
 
-  @warn "Unknown `#{$key}` in $z-indexes.";
-  @return 0;
+  @return map.get($z-indexes, $key);
 }
 
 @function spacing($step) {

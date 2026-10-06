@@ -195,7 +195,7 @@ The expensive bugs in this kit have all been silent. None of them threw.
 
 `nuxt-module-build` copies the runtime verbatim and Vitest renders in jsdom without a
 preprocessor: **nothing in the kit's own pipeline compiles component SCSS.** That is why
-`scripts/scss-smoke.mjs` exists.
+`shell/scss-smoke.mjs` exists.
 
 Turning the token check on found **102 dead paths across 19 components** — rules that have never
 rendered. `grid-name`, `min-height`, `hover-color`: the legacy dash separator splits a key that
