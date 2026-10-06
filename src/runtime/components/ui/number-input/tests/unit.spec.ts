@@ -130,12 +130,16 @@ describe('m-number-input · unit', () => {
   })
 
   describe('a11y', () => {
-    it('announces itself as a menu trigger with a name of its own', async () => {
+    it('announces itself as a menu trigger whose name contains the unit it shows', async () => {
       const wrapper = await mount({ units: ['MiB'], unit: 'MiB', unitLabel: 'Единица измерения' })
       const trigger = wrapper.find('.ui-number-input__unit-trigger')
+      const name = trigger.attributes('aria-labelledby')!.split(' ')
+        .map(id => wrapper.find(`[id="${id}"]`).text())
+        .join(' ')
 
       expect(trigger.attributes('aria-haspopup')).toBe('menu')
-      expect(trigger.attributes('aria-label')).toBe('Единица измерения')
+      expect(trigger.attributes('aria-label')).toBeUndefined()
+      expect(name).toBe('Единица измерения MiB')
       expect(trigger.attributes('type')).toBe('button')
     })
 
