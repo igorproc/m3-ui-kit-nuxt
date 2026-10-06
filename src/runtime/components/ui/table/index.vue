@@ -120,6 +120,7 @@ provideTableContext({
   $t: material-map(t.$tokens, 'md-table');
 
   --ui-scrollbar-inset-block: #{g($t, 'container.border.radius')};
+  --ui-scrollbar-inset-inline: #{g($t, 'container.border.radius')};
 
   width: 100%;
   overflow-x: auto;

@@ -7,6 +7,7 @@
   // scrollbars of the containers nested inside it. Zero specificity lets the
   // container's own class win on its own element.
   --ui-scrollbar-inset-block: 0px;
+  --ui-scrollbar-inset-inline: 0px;
 
   @include use-scrollbar;
 }

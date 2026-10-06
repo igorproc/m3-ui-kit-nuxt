@@ -83,8 +83,15 @@
   // `border-radius` does not clip a scrollbar: a rounded container shortens the
   // track by its corner radius so the thumb never runs into the curve.
   &::-webkit-scrollbar-track {
-    margin-block: var(--ui-scrollbar-inset-block);
     background: transparent;
+  }
+
+  &::-webkit-scrollbar-track:vertical {
+    margin-block: var(--ui-scrollbar-inset-block);
+  }
+
+  &::-webkit-scrollbar-track:horizontal {
+    margin-inline: var(--ui-scrollbar-inset-inline);
   }
 
   // Прозрачная боковая рамка сдвигает видимый thumb внутрь по горизонтали,

@@ -336,9 +336,10 @@ A rounded scroll container drew its scrollbar edge to edge — into the curve an
 Two causes, and neither of them threw.
 
 **`border-radius` does not clip a scrollbar.** The track runs the full height of the box whatever
-its corners do, so the kit shortens it instead: the global scrollbar rule gives the track
-`margin-block: var(--ui-scrollbar-inset-block)`, and every rounded scroll container in the kit
-sets that property to its own corner radius. One of yours needs exactly one line:
+its corners do, so the kit shortens it instead: the global scrollbar rule gives the vertical
+track `margin-block: var(--ui-scrollbar-inset-block)` and the horizontal one
+`margin-inline: var(--ui-scrollbar-inset-inline)`, and every rounded scroll container in the
+kit sets them to its own corner radius. One of yours needs one line per scroll axis:
 
 ```scss
 .my-panel {
@@ -361,12 +362,12 @@ either property to a component "for Firefox"; in Chrome it quietly replaces the 
 with the plain one. `scrollbar-width: none` to hide a scrollbar is the exception — hiding is all
 it is asked to do.
 
-This is the one custom property the kit asks a consumer to set, and it does not contradict
-section 10: it is not a component state but the single input of a rule every scroll container
+These are the only custom properties the kit asks a consumer to set, and they do not contradict
+section 10: they are not component states but the inputs of a rule every scroll container
 shares.
 
-> **Trap.** The margin shortens a vertical scrollbar only, and Firefox has no track margin at
-> all — there the thin scrollbar still reaches the corners.
+> **Trap.** Firefox has no track margin at all — there the thin scrollbar still reaches the
+> corners.
 
 ---
 
