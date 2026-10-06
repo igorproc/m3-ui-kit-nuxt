@@ -3,14 +3,17 @@
  *
  * Adds the shared MD3 `color` role (drives the *selected* segment scheme) and
  * the group-level `disabled` state, alongside the segmented-specific `items`,
- * `modelValue`, and `multiple` props. Accessibility wiring is intentionally
- * out of scope here (separate phase) — only the public prop surface is unified.
+ * `modelValue`, and `multiple` props. Single choice renders a radio group,
+ * multiple choice a set of toggle buttons; name the group itself with
+ * `aria-label` / `aria-labelledby`, which land on its root.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps, makeStateProps } from '#kit/shared/utils/props'
 
 export interface MSegmentedItem {
   label?: string
+  /** Accessible name for a segment that shows an icon and no label. */
+  ariaLabel?: string
   icon?: string
   value: string | number
   disabled?: boolean

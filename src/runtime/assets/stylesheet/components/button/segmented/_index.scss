@@ -4,6 +4,7 @@
 // Material 3 State Opacities
 $hover-state-layer-opacity: state-opacity(hover);
 $pressed-state-layer-opacity: state-opacity(pressed);
+$disabled-container-opacity: state-opacity(disabled-container);
 $disabled-content-opacity: state-opacity(disabled-content);
 
 // M3 Standard Colors
@@ -22,17 +23,20 @@ $outline: map.get($theme-color-link, 'outline');
 $tokens: (
   container: (
     height: 40rem,
-    shape: var(--sys-shape-corner-full, 100vmax),
+    shape: map.get($theme-shape-link, 'full'),
     outline: (
-      color: $outline
+      color: $outline,
+      disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
     )
   ),
 
   segment: (
     padding: (
-      inline: 12rem
+      inline: spacing(12),
+      // Only matters once a label wraps: a single line is centred in the height.
+      block: spacing(4),
     ),
-    gap: 8rem,
+    gap: spacing(8),
     typography: 'label-large',
   ),
 
@@ -60,12 +64,19 @@ $tokens: (
       map.get($theme-color-link, 'on-error-container')),
   ),
 
+  // A disabled segment that is also selected keeps its check mark but loses the
+  // role colour, so it cannot pass for an active choice.
+  disabled: (
+    selected: (container: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent))),
+    content: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
+  ),
+
   icon: (
     size: 18rem
   ),
 
   motion: (
-    duration: var(--sys-motion-duration-short-3, 200ms),
-    easing: var(--sys-motion-easing-standard, cubic-bezier(0.2, 0, 0, 1)),
+    duration: map.get($theme-animation-link, 'duration', 'short', '3'),
+    easing: map.get($theme-animation-link, 'easing', 'standard'),
   )
 );
