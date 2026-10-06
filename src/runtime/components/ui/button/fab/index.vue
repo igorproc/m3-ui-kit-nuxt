@@ -43,6 +43,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
   border: none;
   cursor: pointer;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   outline: none;
   box-shadow: g($t, 'elevation-resting');

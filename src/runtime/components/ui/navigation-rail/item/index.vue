@@ -47,6 +47,7 @@ defineEmits<{
   $t: material-map(t.$tokens, 'md-navigation-rail');
 
   position: relative;
+  isolation: isolate;
   display: block;
   width: 100%;
   height: 72rem;

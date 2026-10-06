@@ -248,6 +248,7 @@ defineExpose({ element })
   --ui-number-input-inset: #{g($t, 'container.padding.inline')};
 
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: g($t, 'container.gap');

@@ -139,6 +139,7 @@ useClickOutside(rootRef, () => close())
   $t: material-map(t.$tokens, $prefix);
 
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   flex-direction: column;
 

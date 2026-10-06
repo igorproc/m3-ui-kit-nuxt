@@ -73,6 +73,7 @@ const switchClasses = computed(() => [
   display: inline-flex;
   align-items: center;
   gap: g($t, 'gap');
+  isolation: isolate;
   cursor: pointer;
 
   &__input {

@@ -371,6 +371,20 @@ shares.
 
 ---
 
+## 12. Two kinds of z-index, and the wall between them
+
+The scale had `dialog`, `backdrop`, `dropdown` and `overlay` — none of them used — while the
+overlay host stacked itself at a literal `9999` outside it, and some thirty `z-index: 1`
+declarations lifting a state layer over its own background were free to compete with the page.
+
+**A page layer reads its value from `z()`** — `header`, `aside`, `overlay-host`. Overlays need no
+entry: they live in the native top layer. **A local value is a literal 1–3 and lives only inside
+a root with `isolation: isolate`**, so it orders the parts of one component and can never reach
+anything outside it. A local value that needs to be larger than 3 is a page layer in disguise;
+give it a key on the scale.
+
+---
+
 ## Where this chapter ends
 
 The other files in this folder answer "what is this component and which axes does it have".

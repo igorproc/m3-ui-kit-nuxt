@@ -518,6 +518,7 @@ function onConfirm() {
   background-color: g($t-mp, 'container-bg');
   border-radius: g($t-mp, 'container-radius');
   box-shadow: g($t-mp, 'container-shadow');
+  isolation: isolate;
   overflow: hidden;
   max-width: 360rem;
   width: calc(100vw - 32rem);

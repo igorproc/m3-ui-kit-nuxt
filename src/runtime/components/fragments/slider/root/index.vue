@@ -42,6 +42,7 @@ $prefix: 'ui-slider-root';
   flex-direction: column;
   gap: g($t, 'gap');
   position: relative;
+  isolation: isolate;
   box-sizing: border-box;
 
   &--dragging * {

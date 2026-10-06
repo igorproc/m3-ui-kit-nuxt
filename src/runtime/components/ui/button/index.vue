@@ -116,6 +116,7 @@ $t: material-map(t.$tokens, $prefix);
   align-items: center;
   justify-content: center;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   cursor: pointer;
   text-decoration: none;

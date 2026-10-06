@@ -10,7 +10,7 @@ $tokens: (
   ),
   overlay: (
     host: (
-      z-index: 9999,
+      z-index: z(overlay-host),
     ),
   ),
 );

@@ -118,6 +118,7 @@ function confirm() {
   width: g($t, 'container-width');
   background-color: g($t, 'container-bg');
   border-radius: g($t, 'container-radius');
+  isolation: isolate;
   overflow: hidden;
   box-shadow: g($t, 'container-shadow');
 

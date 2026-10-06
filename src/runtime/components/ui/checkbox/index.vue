@@ -78,6 +78,7 @@ const checkboxClasses = computed(() => [
   display: inline-flex;
   align-items: center;
   gap: g($t, 'container-gap');
+  isolation: isolate;
   cursor: pointer;
   color: map.get($theme-color-link, 'on-surface');
 

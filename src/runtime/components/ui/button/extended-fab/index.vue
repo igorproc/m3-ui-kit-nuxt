@@ -44,6 +44,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   border: none;
   cursor: pointer;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   outline: none;
   padding-inline: g($t, 'container.padding.md');

@@ -48,15 +48,16 @@ $theme-spacing-link: (
   48: 48rem,
   64: 64rem,
 );
+
+/// The one scale for in-page layers, read through `z($key)`. Overlays live in the
+/// native top layer and need no entry; `overlay-host` only stacks the fallback host
+/// for browsers without the Popover API, so it sits above every page layer.
+/// Component-local stacking (a state layer above its own background) stays at
+/// literal 1–3 inside a root with `isolation: isolate` and never appears here.
 $z-indexes: (
-  dialog: 100,
-  backdrop: 99,
+  overlay-host: 9999,
   header: 50,
   aside: 40,
-  navigation-bottom: 30,
-  dropdown: 20,
-  overlay: 10,
-  below: -1,
 );
 
 /* links */

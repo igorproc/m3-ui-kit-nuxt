@@ -238,6 +238,7 @@ function onPointerUp() {
   padding: g($t, 'container-padding');
   gap: g($t, 'container-gap');
   position: relative;
+  isolation: isolate;
 
   &--horizontal &__content {
     flex-direction: row;

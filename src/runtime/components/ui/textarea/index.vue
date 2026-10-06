@@ -182,6 +182,7 @@ function focusFromBox(event: PointerEvent) {
   --ui-textarea-inset: #{g($t, 'container.padding.inline')};
 
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: g($t, 'container.gap');
