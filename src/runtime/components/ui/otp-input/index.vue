@@ -59,7 +59,7 @@
 
       <input
         ref="element"
-        v-bind="mergeProps(controlAttrs(), inputAttrs)"
+        v-bind="nativeAttrs()"
         class="ui-otp-input__native"
       >
     </div>
@@ -151,6 +151,9 @@ if (import.meta.dev) {
     }
   })
 }
+
+// The field's own attributes win on a clash; listeners from both sides run.
+const nativeAttrs = () => mergeProps(controlAttrs(), inputAttrs.value as unknown as Record<string, unknown>)
 
 const cellClasses = (cell: OtpCell) => [
   'ui-otp-input__field',

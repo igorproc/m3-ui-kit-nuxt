@@ -99,7 +99,7 @@ export function useSegmentedButton(model: Ref<SegmentedValue | undefined>, props
   }))
 
   function segmentAttrs(item: SegmentedItem, index: number) {
-    const selected = isSelected(item.value)
+    const selected = isSelected(item.value) ? 'true' as const : 'false' as const
     const disabled = isItemDisabled(item)
 
     const shared = {
@@ -109,12 +109,12 @@ export function useSegmentedButton(model: Ref<SegmentedValue | undefined>, props
       'onClick': () => select(item.value),
     }
 
-    if (props.multiple) return { ...shared, 'aria-pressed': selected ? 'true' : 'false' }
+    if (props.multiple) return { ...shared, 'aria-pressed': selected }
 
     return {
       ...shared,
       'role': 'radio',
-      'aria-checked': selected ? 'true' : 'false',
+      'aria-checked': selected,
       'tabindex': index === tabStop.value ? 0 : -1,
       'onKeydown': (event: KeyboardEvent) => onKeydown(event, index),
     }

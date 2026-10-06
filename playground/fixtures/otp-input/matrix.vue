@@ -40,13 +40,13 @@ const states = [
   { name: 'filled', props: {} },
   { name: 'grouped', props: { groups: [3, 3], separator: '–' } },
   { name: 'masked', props: { mask: true } },
-  { name: 'alphanumeric', props: { mode: 'alphanumeric', length: 4 } },
+  { name: 'alphanumeric', props: { mode: 'alphanumeric' as const, length: 4 } },
   { name: 'error-message', props: { errorMessage: 'The code is wrong' } },
   { name: 'error-only', props: { error: true } },
   { name: 'disabled', props: { disabled: true } },
   { name: 'readonly', props: { readonly: true } },
   { name: 'loading', props: { loading: true } },
-  { name: 'label-hidden', props: { labelPlacement: 'hidden' } },
+  { name: 'label-hidden', props: { labelPlacement: 'hidden' as const } },
 ]
 
 const values = reactive<Record<string, string>>({
