@@ -19,6 +19,8 @@ import type { StyleValue } from 'vue'
 import { useListbox } from '#kit/composables/listbox/useListbox'
 import { useDropdownChips } from './useDropdownChips'
 import { useDropdownEntries } from './useDropdownEntries'
+import { useDropdownKeyboard } from './useDropdownKeyboard'
+import type { PanelLanding } from './useDropdownKeyboard'
 import { useDropdownSelection } from './useDropdownSelection'
 import type {
   DropdownContext,
@@ -119,9 +121,18 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
   })
 
   // --- panel ----------------------------------------------------------------
-  function openPanel() {
+  // Set by a key that opens *and* aims (Home, End, a type-ahead match); read
+  // once by the landing watcher below.
+  let landing: PanelLanding | undefined
+
+  function openAt(target?: PanelLanding) {
     if (props.disabled || props.readonly || open.value) return
+    landing = target
     open.value = true
+  }
+
+  function openPanel() {
+    openAt()
   }
 
   function closePanel() {
@@ -143,11 +154,19 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
     options.onClose?.()
   })
 
-  // A select opens onto its current value; the browser's own <select> does the
-  // same, and starting at the top would make Enter re-pick the first row.
+  // A key that aimed wins. Otherwise a select opens onto its current value; the
+  // browser's own <select> does the same, and starting at the top would make
+  // Enter re-pick the first row.
   watch(open, (value) => {
-    if (!value || editable()) return
+    if (!value) return
+    const target = landing
+    landing = undefined
+
     nextTick(() => {
+      if (target === 'first' || target === 'last') return move(target)
+      if (target !== undefined) return setActive(target)
+      if (editable()) return
+
       const index = entries.value.findIndex(entry => entry.selected && !entry.disabled)
       if (index >= 0) setActive(index)
     })
@@ -195,87 +214,51 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
     options.onDismiss?.()
   }
 
-  function onKeydown(event: KeyboardEvent) {
-    if (props.disabled || props.readonly) return
-    if (handleChipKeydown(event)) return
-
-    switch (event.key) {
-      case 'ArrowDown':
-      case 'ArrowUp': {
-        event.preventDefault()
-        const direction = event.key === 'ArrowDown' ? 'next' : 'previous'
-        if (!open.value) {
-          openPanel()
-          // Opening may already have landed somewhere — on the current value,
-          // or on the first row. Only an arrow that found nothing active moves.
-          nextTick(() => {
-            if (activeIndex.value < 0) move(direction)
-          })
-          return
-        }
-        move(direction)
-        return
-      }
-      case 'Home':
-        if (!open.value) return
-        event.preventDefault()
-        move('first')
-        return
-      case 'Enter':
-        if (!open.value) {
-          event.preventDefault()
-          openPanel()
-          return
-        }
-        event.preventDefault()
-        if (activeEntry.value) selectEntry(activeEntry.value)
-        return
-      case 'End':
-        if (!open.value) return
-        event.preventDefault()
-        move('last')
-        return
-      case 'Backspace':
-      case 'Delete':
-        // Multiple mode already consumed this above, in chip navigation. A
-        // select has no text to erase, so the key falls through to the value
-        // itself — the keyboard equivalent of the clear control.
-        if (editable() || props.multiple || !hasSelection.value) return
-        event.preventDefault()
-        clear()
-        return
-      case 'Escape':
-        if (!open.value) return
-        event.preventDefault()
-        dismiss()
-        return
-      case 'Tab':
-        if (open.value) dismiss()
-        return
-      case ' ':
-        // A combobox needs the character; a select uses it to choose.
-        if (editable()) return
-        event.preventDefault()
-        if (!open.value) openPanel()
-        else if (activeEntry.value) selectEntry(activeEntry.value)
-    }
-  }
+  const onKeydown = useDropdownKeyboard({
+    inert: () => props.disabled || props.readonly,
+    editable,
+    multiple: () => props.multiple,
+    hasSelection: () => hasSelection.value,
+    open,
+    entries,
+    activeIndex,
+    activeEntry,
+    move,
+    setActive,
+    openAt,
+    closePanel,
+    dismiss,
+    selectEntry,
+    clear,
+    handleChipKeydown,
+  })
 
   // --- attribute bags -------------------------------------------------------
+  // A chip under the keyboard outranks the row: it is what Backspace deletes,
+  // so it is what the screen reader has to name.
+  const activeTarget = computed(() => {
+    if (chipFocus.value !== null) return chipId(chipFocus.value)
+    return open.value ? activeDescendant.value : undefined
+  })
+
   const inputAttrs = computed<Record<string, unknown>>(() => ({
     'role': 'combobox',
     'aria-autocomplete': editable() ? 'list' : 'none',
     'aria-haspopup': 'listbox',
     'aria-expanded': String(open.value),
     'aria-controls': listboxId,
-    'aria-activedescendant': open.value ? activeDescendant.value : undefined,
+    'aria-activedescendant': activeTarget.value,
     'onKeydown': onKeydown,
   }))
 
   const listboxAttrs = computed<DropdownListboxAttrs>(() => ({
     id: listboxId,
     role: 'listbox',
+    // The listbox is a separate widget in the accessibility tree; without its
+    // own name it is announced as an anonymous list.
+    ...(props.label ? { 'aria-label': props.label } : {}),
     ...(props.multiple ? { 'aria-multiselectable': 'true' as const } : {}),
+    ...(props.loading ? { 'aria-busy': 'true' as const } : {}),
   }))
 
   const getOptionAttrs = (entry: DropdownEntry<TItem, TValue>): DropdownOptionAttrs => ({

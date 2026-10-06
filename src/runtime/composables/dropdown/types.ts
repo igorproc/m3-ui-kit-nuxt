@@ -65,7 +65,11 @@ export interface DropdownEntry<TItem = DropdownItemBase, TValue = unknown> {
 export interface DropdownListboxAttrs {
   'id': string
   'role': 'listbox'
+  /** The field's label: the listbox is announced as a widget of its own. */
+  'aria-label'?: string
   'aria-multiselectable'?: 'true'
+  /** Present while `loading`. */
+  'aria-busy'?: 'true'
 }
 
 /** Attributes a custom panel spreads onto one row. */
@@ -109,6 +113,8 @@ export interface DropdownContext<TItem = DropdownItemBase, TValue = unknown> {
 
 /** Resolved configuration — defaults belong to the props, not to this file. */
 export interface DropdownControlConfig {
+  /** The field's label; also names the listbox. */
+  label?: string
   items: readonly DropdownItemBase[]
   itemTitle: DropdownRuntimeResolver<string>
   itemValue?: DropdownRuntimeResolver<unknown>

@@ -121,7 +121,10 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
   function onInput(value: string) {
     setQuery(value)
     if (composing.value || props.disabled || props.readonly) return
+    // Below the minimum there has been no search yet, so the panel would only
+    // claim "no results" for a query nobody ran.
     if (queryReady.value) open.value = true
+    else control.closePanel()
   }
 
   function clearQuery() {
@@ -147,7 +150,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
 
   watch(focused, (value) => {
     if (value) {
-      if (props.openOnFocus && !props.disabled && !props.readonly) open.value = true
+      if (props.openOnFocus && queryReady.value && !props.disabled && !props.readonly) open.value = true
       return
     }
 
