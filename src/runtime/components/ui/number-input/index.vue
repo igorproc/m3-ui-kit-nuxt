@@ -776,7 +776,7 @@ defineExpose({ element })
       }
     }
 
-    &--focused:where(.ui-number-input--interactive) {
+    &--focused {
       &.ui-number-input--filled .ui-number-input__control {
         border-bottom-color: Highlight;
       }
@@ -800,17 +800,24 @@ defineExpose({ element })
         color: GrayText;
       }
     }
-  }
 
-  // Motion is feedback only: colour, and the label's raise.
-  @media (prefers-reduced-motion: reduce) {
-    &__control,
-    &__label,
-    &__outline,
-    &__notch,
-    &__stepper,
-    &__input::placeholder {
-      transition: none;
+    // A zone is drawn by its tone alone, which forcing flattens into Canvas.
+    &__stepper {
+      border: g($t, 'container.border.width') solid ButtonText;
+
+      &:disabled {
+        border-color: GrayText;
+      }
+
+      &:enabled:active {
+        border-color: Highlight;
+      }
+    }
+
+    @include can-hover {
+      &__stepper:enabled:hover {
+        border-color: Highlight;
+      }
     }
   }
 }
