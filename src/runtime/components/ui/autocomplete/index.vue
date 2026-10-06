@@ -329,6 +329,7 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/autocomplete' as t;
+@use '#kit/assets/stylesheet/components/dropdown/panel' as panel;
 
 .ui-autocomplete {
   $t: t.$tokens;
@@ -336,17 +337,6 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   position: relative;
   width: 100%;
   min-width: 0;
-
-  // The chip Backspace would delete. Real focus stays in the input, so this is
-  // the chip's own focus ring drawn by hand — inset, so the field's scrolling
-  // row cannot clip it.
-  &__chip--active.ui-chip {
-    @include focus-ring(inset);
-
-    @include forced-colors {
-      outline-color: Highlight;
-    }
-  }
 
   // `.ui-button` is repeated to outweigh the button's own two-class colour rule
   // (`.ui-button.ui-button--text`) without depending on stylesheet order.
@@ -366,65 +356,6 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
     }
   }
 
-  // Progress lies over the panel's top edge instead of pushing the rows down,
-  // so a refresh on every keystroke does not make the panel jump.
-  &__panel {
-    position: relative;
-    isolation: isolate;
-  }
-
-  &__progress {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-    z-index: 1;
-  }
-
-  &__list {
-    --ui-scrollbar-inset-block: #{g($t, 'panel.scrollbar-inset')};
-
-    max-height: var(--m-dropdown-panel-max-height, #{g($t, 'panel.max-height')});
-    padding-block: g($t, 'panel.padding-block');
-    overflow-y: auto;
-    overscroll-behavior: contain;
-
-    // Filtering adds and removes the scrollbar; a stable gutter keeps the
-    // rows from changing width under the user's eyes.
-    scrollbar-gutter: stable;
-  }
-
-  &__option--active:not(.ui-list-item--selected) {
-    background-color: g($t, 'option.active.bg');
-  }
-
-  &__option--active.ui-list-item--selected {
-    background-color: g($t, 'option.active.selected-bg');
-  }
-
-  // Keyboard focus on a row is the kit's focus ring, as on any other item; the
-  // fill alone is what hover also draws.
-  &__option--keyboard.ui-list-item {
-    @include focus-ring(inset);
-
-    @include forced-colors {
-      outline-color: Highlight;
-    }
-  }
-
-  // A row wraps rather than truncating — a choice has to be readable — and an
-  // unbreakable string (a URL, an e-mail) breaks too, instead of widening the
-  // panel into a horizontal scroll.
-  &__option-title {
-    overflow-wrap: anywhere;
-  }
-
-  &__state {
-    padding: g($t, 'state.padding');
-    color: g($t, 'state.color');
-  }
-
-  &__status {
-    @include sr-only;
-  }
+  @include panel.selection-panel($t);
 }
 </style>
