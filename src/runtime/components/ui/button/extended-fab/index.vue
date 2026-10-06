@@ -8,6 +8,7 @@
     <span
       v-if="loading"
       class="ui-extended-fab__spinner"
+      :class="{ 'ui-extended-fab__spinner--centered': !$slots.prepend }"
       aria-hidden="true"
     />
     <span
@@ -33,6 +34,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/extended-fab' as t;
+@use '#kit/assets/stylesheet/components/button/spinner' as spinner;
 
 .ui-extended-fab {
   $prefix: 'm3-extended-fab';
@@ -46,6 +48,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  max-width: 100%;
   outline: none;
   padding-inline: g($t, 'container.padding.md');
   gap: g($t, 'container.gap.md');
@@ -74,16 +77,31 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     align-items: center;
   }
 
-  &__spinner {
-    width: g($t, 'icon.size.md');
-    height: g($t, 'icon.size.md');
-    border: 2rem solid currentcolor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: ui-extended-fab-spin 0.6s linear infinite;
+  // The container grows with a long label instead of clipping it.
+  &__label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
   }
 
-  // Applies one variant's surface treatment for the active scheme.
+  &__spinner {
+    flex-shrink: 0;
+
+    // With no icon to stand in for, the spinner sits over the label, which
+    // keeps its box (and its accessible name) so the width does not jump.
+    &--centered {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+
+      ~ .ui-extended-fab__label {
+        opacity: 0;
+      }
+    }
+  }
+
+  // One variant's surface for the active scheme. Focus and pressed are separate
+  // layers, and pressed comes last: pressing a focused FAB still reads as a press.
   @mixin apply-surface($scheme, $variant) {
     $base: '#{$scheme}.#{$variant}';
 
@@ -96,7 +114,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
       }
     }
 
-    &:focus-visible:not(.ui-extended-fab--disabled),
+    &:focus-visible:not(.ui-extended-fab--disabled) {
+      background-color: g($t, '#{$base}.container.focus-color');
+    }
+
     &:active:not(.ui-extended-fab--disabled) {
       background-color: g($t, '#{$base}.container.pressed-color');
     }
@@ -123,7 +144,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   }
 
   @mixin apply-size($size) {
-    height: g($t, 'container.height.#{$size}');
+    min-height: g($t, 'container.height.#{$size}');
     border-radius: g($t, 'container.shape.#{$size}');
     padding-inline: g($t, 'container.padding.#{$size}');
     gap: g($t, 'container.gap.#{$size}');
@@ -133,8 +154,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     }
 
     .ui-extended-fab__spinner {
-      width: g($t, 'icon.size.#{$size}');
-      height: g($t, 'icon.size.#{$size}');
+      @include spinner.spinner(g($t, 'icon.size.#{$size}'));
     }
   }
 
@@ -165,12 +185,6 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     box-shadow: none;
     cursor: default;
     pointer-events: none;
-  }
-}
-
-@keyframes ui-extended-fab-spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 </style>

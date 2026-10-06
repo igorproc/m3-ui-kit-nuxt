@@ -8,6 +8,7 @@
     <span
       v-if="loading"
       class="ui-button__spinner"
+      :class="{ 'ui-button__spinner--centered': !$slots.prepend }"
       aria-hidden="true"
     />
 
@@ -18,7 +19,10 @@
       <slot name="prepend" />
     </span>
 
-    <span class="ui-button__label">
+    <span
+      v-if="$slots.default"
+      class="ui-button__label"
+    >
       <slot />
     </span>
 
@@ -47,7 +51,9 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
   block: 'ui-button',
   props,
   modifiers: () => ({
-    'has-prepend': hasPrepend.value && !props.loading,
+    // Kept while loading: the spinner takes the icon's place, so the padding
+    // stays and the button keeps its width.
+    'has-prepend': hasPrepend.value,
     'has-append': hasAppend.value,
     'icon-only': !hasDefault.value && (hasPrepend.value || hasAppend.value),
   }),
@@ -55,56 +61,53 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/button/_index' as t;
+@use '#kit/assets/stylesheet/components/button/spinner' as spinner;
 
 $prefix: 'md-button';
 $t: material-map(t.$tokens, $prefix);
 
-// COLOR MIXIN
-// Применяет токены выбранной схемы ко всем вариантам
+// Applies the tokens of one colour role to every variant.
 @mixin apply-scheme($scheme) {
-  // Цикл по вариантам для DRY-применения токенов состояний
   $variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
 
   @each $v in $variants {
     &.ui-button--#{$v} {
-      $base: "#{$scheme}-#{$v}";
+      $base: '#{$scheme}.#{$v}';
 
-      background-color: g($t, "#{$base}-container-color");
-      color: g($t, "#{$base}-label-text-color");
+      background-color: g($t, '#{$base}.container.color');
+      color: g($t, '#{$base}.label.text.color');
 
       @if $v == 'outlined' {
-        border: 1rem solid g($t, "#{$base}-outline-color");
+        border: 1rem solid g($t, '#{$base}.outline.color');
       }
 
       @if $v == 'elevated' {
-        box-shadow: g($t, "#{$base}-shadow");
+        box-shadow: g($t, '#{$base}.shadow');
       }
 
       @include can-hover {
         &:hover:not(.ui-button--disabled) {
-          background-color: g($t, "#{$base}-container-hover-color");
+          background-color: g($t, '#{$base}.container.hover.color');
 
           @if $v == 'elevated' {
-            box-shadow: g($t, "#{$base}-hover-shadow");
+            box-shadow: g($t, '#{$base}.hover.shadow');
           }
         }
       }
 
       &:active:not(.ui-button--disabled) {
-        background-color: g($t, "#{$base}-container-pressed-color");
+        background-color: g($t, '#{$base}.container.pressed.color');
       }
 
       &.ui-button--disabled {
-        background-color: g($t, "#{$base}-container-disabled-color");
-        color: g($t, "#{$base}-label-text-disabled-color");
+        background-color: g($t, '#{$base}.container.disabled.color');
+        color: g($t, '#{$base}.label.text.disabled.color');
+        box-shadow: none;
 
         @if $v == 'outlined' {
-          border-color: g($t, "#{$base}-outline-disabled-color");
+          border-color: g($t, '#{$base}.outline.disabled.color');
         }
-
-        box-shadow: none !important;
 
         @include forced-colors {
           border-color: GrayText;
@@ -116,13 +119,13 @@ $t: material-map(t.$tokens, $prefix);
 }
 
 .ui-button {
-  // Base Styles
   display: inline-flex;
   align-items: center;
   justify-content: center;
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  max-width: 100%;
   cursor: pointer;
   text-decoration: none;
   border: none;
@@ -133,7 +136,6 @@ $t: material-map(t.$tokens, $prefix);
   border-radius: g($t, 'container.shape');
   padding-inline: g($t, 'container.padding.inline');
 
-  // Typography
   @include typescale('label-large');
 
   transition:
@@ -154,10 +156,16 @@ $t: material-map(t.$tokens, $prefix);
     border: 1px solid ButtonText;
   }
 
+  // The button grows with its label rather than clipping it; an unbroken
+  // string (a URL, an article number) wraps instead of pushing the button
+  // past its container.
   &__label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
     z-index: 1;
   }
 
@@ -171,21 +179,31 @@ $t: material-map(t.$tokens, $prefix);
   }
 
   &__spinner {
-    width: g($t, 'icon.size');
-    height: g($t, 'icon.size');
-    border: 2rem solid currentcolor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: ui-button-spin 0.6s linear infinite;
+    @include spinner.spinner(g($t, 'icon.size'));
+
+    flex-shrink: 0;
     z-index: 1;
+
+    // With no icon to stand in for, the spinner sits over the content, which
+    // keeps its box (and its accessible name) so the width does not jump.
+    &--centered {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+
+      ~ .ui-button__label,
+      ~ .ui-button__icon {
+        opacity: 0;
+      }
+    }
   }
 
   &--has-prepend {
-    padding-left: g($t, 'container.padding.with-icon');
+    padding-inline-start: g($t, 'container.padding.with-icon');
   }
 
   &--has-append {
-    padding-right: g($t, 'container.padding.with-icon');
+    padding-inline-end: g($t, 'container.padding.with-icon');
   }
 
   &--icon-only {
@@ -193,7 +211,6 @@ $t: material-map(t.$tokens, $prefix);
     width: g($t, 'container.height');
   }
 
-  // ПРИМЕНЕНИЕ СХЕМ (MD3 color roles)
   @include apply-scheme('primary');
 
   &--secondary {
@@ -208,7 +225,6 @@ $t: material-map(t.$tokens, $prefix);
     @include apply-scheme('error');
   }
 
-  // STATE
   &--disabled {
     cursor: default;
     pointer-events: none;
@@ -217,12 +233,6 @@ $t: material-map(t.$tokens, $prefix);
   &--loading {
     cursor: default;
     pointer-events: none;
-  }
-}
-
-@keyframes ui-button-spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 </style>

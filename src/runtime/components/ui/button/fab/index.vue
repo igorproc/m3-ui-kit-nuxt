@@ -22,16 +22,19 @@
 
 <script setup lang="ts">
 import { useButton } from '#kit/composables/button/useButton'
+import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
 import { mFabProps } from './props'
 
 const props = defineProps(mFabProps)
 
 const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab', props })
+
+useButtonNameWarning('m-button-fab', () => props.ariaLabel)
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/button/fab' as t;
+@use '#kit/assets/stylesheet/components/button/spinner' as spinner;
 
 .ui-fab {
   $prefix: 'm3-fab';
@@ -46,10 +49,10 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
   isolation: isolate;
   overflow: hidden;
   outline: none;
-  box-shadow: g($t, 'elevation-resting');
+  box-shadow: g($t, 'elevation.resting');
   transition:
-    box-shadow g($t, 'motion-duration') g($t, 'motion-easing'),
-    background-color g($t, 'motion-duration') g($t, 'motion-easing');
+    box-shadow g($t, 'motion.duration') g($t, 'motion.easing'),
+    background-color g($t, 'motion.duration') g($t, 'motion.easing');
 
   &:focus-visible {
     @include focus-ring;
@@ -66,39 +69,39 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color g($t, 'motion-duration') g($t, 'motion-easing');
+    transition: color g($t, 'motion.duration') g($t, 'motion.easing');
   }
 
   &__spinner {
     position: relative;
     z-index: 1;
-    border: 2rem solid currentcolor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: ui-fab-spin 0.6s linear infinite;
   }
 
-  // Applies one variant's surface treatment for the active scheme.
+  // One variant's surface for the active scheme. Focus and pressed are separate
+  // layers, and pressed comes last: pressing a focused FAB still reads as a press.
   @mixin apply-surface($scheme, $variant) {
-    $base: '#{$scheme}-#{$variant}';
+    $base: '#{$scheme}.#{$variant}';
 
-    background-color: g($t, '#{$base}-container-color');
-    color: g($t, '#{$base}-icon-color');
+    background-color: g($t, '#{$base}.container.color');
+    color: g($t, '#{$base}.icon.color');
 
     @include can-hover {
       &:hover:not(.ui-fab--disabled) {
-        background-color: g($t, '#{$base}-container-hover-color');
+        background-color: g($t, '#{$base}.container.hover.color');
       }
     }
 
-    &:focus-visible:not(.ui-fab--disabled),
+    &:focus-visible:not(.ui-fab--disabled) {
+      background-color: g($t, '#{$base}.container.focus.color');
+    }
+
     &:active:not(.ui-fab--disabled) {
-      background-color: g($t, '#{$base}-container-pressed-color');
+      background-color: g($t, '#{$base}.container.pressed.color');
     }
 
     &.ui-fab--disabled {
-      background-color: g($t, '#{$base}-container-disabled-color');
-      color: g($t, '#{$base}-icon-disabled-color');
+      background-color: g($t, '#{$base}.container.disabled.color');
+      color: g($t, '#{$base}.icon.disabled.color');
 
       @include forced-colors {
         border-color: GrayText;
@@ -119,17 +122,16 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
   }
 
   @mixin apply-size($size) {
-    width: g($t, '#{$size}-container-size');
-    height: g($t, '#{$size}-container-size');
-    border-radius: g($t, '#{$size}-container-shape');
+    width: g($t, '#{$size}.container.size');
+    height: g($t, '#{$size}.container.size');
+    border-radius: g($t, '#{$size}.container.shape');
 
     .ui-fab__icon {
-      font-size: g($t, '#{$size}-icon-size');
+      font-size: g($t, '#{$size}.icon.size');
     }
 
     .ui-fab__spinner {
-      width: g($t, '#{$size}-icon-size');
-      height: g($t, '#{$size}-icon-size');
+      @include spinner.spinner(g($t, '#{$size}.icon.size'));
     }
   }
 
@@ -147,12 +149,12 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
   // Interactions
   @include can-hover {
     &:hover:not(.ui-fab--disabled) {
-      box-shadow: g($t, 'elevation-hover');
+      box-shadow: g($t, 'elevation.hover');
     }
   }
 
   &:active:not(.ui-fab--disabled) {
-    box-shadow: g($t, 'elevation-pressed');
+    box-shadow: g($t, 'elevation.pressed');
   }
 
   &--disabled,
@@ -160,12 +162,6 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab'
     box-shadow: none;
     cursor: default;
     pointer-events: none;
-  }
-}
-
-@keyframes ui-fab-spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 </style>

@@ -3,6 +3,7 @@
 
 // Material 3 State Opacities
 $hover-state-layer-opacity: state-opacity(hover);
+$focus-state-layer-opacity: state-opacity(focus);
 $pressed-state-layer-opacity: state-opacity(pressed);
 $disabled-container-opacity: state-opacity(disabled-container);
 $disabled-content-opacity: state-opacity(disabled-content);
@@ -15,6 +16,7 @@ $surface-container: map.get($theme-color-link, 'surface-container-high');
     container: (
       color: $container,
       hover-color: color-mix(in srgb, $on-container $hover-state-layer-opacity, $container),
+      focus-color: color-mix(in srgb, $on-container $focus-state-layer-opacity, $container),
       pressed-color: color-mix(in srgb, $on-container $pressed-state-layer-opacity, $container),
       disabled-color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent),
     ),
@@ -43,19 +45,19 @@ $tokens: (
       lg: 96rem
     ),
     shape: (
-      sm: 12rem,
-      md: 16rem,
-      lg: 28rem
+      sm: map.get($theme-shape-link, 'medium'),
+      md: map.get($theme-shape-link, 'large'),
+      lg: map.get($theme-shape-link, 'extra-large')
     ),
     padding: (
-      sm: 12rem,
-      md: 16rem,
-      lg: 24rem
+      sm: spacing(12),
+      md: spacing(16),
+      lg: spacing(24)
     ),
     gap: (
-      sm: 8rem,
-      md: 12rem,
-      lg: 16rem
+      sm: spacing(8),
+      md: spacing(12),
+      lg: spacing(16)
     ),
     elevation: (
       resting: elevation(3),

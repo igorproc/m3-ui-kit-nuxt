@@ -2,6 +2,7 @@
 @use '../../../abstracts/forward.scss' as *;
 
 $hover-opacity: state-opacity(hover);
+$focus-opacity: state-opacity(focus);
 $pressed-opacity: state-opacity(pressed);
 $disabled-container-opacity: state-opacity(disabled-container);
 $disabled-content-opacity: state-opacity(disabled-content);
@@ -13,6 +14,7 @@ $surface-container: map.get($theme-color-link, 'surface-container-low');
 @function fab-surface($container, $on-container) {
   @return (container: (color: $container,
       hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
+      focus: (color: color-mix(in srgb, $on-container $focus-opacity, $container)),
       pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
       disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
     ),

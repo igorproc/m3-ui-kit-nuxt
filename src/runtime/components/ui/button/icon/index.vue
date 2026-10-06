@@ -18,29 +18,34 @@
 
 <script setup lang="ts">
 import UiButton from '#kit/components/ui/button/index.vue'
+import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
 import { mIconButtonProps } from '../props'
 
-defineProps(mIconButtonProps)
+const props = defineProps(mIconButtonProps)
+
+useButtonNameWarning('m-button-icon', () => props.ariaLabel)
 </script>
 
 <style lang="scss">
-.ui-icon-button {
-  width: 40rem;
-  height: 40rem;
-  padding-inline: 0 !important;
-  border-radius: var(--sys-shape-corner-full, 50%) !important;
+@use '#kit/assets/stylesheet/components/button/_index' as t;
+
+$t: material-map(t.$tokens, 'md-button');
+
+// Doubled class: an icon button is a square, so it outranks the pill padding
+// and radius of `.ui-button` without `!important`.
+.ui-button.ui-icon-button {
+  width: g($t, 'icon-button.container.size');
+  min-height: g($t, 'icon-button.container.size');
+  height: g($t, 'icon-button.container.size');
+  padding-inline: 0;
+  border-radius: g($t, 'icon-button.container.shape');
   flex-shrink: 0;
+}
 
-  &__content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24rem; // Standard M3 icon size
-  }
-
-  // Hide the default button label wrapper padding if any
-  .ui-button__label {
-    padding: 0;
-  }
+.ui-icon-button__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: g($t, 'icon-button.icon.size');
 }
 </style>

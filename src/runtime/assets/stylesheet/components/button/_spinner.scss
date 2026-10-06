@@ -1,0 +1,34 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// The loading indicator shared by MButton, MButtonFab and MButtonExtendedFab.
+// The turn is derived from short-4 on purpose. Reduced motion collapses every
+// duration above short-4 to short-2, so a rotation built on one of those would
+// spin faster for exactly the users who asked for less motion. short-4 keeps
+// its length, and reduced motion slows the turn down instead.
+$turn: map.get($theme-animation-link, 'duration', 'short', '4');
+$tokens: (
+  width: 2rem,
+  duration: calc(#{$turn} * 5),
+  calm: (duration: calc(#{$turn} * 10)),
+  easing: map.get($theme-animation-link, 'easing', 'linear'),
+);
+
+@mixin spinner($size) {
+  width: $size;
+  height: $size;
+  border: map.get($tokens, 'width') solid currentcolor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ui-button-spin map.get($tokens, 'duration') map.get($tokens, 'easing') infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: map.get($tokens, 'calm', 'duration');
+  }
+}
+
+@keyframes ui-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

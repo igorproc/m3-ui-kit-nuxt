@@ -79,9 +79,30 @@ describe('m-button', () => {
     expect(wrapper.find('.ui-button__spinner').exists()).toBe(true)
     expect(wrapper.classes()).toContain('ui-button--loading')
     expect(wrapper.find('button').attributes('aria-busy')).toBe('true')
-    // Loading suppresses the prepend icon and the has-prepend padding class.
+    // The spinner takes the prepend icon's place and keeps its padding, so the
+    // button does not change width when it starts loading.
     expect(wrapper.find('.ui-button__icon--prepend').exists()).toBe(false)
-    expect(wrapper.classes()).not.toContain('ui-button--has-prepend')
+    expect(wrapper.find('.ui-button__spinner--centered').exists()).toBe(false)
+    expect(wrapper.classes()).toContain('ui-button--has-prepend')
+  })
+
+  it('centres the spinner over the label when there is no icon to replace', async () => {
+    const wrapper = await mountSuspended(MButton, {
+      props: { loading: true },
+      slots: { default: () => 'Save' },
+    })
+
+    expect(wrapper.find('.ui-button__spinner--centered').exists()).toBe(true)
+    // The label stays in the DOM: it holds the width and the accessible name.
+    expect(wrapper.find('.ui-button__label').text()).toBe('Save')
+  })
+
+  it('renders no empty label box for an icon-only button', async () => {
+    const wrapper = await mountSuspended(MButton, {
+      slots: { prepend: () => 'P' },
+    })
+
+    expect(wrapper.find('.ui-button__label').exists()).toBe(false)
   })
 
   it('loading also disables the button (pointer-events / disabled attr)', async () => {

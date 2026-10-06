@@ -9,17 +9,33 @@ $tokens: (
   // Базовая геометрия и анимация
   container: (height: 40rem,
     shape: map.get($theme-shape-link, full),
-    gap: 8rem,
-    padding: (inline: 24rem,
-      with-icon: 16rem,
-      icon-only: 8rem,
-      text-inline: 12rem,
+    gap: spacing(8),
+    padding: (inline: spacing(24),
+      with-icon: spacing(16),
+      icon-only: spacing(8),
+      text-inline: spacing(12),
     ),
   ),
   icon: (size: 18rem,
   ),
   state: (duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
+  ),
+
+  // MIconButton: a fixed square, not a padded pill.
+  icon-button: (
+    container: (size: 40rem, shape: map.get($theme-shape-link, full)),
+    icon: (size: 24rem),
+  ),
+
+  // MSplitButton: two halves of one pill, divided by a step of the surface.
+  split: (
+    dropdown: (padding: (inline: spacing(4))),
+    divider: (
+      width: 1rem,
+      color: color-mix(in srgb, map.get($theme-color-link, surface) 30%, transparent),
+    ),
+    menu: (min-width: 150rem),
   ),
 
   // Схемы (полные наборы для каждого типа)
