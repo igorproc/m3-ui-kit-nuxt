@@ -125,6 +125,21 @@ describe('m-text-field', () => {
     expect(wrapper.classes()).toContain('ui-text-field--error')
   })
 
+  it('passes attributes and listeners to the native input, keeps class on the root', async () => {
+    let keydowns = 0
+    const wrapper = await mountSuspended(MTextField, {
+      attrs: { 'class': 'consumer', 'aria-label': 'Search', 'inputmode': 'search', 'onKeydown': () => { keydowns++ } },
+    })
+    const input = wrapper.find('input.ui-text-field__input')
+
+    expect(wrapper.classes()).toContain('consumer')
+    expect(input.attributes('aria-label')).toBe('Search')
+    expect(input.attributes('inputmode')).toBe('search')
+    expect(wrapper.attributes('aria-label')).toBeUndefined()
+    await input.trigger('keydown', { key: 'a' })
+    expect(keydowns).toBe(1)
+  })
+
   it('does not announce invalid before the error is shown', async () => {
     // An engine that has already validated silently: invalid meta, no message yet.
     const silentlyInvalid: ValidationAdapter = {

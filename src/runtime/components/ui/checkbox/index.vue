@@ -1,9 +1,11 @@
 <template>
   <label
+    v-bind="rootAttrs()"
     class="ui-checkbox"
     :class="checkboxClasses"
   >
     <input
+      v-bind="controlAttrs()"
       :id="fieldId"
       :checked="modelValue"
       class="ui-checkbox__input"
@@ -40,6 +42,11 @@
 import { ICONS } from '#kit/shared/constants/icons'
 import { useField } from '#kit/composables/useField'
 import { mCheckboxProps } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mCheckboxProps)
 

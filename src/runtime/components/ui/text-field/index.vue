@@ -1,5 +1,6 @@
 <template>
   <div
+    v-bind="rootAttrs()"
     class="ui-text-field"
     :class="rootClasses"
   >
@@ -48,7 +49,7 @@
           ref="inputRef"
           v-model="modelValue"
           class="ui-text-field__input"
-          v-bind="inputAttrs"
+          v-bind="{ ...controlAttrs(), ...inputAttrs }"
           :type="type"
           :name="name ?? path"
           :placeholder="placeholder"
@@ -71,7 +72,7 @@
         ref="inputRef"
         v-model="modelValue"
         class="ui-text-field__input ui-text-field__row"
-        v-bind="inputAttrs"
+        v-bind="{ ...controlAttrs(), ...inputAttrs }"
         :type="type"
         :name="name ?? path"
         :placeholder="placeholder"
@@ -110,6 +111,11 @@
 
 <script setup lang="ts">
 import { mTextFieldProps } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mTextFieldProps)
 const slots = useSlots()

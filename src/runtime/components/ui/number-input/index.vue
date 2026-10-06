@@ -1,5 +1,8 @@
 <template>
-  <div :class="rootClasses">
+  <div
+    v-bind="rootAttrs()"
+    :class="rootClasses"
+  >
     <label
       v-if="label && !isScrub"
       v-bind="labelAttrs"
@@ -62,7 +65,7 @@
         <input
           ref="element"
           v-model="draft"
-          v-bind="inputAttrs"
+          v-bind="{ ...controlAttrs(), ...inputAttrs }"
           class="ui-number-input__input"
         >
 
@@ -163,6 +166,11 @@ import MNumberInputUnit from './unit.vue'
 import { useNumberInputControl } from '#kit/composables/number-input/useNumberInputControl'
 import { mNumberInputProps } from './props'
 import type { NumberInputInvalidReason } from '#kit/shared/utils/number'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mNumberInputProps)
 

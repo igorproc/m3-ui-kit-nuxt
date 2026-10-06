@@ -1,9 +1,11 @@
 <template>
   <label
+    v-bind="rootAttrs()"
     class="ui-radio"
     :class="radioClasses"
   >
     <input
+      v-bind="controlAttrs()"
       :id="fieldId"
       class="ui-radio__input"
       type="radio"
@@ -42,6 +44,11 @@ import { useRadioGroupContext } from '#kit/composables/radio/useRadioGroup'
 import type { SingleTicket } from '#kit/composables/registry/createSingle'
 import { mRadioProps } from './props'
 import type { MRadioValue } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mRadioProps)
 

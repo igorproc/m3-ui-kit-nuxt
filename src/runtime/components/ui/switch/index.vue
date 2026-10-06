@@ -1,9 +1,11 @@
 <template>
   <label
+    v-bind="rootAttrs()"
     class="ui-switch"
     :class="switchClasses"
   >
     <input
+      v-bind="controlAttrs()"
       :id="fieldId"
       v-model="modelValue"
       class="ui-switch__input"
@@ -36,6 +38,11 @@
 <script setup lang="ts">
 import { useField } from '#kit/composables/useField'
 import { mSwitchProps } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mSwitchProps)
 

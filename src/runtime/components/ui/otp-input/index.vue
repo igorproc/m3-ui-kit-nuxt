@@ -1,5 +1,8 @@
 <template>
-  <div :class="rootClasses">
+  <div
+    v-bind="rootAttrs()"
+    :class="rootClasses"
+  >
     <label
       v-bind="labelAttrs"
       class="ui-otp-input__label"
@@ -56,7 +59,7 @@
 
       <input
         ref="element"
-        v-bind="inputAttrs"
+        v-bind="{ ...controlAttrs(), ...inputAttrs }"
         class="ui-otp-input__native"
       >
     </div>
@@ -82,6 +85,11 @@
 import { useOtpControl } from '#kit/composables/otp-input/useOtpControl'
 import type { OtpCell } from '#kit/composables/otp-input/useOtpControl'
 import { mOtpInputProps } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mOtpInputProps)
 const slots = useSlots()

@@ -1,5 +1,6 @@
 <template>
   <div
+    v-bind="rootAttrs()"
     class="ui-search"
     :class="{
       'ui-search--focused': isFocused,
@@ -16,6 +17,7 @@
     </span>
 
     <input
+      v-bind="controlAttrs()"
       :id="fieldId"
       v-model="modelValue"
       class="ui-search__input"
@@ -44,6 +46,11 @@
 <script setup lang="ts">
 import { ICONS } from '#kit/shared/constants/icons'
 import { mSearchProps } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 defineProps(mSearchProps)
 

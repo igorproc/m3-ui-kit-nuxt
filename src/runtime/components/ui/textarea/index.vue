@@ -1,5 +1,8 @@
 <template>
-  <div :class="rootClasses">
+  <div
+    v-bind="rootAttrs()"
+    :class="rootClasses"
+  >
     <label
       v-if="label"
       v-bind="labelAttrs"
@@ -42,7 +45,7 @@
         <textarea
           ref="element"
           v-model="modelValue"
-          v-bind="inputAttrs"
+          v-bind="{ ...controlAttrs(), ...inputAttrs }"
           class="ui-textarea__input"
         />
 
@@ -111,6 +114,11 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { textareaFieldStateKey, useTextareaControl } from '#kit/composables/textarea/useTextareaControl'
 import { mTextareaProps } from './props'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mTextareaProps)
 const slots = useSlots()
