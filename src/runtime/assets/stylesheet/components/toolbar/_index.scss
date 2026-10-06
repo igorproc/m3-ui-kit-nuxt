@@ -14,7 +14,8 @@ $tokens: (
   ),
   baseline: (container: (color: map.get($theme-color-link, surface-container),
       shape: 0,
-      elevation: elevation(2),
+      // Docked toolbar (MD3 Expressive): separated by surface tone, no shadow.
+      elevation: elevation(0),
       height: 80rem,
     ),
     with-fab: (container: (height: 72rem,
