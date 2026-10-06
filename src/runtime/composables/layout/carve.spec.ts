@@ -389,4 +389,16 @@ describe('buildLayoutCss — scroll padding for pinned zones', () => {
     expect(css).not.toContain('scroll-padding')
     expect(css).not.toContain('html {')
   })
+
+  it('nested layout: the outer layout owns the document scroll padding', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('ab', 'top', 'var(--ab)', true), item('content', 'main')],
+      RANGES,
+      { nested: true },
+    )
+
+    expect(css).not.toContain('scroll-padding')
+    expect(css).not.toContain('html {')
+  })
 })

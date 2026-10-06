@@ -75,6 +75,11 @@ export interface CarveResult {
 export interface LayoutCssOptions {
   /** `main` scrolls itself (`<m-layout full-height>`) instead of the document. */
   fullHeight?: boolean
+  /**
+   * Inside another `<m-layout>`: the document's scroll padding belongs to the
+   * outermost layout, which owns the page's fixed bands.
+   */
+  nested?: boolean
 }
 
 export interface RangeSpec {
@@ -343,7 +348,7 @@ export function buildLayoutCss(
     const rootRule = `#${layoutId} {\n  ${lines.join('\n  ')}\n}`
     blocks.push(spec.media ? `@media ${spec.media} {\n${rootRule}\n}` : rootRule)
 
-    const scrollRule = options.fullHeight ? null : scrollPaddingRule(visible, fixed)
+    const scrollRule = options.fullHeight || options.nested ? null : scrollPaddingRule(visible, fixed)
     if (scrollRule) blocks.push(spec.media ? `@media ${spec.media} {\n${scrollRule}\n}` : scrollRule)
 
     const itemRules: string[] = []

@@ -114,6 +114,7 @@ function normalizeSize(token: string | undefined): string | undefined {
  */
 export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<boolean> = false) {
   const instance = getCurrentInstance()
+  const nested = useLayoutContext() !== null
   const registry = createLayoutRegistry()
   const { items } = registry
 
@@ -197,7 +198,7 @@ export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<bool
       { range: 'mobile', itemsMedia: `only screen and (max-width: ${tabletMin - 1}px)` },
       { range: 'tablet', media: `only screen and (min-width: ${tabletMin}px) and (max-width: ${desktopMin - 1}px)` },
       { range: 'desktop', media: `only screen and (min-width: ${desktopMin}px)` },
-    ], { fullHeight: toValue(fullHeight) })
+    ], { fullHeight: toValue(fullHeight), nested })
   })
 
   return { css, items }
