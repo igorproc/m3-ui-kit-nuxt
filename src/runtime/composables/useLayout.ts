@@ -24,10 +24,12 @@ import {
   readonly,
   ref,
   shallowReactive,
+  toValue,
   unref,
   useId,
   watch,
   watchEffect,
+  type MaybeRefOrGetter,
   type Ref,
 } from 'vue'
 import { useNuxtApp } from '#app'
@@ -107,9 +109,10 @@ function normalizeSize(token: string | undefined): string | undefined {
 
 /**
  * Root-level: called inside `<m-layout>` to create the registry and the
- * per-range CSS payload for `useHead`.
+ * per-range CSS payload for `useHead`. `fullHeight` says `main` scrolls
+ * instead of the document.
  */
-export function createLayout(layoutId: string) {
+export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<boolean> = false) {
   const instance = getCurrentInstance()
   const registry = createLayoutRegistry()
   const { items } = registry
@@ -194,7 +197,7 @@ export function createLayout(layoutId: string) {
       { range: 'mobile', itemsMedia: `only screen and (max-width: ${tabletMin - 1}px)` },
       { range: 'tablet', media: `only screen and (min-width: ${tabletMin}px) and (max-width: ${desktopMin - 1}px)` },
       { range: 'desktop', media: `only screen and (min-width: ${desktopMin}px)` },
-    ])
+    ], { fullHeight: toValue(fullHeight) })
   })
 
   return { css, items }

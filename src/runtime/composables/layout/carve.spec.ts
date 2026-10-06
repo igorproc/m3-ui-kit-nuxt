@@ -317,3 +317,76 @@ describe('buildLayoutCss', () => {
     expect(desktopBlock).not.toContain('display: none')
   })
 })
+
+describe('buildLayoutCss — scroll padding for pinned zones', () => {
+  const RANGES: RangeSpec[] = [{ range: 'desktop' }]
+  const sizeRef = (id: string) => `var(${sizeVar(id)}, 0px)`
+
+  it('pinned top zones → html scroll-padding-top reaching the last pinned zone', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('sb', 'top', 'var(--sb)', true), item('ab', 'top', 'var(--ab)', true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).toContain('html {')
+    expect(css).toContain(`scroll-padding-top: calc(${sizeRef('sb')} + ${sizeRef('ab')});`)
+    expect(css).toContain(`${sizeVar('ab')}: var(--ab);`)
+    expect(css).not.toContain('scroll-padding-bottom')
+  })
+
+  it('counts an in-flow top zone carved before the pinned one, not one after it', () => {
+    const { fixed } = carve([
+      item('before', 'top', 'var(--b)'),
+      item('ab', 'top', 'var(--ab)', true),
+      item('after', 'top', 'var(--a)'),
+      item('content', 'main'),
+    ])
+
+    expect(fixed.top).toBe(`calc(${sizeRef('before')} + ${sizeRef('ab')})`)
+  })
+
+  it('pinned bottom zone → html scroll-padding-bottom', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('nav', 'bottom', 'var(--n)', true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).toContain(`scroll-padding-bottom: ${sizeRef('nav')};`)
+    expect(css).not.toContain('scroll-padding-top')
+  })
+
+  it('no pinned zones → no scroll padding', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('header', 'top', 'var(--h)'), item('nav', 'start', 'var(--n)', true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).not.toContain('scroll-padding')
+  })
+
+  it('sizeless sticky zone stays in flow → no scroll padding', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('header', 'top', undefined, true), item('content', 'main')],
+      RANGES,
+    )
+
+    expect(css).not.toContain('scroll-padding')
+  })
+
+  it('full-height: main scrolls itself → no scroll padding', () => {
+    const css = buildLayoutCss(
+      'lid',
+      [item('ab', 'top', 'var(--ab)', true), item('nav', 'bottom', 'var(--n)', true), item('content', 'main')],
+      RANGES,
+      { fullHeight: true },
+    )
+
+    expect(css).toContain('position: fixed;')
+    expect(css).not.toContain('scroll-padding')
+    expect(css).not.toContain('html {')
+  })
+})

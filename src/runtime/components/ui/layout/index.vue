@@ -17,14 +17,14 @@ interface Props {
   fullHeight?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   fullHeight: false,
 })
 
 const uid = useId()
 const layoutId = `m-layout-${(uid || 'ssr').replace(/[^\w-]/g, '')}`
 
-const { css } = createLayout(layoutId)
+const { css } = createLayout(layoutId, () => props.fullHeight)
 
 /**
  * Computed-стиль собирается после setup всех детей (реестр уже полон при SSR),

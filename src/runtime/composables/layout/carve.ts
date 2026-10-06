@@ -64,6 +64,17 @@ export interface CarveResult {
   insets: Map<string, CarveInsets>
   /** Total sized footprint per edge (`--m3-layout-inset-*`). */
   totals: { top: string, right: string, bottom: string, left: string }
+  /**
+   * How far the zones pinned with `position: fixed` reach into the viewport
+   * from each edge. `top` ends at the far edge of the last pinned top zone, so
+   * in-flow top zones carved before it count too: the pinned zone sits below them.
+   */
+  fixed: { top: string, bottom: string }
+}
+
+export interface LayoutCssOptions {
+  /** `main` scrolls itself (`<m-layout full-height>`) instead of the document. */
+  fullHeight?: boolean
 }
 
 export interface RangeSpec {
@@ -144,6 +155,7 @@ export function carve(items: CarveItem[]): CarveResult {
   const seen = { top: 0, bottom: 0, start: 0, end: 0 }
   const sized = { top: [] as string[], right: [] as string[], bottom: [] as string[], left: [] as string[] }
   const bottomStickyAcc: string[] = []
+  let fixedTop = '0px'
 
   const insetsSnapshot = (): CarveInsets => ({
     top: cssSum(sized.top),
@@ -184,6 +196,7 @@ export function carve(items: CarveItem[]): CarveResult {
 
       if (band.kind === 'top') {
         sized.top.push(expr)
+        if (band.sticky) fixedTop = cssSum(sized.top)
       } else if (band.kind === 'bottom') {
         if (band.sticky) bottomStickyAcc.push(expr)
         sized.bottom.push(expr)
@@ -215,6 +228,10 @@ export function carve(items: CarveItem[]): CarveResult {
       right: cssSum(sized.right),
       bottom: cssSum(sized.bottom),
       left: cssSum(sized.left),
+    },
+    fixed: {
+      top: fixedTop,
+      bottom: cssSum(bottomStickyAcc),
     },
   }
 }
@@ -262,18 +279,43 @@ function stickyDecls(item: CarveItem): string[] | null {
 }
 
 /**
+ * Page-scroll mode: the document scrolls under the pinned zones, so a focused
+ * control or an `#anchor` target would come to rest beneath them. Scroll padding
+ * on the root keeps it clear. The size vars are declared on the layout element,
+ * out of the root's reach, so the rule carries its own copies.
+ */
+function scrollPaddingRule(items: CarveItem[], fixed: CarveResult['fixed']): string | null {
+  if (fixed.top === '0px' && fixed.bottom === '0px') return null
+
+  const lines = items
+    .filter(item => item.size && (item.kind === 'top' || item.kind === 'bottom'))
+    .map(item => `${sizeVar(item.id)}: ${item.size};`)
+
+  if (fixed.top !== '0px') lines.push(`scroll-padding-top: ${fixed.top};`)
+  if (fixed.bottom !== '0px') lines.push(`scroll-padding-bottom: ${fixed.bottom};`)
+
+  return `html {\n  ${lines.join('\n  ')}\n}`
+}
+
+/**
  * Assembles the per-layout `<style>` payload. Per device range:
  * - `#<layoutId>` rule — size vars (base block), insets, grid templates;
  * - per-item rules (`#<layoutId> > [data-m3-zone="<id>"]`) — sticky
  *   positioning and `display: none` for zones filtered out of the range
- *   (otherwise they would become implicit tracks and break the grid).
+ *   (otherwise they would become implicit tracks and break the grid);
+ * - `html` scroll padding for the pinned zones, unless `main` scrolls itself.
  */
-export function buildLayoutCss(layoutId: string, items: CarveItem[], ranges: RangeSpec[]): string {
+export function buildLayoutCss(
+  layoutId: string,
+  items: CarveItem[],
+  ranges: RangeSpec[],
+  options: LayoutCssOptions = {},
+): string {
   const blocks: string[] = []
 
   ranges.forEach((spec, index) => {
     const visible = filterByRange(items, spec.range)
-    const { grid, insets, totals } = carve(visible)
+    const { grid, insets, totals, fixed } = carve(visible)
     const lines: string[] = []
 
     if (index === 0) {
@@ -300,6 +342,9 @@ export function buildLayoutCss(layoutId: string, items: CarveItem[], ranges: Ran
 
     const rootRule = `#${layoutId} {\n  ${lines.join('\n  ')}\n}`
     blocks.push(spec.media ? `@media ${spec.media} {\n${rootRule}\n}` : rootRule)
+
+    const scrollRule = options.fullHeight ? null : scrollPaddingRule(visible, fixed)
+    if (scrollRule) blocks.push(spec.media ? `@media ${spec.media} {\n${scrollRule}\n}` : scrollRule)
 
     const itemRules: string[] = []
     const visibleIds = new Set(visible.map(item => item.id))
