@@ -73,7 +73,7 @@ $t: material-map(t.$tokens, 'm-textarea');
     min-width: 0;
 
     &--end {
-      margin-left: auto;
+      margin-inline-start: auto;
     }
   }
 }

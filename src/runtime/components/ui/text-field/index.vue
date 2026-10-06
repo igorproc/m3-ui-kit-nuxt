@@ -213,6 +213,10 @@ defineExpose({ control: controlRef, input: inputRef })
 
   --ui-text-field-inset: #{g($t, 'container.padding.inline')};
 
+  // The physical side the label scales from: transform-origin has no logical
+  // keyword, so the writing direction picks it here.
+  --ui-text-field-start: left;
+
   position: relative;
   isolation: isolate;
   display: flex;
@@ -248,6 +252,10 @@ defineExpose({ control: controlRef, input: inputRef })
     --ui-text-field-inset: #{g($t, 'outlined.inset')};
   }
 
+  &:dir(rtl) {
+    --ui-text-field-start: right;
+  }
+
   &__label {
     color: g($t, 'label.color');
 
@@ -269,7 +277,7 @@ defineExpose({ control: controlRef, input: inputRef })
     .ui-text-field__label {
       position: absolute;
       top: var(--ui-text-field-label-top);
-      left: var(--ui-text-field-inset);
+      inset-inline-start: var(--ui-text-field-inset);
       z-index: 1;
       max-width: g($t, 'label.max-width');
       overflow: hidden;
@@ -280,7 +288,7 @@ defineExpose({ control: controlRef, input: inputRef })
 
       // Scale around the vertical center so shrinking never shifts the label's
       // center — the raise is then pure `height/2` math (no fudge factor).
-      transform-origin: left center;
+      transform-origin: var(--ui-text-field-start) center;
       transition:
         transform g($t, 'state.duration') g($t, 'state.easing'),
         color g($t, 'state.duration') g($t, 'state.easing');
@@ -296,8 +304,13 @@ defineExpose({ control: controlRef, input: inputRef })
     --ui-text-field-label-notch-shift: #{g($t, 'label.prepend.notch.shift')};
 
     .ui-text-field__label {
-      left: g($t, 'label.prepend.left');
+      inset-inline-start: g($t, 'label.prepend.left');
     }
+  }
+
+  // translateX is physical: the shift back to the start edge flips with it.
+  &--prepend:dir(rtl) {
+    --ui-text-field-label-notch-shift: calc(-1 * #{g($t, 'label.prepend.notch.shift')});
   }
 
   &__control {
@@ -315,11 +328,11 @@ defineExpose({ control: controlRef, input: inputRef })
   }
 
   &--prepend .ui-text-field__control {
-    padding-left: g($t, 'container.padding.prepend');
+    padding-inline-start: g($t, 'container.padding.prepend');
   }
 
   &--append .ui-text-field__control {
-    padding-right: g($t, 'container.padding.append');
+    padding-inline-end: g($t, 'container.padding.append');
   }
 
   &__input {
@@ -390,11 +403,11 @@ defineExpose({ control: controlRef, input: inputRef })
     font-size: g($t, 'icon.size');
 
     &--prepend {
-      margin-right: g($t, 'icon.prepend.margin');
+      margin-inline-end: g($t, 'icon.prepend.margin');
     }
 
     &--append {
-      margin-left: g($t, 'icon.append.margin');
+      margin-inline-start: g($t, 'icon.append.margin');
     }
   }
 
@@ -574,7 +587,7 @@ defineExpose({ control: controlRef, input: inputRef })
     }
 
     .ui-text-field__label {
-      left: 0;
+      inset-inline-start: 0;
     }
 
     &.ui-text-field--focused {

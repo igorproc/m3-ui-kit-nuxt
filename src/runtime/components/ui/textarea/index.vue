@@ -207,6 +207,10 @@ function focusFromBox(event: PointerEvent) {
 
   --ui-textarea-inset: #{g($t, 'container.padding.inline')};
 
+  // The physical side the label scales from: transform-origin has no logical
+  // keyword, so the writing direction picks it here.
+  --ui-textarea-start: left;
+
   position: relative;
   isolation: isolate;
   display: flex;
@@ -231,6 +235,10 @@ function focusFromBox(event: PointerEvent) {
     --ui-textarea-inset: #{g($t, 'outlined.inset')};
   }
 
+  &:dir(rtl) {
+    --ui-textarea-start: right;
+  }
+
   // ── label · base is `top`, a block above the box ──
   &__label {
     min-width: 0;
@@ -251,13 +259,13 @@ function focusFromBox(event: PointerEvent) {
   &--label-inset {
     .ui-textarea__label {
       position: absolute;
-      left: var(--ui-textarea-inset);
+      inset-inline-start: var(--ui-textarea-inset);
       top: g($t, 'label.inset.top');
       z-index: 1;
       max-width: g($t, 'label.max-width');
       pointer-events: none;
       transform: scale(g($t, 'label.active.scale'));
-      transform-origin: left top;
+      transform-origin: var(--ui-textarea-start) top;
     }
   }
 
@@ -267,7 +275,7 @@ function focusFromBox(event: PointerEvent) {
     .ui-textarea__label {
       top: 0;
       transform: translateY(-50%) scale(g($t, 'label.active.scale'));
-      transform-origin: left center;
+      transform-origin: var(--ui-textarea-start) center;
     }
 
     .ui-textarea__notch {
@@ -486,7 +494,7 @@ function focusFromBox(event: PointerEvent) {
     }
   }
 
-  // ── support row · message left, counter right, height reserved ──
+  // ── support row · message at the start, counter at the end, height reserved ──
   &__support {
     display: flex;
     align-items: flex-start;
