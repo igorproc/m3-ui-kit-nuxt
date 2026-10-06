@@ -22,5 +22,7 @@ export default createConfigForNuxt({
 }, {
   ignores: [
     'shell/*.ts',
+    '.claude/**',
+    '.cursor/**',
   ],
 })

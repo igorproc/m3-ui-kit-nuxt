@@ -46,13 +46,14 @@
     "build": "nuxt-module-build build",
     "build:module": "nuxt-module-build build",
     "prepack": "nuxt-module-build build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "dev": "nuxi dev playground",
+    "dev:prepare": "nuxi prepare playground",
+    "generate": "nuxi generate playground",
+    "preview": "nuxi preview playground",
     "test": "vitest",
     "lint": "eslint .",
     "lint:style": "stylelint **/*.{vue,css,scss}",
-    "lint:scss": "node scripts/scss-smoke.mjs"
+    "lint:scss": "node shell/scss-smoke.mjs"
   },
   "dependencies": {
     "@iconify-json/ic": "^1.2.4",

@@ -75,7 +75,7 @@ A virtualization composable that renders only the rows currently on screen, wire
 base table so it stays fast at tens of thousands of rows.
 
 > `useVirtualScroll()` plus the `m-table` integration; covered by
-> `tests/virtual-scroll.spec.ts`.
+> `composables/virtual-scroll/*.spec.ts`.
 
 ---
 

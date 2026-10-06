@@ -18,31 +18,36 @@ kit/
 │       ├── assets/stylesheet/ # the token system
 │       ├── shared/            # constants, types, utils
 │       └── utils/
-├── tests/                     # cross-cutting specs and architecture guards
+├── playground/                # the kit's own consumer app: dev server + Vitest environment
+├── shell/                     # repo scripts (lint:scss smoke compile)
 ├── docs/
 └── .cursor/                   # plans, rules, dated change summaries
 ```
 
-There is no application in this repository — no `app.vue`, no pages. The kit is consumed as a
-module, and `nuxt.config.ts` exists so that the module itself is what boots the Vitest Nuxt
-environment. Keep it that way: re-declaring components, imports or aliases there lets the
-test environment drift away from what consumers actually install.
+The repository root is the module package only. `playground/` is a minimal consumer app: its
+`nuxt.config.ts` installs `../src/module` and nothing else, and it is what `npm run dev` serves
+and what boots the Vitest Nuxt environment. Keep it that way: re-declaring components, imports
+or aliases there lets the test environment drift away from what consumers actually install.
+
+Specs sit next to the code they cover: `foo.ts` → `foo.spec.ts`; a component with several
+specs keeps them in `<component>/tests/`. There is no root test folder.
 
 ## Commands
 
 ```bash
+npm run dev:prepare    # generate playground/.nuxt types (run once after install)
+npm run dev            # serve the playground
 npm run build:module   # build dist/ (module.mjs + runtime + types)
 npm run test           # Vitest, Nuxt environment
 npm run lint           # ESLint — must pass with 0 errors
 npm run lint:style     # Stylelint over **/*.{vue,css,scss} — must pass with 0 errors
 ```
 
-Run a single spec with `npm run test -- tests/initial.spec.ts`.
+Run a single spec with `npm run test -- src/runtime/components/ui/button/index.spec.ts`.
 
-`npm run dev` exists but has nothing to serve. To see changes in a real application, run the
-docs site next to the kit: it consumes the package by path, so a rebuild here is picked up
-there after restarting its dev server. There is no module HMR through `dist` — after editing
-kit sources, run `npm run build:module`.
+`npm run dev` serves the playground straight from `src/`, so kit edits hot-reload there. The docs
+site consumes the built package by path: after editing kit sources, run `npm run build:module`
+and restart its dev server.
 
 ## Component boundaries
 
@@ -57,8 +62,8 @@ kit sources, run `npm run build:module`.
 The scanner only reads `.vue` files from `ui/` and `core/`. Support files (`props.ts`,
 `types.ts`, `context.ts`) sit next to their component and are imported normally.
 
-`tests/component-boundaries.spec.ts` guards this: it asserts the scan boundary declared in
-`src/module.ts` and checks the generated `.nuxt/components.d.ts` for leaks. If you change
+`src/module.spec.ts` guards this: it asserts the scan boundary declared in
+`src/module.ts` and checks the generated `playground/.nuxt/components.d.ts` for leaks. If you change
 where components are registered, update that spec deliberately — do not loosen it to make a
 run go green.
 

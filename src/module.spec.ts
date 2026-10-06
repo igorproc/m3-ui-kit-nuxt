@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 const root = resolve(process.cwd())
 const componentsRoot = resolve(root, 'src/runtime/components')
 // The scan boundary is declared by the published module, not by nuxt.config:
-// the kit ships no app of its own, and the test environment boots `src/module`.
+// the test environment boots the playground app, which only installs `src/module`.
 const moduleSource = readFileSync(resolve(root, 'src/module.ts'), 'utf8')
 
 function collectFiles(directory: string): string[] {
@@ -33,7 +33,7 @@ describe('component boundaries', () => {
   })
 
   it('does not expose fragments or TypeScript support files as Nuxt components', () => {
-    const declarationsPath = resolve(root, '.nuxt/components.d.ts')
+    const declarationsPath = resolve(root, 'playground/.nuxt/components.d.ts')
 
     expect(existsSync(declarationsPath)).toBe(true)
 

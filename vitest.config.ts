@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import { configDefaults } from 'vitest/config'
 import { defineVitestConfig } from '@nuxt/test-utils/config'
 
 export default defineVitestConfig({
@@ -10,6 +11,13 @@ export default defineVitestConfig({
 
   test: {
     environment: 'nuxt',
+    environmentOptions: {
+      nuxt: {
+        rootDir: fileURLToPath(new URL('./playground', import.meta.url)),
+      },
+    },
+
+    exclude: [...configDefaults.exclude, '.claude/**', 'playground/.nuxt/**', 'playground/.output/**'],
 
     coverage: {
       enabled: true,
@@ -17,7 +25,7 @@ export default defineVitestConfig({
 
       reporter: ['html'],
 
-      reportsDirectory: './.nuxt/tests-coverage',
+      reportsDirectory: './coverage',
     },
 
   },
