@@ -169,7 +169,7 @@ describe('m-text-field', () => {
 
     const custom = await mountSuspended(MTextField, {
       props: { errorMessage: 'Too short' },
-      slots: { error: (scope: { message: string }) => `custom: ${scope.message}` },
+      slots: { error: (scope: { message?: string }) => `custom: ${scope.message}` },
     })
     expect(custom.find('.ui-text-field__support-icon').exists()).toBe(false)
     expect(custom.find('[role="alert"]').text()).toBe('custom: Too short')
@@ -178,7 +178,7 @@ describe('m-text-field', () => {
   it('hands the helper text to a helper slot', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { helperText: 'Hint' },
-      slots: { helper: (scope: { message: string }) => `custom: ${scope.message}` },
+      slots: { helper: (scope: { message?: string }) => `custom: ${scope.message}` },
     })
 
     expect(wrapper.find('.ui-text-field__support').text()).toBe('custom: Hint')
