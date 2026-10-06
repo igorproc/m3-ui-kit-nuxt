@@ -6,6 +6,11 @@
 // TEXT FIELD M3 COMPONENT TOKENS (NESTED M3 COMPLIANT)
 // ==========================================
 
+// Spacing reads the 4-unit scale through `spacing()`. Values off it stay
+// literal on purpose — sizes (heights, icon boxes, the input's minimum width),
+// the 18rem support line, the 6rem glyph gap — and the density steps' 14/18/28/10
+// paddings, which centre a 24rem value line in 44/56/64 boxes.
+
 // The default height, named once for the `default` density step.
 $field-height: 56rem;
 
@@ -13,10 +18,16 @@ $field-height: 56rem;
 // label's footprint in layout terms.
 $border-width: 1rem;
 $label-typescale: 'body-large';
-$label-left: 16rem;
-$label-prepend-left: 52rem;
+$label-left: spacing(16);
 $label-raised-scale: 0.75;
-$notch-padding-inline: 4rem;
+$notch-padding-inline: spacing(4);
+
+// A resting label beside a prepend starts where the value does: past the
+// container's prepend padding, the icon box and the icon's margin.
+$padding-prepend: spacing(12);
+$icon-width: 24rem;
+$icon-prepend-margin: spacing(16);
+$label-prepend-left: $padding-prepend + $icon-width + $icon-prepend-margin;
 
 // One density step. The label rests centred on the control (`top` is half the
 // height) and is raised by transform only: `inside` lifts it by `$raise` for the
@@ -37,14 +48,14 @@ $notch-padding-inline: 4rem;
 }
 
 $tokens: (
-  container: (gap: 4rem,
-    padding: (inline: 16rem,
-      prepend: 12rem,
-      append: 12rem,
+  container: (gap: spacing(4),
+    padding: (inline: spacing(16),
+      prepend: $padding-prepend,
+      append: spacing(12),
     ),
     border: (width: $border-width,
     ),
-    field: (gap: 8rem,
+    field: (gap: spacing(8),
       input-min-width: 60rem,
     )),
   typography: (label: $label-typescale,
@@ -64,15 +75,15 @@ $tokens: (
   input: (color: map.get($theme-color-link, on-surface),
   ),
   icon: (color: map.get($theme-color-link, on-surface-variant),
-    width: 24rem,
+    width: $icon-width,
     size: 24rem,
-    prepend: (margin: 16rem,
+    prepend: (margin: $icon-prepend-margin,
     ),
-    append: (margin: 16rem,
+    append: (margin: spacing(16),
     )),
-  helper: (padding: (inline: 16rem,
+  helper: (padding: (inline: spacing(16),
     ),
-    margin: (top: 4rem,
+    margin: (top: spacing(4),
     ),
     min-height: 18rem,
     color: map.get($theme-color-link, on-surface-variant),
@@ -82,9 +93,9 @@ $tokens: (
   // Vertical scale. Height and padding only — type size never changes, so a
   // compact field and a comfortable one still align their values.
   density: (
-    compact: density-step(44rem, 14rem, 18rem, 4rem),
-    default: density-step($field-height, 18rem, 24rem, 8rem),
-    comfortable: density-step(64rem, 20rem, 28rem, 10rem),
+    compact: density-step(44rem, 14rem, 18rem, spacing(4)),
+    default: density-step($field-height, 18rem, spacing(24), spacing(8)),
+    comfortable: density-step(64rem, spacing(20), 28rem, 10rem),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
