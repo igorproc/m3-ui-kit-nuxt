@@ -337,6 +337,18 @@ defineExpose({ control: controlRef, input: inputRef })
     &::placeholder {
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
+
+    // Autofill paints an !important background and text colour of its own,
+    // light even in a dark theme. Clipping that background to the glyphs —
+    // which the fill colour then covers — lets the container show through.
+    &:autofill {
+      // Safari clips to text only under the prefix.
+      /* stylelint-disable-next-line property-no-vendor-prefix */
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: g($t, 'input.color');
+      caret-color: g($t, 'input.color');
+    }
   }
 
   // Composite input row: inline content (chips) + native input on one scrolling row.
