@@ -1,4 +1,4 @@
-# QA-аудит: витрина — поля и кнопка (фаза D, волна 1)
+# QA-аудит: витрина — поля и кнопка (фаза D)
 
 **Даты:** 2026-10-06 — 2026-10-07
 **Предыдущие шаги:** `qa-fix-infra-and-bugs_2026-10-06_1900.md`, `qa-fix-global-styles_2026-10-06_2300.md`.
@@ -48,12 +48,26 @@
   - добавлены RTL, `:autofill`, шкала отступов, forced colors для степперов;
   - зона единицы занимает не больше 30% ширины поля.
 
+## Волна 2 — dropdown и autocomplete (агент)
+
+- Клавиатура по WAI-ARIA APG:
+  - type-ahead с буфером 500 мс;
+  - Home/End открывают список и ставят на цель, PageUp/PageDown перемещают на ±10, Alt+↑/↓.
+- `role="listbox"` содержит только опции. Прогресс и тексты состояний вынесены рядом.
+  Постоянный `role=status` в поле объявляет состояния.
+- Курсор клавиатуры отображается как `focus-ring(inset)`, наведение мышью — слоем 10%.
+- Добавлены `inheritAttrs: false` и `overscroll-behavior: contain`; длинные заголовки переносятся.
+- Новые composables: `useDropdownKeyboard`, `useTypeahead`, `usePanelStatus`. Стили панели
+  вынесены в общий `dropdown/_panel.scss`, и оба SFC теперь короче 400 строк.
+- Исправил после слияния: `:aria-busy` в MTextField перетирал значение из `inputAttrs`.
+
 ## Тесты
 
-- Vitest: 1188 тестов.
-- e2e: 125 тестов (button, otp-input, text-field, textarea, number-input). Фикстуры лежат в
+- Vitest: 1212 тестов.
+- e2e: 176 тестов (button, otp-input, text-field, textarea, number-input, dropdown,
+  autocomplete). Фикстуры лежат в
   `playground/fixtures/<name>/{matrix,stress}.vue`.
-- Аудит: в локальных `data/*.json` для 6 компонентов обновлены статусы, `_build.mjs --check` проходит.
+- Аудит: в локальных `data/*.json` для 8 компонентов обновлены статусы, `_build.mjs --check` проходит.
 
 ## Видимые изменения, которые стоит проверить глазами
 
@@ -82,8 +96,10 @@
 
 ## Межкомпонентные долги (не тронуты)
 
-- MMenu возвращает фокус на `anchorRef.parentElement` и игнорирует проп `anchor`.
-- `placementToArea` не учитывает RTL.
+- MMenu оборачивает listbox в поверхность с `role="menu"` (axe `aria-required-children`), держит
+  слушатели document, пока закрыт, и возвращает фокус на `anchorRef.parentElement` и игнорирует проп `anchor`.
+- `placementToArea` не учитывает RTL. `usePopover` не перемеряет высоту панели и не
+  ограничивает её доступным местом (LY-05/RS-10).
 - `npm run test:e2e` работает на фиксированном порту 3200 с `reuseExistingServer`, это небезопасно
   для параллельных worktree.
 - Нестабильный `useModal.spec` под нагрузкой: для него есть отдельная задача-чип.
