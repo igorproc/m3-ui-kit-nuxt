@@ -300,6 +300,8 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   }
 
   &__list {
+    --ui-scrollbar-inset-block: #{g($t, 'list.scrollbar-inset')};
+
     max-height: var(--m-dropdown-panel-max-height, #{g($t, 'menu.max-height')});
     padding-block: g($t, 'list.padding-block');
     overflow-y: auto;

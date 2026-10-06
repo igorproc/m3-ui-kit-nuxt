@@ -1,5 +1,6 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use '../menu/index' as menu;
 
 // ==========================================
 // DROPDOWN M3 COMPONENT TOKENS
@@ -18,6 +19,9 @@ $tokens: (
     // through `maxHeight`, which arrives as a custom property.
     max-height: 320rem,
     padding-block: 8rem,
+    // The list scrolls inside the menu surface and has to keep its thumb clear
+    // of that surface's corners.
+    scrollbar-inset: map.get(menu.$tokens, surface, border, radius),
   ),
   option: (
     active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} state-opacity(focus), transparent),

@@ -119,6 +119,8 @@ provideTableContext({
 .ui-table-container {
   $t: material-map(t.$tokens, 'md-table');
 
+  --ui-scrollbar-inset-block: #{g($t, 'container.border.radius')};
+
   width: 100%;
   overflow-x: auto;
   background-color: g($t, 'container-bg');

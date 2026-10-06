@@ -3,6 +3,11 @@
 /* Глобальный скроллбар: тонкий, с горизонтальным инсетом thumb,
    чтобы не вылезать за скруглённые границы блоков */
 * {
+  // Reset on every element so a rounded container's inset never reaches the
+  // scrollbars of the containers nested inside it. Zero specificity lets the
+  // container's own class win on its own element.
+  --ui-scrollbar-inset-block: 0px;
+
   @include use-scrollbar;
 }
 

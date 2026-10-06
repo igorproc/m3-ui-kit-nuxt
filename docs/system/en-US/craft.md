@@ -330,6 +330,46 @@ as a custom property is a bug.
 
 ---
 
+## 11. Scrollbars
+
+A rounded scroll container drew its scrollbar edge to edge — into the curve and over the border.
+Two causes, and neither of them threw.
+
+**`border-radius` does not clip a scrollbar.** The track runs the full height of the box whatever
+its corners do, so the kit shortens it instead: the global scrollbar rule gives the track
+`margin-block: var(--ui-scrollbar-inset-block)`, and every rounded scroll container in the kit
+sets that property to its own corner radius. One of yours needs exactly one line:
+
+```scss
+.my-panel {
+  --ui-scrollbar-inset-block: var(--sys-shape-corner-extra-large);
+
+  overflow-y: auto;
+  border-radius: var(--sys-shape-corner-extra-large);
+}
+```
+
+Pass the token the radius comes from, not a number — a measured inset does not survive the next
+shape change. The property is reset on every element, so it never reaches a scroll container
+nested inside yours; the reset has no specificity, so your class wins on its own element.
+
+**The standard properties switch the styled scrollbar off.** Since Chrome 121 an element that
+sets `scrollbar-width` or `scrollbar-color` loses every `::-webkit-scrollbar` rule: the inset
+thumb, its rounded ends, its hover tone, and the track margin above. The kit sets the standard
+pair only under `@supports not selector(::-webkit-scrollbar)` — Firefox, today. Do not add
+either property to a component "for Firefox"; in Chrome it quietly replaces the kit's scrollbar
+with the plain one. `scrollbar-width: none` to hide a scrollbar is the exception — hiding is all
+it is asked to do.
+
+This is the one custom property the kit asks a consumer to set, and it does not contradict
+section 10: it is not a component state but the single input of a rule every scroll container
+shares.
+
+> **Trap.** The margin shortens a vertical scrollbar only, and Firefox has no track margin at
+> all — there the thin scrollbar still reaches the corners.
+
+---
+
 ## Where this chapter ends
 
 The other files in this folder answer "what is this component and which axes does it have".

@@ -67,16 +67,23 @@
 }
 
 @mixin use-scrollbar($width: $scrollbar-width, $inset: $scrollbar-inline-inset) {
-  // Firefox: overlay-скроллбар, край и так не залезает на скругление
-  scrollbar-width: thin;
-  scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+  // Since Chrome 121 an element that sets either standard property loses every
+  // `::-webkit-scrollbar` rule, so the pair is kept to engines that have nothing
+  // else (Firefox).
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+  }
 
   &::-webkit-scrollbar {
     width: $width;
     height: $width;
   }
 
+  // `border-radius` does not clip a scrollbar: a rounded container shortens the
+  // track by its corner radius so the thumb never runs into the curve.
   &::-webkit-scrollbar-track {
+    margin-block: var(--ui-scrollbar-inset-block);
     background: transparent;
   }
 
