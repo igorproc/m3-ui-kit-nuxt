@@ -252,6 +252,34 @@ describe('m-number-input · interaction', () => {
       expect(input.element.value).toBe('10')
     })
 
+    it('lets Enter go on to submit the form once it has committed', async () => {
+      const wrapper = await mount({ modelValue: 3, min: 0, max: 10 })
+      const input = wrapper.find('input')
+      const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true })
+
+      await input.trigger('focus')
+      await input.setValue('99')
+      input.element.dispatchEvent(enter)
+
+      expect(enter.defaultPrevented).toBe(false)
+      expect(last(wrapper, 'update:modelValue')).toEqual([10])
+    })
+
+    it('leaves Escape to whoever is above the field when there is nothing to roll back', async () => {
+      const wrapper = await mount({ modelValue: 3 })
+      const input = wrapper.find('input')
+
+      await input.trigger('focus')
+      const idle = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
+      input.element.dispatchEvent(idle)
+      expect(idle.defaultPrevented).toBe(false)
+
+      await input.setValue('7')
+      const editing = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
+      input.element.dispatchEvent(editing)
+      expect(editing.defaultPrevented).toBe(true)
+    })
+
     it('rolls back to the last committed value on Escape, not to the live model', async () => {
       const wrapper = await mount({ modelValue: 3 })
       const input = wrapper.find('input')

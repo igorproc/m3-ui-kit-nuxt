@@ -89,6 +89,8 @@ export interface UseNumberValueReturn {
   restore: (display?: boolean) => void
   /** Roll the value back to the last committed one — the Escape path. */
   revert: (display?: boolean) => void
+  /** Whether `revert` would change anything: a draft or a model off the last committed value. */
+  isEdited: () => boolean
   onInput: () => void
   onCompositionStart: () => void
   onCompositionEnd: () => void
@@ -228,6 +230,10 @@ export function useNumberValue(
     render(committed.value, display)
   }
 
+  function isEdited() {
+    return dirty.value || model.value !== committed.value
+  }
+
   function onInput() {
     dirty.value = true
     if (composing.value) return
@@ -286,6 +292,7 @@ export function useNumberValue(
     commit,
     restore,
     revert,
+    isEdited,
     onInput,
     onCompositionStart,
     onCompositionEnd,

@@ -183,8 +183,14 @@ export function useNumberInputControl(
       PageDown: () => value.step(-1, PAGE_MULTIPLIER),
       Home: value.toMin,
       End: value.toMax,
-      Enter: () => value.commit(),
       Escape: () => value.revert(),
+    }
+
+    // Enter commits and lets the event go on: inside a form it is still the
+    // implicit submit, which now sees the committed value.
+    if (event.key === 'Enter') {
+      value.commit()
+      return
     }
 
     const action = actions[event.key]
@@ -194,6 +200,9 @@ export function useNumberInputControl(
     // otherwise they stay the caret shortcuts the user expects in a text input.
     if (event.key === 'Home' && !value.hasMin.value) return
     if (event.key === 'End' && !value.hasMax.value) return
+    // With nothing to roll back, Escape belongs to whoever is above the field —
+    // a dialog closing on it, for one.
+    if (event.key === 'Escape' && !value.isEdited()) return
 
     event.preventDefault()
     action()
