@@ -636,7 +636,7 @@ function focusFromBox(event: PointerEvent) {
   }
 
   // ── content · the same ink in every shape, states ascending ──
-  &--focused:where(.ui-textarea--interactive) .ui-textarea__label {
+  &--focused .ui-textarea__label {
     color: g($t, 'focused.label.color');
   }
 
@@ -702,7 +702,7 @@ function focusFromBox(event: PointerEvent) {
       }
     }
 
-    &--focused:where(.ui-textarea--interactive) {
+    &--focused {
       &.ui-textarea--filled .ui-textarea__control {
         border-bottom-color: Highlight;
       }
