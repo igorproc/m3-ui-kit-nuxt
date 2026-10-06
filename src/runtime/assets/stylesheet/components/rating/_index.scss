@@ -8,7 +8,7 @@ $tokens: (
     focus-outline: map.get($theme-color-link, secondary),
     focus-width: 2rem,
     focus-offset: 2rem,
-    disabled-opacity: 38%,
+    disabled-opacity: state-opacity(disabled-content),
   ),
   item: (
     size: 48rem,

@@ -42,7 +42,7 @@ $tokens: (
       type: 'label-large',
     ),
     hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'primary')} 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'primary')} state-opacity(hover), transparent),
     ),
   ),
 );

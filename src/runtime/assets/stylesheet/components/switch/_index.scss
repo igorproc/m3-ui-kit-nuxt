@@ -43,8 +43,8 @@ $tokens: (
     layer: (
       size: 40rem,
       opacity: (
-        hover: 0.08,
-        active: 0.1,
+        hover: state-opacity(hover),
+        active: state-opacity(pressed),
       ),
     ),
   ),
@@ -64,13 +64,13 @@ $tokens: (
     ),
   ),
   disabled: (
-    opacity: 0.38,
+    opacity: state-opacity(disabled-content),
     track: (
       bg: (
-        color: color-mix(in srgb, #{map.get($theme-color-link, 'surface-variant')} 12%, transparent),
+        color: color-mix(in srgb, #{map.get($theme-color-link, 'surface-variant')} state-opacity(disabled-container), transparent),
       ),
       border: (
-        color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
+        color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(disabled-container), transparent),
       ),
     ),
     thumb: (
@@ -79,7 +79,7 @@ $tokens: (
     checked: (
       track: (
         bg: (
-          color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
+          color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(disabled-container), transparent),
         ),
       ),
       thumb: (

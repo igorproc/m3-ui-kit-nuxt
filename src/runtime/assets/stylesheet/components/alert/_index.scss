@@ -9,8 +9,8 @@
     icon: (color: $on-container),
     close: (
       color: $on-container,
-      hover: (color: color-mix(in srgb, #{$on-container} 8%, transparent)),
-      pressed: (color: color-mix(in srgb, #{$on-container} 12%, transparent)),
+      hover: (color: color-mix(in srgb, #{$on-container} state-opacity(hover), transparent)),
+      pressed: (color: color-mix(in srgb, #{$on-container} state-opacity(pressed), transparent)),
       focus: (color: $on-container),
     ),
   );
@@ -26,8 +26,8 @@
     outline: (color: $accent),
     close: (
       color: map.get($theme-color-link, 'on-surface-variant'),
-      hover: (color: color-mix(in srgb, #{$on-surface} 8%, transparent)),
-      pressed: (color: color-mix(in srgb, #{$on-surface} 12%, transparent)),
+      hover: (color: color-mix(in srgb, #{$on-surface} state-opacity(hover), transparent)),
+      pressed: (color: color-mix(in srgb, #{$on-surface} state-opacity(pressed), transparent)),
       focus: (color: $accent),
     ),
   );

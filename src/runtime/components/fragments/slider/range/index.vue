@@ -93,7 +93,7 @@ $prefix: 'ui-slider-range';
   }
 
   &--disabled {
-    opacity: 0.38;
+    opacity: state-opacity(disabled-content);
   }
 
   &__tickmarks {

@@ -138,7 +138,7 @@ function onClear() {
       &:hover {
         background-color: color-mix(
           in srgb,
-          #{map.get($theme-color-link, 'on-surface')} 8%,
+          #{map.get($theme-color-link, 'on-surface')} state-opacity(hover),
           transparent
         );
       }

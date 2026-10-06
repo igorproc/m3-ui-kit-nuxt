@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 $tokens: (
   padding: 16rem,
@@ -7,7 +7,7 @@ $tokens: (
   radius: var(--sys-shape-corner-medium),
   border: (width: 1rem),
 
-  hover: (opacity: 8%),
+  hover: (opacity: state-opacity(hover)),
   state: (layer: (color: map.get($theme-color-link, 'on-surface'))),
 
   title: (type: 'title-medium'),

@@ -50,6 +50,6 @@ $tokens: (
     ),
   ),
   disabled: (
-    opacity: 0.38,
+    opacity: state-opacity(disabled-content),
   ),
 );

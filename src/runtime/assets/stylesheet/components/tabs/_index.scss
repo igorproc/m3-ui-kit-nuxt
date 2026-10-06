@@ -39,7 +39,7 @@ $tokens: (
     color: map.get($theme-color-link, primary),
   ),
   disabled: (
-    opacity: 0.38,
+    opacity: state-opacity(disabled-content),
   ),
   state: (
     layer: (
@@ -48,7 +48,7 @@ $tokens: (
         bg: map.get($theme-color-link, primary),
       ),
       opacity: (
-        hover: 0.08,
+        hover: state-opacity(hover),
       ),
     ),
   ),

@@ -17,7 +17,7 @@ $tokens: (
     color: map.get($theme-color-link, 'on-surface-variant'),
     padding: (inline: 8rem),
     current: (color: $on-surface),
-    disabled: (color: color-mix(in srgb, #{$on-surface} 38%, transparent)),
+    disabled: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent)),
   ),
   divider: (
     color: map.get($theme-color-link, 'outline'),

@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 $tokens: (
   height: 32rem,
@@ -32,12 +32,12 @@ $tokens: (
   state: (
     layer: (
       opacity: (
-        hover: 8%,
-        active: 12%,
+        hover: state-opacity(hover),
+        active: state-opacity(pressed),
       ),
     ),
   ),
-  disabled: (opacity: 0.38),
+  disabled: (opacity: state-opacity(disabled-content)),
   // Reached the group `max`: unavailable for selection, but not disabled, so it
   // stays more legible than a disabled chip.
   blocked: (opacity: 0.6),

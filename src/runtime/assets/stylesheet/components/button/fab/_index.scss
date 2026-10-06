@@ -1,10 +1,10 @@
 @use 'sass:map';
 @use '../../../abstracts/forward.scss' as *;
 
-$hover-opacity: 8%;
-$pressed-opacity: 12%;
-$disabled-container-opacity: 12%;
-$disabled-content-opacity: 38%;
+$hover-opacity: state-opacity(hover);
+$pressed-opacity: state-opacity(pressed);
+$disabled-container-opacity: state-opacity(disabled-container);
+$disabled-content-opacity: state-opacity(disabled-content);
 $on-surface: map.get($theme-color-link, 'on-surface');
 $surface-container: map.get($theme-color-link, 'surface-container-low');
 

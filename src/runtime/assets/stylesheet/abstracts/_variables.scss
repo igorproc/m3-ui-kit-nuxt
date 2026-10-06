@@ -12,6 +12,17 @@ $breakpoints: (
   mobile: 767px,
   mobile-xs: 0,
 );
+
+/// MD3 state-layer opacities: m3.material.io/foundations/interaction/states.
+/// Read through `state-opacity($key)`.
+$theme-state-link: (
+  'hover': 8%,
+  'focus': 10%,
+  'pressed': 12%,
+  'dragged': 16%,
+  'disabled-container': 12%,
+  'disabled-content': 38%,
+);
 $z-indexes: (
   dialog: 100,
   backdrop: 99,

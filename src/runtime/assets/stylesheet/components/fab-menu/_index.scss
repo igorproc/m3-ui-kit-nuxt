@@ -5,8 +5,8 @@
 // FAB MENU M3 COMPONENT TOKENS
 // ==========================================
 
-$hover-opacity: 8%;
-$pressed-opacity: 12%;
+$hover-opacity: state-opacity(hover);
+$pressed-opacity: state-opacity(pressed);
 $on-surface: map.get($theme-color-link, 'on-surface');
 
 // Drawer-item pill scheme for one MD3 role (`<role>-container` fill).

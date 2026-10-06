@@ -107,7 +107,7 @@ $tokens: (
     // already sits on the highest one, so there its zone is a state layer.
     surface: map.get($theme-color-link, surface-container-high),
     filled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, transparent)),
-    disabled: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent)),
+    disabled: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent)),
     // Touch-safe zones at both edges, value between them.
     split: (width: 40rem, height: 40rem, size: 24rem),
     // One narrow column of arrows at the trailing edge. Desktop only.
@@ -124,7 +124,7 @@ $tokens: (
   ),
   // MD3 state layer: an overlay in the element's own ink, never a background
   // swap — the tone underneath has to keep showing through.
-  layer: (hover: 0.08, pressed: 0.12),
+  layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
   // The label doubles as a horizontal drag target; the dotted rule is the only
   // hint the gesture exists, so it is always visible, never hover-only.
   scrub: (
@@ -163,8 +163,8 @@ $tokens: (
   ),
   disabled: (
     surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent),
-    border: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) 12%, transparent)),
-    color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent),
+    border: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-container), transparent)),
+    color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
   ),
   filled: (
     surface: map.get($theme-color-link, surface-container-highest),
@@ -172,7 +172,7 @@ $tokens: (
     // Asymmetric on purpose: the raised label occupies the top of the box.
     input: (padding: (top: 24rem, bottom: 8rem)),
     hover: (
-      surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, map.get($theme-color-link, surface-container-highest)),
+      surface: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(hover), map.get($theme-color-link, surface-container-highest)),
       border: (color: map.get($theme-color-link, on-surface)),
     ),
     disabled: (surface: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent)),

@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../../abstracts/variables' as *;
+@use '../../../abstracts/forward.scss' as *;
 
 $tokens: (
   height: 16rem,
@@ -10,7 +10,7 @@ $tokens: (
     color: color-mix(in srgb, map.get($theme-color-link, on-surface) 16%, transparent),
   ),
   tickmarks: (
-    color: color-mix(in srgb, map.get($theme-color-link, on-surface) 38%, transparent),
+    color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
     active: (
       color: color-mix(in srgb, map.get($theme-color-link, on-primary) 38%, transparent),
     ),

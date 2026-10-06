@@ -8,8 +8,8 @@
 // container. Both variants keep `on-surface` content, so close state layers are
 // declared once instead of per variant.
 
-$hover-opacity: 8%;
-$pressed-opacity: 12%;
+$hover-opacity: state-opacity(hover);
+$pressed-opacity: state-opacity(pressed);
 $on-surface: map.get($theme-color-link, 'on-surface');
 $tokens: (
   root: (

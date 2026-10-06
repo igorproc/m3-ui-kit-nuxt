@@ -2,9 +2,9 @@
 @use '../../../abstracts/forward.scss' as *;
 
 // Material 3 State Opacities
-$hover-state-layer-opacity: 8%;
-$pressed-state-layer-opacity: 12%;
-$disabled-content-opacity: 38%;
+$hover-state-layer-opacity: state-opacity(hover);
+$pressed-state-layer-opacity: state-opacity(pressed);
+$disabled-content-opacity: state-opacity(disabled-content);
 
 // M3 Standard Colors
 $on-surface: map.get($theme-color-link, 'on-surface');

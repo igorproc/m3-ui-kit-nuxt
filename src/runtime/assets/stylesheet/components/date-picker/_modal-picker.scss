@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 $tokens: (
   container: (
@@ -29,7 +29,7 @@ $tokens: (
         typography: map.get($theme-typography-link, label, large),
         color: map.get($theme-color-link, 'on-surface-variant'),
         hover: (
-          bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface-variant')} 8%, transparent),
+          bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface-variant')} state-opacity(hover), transparent),
         ),
       ),
     ),
@@ -38,7 +38,7 @@ $tokens: (
         size: 40rem,
         color: map.get($theme-color-link, 'on-surface-variant'),
         hover: (
-          bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface-variant')} 8%, transparent),
+          bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface-variant')} state-opacity(hover), transparent),
         ),
       ),
     ),
@@ -53,10 +53,10 @@ $tokens: (
     typography: map.get($theme-typography-link, body, small),
     color: map.get($theme-color-link, 'on-surface'),
     disabled: (
-      opacity: 0.38,
+      opacity: state-opacity(disabled-content),
     ),
     hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(hover), transparent),
     ),
     today: (
       color: map.get($theme-color-link, 'primary'),
@@ -68,7 +68,7 @@ $tokens: (
       bg: map.get($theme-color-link, 'primary'),
       color: map.get($theme-color-link, 'on-primary'),
       hover: (
-        bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-primary')} 8%, #{map.get($theme-color-link, 'primary')}),
+        bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-primary')} state-opacity(hover), #{map.get($theme-color-link, 'primary')}),
       ),
     ),
   ),
@@ -77,7 +77,7 @@ $tokens: (
     typography: map.get($theme-typography-link, body, large),
     color: map.get($theme-color-link, 'on-surface-variant'),
     hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface-variant')} 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface-variant')} state-opacity(hover), transparent),
     ),
     selected: (
       bg: map.get($theme-color-link, 'primary'),

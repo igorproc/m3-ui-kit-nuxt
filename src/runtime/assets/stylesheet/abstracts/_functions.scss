@@ -7,6 +7,14 @@
 @use 'sass:math';
 @use 'variables' as *;
 
+@function state-opacity($key) {
+  @if not map.has-key($theme-state-link, $key) {
+    @error 'Unknown state `#{$key}`. Available: #{map.keys($theme-state-link)}.';
+  }
+
+  @return map.get($theme-state-link, $key);
+}
+
 @function z($key) {
   @if map.has-key($z-indexes, $key) {
     @return map.get($z-indexes, $key);
@@ -142,10 +150,10 @@
   $outline,
   $surface-tokens: ()
 ) {
-  $hover-opacity: 8%;
-  $pressed-opacity: 12%;
-  $disabled-container-opacity: 12%;
-  $disabled-content-opacity: 38%;
+  $hover-opacity: state-opacity(hover);
+  $pressed-opacity: state-opacity(pressed);
+  $disabled-container-opacity: state-opacity(disabled-container);
+  $disabled-content-opacity: state-opacity(disabled-content);
 
   // Разрешаем системные цвета
   $on-surface: map.get($surface-tokens, 'on-surface') or map.get($theme-color-link, 'on-surface');

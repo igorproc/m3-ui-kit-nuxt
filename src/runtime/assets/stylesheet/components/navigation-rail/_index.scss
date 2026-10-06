@@ -34,11 +34,11 @@ $tokens: (
       color: map.get($theme-color-link, 'secondary-container'),
       hover: (
         color: map.get($theme-color-link, 'on-surface'),
-        opacity: 0.08,
+        opacity: state-opacity(hover),
       ),
       active: (
         hover: (
-          opacity: 0.12,
+          opacity: state-opacity(pressed),
         ),
       ),
     ),

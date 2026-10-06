@@ -149,12 +149,12 @@ $prefix: 'md-hotkey';
   &--disabled {
     .ui-hotkey__key {
       border-color: transparent;
-      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} 38%, transparent);
-      background-color: color-mix(in srgb, #{g($t, 'key.disabled.color')} 12%, transparent);
+      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} state-opacity(disabled-content), transparent);
+      background-color: color-mix(in srgb, #{g($t, 'key.disabled.color')} state-opacity(disabled-container), transparent);
     }
 
     .ui-hotkey__separator {
-      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} 38%, transparent);
+      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} state-opacity(disabled-content), transparent);
     }
   }
 }

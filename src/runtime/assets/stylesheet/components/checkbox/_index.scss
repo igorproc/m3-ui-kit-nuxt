@@ -31,8 +31,8 @@ $tokens: (
   state: (
     layer: (
       opacity: (
-        hover: 0.08,
-        active: 0.12,
+        hover: state-opacity(hover),
+        active: state-opacity(pressed),
       ),
     ),
   ),
@@ -40,7 +40,7 @@ $tokens: (
     color: map.get($theme-color-link, error),
   ),
   disabled: (
-    opacity: 0.38,
+    opacity: state-opacity(disabled-content),
   ),
   typography: (
     label: 'body-medium',

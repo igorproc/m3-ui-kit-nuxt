@@ -20,7 +20,7 @@ $tokens: (
     padding-block: 8rem,
   ),
   option: (
-    active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} 8%, transparent),
+    active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} state-opacity(focus), transparent),
   ),
   chip: (
     active-outline: map.get($theme-color-link, primary),

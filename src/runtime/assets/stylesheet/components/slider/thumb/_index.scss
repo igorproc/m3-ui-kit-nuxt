@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use '../../../abstracts/variables' as *;
+@use '../../../abstracts/forward.scss' as *;
 
 $tokens: (
   size: 20rem,
@@ -11,10 +11,10 @@ $tokens: (
     layer: (
       size: 40rem,
       hover: (
-        opacity: 0.08,
+        opacity: state-opacity(hover),
       ),
       pressed: (
-        opacity: 0.12,
+        opacity: state-opacity(pressed),
       ),
     ),
   ),

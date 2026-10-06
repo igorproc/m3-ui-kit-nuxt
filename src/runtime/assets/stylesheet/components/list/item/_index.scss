@@ -39,7 +39,7 @@ $tokens: (
       color: map.get($theme-color-link, primary-container),
     ),
     disabled: (
-      opacity: 0.38,
+      opacity: state-opacity(disabled-content),
     )
   ),
 
@@ -121,15 +121,15 @@ $tokens: (
   state: (
     hover: (
       color: map.get($theme-color-link, on-surface),
-      opacity: 8%,
+      opacity: state-opacity(hover),
     ),
     pressed: (
       color: map.get($theme-color-link, on-surface),
-      opacity: 12%,
+      opacity: state-opacity(pressed),
     ),
     focus: (
       color: map.get($theme-color-link, on-surface),
-      opacity: 10%,
+      opacity: state-opacity(focus),
       indicator: (
         color: map.get($theme-color-link, outline),
         thickness: 3rem,

@@ -16,7 +16,7 @@ $tokens: (
     color: map.get($theme-color-link, on-secondary-container),
     indicator: map.get($theme-color-link, primary),
   ),
-  hover: (bg: color-mix(in srgb, map.get($theme-color-link, on-surface) 8%, transparent),
+  hover: (bg: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(hover), transparent),
     selected: (bg: color-mix(in srgb, map.get($theme-color-link, on-secondary-container) 8%, map.get($theme-color-link, secondary-container)),
     ),
   ),

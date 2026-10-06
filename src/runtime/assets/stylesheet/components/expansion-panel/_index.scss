@@ -28,10 +28,10 @@ $tokens: (
       color: map.get($theme-color-link, 'on-surface'),
     ),
     hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(hover), transparent),
     ),
     active: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 12%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(pressed), transparent),
     ),
     content: (
       gap: 4rem,
@@ -66,6 +66,6 @@ $tokens: (
     content: 'body-medium',
   ),
   disabled: (
-    opacity: 0.38,
+    opacity: state-opacity(disabled-content),
   ),
 );

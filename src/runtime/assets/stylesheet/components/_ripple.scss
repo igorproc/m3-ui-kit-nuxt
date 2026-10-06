@@ -36,7 +36,7 @@
 
     &--in {
       transition: transform 450ms cubic-bezier(0.2, 0, 0, 1), opacity 105ms linear;
-      opacity: 0.12;
+      opacity: state-opacity(pressed);
 
       @media (prefers-reduced-motion: reduce) {
         transition-property: opacity;

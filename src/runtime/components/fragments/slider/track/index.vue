@@ -76,7 +76,7 @@ $prefix: 'ui-slider-track';
 
   &--disabled {
     cursor: default;
-    opacity: 0.38;
+    opacity: state-opacity(disabled-content);
   }
 
   &--readonly {

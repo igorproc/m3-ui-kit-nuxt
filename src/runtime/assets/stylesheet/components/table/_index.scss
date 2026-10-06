@@ -46,7 +46,7 @@ $tokens: (
       type: 'label-large',
     ),
     hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 8%, transparent),
+      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(hover), transparent),
     ),
     content: (
       gap: 4rem,
