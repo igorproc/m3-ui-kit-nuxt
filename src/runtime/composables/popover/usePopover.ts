@@ -2,10 +2,8 @@
  * @module usePopover
  *
  * @remarks
- * Shared floating-surface primitive for menu, tooltip and dropdown. Generalises
- * the kit's `useMenu` FSM into a reusable composable (rather than duplicating it)
- * and consolidates the anchor/positioning math those three components each
- * hand-rolled.
+ * Shared floating-surface primitive. `useMenu` (and through it the dropdown)
+ * runs on it; the tooltip is still hand-rolled and moves here next.
  *
  * Two responsibilities:
  * 1. **Lifecycle FSM** — `model` is the source of truth; `status`
@@ -14,9 +12,9 @@
  *    teleport/v-if; `onAfterEnter`/`onAfterLeave` settle the FSM from Vue's
  *    `<transition>`.
  * 2. **Positioning** — preferred path uses native **CSS anchor positioning**
- *    (`position-anchor` + `position-area`); when unsupported it falls back to a
- *    JS-measured fixed position with viewport **flip** and **clamp** (the
- *    behaviour tooltip needs).
+ *    (`position-anchor` + `position-area` + `position-try-fallbacks`); when
+ *    unsupported it falls back to a JS-measured fixed position that flips and
+ *    shifts the same way (see {@link computePopoverPosition}).
  *
  * DOM ownership is **opt-in**: pass `trigger` (and optionally `surface`) refs and
  * the composable measures them and re-positions on scroll/resize via the
@@ -40,30 +38,13 @@
 import { computed, nextTick, shallowRef, toValue, useId, watch } from 'vue'
 import type { MaybeRefOrGetter, Ref } from 'vue'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
-import { clamp } from '#kit/shared/utils/helpers'
+import { supportsAnchorPositioning } from '#kit/shared/utils/support'
 import { useGlobalListener } from '../useGlobalListener'
+import { computePopoverPosition, parsePlacement, placementToArea } from './placement'
+import type { PopoverPlacement, PopoverRect } from './placement'
 
 /** Lifecycle states. `opening`/`closing` are transient animation guards. */
 export type PopoverStatus = 'closed' | 'opening' | 'open' | 'closing'
-
-/** Primary side the surface is placed on, relative to the trigger. */
-export type PopoverSide = 'top' | 'bottom' | 'left' | 'right'
-
-/** Cross-axis alignment against the trigger. */
-export type PopoverAlign = 'start' | 'center' | 'end'
-
-/** `'bottom'` (centered) or `'bottom-start'`/`'bottom-end'`, etc. */
-export type PopoverPlacement = PopoverSide | `${PopoverSide}-${PopoverAlign}`
-
-/** Viewport-relative geometry of the trigger. `height` is derived when omitted. */
-export interface PopoverRect {
-  top: number
-  bottom: number
-  left: number
-  right: number
-  width: number
-  height?: number
-}
 
 export interface UsePopoverOptions {
   /** Placement of the surface relative to the trigger. @default 'bottom' */
@@ -72,7 +53,7 @@ export interface UsePopoverOptions {
   offset?: MaybeRefOrGetter<number>
   /** Force the surface width to match the trigger. @default false */
   matchWidth?: MaybeRefOrGetter<boolean>
-  /** Flip to the opposite side when the surface would overflow the viewport (JS path). @default true */
+  /** Flip to the opposite side / alignment when the surface would overflow the viewport. @default true */
   flip?: MaybeRefOrGetter<boolean>
   /** `'auto'` uses CSS anchor when supported, else JS; `'anchor'`/`'fixed'` force a path. @default 'auto' */
   strategy?: MaybeRefOrGetter<'auto' | 'anchor' | 'fixed'>
@@ -115,26 +96,8 @@ const EMPTY_RECT: PopoverRect = { top: 0, bottom: 0, left: 0, right: 0, width: 0
 
 const DEFAULT_Z_INDEX = '999'
 
-/** Map a placement to a CSS `position-area` value. */
-function placementToArea(side: PopoverSide, align: PopoverAlign): string {
-  if (align === 'center') return side
-
-  // For a vertical side the surface spans horizontally and vice-versa.
-  const spanByAlign: Record<PopoverSide, Record<'start' | 'end', string>> = {
-    top: { start: 'span-right', end: 'span-left' },
-    bottom: { start: 'span-right', end: 'span-left' },
-    left: { start: 'span-bottom', end: 'span-top' },
-    right: { start: 'span-bottom', end: 'span-top' },
-  }
-
-  return `${side} ${spanByAlign[side][align]}`
-}
-
-/** Split a placement string into side + align (defaulting align to center). */
-function parsePlacement(placement: PopoverPlacement): [PopoverSide, PopoverAlign] {
-  const [side, align = 'center'] = placement.split('-') as [PopoverSide, PopoverAlign?]
-  return [side, align ?? 'center']
-}
+/** Native flip tactics, tried in order when the preferred area overflows. */
+const POSITION_TRY_FALLBACKS = 'flip-block, flip-inline, flip-block flip-inline'
 
 export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {}): UsePopoverReturn {
   const anchorName = `--popover-anchor-${useId()}`
@@ -143,12 +106,7 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
   const rect = shallowRef<PopoverRect>({ ...EMPTY_RECT })
   const surfaceSize = shallowRef<{ width: number, height: number }>({ width: 0, height: 0 })
 
-  const isAnchorSupported = shallowRef(false)
-  if (IN_BROWSER) {
-    isAnchorSupported.value = typeof CSS !== 'undefined'
-      && typeof CSS.supports === 'function'
-      && (CSS.supports('position-anchor: --a') || CSS.supports('anchor-name: --a'))
-  }
+  const isAnchorSupported = shallowRef(supportsAnchorPositioning())
 
   // Surface stays mounted for the whole non-closed window so the leave
   // transition can play; `isOpen` is the v-if/teleport gate.
@@ -191,10 +149,11 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
       rect.value = { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height }
     }
 
+    // Layout size, not the painted box: the surface is measured right after it
+    // mounts, mid enter-transition, when a `scale()` would shrink the rect.
     const surfaceEl = toValue(options.surface)
     if (surfaceEl) {
-      const s = surfaceEl.getBoundingClientRect()
-      surfaceSize.value = { width: s.width, height: s.height }
+      surfaceSize.value = { width: surfaceEl.offsetWidth, height: surfaceEl.offsetHeight }
     }
   }
 
@@ -223,6 +182,7 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
         'position-area': placementToArea(side, align),
         'z-index': zIndex,
       }
+      if (toValue(options.flip) ?? true) style['position-try-fallbacks'] = POSITION_TRY_FALLBACKS
       if (offset) {
         const marginSide = side === 'top'
           ? 'margin-bottom'
@@ -237,52 +197,21 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
       return style
     }
 
-    // JS fallback — compute a fixed position from the measured rects.
+    // JS fallback — compute a fixed position from the measured rects. The
+    // viewport excludes the scrollbar, so a shifted surface never hides under it.
     const r = rect.value
-    const height = r.height ?? (r.bottom - r.top)
-    const { width: sw, height: sh } = surfaceSize.value
-    const margin = toValue(options.margin) ?? 8
-    const flip = toValue(options.flip) ?? true
-    const vw = IN_BROWSER ? window.innerWidth : 0
-    const vh = IN_BROWSER ? window.innerHeight : 0
-
-    let resolvedSide = side
-
-    // Flip the main axis when the surface would overflow and the opposite side fits.
-    if (flip && sh > 0 && sw > 0) {
-      if (side === 'bottom' && r.bottom + offset + sh > vh - margin && r.top - offset - sh >= margin) {
-        resolvedSide = 'top'
-      } else if (side === 'top' && r.top - offset - sh < margin && r.bottom + offset + sh <= vh - margin) {
-        resolvedSide = 'bottom'
-      } else if (side === 'right' && r.right + offset + sw > vw - margin && r.left - offset - sw >= margin) {
-        resolvedSide = 'left'
-      } else if (side === 'left' && r.left - offset - sw < margin && r.right + offset + sw <= vw - margin) {
-        resolvedSide = 'right'
-      }
-    }
-
-    let top = 0
-    let left = 0
-
-    if (resolvedSide === 'top' || resolvedSide === 'bottom') {
-      top = resolvedSide === 'bottom' ? r.bottom + offset : r.top - sh - offset
-      left = align === 'start'
-        ? r.left
-        : align === 'end'
-          ? r.right - sw
-          : r.left + (r.width - sw) / 2
-    } else {
-      left = resolvedSide === 'right' ? r.right + offset : r.left - sw - offset
-      top = align === 'start'
-        ? r.top
-        : align === 'end'
-          ? r.bottom - sh
-          : r.top + (height - sh) / 2
-    }
-
-    // Keep the surface inside the viewport.
-    if (sw > 0 && vw > 0) left = clamp(left, margin, Math.max(margin, vw - sw - margin))
-    if (sh > 0 && vh > 0) top = clamp(top, margin, Math.max(margin, vh - sh - margin))
+    const { top, left } = computePopoverPosition({
+      anchor: r,
+      surface: surfaceSize.value,
+      viewport: {
+        width: IN_BROWSER ? document.documentElement.clientWidth : 0,
+        height: IN_BROWSER ? document.documentElement.clientHeight : 0,
+      },
+      placement: toValue(options.placement) ?? 'bottom',
+      offset,
+      margin: toValue(options.margin) ?? 8,
+      flip: toValue(options.flip) ?? true,
+    })
 
     const style: Record<string, string> = {
       'position': 'fixed',
