@@ -39,8 +39,9 @@ export const semanticToTokens = (groups: CustomColorGroup[], isDark: boolean): R
   return tokens
 }
 
-const buildBlock = (definition: string, key: string, tokens: Record<string, string>): string => {
+const buildBlock = (definition: 'light' | 'dark', key: string, tokens: Record<string, string>): string => {
   let css = `[data-definition="${definition}"][data-palette="${key}"] {\n`
+  css += `  color-scheme: ${definition};\n`
   for (const [token, hex] of Object.entries(tokens)) {
     css += `  --md-sys-color-${token}: ${hex};\n`
   }

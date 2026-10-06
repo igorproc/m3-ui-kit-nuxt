@@ -64,6 +64,14 @@ describe('buildThemeBlocks', () => {
     expect(css).not.toContain('data-contrast')
   })
 
+  it('declares color-scheme matching each definition', () => {
+    const scheme = generateScheme({ key: 't', name: 't', color: SEED })!
+    const [light, dark] = buildThemeBlocks('brand', scheme).split('[data-definition="dark"]')
+    expect(light).toContain('color-scheme: light;')
+    expect(light).not.toContain('color-scheme: dark;')
+    expect(dark).toContain('color-scheme: dark;')
+  })
+
   it('returns empty string for a null scheme', () => {
     expect(buildThemeBlocks('t', null)).toBe('')
   })

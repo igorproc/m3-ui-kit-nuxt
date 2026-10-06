@@ -1,6 +1,8 @@
 @use "../../abstracts/forward" as *;
 
 @include theme-definition('light', '_m3-fallback') {
+  color-scheme: light;
+
   --md-sys-color-background: #f9f9f9;
   --md-sys-color-on-background: #1b1b1b;
   --md-sys-color-surface: #f9f9f9;
