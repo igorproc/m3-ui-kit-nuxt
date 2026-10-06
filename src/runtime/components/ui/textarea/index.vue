@@ -735,18 +735,5 @@ function focusFromBox(event: PointerEvent) {
       }
     }
   }
-
-  // Motion is feedback only: colour, and the height of a growing box. Nothing
-  // in the field moves position, so there is nothing else to switch off here.
-  @media (prefers-reduced-motion: reduce) {
-    &__control,
-    &__control::before,
-    &__outline,
-    &__grip,
-    &__grip::before,
-    &__input {
-      transition: none;
-    }
-  }
 }
 </style>

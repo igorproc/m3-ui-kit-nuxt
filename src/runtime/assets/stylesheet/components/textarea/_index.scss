@@ -103,7 +103,7 @@ $tokens: (
   state: (
     duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
-    grow: (duration: 120ms, easing: ease-out),
+    grow: (duration: var(--sys-motion-duration-short-2), easing: var(--sys-motion-easing-standard-decelerate)),
   ),
   // Focus moves the border hue and nothing else: a width change would have to be
   // paid back in padding, and neither of the two can transition smoothly.
