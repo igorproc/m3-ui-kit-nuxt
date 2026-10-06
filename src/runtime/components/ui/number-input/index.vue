@@ -555,10 +555,15 @@ defineExpose({ element })
 
   // ── scrub · the label itself is the drag target ──
   &__scrub {
-    flex: 0 0 auto;
-    margin-right: g($t, 'scrub.padding.inline');
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: g($t, 'scrub.max-width');
+    overflow: hidden;
+    margin-inline-end: g($t, 'scrub.padding.inline');
     border-bottom: g($t, 'scrub.border.width') g($t, 'scrub.border.style') g($t, 'scrub.color');
     color: g($t, 'scrub.color');
+    text-overflow: ellipsis;
+    white-space: nowrap;
     cursor: ew-resize;
     user-select: none;
 
@@ -725,9 +730,16 @@ defineExpose({ element })
     cursor: default;
   }
 
-  // A drag must not leave text selected in its wake.
+  // A drag must not leave text selected in its wake, and the pointer keeps the
+  // resize cursor even once it has left the handle.
   &--scrubbing {
+    cursor: ew-resize;
     user-select: none;
+  }
+
+  &--scrubbing &__scrub {
+    border-bottom-style: g($t, 'scrub.active.border.style');
+    color: g($t, 'scrub.active.color');
   }
 
   // ── support line ──

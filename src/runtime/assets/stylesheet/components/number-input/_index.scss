@@ -132,10 +132,13 @@ $tokens: (
   // hint the gesture exists, so it is always visible, never hover-only.
   scrub: (
     color: map.get($theme-color-link, primary),
-    padding: (inline: 12rem),
-    gap: 2rem,
+    padding: (inline: spacing(12)),
+    gap: spacing(2),
+    // A long label truncates instead of squeezing the value out.
+    max-width: 40%,
     border: (width: 1rem, style: dotted),
-    active: (color: map.get($theme-color-link, primary)),
+    // While dragging the hint turns solid: the gesture has engaged.
+    active: (color: map.get($theme-color-link, primary), border: (style: solid)),
   ),
   support: (
     padding: (inline: spacing(16)),
