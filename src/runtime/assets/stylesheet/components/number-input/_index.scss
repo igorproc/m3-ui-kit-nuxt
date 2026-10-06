@@ -102,7 +102,7 @@ $tokens: (
     // `block` is off the 4-unit scale: it centres a label-large line in the zone.
     padding: (inline: spacing(8), block: 6rem),
     // A long unit truncates instead of squeezing the value out.
-    max-width: 40%,
+    max-width: 30%,
     caret: (size: 18rem),
     selected: (color: map.get($theme-color-link, primary)),
     menu: (min-width: 96rem),
