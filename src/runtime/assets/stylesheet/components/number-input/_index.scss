@@ -135,8 +135,12 @@ $tokens: (
     active: (color: map.get($theme-color-link, primary)),
   ),
   support: (
-    padding: (inline: 16rem),
-    margin: (top: 4rem),
+    padding: (inline: spacing(16)),
+    margin: (top: spacing(4)),
+    // One body-small line, held even when empty so an arriving error never
+    // pushes what is below the field.
+    min-height: var(--md-sys-typescale-body-small-line-height),
+    icon: (gap: 6rem, size: 16rem),
     color: map.get($theme-color-link, on-surface-variant),
   ),
   // Vertical scale. Height and padding only — type size never changes, so a

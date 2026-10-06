@@ -219,10 +219,12 @@ describe('m-number-input · variants', () => {
       expect(invalid.find('.ui-number-input__support').text()).toBe('Out of range')
     })
 
-    it('renders nothing when there is nothing to say', async () => {
+    it('keeps an empty line when there is nothing to say, so an error never reflows', async () => {
       const wrapper = await mount()
+      const support = wrapper.find('.ui-number-input__support')
 
-      expect(wrapper.find('.ui-number-input__support').exists()).toBe(false)
+      expect(support.exists()).toBe(true)
+      expect(support.text()).toBe('')
     })
 
     it('marks the invalid state on the root', async () => {

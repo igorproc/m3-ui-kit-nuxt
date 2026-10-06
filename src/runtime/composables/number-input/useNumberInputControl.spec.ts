@@ -155,13 +155,14 @@ describe('useNumberInputControl', () => {
     expect(onInvalid).toHaveBeenCalledWith('55', 'out-of-range')
   })
 
-  it('announces an error only when there is one', async () => {
+  it('keeps the live-region role constant, so only the arriving error is announced', async () => {
     const model = ref<number | null>(1)
     const props = reactive<Partial<NumberInputControlProps>>({ helperText: 'Pixels' })
     const { component } = createHarness(model, props)
 
     const wrapper = await mountSuspended(component)
-    expect(wrapper.find('p').attributes('role')).toBeUndefined()
+    expect(wrapper.find('p').attributes('role')).toBe('alert')
+    expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
 
     props.errorMessage = 'Out of range'
     await wrapper.vm.$nextTick()

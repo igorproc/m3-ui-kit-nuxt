@@ -167,11 +167,34 @@ describe('m-number-input · a11y', () => {
       expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
     })
 
-    it('leaves a valid field unmarked and its helper silent', async () => {
+    it('leaves a valid field unmarked', async () => {
       const wrapper = await mount({ helperText: 'Pixels' })
 
       expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
-      expect(wrapper.find('.ui-number-input__support').attributes('role')).toBeUndefined()
+    })
+
+    it('has the live region in place before the error arrives, and never re-roles it', async () => {
+      const wrapper = await mount()
+      const region = wrapper.find('.ui-number-input__support')
+
+      expect(region.exists()).toBe(true)
+      expect(region.attributes('role')).toBe('alert')
+      expect(region.text()).toBe('')
+
+      await wrapper.setProps({ errorMessage: 'Out of range' })
+
+      expect(wrapper.find('.ui-number-input__support').element).toBe(region.element)
+      expect(region.attributes('role')).toBe('alert')
+      expect(region.text()).toBe('Out of range')
+    })
+
+    it('says error without colour: a glyph, even with no message', async () => {
+      const valid = await mount({ helperText: 'Pixels' })
+      expect(valid.find('.ui-number-input__support-icon').exists()).toBe(false)
+
+      const bare = await mount({ error: true })
+      expect(bare.find('.ui-number-input__support-icon').exists()).toBe(true)
+      expect(bare.find('.ui-number-input__support-icon').attributes('aria-hidden')).toBe('true')
     })
 
     it('exposes required through both the native attribute and ARIA', async () => {

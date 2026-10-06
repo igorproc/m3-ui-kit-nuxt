@@ -87,7 +87,12 @@ export interface NumberLabelAttrs {
 
 export interface NumberSupportAttrs {
   id: string
-  role: 'alert' | undefined
+  /**
+   * Constant, never toggled with the text: a live region is only heard when it
+   * already exists before its content changes. Its helper text is in place at
+   * mount, so it stays silent; only a change — the error arriving — is spoken.
+   */
+  role: 'alert'
 }
 
 export interface NumberStepperAttrs {
@@ -245,9 +250,7 @@ export function useNumberInputControl(
 
   const supportAttrs = computed<NumberSupportAttrs>(() => ({
     id: messageId,
-    // Only a real error interrupts; a helper line that announces itself on
-    // every render is noise.
-    role: isError.value ? 'alert' : undefined,
+    role: 'alert',
   }))
 
   const incrementAttrs = computed<NumberStepperAttrs>(() => ({

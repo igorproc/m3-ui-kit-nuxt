@@ -138,23 +138,34 @@
     </div>
 
     <p
-      v-if="message"
       v-bind="supportAttrs"
       class="ui-number-input__support"
     >
-      <slot
-        v-if="isError && $slots.error"
-        name="error"
-        :message="message"
+      <MIcon
+        v-if="isError && !$slots.error"
+        :name="ICONS.error"
+        class="ui-number-input__support-icon"
+        aria-hidden="true"
       />
-      <slot
-        v-else-if="!isError && $slots.helper"
-        name="helper"
-        :message="message"
-      />
-      <template v-else>
-        {{ message }}
-      </template>
+
+      <span
+        v-if="message"
+        class="ui-number-input__support-text"
+      >
+        <slot
+          v-if="isError && $slots.error"
+          name="error"
+          :message="message"
+        />
+        <slot
+          v-else-if="!isError && $slots.helper"
+          name="helper"
+          :message="message"
+        />
+        <template v-else>
+          {{ message }}
+        </template>
+      </span>
     </p>
   </div>
 </template>
@@ -298,6 +309,7 @@ defineExpose({ element })
 
   // ── label · base is `top`, a block above the container ──
   &__label {
+    overflow-wrap: anywhere;
     color: g($t, 'label.color');
 
     @include typescale(g($t, 'typography.label'));
@@ -719,12 +731,31 @@ defineExpose({ element })
   }
 
   // ── support line ──
+  // Always mounted: its height is reserved, and as a live region it has to
+  // exist before the error text arrives in it.
   &__support {
+    display: flex;
+    align-items: center;
+    gap: g($t, 'support.icon.gap');
+    min-height: g($t, 'support.min-height');
     padding-inline: g($t, 'support.padding.inline');
     margin: g($t, 'support.margin.top') 0 0;
+    overflow-wrap: anywhere;
     color: g($t, 'support.color');
+    transition: color g($t, 'state.duration') g($t, 'state.easing');
 
     @include typescale(g($t, 'typography.support'));
+  }
+
+  // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
+  // message has nothing but this glyph to say it.
+  &__support-icon {
+    flex: 0 0 auto;
+    font-size: g($t, 'support.icon.size');
+  }
+
+  &__support-text {
+    min-width: 0;
   }
 
   // ── forced colours · every edge turns CanvasText, so the states that were a
