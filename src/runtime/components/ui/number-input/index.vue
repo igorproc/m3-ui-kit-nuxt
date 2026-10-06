@@ -217,6 +217,16 @@ const {
   onInvalid: (value, reason) => emit('invalid', value, reason),
 })
 
+// The kit ships no default label: it would be English in a kit with no i18n.
+// An unnamed spinbutton is worse, so say it in dev rather than in a broken form.
+if (import.meta.dev) {
+  const attrs = useAttrs()
+
+  if (!props.label && !attrs['aria-label'] && !attrs['aria-labelledby']) {
+    console.warn('[m-number-input] has no accessible name: pass `label`, `aria-label` or `aria-labelledby`.')
+  }
+}
+
 const isScrub = computed(() => props.controls === 'scrub')
 // The notch is sized by this copy of the label, so it carries the asterisk too.
 const notchText = computed(() => props.required ? `${props.label} *` : props.label)
