@@ -327,7 +327,7 @@ defineExpose({ element })
     .ui-number-input__label {
       position: absolute;
       top: var(--ui-number-input-label-top);
-      left: var(--ui-number-input-inset);
+      inset-inline-start: var(--ui-number-input-inset);
       z-index: 1;
       max-width: g($t, 'label.max-width');
       overflow: hidden;
@@ -342,6 +342,10 @@ defineExpose({ element })
       transition:
         transform g($t, 'state.duration') g($t, 'state.easing'),
         color g($t, 'state.duration') g($t, 'state.easing');
+
+      &:dir(rtl) {
+        transform-origin: right center;
+      }
     }
   }
 
@@ -350,8 +354,18 @@ defineExpose({ element })
   &--split {
     --ui-number-input-label-notch-shift: #{g($t, 'label.split.notch.shift')};
 
+    // The shift is a physical translate, so it runs the other way in RTL.
+    &:dir(rtl) {
+      --ui-number-input-label-notch-shift: calc(#{g($t, 'label.split.notch.shift')} * -1);
+    }
+
+  }
+
+  &--label-float.ui-number-input--split,
+  &--label-inset.ui-number-input--split {
     .ui-number-input__label {
-      left: g($t, 'label.split.left');
+      inset-inline-start: g($t, 'label.split.left');
+      max-width: g($t, 'label.split.max-width');
     }
   }
 
@@ -587,8 +601,8 @@ defineExpose({ element })
     .ui-number-input__control {
       border-color: transparent;
       border-bottom-color: g($t, 'filled.border.color');
-      border-bottom-right-radius: 0;
-      border-bottom-left-radius: 0;
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
       background-color: g($t, 'filled.surface');
     }
 

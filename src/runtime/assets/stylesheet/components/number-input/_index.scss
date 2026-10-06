@@ -22,11 +22,15 @@ $field-height: 56rem;
 // Shared by the label and the outline notch, which has to reproduce the raised
 // label's footprint in layout terms.
 $border-width: 1rem;
-$padding-inline: 16rem;
+$padding-inline: spacing(16);
 $label-typescale: 'body-large';
-$label-split-left: 60rem;
 $label-raised-scale: 0.75;
-$notch-padding-inline: 4rem;
+$notch-padding-inline: spacing(4);
+$stepper-inset: spacing(4);
+
+// A leading split zone pushes the resting label past it: the zone's inset, the
+// zone itself (its size follows density) and the usual content start.
+$label-split-left: calc(#{$stepper-inset} + var(--ui-number-input-stepper-size) + #{$padding-inline});
 
 // One density step. The label rests centred on the control (`top` is half the
 // height) and is raised by transform only: `inside` lifts it by `$raise` for
@@ -69,7 +73,10 @@ $tokens: (
     // A leading split zone pushes the resting label past it, so the two never
     // overlap. Raised onto the border it returns to the content start: the
     // notch does not follow the zone.
+    // The same clearance at the trailing edge keeps a long label off the
+    // increment zone.
     split: (left: $label-split-left,
+      max-width: calc(100% - 2 * #{$label-split-left}),
       notch: (shift: calc(var(--ui-number-input-inset) - #{$label-split-left})),
     ),
     // Raised label lifts by transform only — no reflow, no font-size animation.
@@ -105,7 +112,7 @@ $tokens: (
   // draws, and three of them in a row is exactly what reads as a form toolkit.
   stepper: (
     color: map.get($theme-color-link, on-surface-variant),
-    inset: 4rem,
+    inset: $stepper-inset,
     // Transparent containers can step up to the next surface tone. `filled`
     // already sits on the highest one, so there its zone is a state layer.
     surface: map.get($theme-color-link, surface-container-high),
