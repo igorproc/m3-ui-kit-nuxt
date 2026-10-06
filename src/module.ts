@@ -12,6 +12,7 @@ import { COOKIE_THEME_KEYS } from './runtime/shared/constants/cookie'
 import { findLegacyThemeOptions, formatLegacyThemeOptions } from './options/legacy'
 import { findUndeclaredDefaultPalette } from './options/validate'
 import { resolveBreakpoints } from './runtime/utils/viewport/resolveBreakpoints'
+import type { ModuleDependencies, Nuxt, NuxtModule } from 'nuxt/schema'
 import type { MaterialKitOptions } from './runtime/shared/types/kit'
 
 export type { MaterialKitOptions }
@@ -71,13 +72,13 @@ function registerThemePipeline(options: MaterialKitOptions, nuxt: any) {
   nuxt.options.alias['~material-kit-themes'] = themesTemplate.dst
 }
 
-export default defineNuxtModule<MaterialKitOptions>({
+const materialKitModule: NuxtModule<MaterialKitOptions> = defineNuxtModule<MaterialKitOptions>({
   meta: {
     name: '@pr0s1k/primetime-kit',
     configKey: 'materialKit',
     compatibility: { nuxt: '>=4.0.0' },
   },
-  moduleDependencies(nuxt) {
+  moduleDependencies(nuxt: Nuxt): ModuleDependencies {
     const kitModulesDir = fileURLToPath(new URL('../node_modules', import.meta.url))
     if (!nuxt.options.modulesDir.includes(kitModulesDir)) {
       nuxt.options.modulesDir.push(kitModulesDir)
@@ -151,7 +152,6 @@ export default defineNuxtModule<MaterialKitOptions>({
 
     nuxt.options.build.transpile.push(runtimeDir)
 
-    nuxt.options.imports ||= {}
     nuxt.options.imports.transform ||= {}
     nuxt.options.imports.transform.include ||= []
     nuxt.options.imports.transform.include.push(
@@ -201,6 +201,11 @@ export default defineNuxtModule<MaterialKitOptions>({
 
     registerThemePipeline(options, nuxt)
 
-    nuxt.options.runtimeConfig.public.materialKit = options as MaterialKitOptions
+    // Nuxt generates runtime-config types from the resolved values (an empty
+    // `themes` becomes `{}[]`), so the declared option type is not assignable back.
+    const publicConfig = nuxt.options.runtimeConfig.public as Record<string, unknown>
+    publicConfig.materialKit = options
   },
 })
+
+export default materialKitModule

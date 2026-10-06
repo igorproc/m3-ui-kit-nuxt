@@ -4,7 +4,7 @@ import { useCookie, useRuntimeConfig, useState } from '#app'
 
 import { THEME_COOKIE_OPTIONS, THEME_DEFINITIONS, THEME_CONTRASTS, FALLBACK_PALETTE_KEY } from '#kit/shared/constants/theme'
 import { createThemeController } from '#kit/utils/theme/createThemeController'
-import type { TDefinition, IPaletteCookie } from '#kit/shared/types/kit'
+import type { TDefinition, IPaletteCookie, ICookie, MaterialKitOptions } from '#kit/shared/types/kit'
 
 /**
  * Wires the pure {@link createThemeController} to Nuxt: cookies for persisted state,
@@ -18,7 +18,9 @@ import type { TDefinition, IPaletteCookie } from '#kit/shared/types/kit'
  * `theme.definition = 'light'` writes.
  */
 export function createMaterialTheme() {
-  const config = useRuntimeConfig().public.materialKit
+  // Generated runtime-config types are inferred from default values; restore the
+  // declared shape. Module defaults (defu-merged) guarantee every cookie key.
+  const config = useRuntimeConfig().public.materialKit as MaterialKitOptions & { cookie: { theme: Required<ICookie['theme']> } }
   const cookieKeys = config.cookie.theme
 
   const defaults = config.theme?.default ?? {}

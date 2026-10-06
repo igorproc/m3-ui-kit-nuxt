@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import type { Component } from 'vue'
 import MTable from './index.vue'
 import MTableHeader from '#kit/components/fragments/table/header/index.vue'
 import MTablePagination from '#kit/components/fragments/table/pagination/index.vue'
 
-interface Row { id: number, name: string, age: number }
+type Row = { id: number, name: string, age: number }
 
 const columns = [
   { key: 'name', label: 'Name', sortable: true },
@@ -62,7 +63,7 @@ describe('m-table', () => {
 
     await wrapper.find('.ui-table__header-sort').trigger('click')
 
-    const events = wrapper.findComponent(MTableHeader).emitted('update:sort')
+    const events = wrapper.findComponent(MTableHeader as Component).emitted('update:sort')
     expect(events).toBeTruthy()
     expect(events!.at(-1)).toEqual([{ key: 'name', direction: 'asc' }])
   })

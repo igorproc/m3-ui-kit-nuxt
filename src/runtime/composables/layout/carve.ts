@@ -14,6 +14,7 @@
  */
 
 export type LayoutKind = 'top' | 'bottom' | 'start' | 'end' | 'main'
+type EdgeKind = Exclude<LayoutKind, 'main'>
 
 export type DeviceRange = 'mobile' | 'tablet' | 'desktop'
 
@@ -124,7 +125,7 @@ export function carve(items: CarveItem[]): CarveResult {
 
   const mainItem = orderedItems.find(item => item.kind === 'main')
   const mainArea = mainItem?.id ?? 'main'
-  const bands = orderedItems.filter(item => item.kind !== 'main')
+  const bands = orderedItems.filter((item): item is CarveItem & { kind: EdgeKind } => item.kind !== 'main')
 
   const counts = { top: 0, bottom: 0, start: 0, end: 0 }
   for (const band of bands) counts[band.kind]++

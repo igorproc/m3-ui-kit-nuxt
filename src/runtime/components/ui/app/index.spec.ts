@@ -35,7 +35,7 @@ describe('m-app', () => {
   it('provides readonly loading state to the loading slot', async () => {
     const wrapper = await mountSuspended(MApp, {
       slots: {
-        loading: scope => h('output', { 'data-test': 'loading' }, `${scope.progress.value}:${scope.isLoading.value}`),
+        loading: scope => h('output', { 'data-test': 'loading' }, `${scope.progress}:${scope.isLoading}`),
       },
     })
 

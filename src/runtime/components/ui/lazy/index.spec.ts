@@ -91,7 +91,7 @@ describe('m-lazy', () => {
         'minWidth': 120,
         'minHeight': '240px',
         'once': false,
-        'onUpdate:active': (value: boolean) => { active.value = value },
+        'onUpdate:active': (value: boolean | undefined) => { active.value = value as boolean },
       }, {
         default: () => h('div', { class: 'content' }, 'Content'),
         placeholder: () => h('div', { class: 'placeholder' }, 'Waiting'),

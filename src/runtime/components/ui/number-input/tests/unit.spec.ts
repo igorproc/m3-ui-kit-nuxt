@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import type { VueWrapper } from '@vue/test-utils'
 import MNumberInput from '../index.vue'
 
 let host: HTMLElement
@@ -7,11 +8,11 @@ let host: HTMLElement
 // one in the document — querying options across tests then never leaks.
 let current: { unmount: () => void } | null = null
 
-async function mount(props: Record<string, unknown> = {}, slots?: Record<string, unknown>) {
+async function mount(props: Record<string, unknown> = {}, slots?: Record<string, (...args: never[]) => unknown>) {
   if (current) current.unmount()
   current = await mountSuspended(MNumberInput, { props, slots })
 
-  return current as Awaited<ReturnType<typeof mountSuspended>>
+  return current as VueWrapper
 }
 
 function options() {

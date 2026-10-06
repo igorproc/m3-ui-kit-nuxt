@@ -58,17 +58,10 @@ import { computed } from 'vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import MCheckbox from '#kit/components/ui/checkbox/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
-import type { TableColumn, TableData, SortState } from '#kit/components/ui/table/types'
+import type { MTableHeaderProps, TableColumn, TableData, SortState } from '#kit/components/ui/table/types'
 import { useTableContext } from '#kit/composables/table/useTableContext'
 
-export interface Props {
-  columns: TableColumn<T>[]
-  selectable?: boolean
-  isAllSelected?: boolean
-  sort?: SortState<T> | null
-}
-
-const props = defineProps<Props>()
+const props = defineProps<MTableHeaderProps<T>>()
 
 const emit = defineEmits<{
   'toggle-all': [value: boolean]

@@ -15,7 +15,7 @@ type Control = ReturnType<typeof useNumberInputControl>
  */
 function createHarness(
   model: Ref<number | null>,
-  props: NumberInputControlProps = {},
+  props: Partial<NumberInputControlProps> = {},
   hooks: NumberValueHooks = {},
 ) {
   let control: Control | null = null
@@ -23,7 +23,7 @@ function createHarness(
 
   const component = defineComponent({
     setup() {
-      control = useNumberInputControl(model, focused, props, hooks, 'harness')
+      control = useNumberInputControl(model, focused, props as NumberInputControlProps, hooks, 'harness')
 
       return () => h('div', [
         h('label', { ...control!.labelAttrs.value, ref: (el: unknown) => {
@@ -69,13 +69,13 @@ describe('useNumberInputControl', () => {
     const { component, getControl } = createHarness(model, { error: true })
 
     await mountSuspended(component)
-    const bags = [
+    const bags: object[] = [
       getControl().inputAttrs.value,
       getControl().labelAttrs.value,
       getControl().supportAttrs.value,
       getControl().incrementAttrs.value,
       getControl().decrementAttrs.value,
-    ] as Record<string, unknown>[]
+    ]
 
     for (const bag of bags) {
       for (const key of Object.keys(bag)) {
@@ -87,7 +87,7 @@ describe('useNumberInputControl', () => {
 
   it('tracks a reactive props object without any getter plumbing', async () => {
     const model = ref<number | null>(5)
-    const props = reactive<NumberInputControlProps>({ max: 10, required: false })
+    const props = reactive<Partial<NumberInputControlProps>>({ max: 10, required: false })
     const { component } = createHarness(model, props)
 
     const wrapper = await mountSuspended(component)
@@ -157,7 +157,7 @@ describe('useNumberInputControl', () => {
 
   it('announces an error only when there is one', async () => {
     const model = ref<number | null>(1)
-    const props = reactive<NumberInputControlProps>({ helperText: 'Pixels' })
+    const props = reactive<Partial<NumberInputControlProps>>({ helperText: 'Pixels' })
     const { component } = createHarness(model, props)
 
     const wrapper = await mountSuspended(component)

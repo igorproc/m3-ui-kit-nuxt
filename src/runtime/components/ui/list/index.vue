@@ -16,15 +16,9 @@
 <script setup lang="ts" generic="T extends { id: string | number }">
 import { toRef } from 'vue'
 import { provideListContext } from './context'
-import type { MListItemDensity } from './item/props'
+import type { MListProps } from './types'
 
-export interface Props {
-  items?: T[]
-  /** Vertical scale inherited by every row that does not set its own. */
-  density?: MListItemDensity
-}
-
-const props = withDefaults(defineProps<Props>(), { density: 'default' })
+const props = withDefaults(defineProps<MListProps<T>>(), { density: 'default' })
 
 provideListContext({ density: toRef(() => props.density) })
 </script>

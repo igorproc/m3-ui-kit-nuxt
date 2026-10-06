@@ -14,6 +14,7 @@ import type {
   TTheme,
   TDefinition,
   TResolvedDefinition,
+  TThemeContrast,
   TThemeVariant,
   IPaletteCookie,
 } from '#kit/shared/types/kit'
@@ -197,7 +198,8 @@ export function createThemeController(deps: ThemeControllerDeps) {
   const schemeInput = computed(() => ({
     theme: activeTheme.value ?? { key: '', name: '' },
     paletteKey: resolvedPalette.value,
-    contrast: contrast.value,
+    // A cookie can carry any string; the generator maps unknown levels to standard.
+    contrast: contrast.value as TThemeContrast,
     semanticColors,
     semanticBlend,
   }))

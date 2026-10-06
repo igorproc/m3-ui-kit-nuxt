@@ -4,13 +4,13 @@ export const THEME_DEFINITIONS = {
   LIGHT: 'light',
   DARK: 'dark',
   SYSTEM: 'system',
-}
+} as const
 
 export const THEME_CONTRASTS = {
   STANDARD: 'standard',
   MEDIUM: 'medium',
   HIGH: 'high',
-}
+} as const
 
 /**
  * Every MCU scheme variant the kit accepts, as plain data.

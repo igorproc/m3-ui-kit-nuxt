@@ -1,3 +1,5 @@
+import type { Ref } from 'vue'
+
 export type FileUploadStatus = 'queued' | 'uploading' | 'success' | 'error' | 'cancelled'
 
 export interface FileUploadTaskContext {
@@ -26,7 +28,8 @@ export interface FileUploadQueueOptions<TResult> {
 }
 
 export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOptions<TResult>) {
-  const entries = ref<FileUploadEntry<TResult>[]>([])
+  // Annotated rather than inferred: ref() would unwrap the generic TResult.
+  const entries = ref([]) as Ref<FileUploadEntry<TResult>[]>
   const controllers = new Map<string, AbortController>()
   let sequence = 0
 

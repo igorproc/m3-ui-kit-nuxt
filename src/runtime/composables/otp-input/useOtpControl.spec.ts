@@ -63,12 +63,12 @@ describe('useOtpControl', () => {
     const { component, getControl } = createHarness(model, { length: 2, mode: 'numeric', error: true })
 
     await mountSuspended(component)
-    const bags = [
+    const bags: object[] = [
       getControl().inputAttrs.value,
       getControl().labelAttrs.value,
       getControl().supportAttrs.value,
       getControl().cellAttrs(0),
-    ] as Record<string, unknown>[]
+    ]
 
     for (const bag of bags) {
       for (const key of Object.keys(bag)) {

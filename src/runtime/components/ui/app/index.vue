@@ -40,7 +40,11 @@ defineSlots<MAppSlots>()
 
 const theme = useMaterialTheme()
 useHead({
-  htmlAttrs: computed(() => theme.htmlAttrs),
+  htmlAttrs: {
+    'data-definition': () => theme.htmlAttrs['data-definition'],
+    'data-palette': () => theme.htmlAttrs['data-palette'],
+    'data-contrast': () => theme.htmlAttrs['data-contrast'],
+  },
   style: [{ id: 'material-kit-theme', innerHTML: computed(() => theme.themeCss) }],
 })
 

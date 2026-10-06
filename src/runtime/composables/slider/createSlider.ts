@@ -181,7 +181,7 @@ export function useSlider(
   const activeRange = computed(() => {
     const pcts = percentages.value
     if (pcts.length === 0) return { start: 0, end: 0 }
-    if (pcts.length === 1) return { start: 0, end: pcts[0] }
+    if (pcts.length === 1) return { start: 0, end: pcts[0] ?? 0 }
     return {
       start: Math.min(...pcts),
       end: Math.max(...pcts),

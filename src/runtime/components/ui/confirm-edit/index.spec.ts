@@ -13,7 +13,7 @@ describe('useConfirmEditTransaction', () => {
       props: { modelValue: { name: 'Ada' }, presentation: 'popover' },
       slots: {
         activator: ({ props }: { props: Record<string, unknown> }) => h('button', props, 'Edit'),
-        editor: ({ draft }: { draft: { name: string } }) => h('span', draft.name),
+        editor: ({ draft }) => h('span', (draft as { name: string }).name),
       },
     })
     await wrapper.find('button').trigger('click')

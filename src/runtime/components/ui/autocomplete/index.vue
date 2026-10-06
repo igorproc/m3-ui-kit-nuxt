@@ -260,7 +260,7 @@ watch(open, (value) => {
   if (value) nextTick(() => fieldRef.value?.input?.focus())
 })
 
-provideDropdownContext(control.context as DropdownContext)
+provideDropdownContext(control.context as unknown as DropdownContext)
 
 defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: control.clearQuery })
 </script>

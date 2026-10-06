@@ -90,11 +90,6 @@ export interface MLazySlotState {
   retry: () => void
 }
 
-interface IdleWindow extends Window {
-  requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number
-  cancelIdleCallback?: (handle: number) => void
-}
-
 const props = defineProps(mLazyProps)
 const activeModel = defineModel<boolean | undefined>('active', { default: undefined })
 
@@ -122,7 +117,10 @@ const retryKey = ref(0)
 
 const isControlled = computed(() => activeModel.value !== undefined)
 const isActivated = computed(() => isControlled.value ? activeModel.value === true : internalActive.value)
-const transitionName = computed(() => props.transition === false ? undefined : props.transition)
+const transitionName = computed(() => {
+  if (props.transition === false) return undefined
+  return props.transition === true ? mLazyProps.transition.default : props.transition
+})
 const boundaryStyle = computed(() => ({
   minWidth: toCssSize(props.minWidth),
   minHeight: toCssSize(props.minHeight),
@@ -209,7 +207,7 @@ function onInteraction(interaction: MLazyInteraction, event: Event) {
 function scheduleIdle() {
   if (!import.meta.client) return
 
-  const idleWindow = window as IdleWindow
+  const idleWindow: Partial<Pick<Window, 'requestIdleCallback' | 'cancelIdleCallback'>> = window
 
   if (idleWindow.requestIdleCallback) {
     const handle = idleWindow.requestIdleCallback(() => activate('idle'), { timeout: props.timeout })

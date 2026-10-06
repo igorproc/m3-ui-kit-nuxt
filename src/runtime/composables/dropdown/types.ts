@@ -111,17 +111,17 @@ export interface DropdownContext<TItem = DropdownItemBase, TValue = unknown> {
 export interface DropdownControlConfig {
   items: readonly DropdownItemBase[]
   itemTitle: DropdownRuntimeResolver<string>
-  itemValue: DropdownRuntimeResolver<unknown> | undefined
+  itemValue?: DropdownRuntimeResolver<unknown>
   itemDisabled: DropdownRuntimeResolver<boolean>
-  valueComparator: DropdownValueComparator | undefined
+  valueComparator?: DropdownValueComparator
   multiple: boolean
   mandatory: boolean
-  max: number | undefined
+  max?: number
   clearable: boolean
   disabled: boolean
   readonly: boolean
   loading: boolean
-  maxHeight: number | string | undefined
+  maxHeight?: number | string
 }
 
 export interface UseDropdownControlOptions<TItem extends DropdownItemBase, TValue> {

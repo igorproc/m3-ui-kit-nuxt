@@ -38,7 +38,7 @@ import { useGlobalListener } from '#kit/composables/useGlobalListener'
 import { useSlider } from '#kit/composables/slider/createSlider'
 
 // Utilities
-import { computed, onScopeDispose, readonly, shallowRef, toValue } from 'vue'
+import { computed, onScopeDispose, readonly, shallowReadonly, shallowRef, toValue } from 'vue'
 
 // Types
 import type { ComputedRef, MaybeRefOrGetter, Ref, ShallowRef } from 'vue'
@@ -336,7 +336,7 @@ export function useSliderControl(
 
   const isDragging = computed(() => draggingIndex.value !== null)
 
-  const rootAttrs = computed(() => ({
+  const rootAttrs = computed<SliderRootAttrs>(() => ({
     'data-orientation': state.orientation,
     'data-state': isDragging.value ? 'dragging' : 'idle',
     'data-disabled': state.disabled ? '' : undefined,
@@ -369,7 +369,7 @@ export function useSliderControl(
    * Attrs for the thumb at `index`. Called during render so the reads below stay
    * tracked; neighbours clamp `aria-valuemin`/`aria-valuemax` in range mode.
    */
-  function getThumbAttrs(index: number) {
+  function getThumbAttrs(index: number): SliderThumbAttrs {
     const values = slider.values.value
     const value = values[index] ?? state.min
     const percent = slider.percentages.value[index] ?? 0
@@ -418,7 +418,7 @@ export function useSliderControl(
     // Behavior
     draggingIndex: readonly(draggingIndex),
     isDragging,
-    trackElement: readonly(trackElement),
+    trackElement: shallowReadonly(trackElement),
 
     // Attr bags
     rootAttrs,

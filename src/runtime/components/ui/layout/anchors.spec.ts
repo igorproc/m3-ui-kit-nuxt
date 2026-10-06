@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
+import type { Component } from 'vue'
 import MLayout from './index.vue'
 import MLayoutHeader from './header.vue'
 import MLayoutAside from './aside.vue'
@@ -34,7 +35,7 @@ const DocsHeaderWrapper = defineComponent({
   render: () => h(MAppBar, { title: 'Docs header' }),
 })
 
-const NestedWrapper = defineComponent({
+const NestedWrapper: Component = defineComponent({
   props: { depth: { type: Number, required: true } },
   setup(props) {
     return () => props.depth > 0

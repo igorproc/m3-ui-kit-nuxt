@@ -11,13 +11,13 @@ type Control = ReturnType<typeof useTextareaControl>
  * Mounts the attr bags onto anonymous markup — no kit component, no kit class
  * names. Anything asserted here is behavior the bags carry on their own.
  */
-function createHarness(model: Ref<string>, props: TextareaControlProps = {}) {
+function createHarness(model: Ref<string>, props: Partial<TextareaControlProps> = {}) {
   let control: Control | null = null
   const focused = ref(false)
 
   const component = defineComponent({
     setup() {
-      control = useTextareaControl(model, focused, props, 'harness')
+      control = useTextareaControl(model, focused, props as TextareaControlProps, 'harness')
 
       return () => h('div', [
         h('label', control!.labelAttrs.value, 'Notes'),
@@ -54,7 +54,7 @@ describe('useTextareaControl', () => {
 
   it('tracks a reactive props object without any getter plumbing', async () => {
     const model = ref('')
-    const props = reactive<TextareaControlProps>({ helperText: 'Hint', required: false })
+    const props = reactive<Partial<TextareaControlProps>>({ helperText: 'Hint', required: false })
     const { component } = createHarness(model, props)
 
     const wrapper = await mountSuspended(component)
@@ -121,7 +121,7 @@ describe('useTextareaControl', () => {
 
   it('publishes the interaction state the container passes down to a footer', async () => {
     const model = ref('')
-    const props = reactive<TextareaControlProps>({ disabled: false, readonly: false })
+    const props = reactive<Partial<TextareaControlProps>>({ disabled: false, readonly: false })
     const { component, getControl } = createHarness(model, props)
 
     await mountSuspended(component)

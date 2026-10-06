@@ -22,6 +22,7 @@ import { useFormBuilder } from './useFormBuilder'
 import type {
   CreateFormConfig,
   FieldBinding,
+  BindFieldOptions,
   FieldMeta,
   FormBinding,
   ValidationAdapter,
@@ -30,7 +31,7 @@ import type {
 /** Creates the `vee-validate` + `yup` validation adapter. */
 export function veeValidateAdapter(): ValidationAdapter {
   return {
-    bindField<T>(path: string, options): FieldBinding<T> {
+    bindField<T>(path: string, options?: BindFieldOptions): FieldBinding<T> {
       const field = useVeeField<T>(() => path, undefined, {
         validateOnValueUpdate: options?.validateOnValueUpdate ?? true,
       })
@@ -56,7 +57,9 @@ export function veeValidateAdapter(): ValidationAdapter {
       })
 
       return {
-        submit: form.submit,
+        submit: async (event?: Event) => {
+          await form.submit(event)
+        },
         pending: form.pending,
         isError: form.isError,
         values: computed(() => form.values as TValues),

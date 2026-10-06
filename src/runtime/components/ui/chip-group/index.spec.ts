@@ -201,7 +201,7 @@ describe('MChipGroup', () => {
               'itemValue': 'id',
               'itemKey': 'id',
               'modelValue': model.value,
-              'onUpdate:modelValue': (value: unknown) => (model.value = value),
+              'onUpdate:modelValue': (value: unknown) => (model.value = value as string),
             },
             {
               item: ({ item, props }: { item: { title: string }, props: Record<string, unknown> }) =>

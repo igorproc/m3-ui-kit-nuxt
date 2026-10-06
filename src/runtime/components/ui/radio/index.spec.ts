@@ -116,7 +116,7 @@ describe('m-radio-group', () => {
           MRadioGroup,
           {
             'modelValue': model.value,
-            'onUpdate:modelValue': (v: string | undefined) => { model.value = v },
+            'onUpdate:modelValue': (v: unknown) => { model.value = v as string | undefined },
           },
           () => [
             h(MRadio, { value: 'a' }),
@@ -148,7 +148,7 @@ describe('m-radio-group', () => {
           MRadioGroup,
           {
             'modelValue': model.value,
-            'onUpdate:modelValue': (v: string | undefined) => { model.value = v },
+            'onUpdate:modelValue': (v: unknown) => { model.value = v as string | undefined },
           },
           () => [
             h(MRadio, { value: 'a' }),

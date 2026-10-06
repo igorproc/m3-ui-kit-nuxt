@@ -167,7 +167,7 @@ async function mountWithSlots() {
   return mountSuspended(MDropdown, {
     props: base,
     slots: {
-      default: (scope: Record<string, never>) => {
+      default: (scope) => {
         const slot = scope as unknown as {
           entries: { id: string, title: string }[]
           listboxAttrs: Record<string, unknown>
@@ -188,7 +188,7 @@ async function mountItemSlot() {
   return mountSuspended(MDropdown, {
     props: base,
     slots: {
-      item: (scope: Record<string, never>) => {
+      item: (scope) => {
         const { title } = scope as unknown as { title: string }
         return h('span', { class: 'custom-row' }, `· ${title} ·`)
       },

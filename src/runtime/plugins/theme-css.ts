@@ -1,5 +1,6 @@
 import { watch } from 'vue'
 import { defineNuxtPlugin } from '#app'
+import type { MaterialRuntime } from '#kit/plugins/material'
 
 /**
  * Renders the active palette's CSS and keeps it current.
@@ -17,7 +18,9 @@ export default defineNuxtPlugin({
   name: 'material-theme-css',
   dependsOn: ['material'],
   async setup(nuxtApp) {
-    const theme = nuxtApp.$material.theme
+    // Nuxt types `$material` from every plugin's own type, this one included;
+    // reading it here closes that loop and TypeScript resolves it to unknown.
+    const theme = (nuxtApp.$material as MaterialRuntime).theme
 
     const render = async () => {
       const [{ generateScheme }, { buildThemeBlocks }] = await Promise.all([

@@ -11,7 +11,7 @@ function timeline(timelineProps: Record<string, unknown>, items: Array<Record<st
       return () =>
         h(MTimeline, timelineProps, {
           default: () => items.map((item, index) =>
-            h(MTimelineItem, { key: item.key ?? index, ...item }, {
+            h(MTimelineItem, { key: (item.key as PropertyKey | undefined) ?? index, ...item }, {
               default: () => item.body ?? `Event ${index}`,
             })),
         })

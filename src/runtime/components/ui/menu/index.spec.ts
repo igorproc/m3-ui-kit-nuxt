@@ -24,7 +24,7 @@ function renderTrigger(props: Record<string, unknown> = {}, items = '') {
     props: { open: { type: Boolean, default: false } },
     setup(p) {
       return () => h('button', { class: 'trigger' }, [
-        h(MMenu, { ...props, modelValue: props.modelValue ?? p.open }, {
+        h(MMenu, { ...props, modelValue: (props.modelValue as boolean | undefined) ?? p.open }, {
           default: () => items
             ? [
                 h('button', { class: 'ui-menu__item' }, 'A'),

@@ -55,7 +55,7 @@ describe('breakpoint bands', () => {
   it('includes consumer-defined breakpoints in all three maps', () => {
     const { is, more, less } = resolveBands(250, { ...BREAKPOINTS, watch: 200 })
     expect('watch' in is).toBe(true)
-    expect(more.watch).toBe(true) // 250 > 200
-    expect(less.watch).toBe(false)
+    expect((more as Record<string, boolean>).watch).toBe(true) // 250 > 200
+    expect((less as Record<string, boolean>).watch).toBe(false)
   })
 })

@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import type { CSSProperties } from 'vue'
+import type { CSSProperties, VNodeChild } from 'vue'
 import { h } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MDialog from '#kit/components/ui/dialog/index.vue'
@@ -86,7 +86,20 @@ const emit = defineEmits<{
   (event: 'error', error: unknown): void
   (event: 'conflict', external: T, draft: T): void
 }>()
-const slots = useSlots()
+type ConfirmEditScope = ReturnType<typeof editorState>
+const slots = defineSlots<{
+  activator?: (scope: {
+    props: typeof activatorProps.value
+    open: typeof openEditor
+    close: typeof requestClose
+    isOpen: boolean
+  }) => VNodeChild
+  title?: () => VNodeChild
+  editor?: (scope: ConfirmEditScope) => VNodeChild
+  actions?: (scope: ConfirmEditScope) => VNodeChild
+  conflict?: (scope: ConfirmEditScope) => VNodeChild
+  error?: (scope: { error: unknown, retry: typeof saveAndClose }) => VNodeChild
+}>()
 const discardOpen = ref(false)
 const activator = shallowRef<HTMLElement>()
 const anchorRect = shallowRef<{ left: number, top: number, width: number }>()
@@ -162,7 +175,7 @@ async function requestClose(explicit = false) {
 function confirmDiscard() {
   discardOpen.value = false
   transaction.cancel()
-  emit('cancel', transaction.committed.value)
+  emit('cancel', transaction.committed.value as T)
   open.value = false
 }
 
@@ -172,7 +185,7 @@ async function saveAndClose() {
 }
 
 function explicitCancel() {
-  emit('cancel', transaction.committed.value)
+  emit('cancel', transaction.committed.value as T)
   void requestClose(true)
 }
 

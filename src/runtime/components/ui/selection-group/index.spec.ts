@@ -35,7 +35,7 @@ async function mountGroup(groupProps: Record<string, unknown>, slots: Record<str
   const model: Ref<unknown> = ref(groupProps.modelValue)
   const Harness = defineComponent({
     setup: () => () => h(
-      MSelectionGroup,
+      MSelectionGroup as never,
       {
         ...groupProps,
         'modelValue': model.value,
@@ -148,14 +148,14 @@ describe('m-selection-item (manual)', () => {
     const model: Ref<unknown> = ref('a')
     const Harness = defineComponent({
       setup: () => () => h(
-        MSelectionGroup,
+        MSelectionGroup as never,
         {
           'modelValue': model.value,
           'onUpdate:modelValue': (value: unknown) => { model.value = value },
         },
         {
           default: () => plans.map(plan => h(
-            MSelectionItem,
+            MSelectionItem as never,
             { value: plan.id },
             { default: (s: SelectionItemState<string>) => itemButton({ ...s, item: plan }) },
           )),
@@ -195,7 +195,7 @@ describe('m-selection-group (advanced context)', () => {
     })
     const Harness = defineComponent({
       setup: () => () => h(
-        MSelectionGroup,
+        MSelectionGroup as never,
         { modelValue: 'b' },
         {
           default: () => [

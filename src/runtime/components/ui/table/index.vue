@@ -78,27 +78,11 @@ import { computed, toRef } from 'vue'
 import UiTableHeader from '#kit/components/fragments/table/header/index.vue'
 import UiTablePagination from '#kit/components/fragments/table/pagination/index.vue'
 import MCheckbox from '#kit/components/ui/checkbox/index.vue'
-import type { TableColumn, TableData, SortState } from './types'
+import type { MTableEmits, MTableProps, TableColumn, TableData, SortState } from './types'
 import { useTableSelection } from '#kit/composables/table/useTableSelection'
 import { provideTableContext } from '#kit/composables/table/useTableContext'
 
-export interface Props {
-  columns: TableColumn<T>[]
-  data: T[]
-  selectable?: boolean
-  selectedRows?: T[]
-  pagination?: boolean
-  pageSize?: number
-  totalItems?: number
-  currentPage?: number
-}
-
-export interface Emits {
-  (e: 'update:selectedRows', rows: T[]): void
-  (e: 'update:currentPage', page: number): void
-}
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<MTableProps<T>>(), {
   selectable: false,
   selectedRows: () => [],
   pagination: false,
@@ -107,7 +91,7 @@ const props = withDefaults(defineProps<Props>(), {
   currentPage: 1,
 })
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<MTableEmits<T>>()
 
 const sortState = defineModel<SortState<T> | null>('sort', { default: null })
 

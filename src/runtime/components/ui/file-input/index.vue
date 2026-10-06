@@ -81,7 +81,7 @@
       type="file"
       :accept="accept"
       :multiple="multiple"
-      :capture="captureAttribute"
+      v-bind="captureAttrs"
       :required="required"
       :name="name ?? path"
       :disabled="actionsDisabled"
@@ -100,6 +100,7 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import { mFileInputProps } from './props'
 import { createFilePolicy, formatFileSize } from '#kit/shared/utils/file'
 import type { FileRejection } from '#kit/shared/utils/file'
+import type { InputHTMLAttributes } from 'vue'
 
 interface BrowseButtonSlotProps {
   type: 'button'
@@ -142,7 +143,10 @@ const policy = computed(() => createFilePolicy({
   maxFiles: props.multiple ? props.maxFiles : 1,
   maxSize: props.maxSize,
 }))
-const captureAttribute = computed(() => props.capture === true ? '' : props.capture || undefined)
+// `capture` is not a Vue boolean attribute: `true` would render as capture="true".
+const captureAttrs = computed(() => props.capture
+  ? { capture: (props.capture === true ? '' : props.capture) as InputHTMLAttributes['capture'] }
+  : {})
 const displayText = computed(() => {
   if (files.value.length === 0) return ''
   if (files.value.length === 1) {

@@ -44,7 +44,7 @@ export interface UseAutocompleteOptions<TItem extends DropdownItemBase, TValue> 
 }
 
 export interface UseAutocompleteReturn<TItem extends DropdownItemBase, TValue>
-  extends UseDropdownControlReturn<TItem, TValue> {
+  extends Omit<UseDropdownControlReturn<TItem, TValue>, 'inputAttrs'> {
   focused: Ref<boolean>
   draft: Ref<string>
   /** True once the query is long enough for the list to mean anything. */

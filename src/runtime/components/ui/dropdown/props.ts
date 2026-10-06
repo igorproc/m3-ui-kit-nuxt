@@ -95,3 +95,8 @@ export interface MDropdownProps<TItem extends DropdownItemBase, TValue = TItem> 
   menuPlacement?: UiMenuOrigin
   maxHeight?: number | string
 }
+
+export interface MDropdownEmits<TItem extends DropdownItemBase> {
+  (event: 'select' | 'remove', item: TItem): void
+  (event: 'clear' | 'open' | 'close'): void
+}

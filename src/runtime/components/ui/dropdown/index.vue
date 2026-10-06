@@ -182,6 +182,7 @@
 <script setup lang="ts" generic="TItem extends DropdownItemBase, TValue = TItem">
 import { computed, nextTick, ref, watch } from 'vue'
 import { mDropdownProps } from './props'
+import type { MDropdownEmits } from './props'
 import type { MFieldParts } from '#kit/components/ui/text-field/props'
 import { provideDropdownContext } from './context'
 import { useDropdownControl } from '#kit/composables/dropdown/useDropdownControl'
@@ -198,13 +199,8 @@ import MMenu from '#kit/components/ui/menu/index.vue'
 import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 
-export interface Emits {
-  (event: 'select' | 'remove', item: TItem): void
-  (event: 'clear' | 'open' | 'close'): void
-}
-
 const props = defineProps(mDropdownProps)
-const emit = defineEmits<Emits>()
+const emit = defineEmits<MDropdownEmits<TItem>>()
 
 const model = defineModel<TValue | TValue[] | undefined>()
 const open = defineModel<boolean>('open', { default: false })

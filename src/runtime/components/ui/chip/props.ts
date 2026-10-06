@@ -20,7 +20,7 @@ export const mChipProps = {
   disabled,
   type: { type: String as PropType<MChipType>, default: 'assist' },
   /** Selection value inside a `<MChipGroup>`. Undefined keeps the chip standalone. */
-  value: { type: null as unknown as PropType<unknown>, default: undefined },
+  value: { type: null as unknown as PropType<unknown> },
 }
 
 export type MChipProps = ExtractPublicPropTypes<typeof mChipProps>

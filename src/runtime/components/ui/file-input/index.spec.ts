@@ -16,14 +16,14 @@ describe('m-file-input', () => {
     await native.trigger('change')
 
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([file])
-    expect(wrapper.find('input.ui-text-field__input').element.value).toBe('hello.txt')
+    expect((wrapper.find('input.ui-text-field__input').element as HTMLInputElement).value).toBe('hello.txt')
   })
 
   it('supports multiple files and clear', async () => {
     const files = [new File(['a'], 'a.txt'), new File(['b'], 'b.txt')]
     const wrapper = await mountSuspended(MFileInput, { props: { multiple: true, modelValue: files } })
 
-    expect(wrapper.find('input.ui-text-field__input').element.value).toBe('a.txt, b.txt')
+    expect((wrapper.find('input.ui-text-field__input').element as HTMLInputElement).value).toBe('a.txt, b.txt')
     await wrapper.find('[aria-label="Clear selected files"]').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([[]])
   })
