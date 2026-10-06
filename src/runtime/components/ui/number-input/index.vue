@@ -466,7 +466,7 @@ defineExpose({ element })
   &__notch {
     display: block;
     width: auto;
-    max-width: 0.01rem;
+    max-width: g($t, 'outlined.notch.collapsed');
     height: g($t, 'container.border.width');
     padding: 0;
     overflow: hidden;

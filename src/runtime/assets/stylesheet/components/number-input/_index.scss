@@ -54,7 +54,7 @@ $label-split-left: calc(#{$stepper-inset} + var(--ui-number-input-stepper-size) 
 $tokens: (
   container: (
     height: $field-height,
-    gap: 4rem,
+    gap: spacing(4),
     padding: (inline: $padding-inline),
     border: (width: $border-width, color: map.get($theme-color-link, outline)),
     surface: transparent,
@@ -88,7 +88,7 @@ $tokens: (
     placeholder: (color: map.get($theme-color-link, on-surface-variant)),
   ),
   adornment: (
-    gap: 8rem,
+    gap: spacing(8),
     color: map.get($theme-color-link, on-surface-variant),
     size: 24rem,
   ),
@@ -160,8 +160,8 @@ $tokens: (
   // compact field and a comfortable one still align their values. `compact`
   // keeps its stepper zone at 32rem, clear of the 24rem WCAG 2.5.8 floor.
   density: (
-    compact: density-step(44rem, 14rem, 18rem, 4rem, 32rem, 36rem),
-    default: density-step($field-height, 18rem, 24rem, 8rem, 40rem, 44rem),
+    compact: density-step(44rem, 14rem, 18rem, spacing(4), 32rem, 36rem),
+    default: density-step($field-height, 18rem, spacing(24), spacing(8), 40rem, 44rem),
     comfortable: density-step(64rem, 20rem, 28rem, 10rem, 40rem, 48rem),
   ),
   state: (
@@ -187,7 +187,7 @@ $tokens: (
     surface: map.get($theme-color-link, surface-container-highest),
     border: (color: map.get($theme-color-link, on-surface-variant)),
     // Asymmetric on purpose: the raised label occupies the top of the box.
-    input: (padding: (top: 24rem, bottom: 8rem)),
+    input: (padding: (top: spacing(24), bottom: spacing(8))),
     hover: (
       surface: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(hover), map.get($theme-color-link, surface-container-highest)),
       border: (color: map.get($theme-color-link, on-surface)),
@@ -210,7 +210,10 @@ $tokens: (
     // The gap cut into the top border behind a raised label: the label text at
     // its raised size (a real font size — only layout size widens the gap),
     // plus breathing room on either side.
+    // The resting legend is collapsed to a sliver rather than removed, so the
+    // notch opens by a max-width transition alone.
     notch: (padding: (inline: $notch-padding-inline),
+      collapsed: 0.01rem,
       font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
     ),
     hover: (border: (color: map.get($theme-color-link, on-surface))),
