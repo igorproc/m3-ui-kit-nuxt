@@ -7,8 +7,8 @@ import {
   itemInsetVar,
   sanitizeAreaName,
   sizeVar,
-} from '../src/runtime/composables/layout/carve'
-import type { CarveItem, LayoutKind, RangeSpec } from '../src/runtime/composables/layout/carve'
+} from './carve'
+import type { CarveItem, LayoutKind, RangeSpec } from './carve'
 
 const item = (id: string, kind: LayoutKind, size?: string, sticky?: boolean): CarveItem =>
   ({ id, kind, size, sticky })

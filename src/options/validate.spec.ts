@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findUndeclaredDefaultPalette } from '../src/options/validate'
+import { findUndeclaredDefaultPalette } from './validate'
 
 describe('default palette validation', () => {
   it('accepts a default that is declared', () => {

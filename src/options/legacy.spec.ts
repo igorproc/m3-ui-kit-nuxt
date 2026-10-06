@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findLegacyThemeOptions, formatLegacyThemeOptions } from '../src/options/legacy'
+import { findLegacyThemeOptions, formatLegacyThemeOptions } from './legacy'
 
 describe('legacy materialKit options', () => {
   it('detects flat theme keys that moved under `theme`', () => {

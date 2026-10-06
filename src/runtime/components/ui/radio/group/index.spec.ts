@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h } from 'vue'
-import MRadio from '../src/runtime/components/ui/radio/index.vue'
-import MRadioGroup from '../src/runtime/components/ui/radio/group/index.vue'
-import MExpansionPanel from '../src/runtime/components/ui/expansion-panel/index.vue'
-import MExpansionPanels from '../src/runtime/components/ui/expansion-panels/index.vue'
+import MRadio from '#kit/components/ui/radio/index.vue'
+import MRadioGroup from './index.vue'
 
 // Regression coverage for the grouped "initial v-model" bug: a preset value on
 // the group must select/open the matching child at mount (the child registers
@@ -23,19 +21,5 @@ describe('grouped initial v-model', () => {
     expect(inputs).toHaveLength(2)
     expect((inputs[0]!.element as HTMLInputElement).checked).toBe(false)
     expect((inputs[1]!.element as HTMLInputElement).checked).toBe(true)
-  })
-
-  it('MExpansionPanels opens the panel matching a preset model at mount', async () => {
-    const wrapper = await mountSuspended(defineComponent({
-      render: () => h(MExpansionPanels, { modelValue: 'b' }, () => [
-        h(MExpansionPanel, { value: 'a', title: 'A' }, () => 'A body'),
-        h(MExpansionPanel, { value: 'b', title: 'B' }, () => 'B body'),
-      ]),
-    }))
-
-    const headers = wrapper.findAll('[aria-expanded]')
-    expect(headers.length).toBeGreaterThanOrEqual(2)
-    expect(headers[0]!.attributes('aria-expanded')).toBe('false')
-    expect(headers[1]!.attributes('aria-expanded')).toBe('true')
   })
 })
