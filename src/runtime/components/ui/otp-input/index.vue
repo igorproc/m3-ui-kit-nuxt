@@ -159,12 +159,7 @@ const cellClasses = (cell: OtpCell) => [
   // The name has to exist even when it is not shown: `hidden` takes it out of
   // the layout, never out of the accessibility tree.
   &--label-hidden &__label {
-    position: absolute;
-    width: 1rem;
-    height: 1rem;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    @include sr-only;
   }
 
   &__visual {

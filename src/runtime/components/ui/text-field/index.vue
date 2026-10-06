@@ -239,12 +239,7 @@ defineExpose({ control: controlRef, input: inputRef })
 
   // Present for assistive tech, absent for the eye.
   &--label-hidden .ui-text-field__label {
-    position: absolute;
-    width: 1rem;
-    height: 1rem;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    @include sr-only;
   }
 
   &--prepend {

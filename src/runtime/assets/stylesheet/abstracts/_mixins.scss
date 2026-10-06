@@ -55,6 +55,17 @@
   }
 }
 
+/// Hidden from the eye, still in the accessibility tree (unlike `display: none`
+/// or `hidden`): visually hidden labels, live-region text.
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @mixin use-scrollbar($width: $scrollbar-width, $inset: $scrollbar-inline-inset) {
   // Firefox: overlay-скроллбар, край и так не залезает на скругление
   scrollbar-width: thin;

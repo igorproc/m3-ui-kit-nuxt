@@ -335,12 +335,7 @@ defineExpose({ element })
   }
 
   &--label-hidden .ui-number-input__label {
-    position: absolute;
-    width: 1rem;
-    height: 1rem;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    @include sr-only;
   }
 
   // ── container · owns the border and the surface ──

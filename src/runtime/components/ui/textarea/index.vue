@@ -249,12 +249,7 @@ function focusFromBox(event: PointerEvent) {
   }
 
   &--label-hidden .ui-textarea__label {
-    position: absolute;
-    width: 1rem;
-    height: 1rem;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    @include sr-only;
   }
 
   &__required {
