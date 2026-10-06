@@ -17,6 +17,13 @@ function last(wrapper: { emitted: (name: string) => unknown[][] | undefined }, e
   return wrapper.emitted(event)?.at(-1)
 }
 
+/** Lays the cells out 48 wide on a 50 pitch, which jsdom does not do by itself. */
+function layOutCells(wrapper: { findAll: (selector: string) => Array<{ element: Element }> }) {
+  wrapper.findAll('.ui-otp-input__field').forEach(({ element }, index) => {
+    element.getBoundingClientRect = () => ({ left: index * 50, right: index * 50 + 48 }) as DOMRect
+  })
+}
+
 afterEach(() => {
   current?.unmount()
   current = null
@@ -145,6 +152,27 @@ describe('m-otp-input · interaction', () => {
         .toContain('ui-otp-input__field--active')
     })
 
+    // In a browser the transparent input lies over the grid and takes the click;
+    // its own caret would land wherever the invisible text reaches.
+    it('puts the caret on the cell drawn under a click on the input', async () => {
+      const wrapper = await mount({ length: 4, modelValue: '1234' })
+      layOutCells(wrapper)
+
+      await wrapper.find('input').trigger('click', { clientX: 120 })
+
+      expect((wrapper.find('input').element as HTMLInputElement).selectionStart).toBe(2)
+      expect(wrapper.findAll('.ui-otp-input__field')[2]!.classes()).toContain('ui-otp-input__field--active')
+    })
+
+    it('stops at the end of the typed text when the click lands further on', async () => {
+      const wrapper = await mount({ length: 4, modelValue: '1' })
+      layOutCells(wrapper)
+
+      await wrapper.find('input').trigger('click', { clientX: 170 })
+
+      expect(wrapper.findAll('.ui-otp-input__field')[1]!.classes()).toContain('ui-otp-input__field--active')
+    })
+
     it('ignores a click on a cell while the field is disabled', async () => {
       const wrapper = await mount({ length: 4, disabled: true })
 
@@ -206,6 +234,30 @@ describe('m-otp-input · interaction', () => {
       await wrapper.vm.$nextTick()
 
       expect(wrapper.find('.ui-otp-input__field--active').exists()).toBe(false)
+    })
+  })
+
+  describe('fallthrough listeners', () => {
+    it('reach the input alongside the own handlers of the field', async () => {
+      const calls: string[] = []
+      const wrapper = await mountSuspended(MOtpInput, {
+        props: { length: 4 },
+        attrs: {
+          onFocus: () => calls.push('focus'),
+          onBlur: () => calls.push('blur'),
+          onInput: () => calls.push('input'),
+        },
+        attachTo: document.body,
+      })
+      current = wrapper
+      const input = wrapper.find('input')
+
+      await input.trigger('focus')
+      await input.setValue('12')
+      await input.trigger('blur')
+
+      expect(calls).toEqual(['focus', 'input', 'blur'])
+      expect(last(wrapper, 'update:modelValue')).toEqual(['12'])
     })
   })
 

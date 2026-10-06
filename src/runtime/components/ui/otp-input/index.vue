@@ -59,16 +59,22 @@
 
       <input
         ref="element"
-        v-bind="{ ...controlAttrs(), ...inputAttrs }"
+        v-bind="mergeProps(controlAttrs(), inputAttrs)"
         class="ui-otp-input__native"
       >
     </div>
 
+    <!-- Always mounted and always the same live region: only its content changes. -->
     <p
-      v-if="message"
       v-bind="supportAttrs"
       class="ui-otp-input__message"
     >
+      <MIcon
+        v-if="isError"
+        :name="ICONS.error"
+        class="ui-otp-input__message-icon"
+        aria-hidden="true"
+      />
       {{ message }}
     </p>
 
@@ -82,12 +88,17 @@
 </template>
 
 <script setup lang="ts">
+import { computed, mergeProps, useSlots, watchEffect } from 'vue'
+import MIcon from '#kit/components/ui/icon/index.vue'
+import { ICONS } from '#kit/shared/constants/icons'
 import { useOtpControl } from '#kit/composables/otp-input/useOtpControl'
 import type { OtpCell } from '#kit/composables/otp-input/useOtpControl'
 import { mOtpInputProps } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 
-// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
+// The root is a wrapper; aria-*, name, inputmode and listeners belong on the native
+// control. They are merged, not spread: a spread let the field's own focus, blur and
+// input handlers silently replace a consumer's @focus/@blur/@input.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
@@ -124,6 +135,7 @@ const rootClasses = computed(() => [
   `ui-otp-input--label-${props.labelPlacement}`,
   {
     'ui-otp-input--focused': focusedModel.value,
+    'ui-otp-input--disabled': props.disabled,
     'ui-otp-input--error': isError.value,
     'ui-otp-input--complete': isComplete.value,
   },
@@ -156,12 +168,27 @@ const cellClasses = (cell: OtpCell) => [
 
 .ui-otp-input {
   $t: material-map(t.$tokens, 'm-otp-input');
+  $transition:
+    border-color g($t, 'state.duration') g($t, 'state.easing'),
+    background-color g($t, 'state.duration') g($t, 'state.easing'),
+    color g($t, 'state.duration') g($t, 'state.easing');
 
   display: inline-flex;
   flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
 
   &__label {
-    margin-bottom: g($t, 'root.gap');
+    max-width: 100%;
+    margin-block-end: g($t, 'root.gap');
+    color: g($t, 'label.color');
+    overflow-wrap: anywhere;
+
+    @include typescale(g($t, 'label.typography'));
+  }
+
+  &--disabled &__label {
+    color: g($t, 'field.disabled.color');
   }
 
   // The name has to exist even when it is not shown: `hidden` takes it out of
@@ -170,50 +197,65 @@ const cellClasses = (cell: OtpCell) => [
     @include sr-only;
   }
 
+  // A code reads left to right in every script, and the caret of the input
+  // above has to agree with the order of the cells below it.
   &__visual {
     position: relative;
     display: inline-flex;
     align-items: center;
+    max-width: 100%;
     gap: g($t, 'root.gap');
+    direction: ltr;
   }
 
+  // Cells keep their size while there is room and shrink, square, in a narrow
+  // container instead of running out of it.
   &__group {
     display: inline-flex;
     align-items: center;
+    min-width: 0;
     gap: g($t, 'group.gap');
   }
 
   &__field {
     display: inline-flex;
+    flex: 0 1 auto;
     align-items: center;
     justify-content: center;
     width: g($t, 'field.size');
-    height: g($t, 'field.size');
-    border: g($t, 'field.border-width') solid g($t, 'field.outline');
+    min-width: 0;
+    aspect-ratio: 1;
+    border: g($t, 'field.border.width') solid g($t, 'field.outline');
     border-radius: g($t, 'field.shape');
     color: g($t, 'field.color');
     cursor: text;
+    transition: $transition;
 
     @include typescale(g($t, 'field.typography'));
 
     &--filled {
-      background: g($t, 'field.filled-container');
+      background: g($t, 'field.filled.container');
     }
 
     &--error {
-      border-color: g($t, 'field.error-outline');
+      border-color: g($t, 'field.error.outline');
     }
 
     // After error: the active cell shows focus even in an invalid code; the
     // error stays in the message and the other cells.
     &--active {
-      border-width: g($t, 'field.active-width');
-      border-color: g($t, 'field.active-outline');
+      border-width: g($t, 'field.active.width');
+      border-color: g($t, 'field.active.outline');
     }
 
     &--disabled {
-      opacity: g($t, 'field.disabled-opacity');
+      border-color: g($t, 'field.disabled.outline');
+      color: g($t, 'field.disabled.color');
       cursor: default;
+    }
+
+    &--disabled#{&}--filled {
+      background: g($t, 'field.disabled.container');
     }
 
     // Every cell edge turns CanvasText, so the cell states are restated in
@@ -231,6 +273,12 @@ const cellClasses = (cell: OtpCell) => [
       &--disabled {
         border-color: GrayText;
       }
+    }
+  }
+
+  @include can-hover {
+    &:not(.ui-otp-input--disabled) &__visual:hover &__field:not(.ui-otp-input__field--active, .ui-otp-input__field--error) {
+      border-color: g($t, 'field.hover.outline');
     }
   }
 
@@ -256,14 +304,29 @@ const cellClasses = (cell: OtpCell) => [
     display: flex;
     align-items: center;
     gap: g($t, 'group.gap');
-    margin-top: g($t, 'message.margin-top');
+    margin-block-start: g($t, 'message.margin.top');
   }
 
+  // Reserved even when empty: an error that appears must not push the page down.
   &__message {
-    margin: g($t, 'message.margin-top') 0 0;
+    display: flex;
+    align-items: center;
+    gap: g($t, 'message.gap');
+    max-width: 100%;
+    min-height: g($t, 'message.min-height');
+    margin: 0;
+    margin-block-start: g($t, 'message.margin.top');
     color: g($t, 'message.color');
+    overflow-wrap: anywhere;
 
     @include typescale(g($t, 'message.typography'));
+  }
+
+  // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
+  // message has nothing but this glyph to say it.
+  &__message-icon {
+    flex: 0 0 auto;
+    font-size: g($t, 'message.icon.size');
   }
 }
 </style>

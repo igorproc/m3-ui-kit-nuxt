@@ -1,32 +1,56 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+$on-surface: map.get($theme-color-link, on-surface);
+$message-typography: body-small;
 $tokens: (
   root: (
-    gap: 12rem,
+    gap: spacing(12),
   ),
   group: (
-    gap: 8rem,
+    gap: spacing(8),
+  ),
+  // The top label of the field family: the textarea's typescale and colour.
+  label: (
+    color: map.get($theme-color-link, on-surface-variant),
+    typography: body-medium,
   ),
   field: (
     size: 48rem,
     shape: var(--sys-shape-corner-medium),
-    border-width: 1rem,
+    border: (width: 1rem),
     outline: map.get($theme-color-link, outline),
-    color: map.get($theme-color-link, on-surface),
-    active-outline: map.get($theme-color-link, primary),
-    active-width: 2rem,
-    filled-container: map.get($theme-color-link, surface-container-highest),
-    error-outline: map.get($theme-color-link, error),
-    disabled-opacity: state-opacity(disabled-content),
+    color: $on-surface,
     typography: title-large,
+    filled: (container: map.get($theme-color-link, surface-container-highest)),
+    // An outlined cell hovers the way an outlined text field does: the edge
+    // darkens, nothing else moves.
+    hover: (outline: $on-surface),
+    // The one ring in the field family (see color-and-state): with no caret,
+    // the active cell is the only place focus can be seen.
+    active: (outline: map.get($theme-color-link, primary), width: 2rem),
+    error: (outline: map.get($theme-color-link, error)),
+    // The family's disabled roles, not one opacity over the whole cell.
+    disabled: (
+      outline: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent),
+      color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent),
+      container: color-mix(in srgb, $on-surface 4%, transparent),
+    ),
   ),
   separator: (
     color: map.get($theme-color-link, on-surface-variant),
   ),
   message: (
-    margin-top: 4rem,
+    margin: (top: spacing(4)),
+    gap: spacing(4),
     color: map.get($theme-color-link, error),
-    typography: body-small,
+    typography: $message-typography,
+    // One line, reserved even while empty.
+    min-height: var(--md-sys-typescale-#{$message-typography}-line-height),
+    icon: (size: 16rem),
+  ),
+  state: (
+    duration: map.get($theme-animation-link, 'duration', 'short', '3'),
+    easing: map.get($theme-animation-link, 'easing', 'standard'),
   ),
 );

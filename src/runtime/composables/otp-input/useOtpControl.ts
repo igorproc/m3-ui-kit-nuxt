@@ -37,6 +37,8 @@ export interface OtpControlProps extends OtpValueProps {
   errorMessage?: string
   disabled?: boolean
   readonly?: boolean
+  /** A check is running (typically after `complete`): the code is held still. */
+  loading?: boolean
   autofocus?: boolean
   /** `true` masks with the default bullet; a string masks with that character. */
   mask?: boolean | string
@@ -68,11 +70,13 @@ export interface OtpInputAttrs {
   'disabled': boolean
   'readonly': boolean
   'autofocus': boolean
+  'aria-busy': 'true' | undefined
   'aria-labelledby': string
   'aria-invalid': 'true' | undefined
   'aria-describedby': string | undefined
   'onFocus': () => void
   'onBlur': () => void
+  'onClick': (event: MouseEvent) => void
   'onInput': (event: Event) => void
   'onCompositionstart': () => void
   'onCompositionend': (event: CompositionEvent) => void
@@ -85,11 +89,17 @@ export interface OtpLabelAttrs {
 
 export interface OtpSupportAttrs {
   id: string
-  role: 'alert' | undefined
+  /**
+   * Constant on purpose: a live region has to exist before its text changes,
+   * so the element stays mounted and only its content comes and goes.
+   */
+  role: 'alert'
 }
 
 export interface OtpCellAttrs {
   'aria-hidden': 'true'
+  /** Registers the drawn cell, so a click on the input above it can find it. */
+  'ref': (element: unknown) => void
   'onClick': () => void
 }
 
@@ -133,6 +143,7 @@ export function useOtpControl(
 
   const composing = shallowRef(false)
   const activeIndex = shallowRef(0)
+  const cells = new Map<number, Element>()
 
   const value = useOtpValue(model, props, hooks)
 
@@ -206,9 +217,25 @@ export function useOtpControl(
   function focusAt(index: number) {
     if (props.disabled) return
 
+    // The caret cannot stand past the typed text, so neither can the highlight.
+    const caret = Math.min(index, model.value.length)
+
     element.value?.focus()
-    element.value?.setSelectionRange(index, index)
-    activeIndex.value = index
+    element.value?.setSelectionRange(caret, caret)
+    activeIndex.value = caret
+  }
+
+  /** The drawn cell under a horizontal pointer position: the one containing it, else the nearest. */
+  function cellAt(x: number) {
+    let nearest: { index: number, distance: number } | undefined
+
+    for (const [index, cell] of cells) {
+      const { left, right } = cell.getBoundingClientRect()
+      const distance = x < left ? left - x : x > right ? x - right : 0
+      if (!nearest || distance < nearest.distance) nearest = { index, distance }
+    }
+
+    return nearest?.index
   }
 
   const inputAttrs = computed<OtpInputAttrs>(() => ({
@@ -221,8 +248,9 @@ export function useOtpControl(
     'autocomplete': OTP_AUTOCOMPLETE,
     'maxlength': value.length.value,
     'disabled': Boolean(props.disabled),
-    'readonly': Boolean(props.readonly),
+    'readonly': Boolean(props.readonly) || Boolean(props.loading),
     'autofocus': Boolean(props.autofocus),
+    'aria-busy': props.loading ? 'true' : undefined,
     'aria-labelledby': labelId,
     'aria-invalid': isError.value ? 'true' : undefined,
     'aria-describedby': message.value ? messageId : undefined,
@@ -233,6 +261,13 @@ export function useOtpControl(
     'onBlur': () => {
       focused.value = false
       stopWatchingCaret()
+    },
+    // The input lies over the whole grid, so it takes every click, and its own
+    // caret would land wherever the invisible text happens to reach. The cell
+    // drawn under the pointer decides instead.
+    'onClick': (event: MouseEvent) => {
+      const index = cellAt(event.clientX)
+      if (index !== undefined) focusAt(index)
     },
     'onInput': (event: Event) => {
       if (composing.value) return
@@ -255,12 +290,16 @@ export function useOtpControl(
 
   const supportAttrs = computed<OtpSupportAttrs>(() => ({
     id: messageId,
-    role: isError.value ? 'alert' : undefined,
+    role: 'alert',
   }))
 
   const cellAttrs = (index: number): OtpCellAttrs => ({
     // The value is carried by the input; the grid is a picture of it.
     'aria-hidden': 'true',
+    'ref': (cell) => {
+      if (cell instanceof Element) cells.set(index, cell)
+      else cells.delete(index)
+    },
     'onClick': () => focusAt(index),
   })
 

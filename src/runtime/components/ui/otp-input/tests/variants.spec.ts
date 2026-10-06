@@ -269,10 +269,21 @@ describe('m-otp-input · variants', () => {
       expect(wrapper.find('.ui-otp-input__message').text()).toBe('Код неверный')
     })
 
-    it('renders nothing when there is nothing to say', async () => {
+    // The line is reserved height (an appearing error must not push the page
+    // down) and a live region (it has to exist before its text changes).
+    it('keeps the line mounted and empty when there is nothing to say', async () => {
       const wrapper = await mount({ length: 4 })
+      const line = wrapper.find('.ui-otp-input__message')
 
-      expect(wrapper.find('.ui-otp-input__message').exists()).toBe(false)
+      expect(line.exists()).toBe(true)
+      expect(line.text()).toBe('')
+      expect(line.find('.ui-otp-input__message-icon').exists()).toBe(false)
+    })
+
+    it('carries an error glyph, so an error without a message is not colour alone', async () => {
+      const wrapper = await mount({ length: 4, error: true })
+
+      expect(wrapper.find('.ui-otp-input__message-icon').exists()).toBe(true)
     })
   })
 })

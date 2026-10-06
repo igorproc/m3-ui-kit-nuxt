@@ -99,6 +99,28 @@ describe('m-otp-input · a11y', () => {
       expect(wrapper.find('.ui-otp-input__message').attributes('role')).toBe('alert')
     })
 
+    it('keeps one live region in place and changes only its text', async () => {
+      const wrapper = await mount({ length: 4 })
+      const before = wrapper.find('.ui-otp-input__message')
+
+      expect(before.attributes('role')).toBe('alert')
+
+      await wrapper.setProps({ errorMessage: 'Код неверный' })
+      const after = wrapper.find('.ui-otp-input__message')
+
+      expect(after.element).toBe(before.element)
+      expect(after.attributes('role')).toBe('alert')
+      expect(after.text()).toBe('Код неверный')
+    })
+
+    it('announces a running check as busy and holds the code still', async () => {
+      const wrapper = await mount({ length: 4, loading: true })
+      const input = wrapper.find('input')
+
+      expect(input.attributes('aria-busy')).toBe('true')
+      expect(input.attributes('readonly')).toBeDefined()
+    })
+
     it('treats the error prop as invalid even without a message', async () => {
       const wrapper = await mount({ length: 4, error: true })
 
