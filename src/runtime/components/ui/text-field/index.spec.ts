@@ -219,6 +219,55 @@ describe('m-text-field', () => {
     expect(wrapper.find('input.ui-text-field__input').attributes('aria-invalid')).toBeUndefined()
   })
 
+  it('reports the input busy while the adapter validates asynchronously', async () => {
+    const pending: ValidationAdapter = {
+      bindField: () => ({
+        value: ref(''),
+        errorMessage: ref<string | undefined>(undefined),
+        meta: { required: false, touched: true, dirty: true, valid: true, validated: false, pending: true },
+      }) as never,
+      createForm: () => { throw new Error('unused') },
+    }
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        provideValidationAdapter(pending)
+        return () => h(MTextField, { path: 'email', label: 'Email' })
+      },
+    }))
+
+    expect(wrapper.find('input.ui-text-field__input').attributes('aria-busy')).toBe('true')
+  })
+
+  it('leaves aria-busy off a field that is not validating', async () => {
+    const wrapper = await mountSuspended(MTextField)
+
+    expect(wrapper.find('input').attributes('aria-busy')).toBeUndefined()
+  })
+
+  it('counts a numeric 0 as a value, so a floating label does not sit on it', async () => {
+    const wrapper = await mountSuspended(MTextField, {
+      props: { type: 'number', label: 'Count', modelValue: 0 as never },
+    })
+
+    expect(wrapper.classes()).toContain('ui-text-field--populated')
+  })
+
+  it('marks a required field with a decorative asterisk, mirrored in the notch', async () => {
+    const wrapper = await mountSuspended(MTextField, {
+      props: { label: 'Email', required: true, variant: 'outlined' },
+    })
+
+    expect(wrapper.find('.ui-text-field__required').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('.ui-text-field__notch-text').text()).toBe('Email *')
+    expect(wrapper.find('input').attributes('aria-required')).toBe('true')
+  })
+
+  it.each(['tel', 'url', 'search'] as const)('passes type %s to the native input', async (type) => {
+    const wrapper = await mountSuspended(MTextField, { props: { type } })
+
+    expect(wrapper.find('input').attributes('type')).toBe(type)
+  })
+
   it('exposes a single root-owned label and applies the rounded tier', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { variant: 'outlined', rounded: 'pill', label: 'Email' },

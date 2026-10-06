@@ -11,7 +11,7 @@
 import type { ExtractPublicPropTypes, InputHTMLAttributes, PropType } from 'vue'
 import { makeReadonlyProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
 
-export type MTextFieldType = 'text' | 'number' | 'email' | 'password'
+export type MTextFieldType = 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search'
 export type MTextFieldVariant = 'filled' | 'outlined' | 'underline'
 export type MTextFieldRounded = 'sharp' | 'small' | 'medium' | 'large' | 'pill'
 

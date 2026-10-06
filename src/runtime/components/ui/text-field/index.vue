@@ -10,6 +10,12 @@
       class="ui-text-field__label"
     >
       {{ label }}
+
+      <span
+        v-if="required"
+        class="ui-text-field__required"
+        aria-hidden="true"
+      >*</span>
     </label>
 
     <div
@@ -25,7 +31,7 @@
           v-if="label"
           class="ui-text-field__notch"
         >
-          <span class="ui-text-field__notch-text">{{ label }}</span>
+          <span class="ui-text-field__notch-text">{{ notchText }}</span>
         </legend>
       </fieldset>
 
@@ -59,6 +65,7 @@
           :autofocus="autofocus"
           :autocomplete="autocomplete"
           :aria-invalid="isError || undefined"
+          :aria-busy="meta.pending || undefined"
           :aria-required="required || undefined"
           :aria-describedby="describedBy"
           @focus="onFocus"
@@ -82,6 +89,7 @@
         :autofocus="autofocus"
         :autocomplete="autocomplete"
         :aria-invalid="isError || undefined"
+        :aria-busy="meta.pending || undefined"
         :aria-required="required || undefined"
         :aria-describedby="describedBy"
         @focus="onFocus"
@@ -164,7 +172,11 @@ const { errorMessage, isError, meta, onFocus, onBlur } = useTextField({
 
 const hasPrepend = computed(() => Boolean(slots.prepend))
 const hasAppend = computed(() => Boolean(slots.append))
-const isPopulated = computed(() => props.populated || Boolean(modelValue.value))
+// Not truthiness: v-model casts a `type="number"` value, and 0 is a value.
+const isPopulated = computed(() => props.populated || (modelValue.value != null && modelValue.value !== ''))
+
+// The notch is sized by this copy of the label, so it carries the asterisk too.
+const notchText = computed(() => props.required ? `${props.label} *` : props.label)
 
 const rootClasses = computed(() => [
   `ui-text-field--${props.variant}`,
@@ -240,6 +252,10 @@ defineExpose({ control: controlRef, input: inputRef })
     color: g($t, 'label.color');
 
     @include typescale(g($t, 'typography.label'));
+  }
+
+  &__required {
+    color: g($t, 'label.required.color');
   }
 
   // ── label placement · an axis of its own, independent of the shape ──

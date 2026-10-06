@@ -54,6 +54,7 @@ $tokens: (
   label: (left: $label-left,
     max-width: calc(100% - #{2 * $label-left}),
     color: map.get($theme-color-link, on-surface-variant),
+    required: (color: map.get($theme-color-link, error)),
     // The resting label follows a prepend; the raised one returns to the start
     // edge, because nothing bounds what a prepend holds and the notch must not
     // depend on it.
