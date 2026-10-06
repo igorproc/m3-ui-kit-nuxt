@@ -580,12 +580,14 @@ defineExpose({ element })
       }
     }
 
-    &.ui-number-input--focused:where(.ui-number-input--interactive) .ui-number-input__control {
-      border-bottom-color: g($t, 'focused.border.color');
-    }
-
     &.ui-number-input--error .ui-number-input__control {
       border-bottom-color: g($t, 'error.border.color');
+    }
+
+    // After error: focus stays visible in an invalid field (and in read-only);
+    // the label and the message keep saying "error".
+    &.ui-number-input--focused .ui-number-input__control {
+      border-bottom-color: g($t, 'focused.border.color');
     }
 
     &.ui-number-input--disabled .ui-number-input__control {
@@ -606,12 +608,14 @@ defineExpose({ element })
       }
     }
 
-    &.ui-number-input--focused:where(.ui-number-input--interactive) .ui-number-input__control {
-      border-color: g($t, 'focused.border.color');
-    }
-
     &.ui-number-input--error .ui-number-input__control {
       border-color: g($t, 'error.border.color');
+    }
+
+    // After error: focus stays visible in an invalid field (and in read-only);
+    // the label and the message keep saying "error".
+    &.ui-number-input--focused .ui-number-input__control {
+      border-color: g($t, 'focused.border.color');
     }
 
     &.ui-number-input--disabled .ui-number-input__control {
@@ -719,13 +723,17 @@ defineExpose({ element })
   // colour change alone are restated in system colours. The outline is named
   // directly, not reached through its `inherit`, which forcing may override. ──
   @include forced-colors {
+    // Error is a dashed edge: a system colour for it (Mark) can vanish on a
+    // light contrast theme, a line style cannot.
     &--error {
       &.ui-number-input--filled .ui-number-input__control {
-        border-bottom-color: Mark;
+        border-bottom-style: dashed;
+        border-bottom-color: CanvasText;
       }
 
       .ui-number-input__outline {
-        border-color: Mark;
+        border-style: dashed;
+        border-color: CanvasText;
       }
     }
 

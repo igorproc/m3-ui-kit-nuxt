@@ -64,6 +64,12 @@ so both snap while the colour eases. `<MOtpInput>` has no blinking caret for thi
 reason: it would have been the only blinking element in the kit, and the active cell's ring
 already satisfies WCAG 2.4.7.
 
+Focus outranks error on the edge: an invalid field takes the focus colour while it is
+focused, and the error stays in the label, the message and its icon — which a state must
+have anyway. Read-only fields show focus like any other. Every other control (buttons,
+chips, items, thumbs) uses the shared `@include focus-ring`. In forced colors an error edge
+is dashed: a system colour for it can vanish on a light contrast theme, a line style cannot.
+
 The one case where a caret and a ring genuinely disagree — returning to edit a fully typed
 code, where the caret sits *after* a character while the ring highlights the cell — was
 judged too rare to buy a new mechanism.

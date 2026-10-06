@@ -524,12 +524,14 @@ function focusFromBox(event: PointerEvent) {
       }
     }
 
-    &.ui-textarea--focused:where(.ui-textarea--interactive) .ui-textarea__control {
-      border-bottom-color: g($t, 'focused.border.color');
-    }
-
     &.ui-textarea--error .ui-textarea__control {
       border-bottom-color: g($t, 'error.border.color');
+    }
+
+    // After error: focus stays visible in an invalid field (and in read-only);
+    // the label and the message keep saying "error".
+    &.ui-textarea--focused .ui-textarea__control {
+      border-bottom-color: g($t, 'focused.border.color');
     }
 
     &.ui-textarea--disabled .ui-textarea__control {
@@ -550,12 +552,14 @@ function focusFromBox(event: PointerEvent) {
       }
     }
 
-    &.ui-textarea--focused:where(.ui-textarea--interactive) .ui-textarea__control {
-      border-color: g($t, 'focused.border.color');
-    }
-
     &.ui-textarea--error .ui-textarea__control {
       border-color: g($t, 'error.border.color');
+    }
+
+    // After error: focus stays visible in an invalid field (and in read-only);
+    // the label and the message keep saying "error".
+    &.ui-textarea--focused .ui-textarea__control {
+      border-color: g($t, 'focused.border.color');
     }
 
     &.ui-textarea--disabled .ui-textarea__control {
@@ -624,13 +628,17 @@ function focusFromBox(event: PointerEvent) {
       }
     }
 
+    // Error is a dashed edge: a system colour for it (Mark) can vanish on a
+    // light contrast theme, a line style cannot.
     &--error {
       &.ui-textarea--filled .ui-textarea__control {
-        border-bottom-color: Mark;
+        border-bottom-style: dashed;
+        border-bottom-color: CanvasText;
       }
 
       .ui-textarea__outline {
-        border-color: Mark;
+        border-style: dashed;
+        border-color: CanvasText;
       }
     }
 

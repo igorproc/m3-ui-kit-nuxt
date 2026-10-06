@@ -536,6 +536,10 @@ defineExpose({ control: controlRef, input: inputRef })
       }
     }
 
+    &.ui-text-field--error.ui-text-field--focused .ui-text-field__control {
+      border-bottom-color: g($t, 'filled.error.focused.border.bottom.color');
+    }
+
     &.ui-text-field--disabled {
       .ui-text-field__control {
         border-color: g($t, 'filled.disabled.border.bottom.color');
@@ -620,11 +624,18 @@ defineExpose({ control: controlRef, input: inputRef })
 
     // `.ui-text-field` is repeated to match the error + focused rule's weight,
     // so source order alone decides — and focus outranks error.
+    // Error is a dashed edge: a system colour for it (Mark) can vanish on a
+    // light contrast theme, a line style cannot.
     &.ui-text-field--error {
       &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control,
+      &.ui-text-field--underline .ui-text-field__control {
+        border-bottom-style: dashed;
+        border-bottom-color: CanvasText;
+      }
+
       &.ui-text-field--outlined .ui-text-field__outline {
-        border-color: Mark;
+        border-style: dashed;
+        border-color: CanvasText;
       }
     }
 

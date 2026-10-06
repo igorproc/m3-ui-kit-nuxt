@@ -192,13 +192,15 @@ const cellClasses = (cell: OtpCell) => [
       background: g($t, 'field.filled-container');
     }
 
+    &--error {
+      border-color: g($t, 'field.error-outline');
+    }
+
+    // After error: the active cell shows focus even in an invalid code; the
+    // error stays in the message and the other cells.
     &--active {
       border-width: g($t, 'field.active-width');
       border-color: g($t, 'field.active-outline');
-    }
-
-    &--error {
-      border-color: g($t, 'field.error-outline');
     }
 
     &--disabled {
@@ -210,7 +212,8 @@ const cellClasses = (cell: OtpCell) => [
     // system colours — the active cell after the error so focus stays visible.
     @include forced-colors {
       &--error {
-        border-color: Mark;
+        border-style: dashed;
+        border-color: CanvasText;
       }
 
       &--active {
