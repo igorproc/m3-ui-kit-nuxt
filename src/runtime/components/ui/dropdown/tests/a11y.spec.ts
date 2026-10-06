@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { nextTick } from 'vue'
+import MDropdown from '../index.vue'
 import { base, createHost, destroyHost, input, mount, open, options } from './helpers'
+import type { Wrapper } from './helpers'
 
 beforeEach(createHost)
 afterEach(destroyHost)
@@ -66,6 +70,64 @@ describe('m-dropdown · a11y', () => {
     expect(alpha!.getAttribute('aria-selected')).toBe('true')
     expect(beta!.getAttribute('aria-selected')).toBe('false')
     expect(beta!.getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('names the listbox after the field and marks it busy while loading', async () => {
+    const wrapper = await mount({ ...base, label: 'City', loading: true })
+    await open(wrapper)
+
+    const listbox = document.querySelector('[role="listbox"]')!
+    expect(listbox.getAttribute('aria-label')).toBe('City')
+    expect(listbox.getAttribute('aria-busy')).toBe('true')
+  })
+
+  it('lets the listbox own options only; progress and state sit beside it', async () => {
+    const wrapper = await mount({ items: [], loading: true })
+    await open(wrapper)
+
+    const listbox = document.querySelector('[role="listbox"]')!
+    expect(listbox.querySelector('[role="progressbar"]')).toBeNull()
+    expect(document.querySelector('[role="progressbar"]')).not.toBeNull()
+
+    await wrapper.setProps({ loading: false })
+    expect(document.querySelector('.ui-dropdown__state')).not.toBeNull()
+    expect(listbox.querySelector('.ui-dropdown__state')).toBeNull()
+  })
+
+  it('announces the empty panel through a live region that was already there', async () => {
+    const wrapper = await mount({ items: [] })
+    const region = wrapper.find('[role="status"]')
+
+    expect(region.exists()).toBe(true)
+    expect(region.text()).toBe('')
+
+    await open(wrapper)
+    await nextTick()
+    expect(wrapper.find('[role="status"]').text()).toBe('No options')
+  })
+
+  it('announces a localised empty slot, not the fallback copy', async () => {
+    const wrapper = await mountSuspended(MDropdown, {
+      props: { items: [] },
+      slots: { empty: () => 'Нет вариантов' },
+    })
+    await open(wrapper as Wrapper)
+    await nextTick()
+
+    expect(wrapper.find('[role="status"]').text()).toBe('Нет вариантов')
+    wrapper.unmount()
+  })
+
+  it('sends fallthrough attributes to the combobox and keeps class on the root', async () => {
+    const wrapper = await mountSuspended(MDropdown, {
+      props: base,
+      attrs: { 'class': 'consumer', 'aria-describedby': 'hint', 'data-test': 'city' },
+    })
+
+    expect(wrapper.classes()).toContain('consumer')
+    expect(wrapper.attributes('data-test')).toBeUndefined()
+    expect(input(wrapper as Wrapper).attributes('data-test')).toBe('city')
+    wrapper.unmount()
   })
 
   it('announces rows blocked by max as disabled', async () => {

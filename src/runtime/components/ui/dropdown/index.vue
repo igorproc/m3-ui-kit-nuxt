@@ -1,5 +1,6 @@
 <template>
   <div
+    v-bind="rootAttrs()"
     class="ui-dropdown"
     :class="{
       'ui-dropdown--open': open,
@@ -7,9 +8,12 @@
       'ui-dropdown--multiple': multiple,
     }"
     @click="onFieldClick"
+    @keydown.capture="keyboardCursor = true"
+    @pointerdown="keyboardCursor = false"
     @keydown="onFieldKeydown"
   >
     <MTextField
+      v-bind="controlAttrs()"
       ref="fieldRef"
       v-model:focused="focused"
       class="ui-dropdown__field"
@@ -118,64 +122,79 @@
         :select="control.selectEntry"
         :close="control.closePanel"
       >
-        <MList
-          v-bind="control.listboxAttrs.value"
-          class="ui-dropdown__list"
-          :density="density"
-          :style="control.panelStyle.value"
+        <!-- Progress and the state message sit beside the listbox, not in it:
+             a listbox may only own options. -->
+        <div
+          class="ui-dropdown__panel"
           @mousedown.prevent
+          @pointermove="keyboardCursor = false"
         >
           <MProgressLinear
             v-if="loading"
+            class="ui-dropdown__progress"
             indeterminate
             :aria-label="MESSAGES.dropdownLoading"
           />
 
-          <MListItem
-            v-for="(entry, index) in control.entries.value"
-            :key="entry.key"
-            v-bind="control.getOptionAttrs(entry)"
-            class="ui-dropdown__option"
-            :class="{ 'ui-dropdown__option--active': control.activeId.value === entry.id }"
-            :interactive="true"
-            :selected="entry.selected"
-            :disabled="entry.disabled"
-            :lines="1"
+          <MList
+            v-bind="control.listboxAttrs.value"
+            class="ui-dropdown__list"
+            :density="density"
+            :style="control.panelStyle.value"
           >
-            <template #leading>
-              <MIcon
-                v-if="entry.selected"
-                :name="ICONS.check"
-                class="ui-dropdown__check"
-              />
-            </template>
-
-            <slot
-              name="item"
-              :item="entry.item"
-              :index="index"
-              :value="entry.value"
-              :title="entry.title"
+            <MListItem
+              v-for="(entry, index) in control.entries.value"
+              :key="entry.key"
+              v-bind="control.getOptionAttrs(entry)"
+              class="ui-dropdown__option"
+              :class="optionClasses(entry)"
+              :interactive="true"
               :selected="entry.selected"
               :disabled="entry.disabled"
-              :blocked="entry.blocked"
-              :active="control.activeId.value === entry.id"
+              :lines="1"
             >
-              {{ entry.title }}
-            </slot>
-          </MListItem>
+              <template #leading>
+                <MIcon
+                  v-if="entry.selected"
+                  :name="ICONS.check"
+                  class="ui-dropdown__check"
+                />
+              </template>
 
-          <slot
-            v-if="!loading && !control.entries.value.length"
-            name="empty"
-          >
-            <div class="ui-dropdown__state">
-              {{ MESSAGES.dropdownEmpty }}
-            </div>
-          </slot>
-        </MList>
+              <slot
+                name="item"
+                :item="entry.item"
+                :index="index"
+                :value="entry.value"
+                :title="entry.title"
+                :selected="entry.selected"
+                :disabled="entry.disabled"
+                :blocked="entry.blocked"
+                :active="control.activeId.value === entry.id"
+              >
+                {{ entry.title }}
+              </slot>
+            </MListItem>
+          </MList>
+
+          <div ref="stateRef">
+            <slot
+              v-if="!loading && !control.entries.value.length"
+              name="empty"
+            >
+              <div class="ui-dropdown__state">
+                {{ MESSAGES.dropdownEmpty }}
+              </div>
+            </slot>
+          </div>
+        </div>
       </slot>
     </MMenu>
+
+    <span
+      class="ui-dropdown__status"
+      role="status"
+    >{{ status }}</span>
   </div>
 </template>
 
@@ -186,7 +205,9 @@ import type { MDropdownEmits } from './props'
 import type { MFieldParts } from '#kit/components/ui/text-field/props'
 import { provideDropdownContext } from './context'
 import { useDropdownControl } from '#kit/composables/dropdown/useDropdownControl'
-import type { DropdownContext, DropdownItemBase } from '#kit/composables/dropdown/types'
+import { usePanelStatus } from '#kit/composables/dropdown/usePanelStatus'
+import type { DropdownContext, DropdownEntry, DropdownItemBase } from '#kit/composables/dropdown/types'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
 import { useField } from '#kit/composables/useField'
 import { ICONS } from '#kit/shared/constants/icons'
 import { MESSAGES } from '#kit/shared/constants/messages'
@@ -198,6 +219,10 @@ import MListItem from '#kit/components/ui/list/item/index.vue'
 import MMenu from '#kit/components/ui/menu/index.vue'
 import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
+
+// The root is a wrapper; aria-*, name and listeners belong on the combobox.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mDropdownProps)
 const emit = defineEmits<MDropdownEmits<TItem>>()
@@ -227,6 +252,27 @@ const control = useDropdownControl<TItem, TValue>({
 })
 
 const hasChips = computed(() => props.multiple && control.selectedEntries.value.length > 0)
+
+// The pointer also moves the virtual focus (hovering a row makes it active), so
+// the ring that marks keyboard focus is drawn only while the keyboard drives.
+const keyboardCursor = ref(false)
+
+const optionClasses = (entry: DropdownEntry<TItem, TValue>) => {
+  const active = control.activeId.value === entry.id
+  return {
+    'ui-dropdown__option--active': active,
+    'ui-dropdown__option--keyboard': active && keyboardCursor.value,
+  }
+}
+
+const stateRef = ref<HTMLElement | null>(null)
+const status = usePanelStatus({
+  open: () => open.value,
+  loading: () => props.loading,
+  hasRows: () => control.entries.value.length > 0,
+  loadingText: MESSAGES.dropdownLoading,
+  state: () => stateRef.value,
+})
 
 // A click can land on the box, the label or the arrow — none of which is
 // focusable — so the input is focused whenever the panel opens. Without it the
@@ -275,13 +321,14 @@ defineExpose({ open: control.openPanel, close: control.closePanel, clear: contro
     cursor: inherit;
   }
 
-  &__chip--active {
-    box-shadow: inset 0 0 0 2rem g($t, 'chip.active-outline');
+  // The chip Backspace would delete. Real focus stays in the input, so this is
+  // the chip's own focus ring drawn by hand — inset, so the field's scrolling
+  // row cannot clip it.
+  &__chip--active.ui-chip {
+    @include focus-ring(inset);
 
-    // The ring is a shadow, which forced colours drop.
     @include forced-colors {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
+      outline-color: Highlight;
     }
   }
 
@@ -311,30 +358,55 @@ defineExpose({ open: control.openPanel, close: control.closePanel, clear: contro
     transform: rotate(180deg);
   }
 
+  // Progress lies over the panel's top edge instead of pushing the rows down,
+  // so a refresh under visible rows does not make them jump.
+  &__panel {
+    position: relative;
+    isolation: isolate;
+  }
+
+  &__progress {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 1;
+  }
+
   &__list {
     --ui-scrollbar-inset-block: #{g($t, 'panel.scrollbar-inset')};
 
     max-height: var(--m-dropdown-panel-max-height, #{g($t, 'panel.max-height')});
     padding-block: g($t, 'panel.padding-block');
     overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 
   &__option--active:not(.ui-list-item--selected) {
-    background-color: g($t, 'option.active-bg');
+    background-color: g($t, 'option.active.bg');
   }
 
-  // The active option is a fill alone, which forced colours drop. The outline
-  // does not compete with the selected item's look, so it marks any active one.
-  &__option--active {
+  &__option--active.ui-list-item--selected {
+    background-color: g($t, 'option.active.selected-bg');
+  }
+
+  // Keyboard focus on a row is the kit's focus ring, as on any other item; the
+  // fill alone is what hover also draws.
+  &__option--keyboard.ui-list-item {
+    @include focus-ring(inset);
+
     @include forced-colors {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
+      outline-color: Highlight;
     }
   }
 
   &__state {
     padding: g($t, 'state.padding');
     color: g($t, 'state.color');
+  }
+
+  &__status {
+    @include sr-only;
   }
 }
 </style>

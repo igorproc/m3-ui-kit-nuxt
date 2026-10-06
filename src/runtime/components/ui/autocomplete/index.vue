@@ -1,10 +1,14 @@
 <template>
   <div
+    v-bind="rootAttrs()"
     class="ui-autocomplete"
     :class="{ 'ui-autocomplete--open': open, 'ui-autocomplete--multiple': multiple }"
+    @keydown.capture="keyboardCursor = true"
+    @pointerdown="keyboardCursor = false"
     @keydown="onFieldKeydown"
   >
     <MTextField
+      v-bind="controlAttrs()"
       ref="fieldRef"
       v-model:focused="control.focused.value"
       class="ui-autocomplete__field"
@@ -87,10 +91,15 @@
           <MIcon :name="ICONS.close" />
         </MButtonIcon>
 
+        <!-- Not a tab stop (APG): the combobox already opens from the keyboard,
+             so the button is for the pointer and would only add a stop. -->
         <MButtonIcon
           type="button"
           class="ui-autocomplete__toggle"
+          tabindex="-1"
           :aria-label="MESSAGES.dropdownToggle"
+          :aria-expanded="String(open)"
+          :aria-controls="control.listboxId"
           :disabled="disabled || readonly"
           @mousedown.prevent
           @click="control.togglePanel"
@@ -120,40 +129,47 @@
         :select="control.selectEntry"
         :close="control.closePanel"
       >
-        <MList
-          v-bind="control.listboxAttrs.value"
-          class="ui-autocomplete__list"
-          :density="density"
-          :style="control.panelStyle.value"
+        <!-- Progress and the state messages sit beside the listbox, not in it:
+             a listbox may only own options. -->
+        <div
+          class="ui-autocomplete__panel"
           @mousedown.prevent
+          @pointermove="keyboardCursor = false"
         >
           <MProgressLinear
             v-if="loading"
+            class="ui-autocomplete__progress"
             indeterminate
             :aria-label="MESSAGES.dropdownLoading"
           />
 
-          <slot
-            v-if="loading"
-            name="loading"
+          <!-- Rows stay while a new query loads: a refresh keeps what the user
+               was reading, and the active row survives the round trip. -->
+          <MList
+            v-bind="control.listboxAttrs.value"
+            class="ui-autocomplete__list"
+            :density="density"
+            :style="control.panelStyle.value"
           >
-            <div class="ui-autocomplete__state">
-              {{ MESSAGES.dropdownLoading }}
-            </div>
-          </slot>
-
-          <template v-else-if="control.entries.value.length">
             <MListItem
               v-for="(entry, index) in control.entries.value"
               :key="entry.key"
               v-bind="control.getOptionAttrs(entry)"
               class="ui-autocomplete__option"
-              :class="{ 'ui-autocomplete__option--active': control.activeId.value === entry.id }"
+              :class="optionClasses(entry)"
               :interactive="true"
               :selected="entry.selected"
               :disabled="entry.disabled"
               :lines="1"
             >
+              <template #leading>
+                <MIcon
+                  v-if="entry.selected"
+                  :name="ICONS.check"
+                  class="ui-autocomplete__check"
+                />
+              </template>
+
               <slot
                 name="item"
                 :item="entry.item"
@@ -168,29 +184,47 @@
                 {{ entry.title }}
               </slot>
             </MListItem>
-          </template>
+          </MList>
 
-          <slot
-            v-else-if="!items.length"
-            name="empty"
-          >
-            <div class="ui-autocomplete__state">
-              {{ MESSAGES.dropdownEmpty }}
-            </div>
-          </slot>
+          <div ref="stateRef">
+            <template v-if="!control.entries.value.length">
+              <slot
+                v-if="loading"
+                name="loading"
+              >
+                <div class="ui-autocomplete__state">
+                  {{ MESSAGES.dropdownLoading }}
+                </div>
+              </slot>
 
-          <slot
-            v-else
-            name="no-results"
-            :query="search"
-          >
-            <div class="ui-autocomplete__state">
-              {{ MESSAGES.dropdownNoResults }}
-            </div>
-          </slot>
-        </MList>
+              <slot
+                v-else-if="!items.length"
+                name="empty"
+              >
+                <div class="ui-autocomplete__state">
+                  {{ MESSAGES.dropdownEmpty }}
+                </div>
+              </slot>
+
+              <slot
+                v-else
+                name="no-results"
+                :query="search"
+              >
+                <div class="ui-autocomplete__state">
+                  {{ MESSAGES.dropdownNoResults }}
+                </div>
+              </slot>
+            </template>
+          </div>
+        </div>
       </slot>
     </MMenu>
+
+    <span
+      class="ui-autocomplete__status"
+      role="status"
+    >{{ status }}</span>
   </div>
 </template>
 
@@ -201,7 +235,9 @@ import type { MFieldParts } from '#kit/components/ui/text-field/props'
 import { useAutocomplete } from '#kit/composables/autocomplete/useAutocomplete'
 import type { AutocompleteControlConfig } from '#kit/composables/autocomplete/useAutocomplete'
 import { provideDropdownContext } from '#kit/components/ui/dropdown/context'
-import type { DropdownContext, DropdownItemBase } from '#kit/composables/dropdown/types'
+import { usePanelStatus } from '#kit/composables/dropdown/usePanelStatus'
+import type { DropdownContext, DropdownEntry, DropdownItemBase } from '#kit/composables/dropdown/types'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
 import { useField } from '#kit/composables/useField'
 import { ICONS } from '#kit/shared/constants/icons'
 import { MESSAGES } from '#kit/shared/constants/messages'
@@ -213,6 +249,10 @@ import MListItem from '#kit/components/ui/list/item/index.vue'
 import MMenu from '#kit/components/ui/menu/index.vue'
 import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
+
+// The root is a wrapper; aria-*, inputmode and listeners belong on the combobox.
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mAutocompleteProps)
 
@@ -254,6 +294,28 @@ const control = useAutocomplete<TItem, TValue>({
 
 const hasChips = computed(() => props.multiple && control.selectedEntries.value.length > 0)
 
+// Hovering a row also makes it active, so the ring that marks keyboard focus
+// is drawn only while the keyboard drives.
+const keyboardCursor = ref(false)
+
+const optionClasses = (entry: DropdownEntry<TItem, TValue>) => {
+  const active = control.activeId.value === entry.id
+  return {
+    'ui-autocomplete__option--active': active,
+    'ui-autocomplete__option--keyboard': active && keyboardCursor.value,
+  }
+}
+
+const stateRef = ref<HTMLElement | null>(null)
+const status = usePanelStatus({
+  open: () => open.value,
+  loading: () => props.loading,
+  hasRows: () => control.entries.value.length > 0,
+  loadingText: MESSAGES.dropdownLoading,
+  state: () => stateRef.value,
+  sources: () => [props.items.length],
+})
+
 // Opening from the toggle button leaves focus nowhere useful; the combobox
 // needs DOM focus for `aria-activedescendant` to point from anything.
 watch(open, (value) => {
@@ -275,60 +337,87 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   width: 100%;
   min-width: 0;
 
-  // Keyboard-focused chip (arrow navigation) gets a ring so the delete target
-  // is obvious without moving real DOM focus off the input.
-  &__chip--active {
-    // Inset ring so the highlight is never clipped by the field's overflow.
-    box-shadow: inset 0 0 0 2rem g($t, 'chip.active-outline');
+  // The chip Backspace would delete. Real focus stays in the input, so this is
+  // the chip's own focus ring drawn by hand — inset, so the field's scrolling
+  // row cannot clip it.
+  &__chip--active.ui-chip {
+    @include focus-ring(inset);
 
-    // The ring is a shadow, which forced colours drop.
     @include forced-colors {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
+      outline-color: Highlight;
     }
   }
 
   // `.ui-button` is repeated to outweigh the button's own two-class colour rule
   // (`.ui-button.ui-button--text`) without depending on stylesheet order.
-  &__clear.ui-button.ui-button,
-  &__toggle.ui-button.ui-button {
-    color: g($t, 'clear.color');
+  @each $part in clear, toggle {
+    &__#{$part}.ui-button.ui-button {
+      color: g($t, '#{$part}.color');
 
-    @include can-hover {
-      &:hover:not(.ui-button--disabled) {
-        color: g($t, 'clear.active-color');
+      @include can-hover {
+        &:hover:not(.ui-button--disabled) {
+          color: g($t, '#{$part}.active-color');
+        }
+      }
+
+      &:focus-visible {
+        color: g($t, '#{$part}.active-color');
       }
     }
+  }
 
-    &:focus-visible {
-      color: g($t, 'clear.active-color');
-    }
+  // Progress lies over the panel's top edge instead of pushing the rows down,
+  // so a refresh on every keystroke does not make the panel jump.
+  &__panel {
+    position: relative;
+    isolation: isolate;
+  }
+
+  &__progress {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 1;
   }
 
   &__list {
-    --ui-scrollbar-inset-block: #{g($t, 'list.scrollbar-inset')};
+    --ui-scrollbar-inset-block: #{g($t, 'panel.scrollbar-inset')};
 
-    max-height: var(--m-dropdown-panel-max-height, #{g($t, 'menu.max-height')});
-    padding-block: g($t, 'list.padding-block');
+    max-height: var(--m-dropdown-panel-max-height, #{g($t, 'panel.max-height')});
+    padding-block: g($t, 'panel.padding-block');
     overflow-y: auto;
+    overscroll-behavior: contain;
+
+    // Filtering adds and removes the scrollbar; a stable gutter keeps the
+    // rows from changing width under the user's eyes.
+    scrollbar-gutter: stable;
   }
 
   &__option--active:not(.ui-list-item--selected) {
-    background-color: g($t, 'option.active-bg');
+    background-color: g($t, 'option.active.bg');
   }
 
-  // The active option is a fill alone, which forced colours drop. The outline
-  // does not compete with the selected item's look, so it marks any active one.
-  &__option--active {
+  &__option--active.ui-list-item--selected {
+    background-color: g($t, 'option.active.selected-bg');
+  }
+
+  // Keyboard focus on a row is the kit's focus ring, as on any other item; the
+  // fill alone is what hover also draws.
+  &__option--keyboard.ui-list-item {
+    @include focus-ring(inset);
+
     @include forced-colors {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
+      outline-color: Highlight;
     }
   }
 
   &__state {
     padding: g($t, 'state.padding');
     color: g($t, 'state.color');
+  }
+
+  &__status {
+    @include sr-only;
   }
 }
 </style>

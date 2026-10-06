@@ -120,6 +120,40 @@ describe('m-autocomplete · interaction', () => {
     expect(optionByText('Gamma')).toBeTruthy()
   })
 
+  it('does not open on focus before the query is long enough, and closes when it falls short', async () => {
+    const wrapper = await mount({ ...base, minSearchLength: 2 })
+    const input = wrapper.find('input.ui-text-field__input')
+
+    await input.trigger('focus')
+    await nextTick()
+    expect(wrapper.emitted('update:open')).toBeFalsy()
+
+    await input.setValue('ga')
+    await nextTick()
+    expect(wrapper.emitted('update:open')?.at(-1)).toEqual([true])
+
+    await input.setValue('g')
+    await nextTick()
+    expect(wrapper.emitted('update:open')?.at(-1)).toEqual([false])
+  })
+
+  it('keeps the rows while a new query loads', async () => {
+    const wrapper = await mount(base)
+    await openMenu(wrapper)
+
+    await wrapper.setProps({ loading: true })
+    expect(optionEls()).toHaveLength(3)
+    expect(document.querySelector('[role="progressbar"]')).not.toBeNull()
+    expect(document.querySelector('.ui-autocomplete__state')).toBeNull()
+  })
+
+  it('shows the loading state in place of rows only when there are none', async () => {
+    const wrapper = await mount({ ...base, items: [], loading: true })
+    await openMenu(wrapper)
+
+    expect(document.querySelector('.ui-autocomplete__state')?.textContent).toContain('Loading options')
+  })
+
   it('does not react to keyboard or clicks when disabled', async () => {
     const wrapper = await mount({ ...base, disabled: true })
 

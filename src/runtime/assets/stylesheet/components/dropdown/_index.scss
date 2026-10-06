@@ -1,6 +1,7 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 @use '../menu/index' as menu;
+@use '../list/item/index' as item;
 
 // ==========================================
 // DROPDOWN M3 COMPONENT TOKENS
@@ -9,6 +10,12 @@
 // own tokens. What is owned here is the chrome between them: the arrow, the
 // panel's box, the keyboard-active highlight and the empty/loading row.
 
+// Spacing reads the 4-unit scale through `spacing()`. Off the scale and kept
+// literal: `panel.max-height` (a cap, not a step) and `arrow.size` (an icon
+// size from the 24dp icon grid, not a gap).
+$item-focus-color: map.get(item.$tokens, state, focus, color);
+$item-focus-opacity: map.get(item.$tokens, state, focus, opacity);
+$item-selected-color: map.get(item.$tokens, container, selected, color);
 $tokens: (
   arrow: (
     size: 24rem,
@@ -18,16 +25,18 @@ $tokens: (
     // A hundred options must not run off the screen. Overridable per instance
     // through `maxHeight`, which arrives as a custom property.
     max-height: 320rem,
-    padding-block: 8rem,
+    padding-block: spacing(8),
     // The list scrolls inside the menu surface and has to keep its thumb clear
     // of that surface's corners.
     scrollbar-inset: map.get(menu.$tokens, surface, border, radius),
   ),
+  // The row under the virtual focus. Same layer the list item paints for its
+  // own `:focus-visible`, so a selected row keeps its container under it.
   option: (
-    active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} state-opacity(focus), transparent),
-  ),
-  chip: (
-    active-outline: map.get($theme-color-link, primary),
+    active: (
+      bg: color-mix(in srgb, #{$item-focus-color} $item-focus-opacity, transparent),
+      selected-bg: color-mix(in srgb, #{$item-focus-color} $item-focus-opacity, #{$item-selected-color}),
+    ),
   ),
   // The clear control is an affordance at rest, not the thing being acted on:
   // `primary` is reserved for activity, so it only arrives with hover/focus.
@@ -36,7 +45,7 @@ $tokens: (
     active-color: map.get($theme-color-link, on-surface),
   ),
   state: (
-    padding: 24rem,
+    padding: spacing(24),
     color: map.get($theme-color-link, on-surface-variant),
   ),
   motion: (

@@ -72,6 +72,77 @@ describe('m-autocomplete · a11y', () => {
       expect(option.getAttribute('role')).toBe('option')
       expect(option.getAttribute('aria-selected')).toBe('false')
     })
+
+    it('wires the toggle to the listbox and keeps it out of the tab order', async () => {
+      const wrapper = await mount(base)
+      const toggle = wrapper.find('.ui-autocomplete__toggle')
+      const controls = wrapper.find('input.ui-text-field__input').attributes('aria-controls')
+
+      expect(toggle.attributes('tabindex')).toBe('-1')
+      expect(toggle.attributes('aria-controls')).toBe(controls)
+      expect(toggle.attributes('aria-expanded')).toBe('false')
+
+      await toggle.trigger('click')
+      expect(wrapper.find('.ui-autocomplete__toggle').attributes('aria-expanded')).toBe('true')
+    })
+
+    it('marks a selected row with a glyph, not with colour alone', async () => {
+      const wrapper = await mount({ ...base, modelValue: 1 })
+      await wrapper.find('input.ui-text-field__input').trigger('keydown', { key: 'ArrowDown' })
+      await nextTick()
+
+      const selected = document.querySelector('.ui-autocomplete__option.ui-list-item--selected')!
+      expect(selected.querySelector('.ui-autocomplete__check')).not.toBeNull()
+      expect(document.querySelectorAll('.ui-autocomplete__check')).toHaveLength(1)
+    })
+
+    it('announces "no results" through a live region that was already there', async () => {
+      const wrapper = await mount(base)
+      const region = wrapper.find('[role="status"]')
+      expect(region.text()).toBe('')
+
+      await wrapper.find('input.ui-text-field__input').setValue('zzz')
+      await nextTick()
+      await nextTick()
+      expect(wrapper.find('[role="status"]').text()).toBe('No results')
+    })
+  })
+
+  describe('keyboard — editing', () => {
+    it('leaves Home and End to the caret', async () => {
+      const wrapper = await mount(base)
+      const input = wrapper.find('input.ui-text-field__input')
+      await input.trigger('keydown', { key: 'ArrowDown' })
+
+      for (const key of ['Home', 'End']) {
+        const event = new KeyboardEvent('keydown', { key, cancelable: true, bubbles: true })
+        input.element.dispatchEvent(event)
+        expect(event.defaultPrevented, key).toBe(false)
+      }
+    })
+
+    it('closes with Alt+ArrowUp and keeps the typed draft', async () => {
+      const wrapper = await mount(base)
+      const input = wrapper.find('input.ui-text-field__input')
+
+      await input.setValue('Gam')
+      await nextTick()
+      await input.trigger('keydown', { key: 'ArrowUp', altKey: true })
+      await nextTick()
+
+      expect(wrapper.emitted('update:open')?.at(-1)).toEqual([false])
+      expect((input.element as HTMLInputElement).value).toBe('Gam')
+      expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+    })
+
+    it('does not type into the list: letters stay characters of the query', async () => {
+      const wrapper = await mount(base)
+      const input = wrapper.find('input.ui-text-field__input')
+
+      const event = new KeyboardEvent('keydown', { key: 'g', cancelable: true, bubbles: true })
+      input.element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+    })
   })
 
   describe('keyboard — options', () => {

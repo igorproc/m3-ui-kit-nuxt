@@ -1,37 +1,14 @@
 @use 'sass:map';
-@use '../../abstracts/forward.scss' as *;
-@use '../menu/index' as menu;
+@use '../dropdown/index' as dropdown;
 
 // ==========================================
 // AUTOCOMPLETE TOKENS
 // ==========================================
-// The option row is an MListItem and inherits its hover / selected / disabled
-// visuals; only the popover chrome, empty/loading state, and the keyboard
-// active-descendant highlight are owned here.
+// The autocomplete is the dropdown plus a query, and draws the same panel,
+// rows and chrome — so it reads the dropdown's tokens instead of keeping a copy
+// that drifts. What it adds is the toggle button, which is the same affordance
+// as the clear control: neutral at rest, `on-surface` once acted on.
 
-$tokens: (
-  menu: (
-    max-height: 320rem,
-  ),
-  list: (
-    padding-block: 8rem,
-    // The list scrolls inside the menu surface and has to keep its thumb clear
-    // of that surface's corners.
-    scrollbar-inset: map.get(menu.$tokens, surface, border, radius),
-  ),
-  option: (
-    active-bg: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} state-opacity(focus), transparent),
-  ),
-  chip: (
-    active-outline: map.get($theme-color-link, primary),
-  ),
-  // Rest is an affordance, not an action: `primary` belongs to activity alone.
-  clear: (
-    color: map.get($theme-color-link, on-surface-variant),
-    active-color: map.get($theme-color-link, on-surface),
-  ),
-  state: (
-    padding: 24rem,
-    color: map.get($theme-color-link, on-surface-variant),
-  ),
-);
+$tokens: map.merge(dropdown.$tokens, (
+  toggle: map.get(dropdown.$tokens, clear),
+));
