@@ -91,7 +91,8 @@ $tokens: (
     // Vertical space reserved under the value so the two never collide.
     band: $grip-band,
     body: (padding: (bottom: $padding-block + $grip-band)),
-    hit: (width: 72rem, height: 16rem),
+    // WCAG 2.5.8: at least 24 high.
+    hit: (width: 72rem, height: 24rem),
     color: map.get($theme-color-link, outline-variant),
     hover: (color: map.get($theme-color-link, on-surface-variant)),
     focus: (color: map.get($theme-color-link, primary)),

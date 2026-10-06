@@ -460,18 +460,20 @@ function focusFromBox(event: PointerEvent) {
     transition: background-color g($t, 'state.duration') g($t, 'state.easing');
 
     // The bar is the mark; the target is the band around it. Pointer and touch
-    // both aim at 72×16, not at the 5rem the eye sees.
+    // both aim at the hit box, not at the 5rem the eye sees. It stands on the
+    // container's bottom edge — centred on the bar, its lower part would be
+    // clipped by the container — and stays under the value's bottom padding.
     &::before {
       position: absolute;
       left: 50%;
-      top: 50%;
+      bottom: calc(-1 * #{g($t, 'grip.inset')});
       width: g($t, 'grip.hit.width');
       height: g($t, 'grip.hit.height');
       border-radius: g($t, 'rounded.pill');
       background-color: currentcolor;
       content: '';
       opacity: 0;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
 
@@ -661,7 +663,7 @@ function focusFromBox(event: PointerEvent) {
     }
 
     .ui-textarea__grip {
-      border-color: g($t, 'disabled.color');
+      background-color: g($t, 'disabled.color');
     }
   }
 
