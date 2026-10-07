@@ -20,7 +20,7 @@
  * - Exposes the live interpolated `d` and the live rotation as readonly refs.
  * - Manual `start` / `stop` / `cancel` controls.
  * - Automatic cleanup on scope disposal (via `useRaf`).
- * - SSR-safe, and snaps without animating when the viewer prefers reduced motion.
+ * - SSR-safe; when the viewer prefers reduced motion the morph shortens and does not bank.
  *
  * @remarks Rotation
  * The rotation is reported in degrees for the *element*, never baked into the
@@ -63,7 +63,7 @@ import { IN_BROWSER } from '#kit/shared/constants/globals'
 
 // Utilities
 import { createPathInterpolator } from '#kit/utils/morph'
-import { createVelocityProfile, prefersReducedMotion, resolveTransition } from '#kit/utils/motion'
+import { createVelocityProfile, prefersReducedMotion, reduceTransition, resolveTransition } from '#kit/utils/motion'
 import { computed, readonly, shallowRef, toValue, watch } from 'vue'
 
 // Types
@@ -72,6 +72,12 @@ import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from 'vue'
 
 /** Easing function mapping linear progress `[0, 1]` to eased progress. */
 export type ShapeMorphEasing = (progress: number) => number
+
+type PathInterpolator = (t: number) => string
+
+const INTERPOLATOR_LIMIT = 64
+
+const interpolators: Map<string, PathInterpolator> | undefined = IN_BROWSER ? new Map() : undefined
 
 /**
  * M3 standard (emphasized-decelerate) easing approximation.
@@ -157,32 +163,37 @@ export function useShapeMorph(
     transition.value.rotate ? createVelocityProfile(transition.value.easing) : undefined,
   )
 
-  let interpolator: ((t: number) => string) | undefined
+  let interpolator: PathInterpolator | undefined
+  let motion: MorphTransition = transition.value
   let startTime: number | undefined
-
-  /**
-   * Memoized interpolators keyed by geometry flags plus the canonical
-   * `from to` pair. Building an interpolator is the expensive step; a repeating
-   * cycle reuses the same canonical pairs, so we never rebuild them.
-   */
-  const cache = new Map<string, (t: number) => string>()
 
   /** Canonical path that `d` is currently anchored to (the last morph target). */
   let canonicalFrom = toValue(target)
 
-  function getInterpolator(from: string, to: string): (t: number) => string {
+  function buildInterpolator(from: string, to: string): PathInterpolator {
     const { preserveArea, overshoots } = transition.value
-    const key = `${preserveArea ? 1 : 0}${overshoots ? 1 : 0} ${from} ${to}`
-    let fn = cache.get(key)
-    if (!fn) {
-      fn = createPathInterpolator(from, to, {
-        samples,
-        preserveArea,
-        snapEnd: !overshoots,
-      })
-      cache.set(key, fn)
+    return createPathInterpolator(from, to, {
+      samples,
+      preserveArea,
+      snapEnd: !overshoots,
+    })
+  }
+
+  function getInterpolator(from: string, to: string): PathInterpolator {
+    if (!interpolators) return buildInterpolator(from, to)
+
+    const { preserveArea, overshoots } = transition.value
+    const key = `${samples} ${preserveArea ? 1 : 0}${overshoots ? 1 : 0} ${from} ${to}`
+    const cached = interpolators.get(key)
+    if (cached) return cached
+
+    const built = buildInterpolator(from, to)
+    if (interpolators.size >= INTERPOLATOR_LIMIT) {
+      const oldest = interpolators.keys().next().value
+      if (oldest !== undefined) interpolators.delete(oldest)
     }
-    return fn
+    interpolators.set(key, built)
+    return built
   }
 
   function stop(): void {
@@ -203,12 +214,12 @@ export function useShapeMorph(
 
     if (startTime === undefined) startTime = timestamp
 
-    const { duration, easing, rotate: amplitude } = transition.value
+    const { duration, easing, rotate: amplitude } = motion
     const progress = duration <= 0 ? 1 : Math.min((timestamp - startTime) / duration, 1)
     const eased = easing(progress)
 
     d.value = interpolator(eased)
-    rotate.value = amplitude * (velocity.value?.(progress) ?? 0)
+    rotate.value = amplitude ? amplitude * (velocity.value?.(progress) ?? 0) : 0
 
     if (progress < 1) {
       tick()
@@ -226,16 +237,18 @@ export function useShapeMorph(
     // for the generic single-target use case.
     const hasSequence = (toValue(sequence)?.length ?? 0) >= 2
     const from = hasSequence ? canonicalFrom : d.value
+    const canonical = from === canonicalFrom
 
     canonicalFrom = to
 
-    if (from === to || !IN_BROWSER || prefersReducedMotion()) {
+    if (from === to || !IN_BROWSER) {
       settle(to)
       return
     }
 
     tick.cancel()
-    interpolator = getInterpolator(from, to)
+    motion = prefersReducedMotion() ? reduceTransition(transition.value) : transition.value
+    interpolator = canonical ? getInterpolator(from, to) : buildInterpolator(from, to)
     startTime = undefined
     tick()
   }

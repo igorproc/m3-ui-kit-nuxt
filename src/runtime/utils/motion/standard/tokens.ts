@@ -23,6 +23,25 @@ export const M3_EASING = {
   legacy: [0.4, 0, 0.2, 1],
 } as const satisfies Record<string, readonly [number, number, number, number]>
 
+export const M3_DURATION = {
+  short1: 50,
+  short2: 100,
+  short3: 150,
+  short4: 200,
+  medium1: 250,
+  medium2: 300,
+  medium3: 350,
+  medium4: 400,
+  long1: 450,
+  long2: 500,
+  long3: 550,
+  long4: 600,
+  extraLong1: 700,
+  extraLong2: 800,
+  extraLong3: 900,
+  extraLong4: 1000,
+} as const satisfies Record<string, number>
+
 /**
  * `md.sys.motion.spring.*`.
  *

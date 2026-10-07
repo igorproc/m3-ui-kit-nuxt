@@ -8,6 +8,7 @@ import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
 import { makeStateProps } from '#kit/shared/utils/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export type MListItemLines = 1 | 2 | 3 | 'auto'
 
@@ -27,8 +28,8 @@ export const mListItemProps = {
   headline: { type: String, default: '' },
   supportingText: { type: String, default: '' },
   overline: { type: String, default: '' },
-  leadingIcon: { type: String, default: '' },
-  trailingIcon: { type: String, default: '' },
+  leadingIcon: { type: String as PropType<MIconName>, default: undefined },
+  trailingIcon: { type: String as PropType<MIconName>, default: undefined },
   trailingSupportingText: { type: String, default: '' },
   tag: { type: String, default: 'div' },
   to: { type: [String, Object] as PropType<NuxtLinkProps['to']>, default: undefined },

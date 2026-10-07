@@ -1,15 +1,20 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   createVelocityProfile,
   cubicBezier,
   defineTransition,
+  M3_DURATION,
   M3_SPRING,
+  reduceTransition,
   resolveTransition,
   springDuration,
   springEasing,
   springOvershoot,
 } from '#kit/utils/motion'
-import { expressive } from '#kit/utils/motion/expressive/transitions'
+import { bouncy, expressive } from '#kit/utils/motion/expressive/transitions'
+import { calm, standard } from '#kit/utils/motion/standard/transitions'
 
 /** Sample an easing on a uniform grid. */
 const sample = (fn: (t: number) => number, steps = 200): number[] =>
@@ -208,4 +213,71 @@ describe('resolveTransition', () => {
     expect(t.rotate).toBe(45)
     expect(t.overshoots).toBe(true)
   })
+})
+
+describe('M3_DURATION', () => {
+  it('matches the duration tokens of the stylesheet', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/runtime/assets/stylesheet/base/_animations.scss'), 'utf8')
+    const declared = Object.fromEntries(
+      [...source.matchAll(/--sys-motion-duration-([a-z-]+)-(\d):\s*(\d+)ms/g)].map(([, step, index, ms]) => [
+        `${step!.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())}${index}`,
+        Number(ms),
+      ]),
+    )
+
+    expect(declared).toEqual(M3_DURATION)
+  })
+})
+
+describe('reduceTransition', () => {
+  it('collapses a long transition to short2 and keeps its curve', () => {
+    const reduced = reduceTransition(expressive)
+
+    expect(reduced.duration).toBe(M3_DURATION.short2)
+    expect(reduced.easing).toBe(expressive.easing)
+    expect(reduced.preserveArea).toBe(expressive.preserveArea)
+    expect(reduced.overshoots).toBe(expressive.overshoots)
+    expect(reduced.hold).toBe(expressive.hold)
+  })
+
+  it.each([
+    [50, 50],
+    [150, 150],
+    [200, 200],
+    [201, 100],
+    [610, 100],
+    [2000, 100],
+  ])('turns %i ms into %i ms', (duration, expected) => {
+    const reduced = reduceTransition(defineTransition({ easing: t => t, duration }))
+    expect(reduced.duration).toBe(expected)
+  })
+
+  it('stops the bank and leaves the source transition untouched', () => {
+    const reduced = reduceTransition(bouncy)
+
+    expect(reduced.rotate).toBe(0)
+    expect(bouncy.rotate).toBe(90)
+    expect(bouncy.duration).toBeGreaterThan(M3_DURATION.short4)
+  })
+})
+
+describe('M3_SPRING against StandardMotionTokens (kit constants, not verified against Compose)', () => {
+  it.each([
+    ['SpringFastSpatial', M3_SPRING.spatial.fast, 0.9, 1400],
+    ['SpringDefaultSpatial', M3_SPRING.spatial.default, 0.9, 700],
+    ['SpringSlowSpatial', M3_SPRING.spatial.slow, 0.9, 300],
+    ['SpringFastEffects', M3_SPRING.effects.fast, 1, 3800],
+    ['SpringDefaultEffects', M3_SPRING.effects.default, 1, 1600],
+    ['SpringSlowEffects', M3_SPRING.effects.slow, 1, 800],
+  ] as const)('%s', (_token, spring, damping, stiffness) => {
+    expect(spring).toEqual({ damping, stiffness })
+  })
+
+  it('builds the standard and calm transitions on those springs', () => {
+    expect(standard.duration).toBe(springDuration(M3_SPRING.spatial.default))
+    expect(calm.duration).toBe(springDuration(M3_SPRING.effects.default))
+    expect(calm.overshoots).toBe(false)
+  })
+
+  it.todo('reconcile the expressive scheme with ExpressiveMotionTokens once the Compose sources are available')
 })

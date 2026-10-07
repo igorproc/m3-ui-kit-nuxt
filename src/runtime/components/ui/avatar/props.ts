@@ -8,6 +8,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MShape } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import { makeSizeProps } from '#kit/shared/utils/props'
 
 /** MD3 surface presets meaningful for an identity surface. */
@@ -28,7 +29,7 @@ export const mAvatarProps = {
   /** Display name used for derived initials and the accessible label. */
   name: { type: String, default: undefined },
   /** Explicit fallback icon, used when no initials can be derived. */
-  icon: { type: String, default: undefined },
+  icon: { type: String as PropType<MIconName>, default: undefined },
   /** MD3 corner shape. */
   shape: { type: String as PropType<MAvatarShape>, default: 'full' },
   /** MD3 surface preset. */
@@ -47,6 +48,6 @@ export interface MAvatarDefaultSlot {
 export interface MAvatarFallbackSlot {
   name: string | undefined
   initials: string
-  icon: string
+  icon: MIconName
   error: Event | undefined
 }

@@ -9,12 +9,13 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps, makeStateProps } from '#kit/shared/utils/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface MSegmentedItem {
   label?: string
   /** Accessible name for a segment that shows an icon and no label. */
   ariaLabel?: string
-  icon?: string
+  icon?: MIconName
   value: string | number
   disabled?: boolean
 }

@@ -4,11 +4,12 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
 import type { TabValue } from '#kit/composables/tabs/useTabs'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface MTabItem {
   value: TabValue
   label: string
-  icon?: string
+  icon?: MIconName
   disabled?: boolean
   to?: NuxtLinkProps['to']
 }

@@ -2,10 +2,11 @@
  * Public prop surface for `<MNavigationRail>`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface MNavigationRailItem {
   id: string
-  icon: string
+  icon: MIconName
   label: string
   badge?: number
 }

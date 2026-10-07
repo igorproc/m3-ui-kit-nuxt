@@ -8,11 +8,12 @@
  */
 import type { TabValue } from '#kit/composables/tabs/useTabs'
 import type { NuxtLinkProps } from '#app'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface MTabProps {
   value: TabValue
   label?: string
-  icon?: string
+  icon?: MIconName
   disabled?: boolean
   /** Optional Nuxt route destination. Without it the tab remains a button. */
   to?: NuxtLinkProps['to']

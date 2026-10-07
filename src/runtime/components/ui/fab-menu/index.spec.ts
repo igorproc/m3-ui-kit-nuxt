@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MFabMenu from './index.vue'
+import type { MFabMenuItem } from './props'
 
-const items = [
+const items: MFabMenuItem[] = [
   { label: 'Share', icon: 'ic:baseline-share', value: 'share' },
   { label: 'Edit', icon: 'ic:baseline-edit', value: 'edit' },
 ]

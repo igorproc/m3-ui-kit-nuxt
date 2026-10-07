@@ -46,6 +46,7 @@ import type { PropType } from 'vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import type { MColor } from '#kit/shared/types/props'
 import type { MTimelineLine } from '#kit/composables/timeline/context'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 defineProps({
   /** First item: the leading connector segment is hidden. */
@@ -57,7 +58,7 @@ defineProps({
   /** Marker color role. */
   color: { type: String as PropType<MColor>, required: true },
   /** Decorative marker icon. */
-  icon: { type: String, default: undefined },
+  icon: { type: String as PropType<MIconName>, default: undefined },
   /** Hides the dot while preserving connector geometry. */
   hideDot: { type: Boolean, default: false },
 })

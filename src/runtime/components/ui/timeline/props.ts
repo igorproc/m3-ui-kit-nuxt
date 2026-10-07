@@ -10,6 +10,7 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MColor } from '#kit/shared/types/props'
 import type { MSurfaceVariant } from '#kit/components/ui/surface/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import type {
   MTimelineDensity,
   MTimelineLine,
@@ -38,7 +39,7 @@ export const mTimelineItemProps = {
   /** Machine-readable timestamp rendered through `<time datetime>`. */
   datetime: { type: String, default: undefined },
   /** Decorative marker icon. */
-  icon: { type: String, default: undefined },
+  icon: { type: String as PropType<MIconName>, default: undefined },
   /** Semantic color of the marker (and outlined content accent). */
   color: { type: String as PropType<MColor>, default: 'primary' },
   /** MD3 surface preset for the content container. */

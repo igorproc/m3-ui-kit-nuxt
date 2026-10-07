@@ -8,6 +8,21 @@ $tokens: (
     color: map.get($theme-color-link, on-background),
     min-height: 100dvh,
   ),
+  skip-link: (
+    inset: spacing(16),
+    min-height: 40rem,
+    padding: (
+      inline: spacing(16),
+    ),
+    shape: map.get($theme-shape-link, 'small'),
+    container: (
+      color: map.get($theme-color-link, 'inverse-surface'),
+    ),
+    color: map.get($theme-color-link, 'inverse-on-surface'),
+    elevation: elevation(3),
+    typography: 'label-large',
+    z-index: z(overlay-host),
+  ),
   overlay: (
     host: (
       z-index: z(overlay-host),

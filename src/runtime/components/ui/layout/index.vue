@@ -73,6 +73,10 @@ if (import.meta.dev) {
   &--full-height {
     height: 100dvh;
     overflow: hidden;
+
+    > .m-layout-main {
+      scrollbar-gutter: stable;
+    }
   }
 }
 </style>

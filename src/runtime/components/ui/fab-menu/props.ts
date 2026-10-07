@@ -8,10 +8,11 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface MFabMenuItem {
   label?: string
-  icon?: string
+  icon?: MIconName
   value?: string | number
   action?: () => void
 }
@@ -26,8 +27,8 @@ export const mFabMenuProps = {
   items: { type: Array as PropType<MFabMenuItem[]>, default: () => [] },
   /** Edge the FAB and its items align to. @default 'right' */
   align: { type: String as PropType<MFabMenuAlign>, default: 'right' },
-  openIcon: { type: String, default: 'asset:ui-test-plus' },
-  closeIcon: { type: String, default: 'asset:ui-test-close' },
+  openIcon: { type: String as PropType<MIconName>, default: 'asset:ui-test-plus' },
+  closeIcon: { type: String as PropType<MIconName>, default: 'asset:ui-test-close' },
 }
 
 export type MFabMenuProps = ExtractPublicPropTypes<typeof mFabMenuProps>

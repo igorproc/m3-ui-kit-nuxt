@@ -13,11 +13,11 @@
 
 export { defineTransition } from './shared/define'
 export { MORPH_TRANSITIONS, resolveTransition } from './shared/resolve'
-export { prefersReducedMotion } from './shared/reduced-motion'
+export { prefersReducedMotion, reduceTransition } from './shared/reduced-motion'
 export { springDuration, springEasing, springOvershoot } from './shared/spring'
 export { createVelocityProfile } from './shared/velocity'
 export { cubicBezier } from './standard/bezier'
-export { M3_EASING, M3_SPRING } from './standard/tokens'
+export { M3_DURATION, M3_EASING, M3_SPRING } from './standard/tokens'
 export { bouncy, expressive } from './expressive/transitions'
 export { calm, standard } from './standard/transitions'
 

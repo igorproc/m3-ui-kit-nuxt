@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // Client-only modal runtime host. Loading presentation is intentionally NOT
-// rendered here: it belongs to the <MApp> `loading` slot (see app.md). Without
+// rendered here: it belongs to the <MApp> `loading` slot (see docs/architecture.md). Without
 // a slot, no progress UI is drawn.
 </script>
 

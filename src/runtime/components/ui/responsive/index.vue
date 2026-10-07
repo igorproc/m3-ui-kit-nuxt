@@ -23,9 +23,15 @@ const styles = computed(() =>
 </script>
 
 <style lang="scss">
+@use '#kit/assets/stylesheet/components/responsive/index' as t;
+
 .ui-responsive {
+  $t: material-map(t.$tokens, 'md-responsive');
+
   position: relative;
   width: 100%;
-  overflow: hidden;
+  min-block-size: 0;
+  overflow: clip;
+  overflow-clip-margin: g($t, 'clip.margin');
 }
 </style>

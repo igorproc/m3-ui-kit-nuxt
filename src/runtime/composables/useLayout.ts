@@ -40,10 +40,10 @@ import { useGlobalListener } from './useGlobalListener'
 import {
   KIND_BY_AREA,
   ZONE_ATTR,
-  buildLayoutCss,
   sanitizeAreaName,
 } from './layout/carve'
 import type { CarveItem, LayoutKind } from './layout/carve'
+import { buildLayoutCss } from './layout/css'
 import { createLayoutRegistry } from './layout/registry'
 import type { LayoutItem, LayoutRegistry } from './layout/registry'
 import { createScrollLock, type ScrollLock } from './layout/scroll'

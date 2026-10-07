@@ -2,9 +2,9 @@
   <span class="ui-breadcrumbs-divider">
     <slot>
       <MIcon
-        v-if="isIcon"
+        v-if="iconName"
         class="ui-breadcrumbs-divider__icon"
-        :name="divider"
+        :name="iconName"
       />
       <template v-else>{{ divider }}</template>
     </slot>
@@ -20,6 +20,7 @@
  * item. The leaf owns no state, focus behavior or route logic.
  */
 import MIcon from '#kit/components/ui/icon/index.vue'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 /**
  * Icon names follow the kit convention (`round-chevron-right`,
@@ -33,7 +34,7 @@ const props = defineProps({
   divider: { type: String, required: true },
 })
 
-const isIcon = computed(() => ICON_NAME.test(props.divider))
+const iconName = computed(() => (ICON_NAME.test(props.divider) ? props.divider as MIconName : undefined))
 </script>
 
 <style lang="scss">

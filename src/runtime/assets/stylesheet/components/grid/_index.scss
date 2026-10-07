@@ -25,16 +25,25 @@ $tokens: (
     desktop-xs: 12,
   ),
   gutter: (
-    mobile-xs: 16rem,
-    tablet-xs: 24rem,
+    mobile-xs: spacing(16),
+    tablet-xs: spacing(24),
   ),
   margin: (
-    mobile-xs: 16rem,
-    tablet-xs: 24rem,
+    mobile-xs: spacing(16),
+    tablet-xs: spacing(24),
   ),
   max-width: (
     desktop-xs: 1200rem,
     desktop: 1600rem,
+  ),
+  safe-area: (
+    left: env(safe-area-inset-left, 0rem),
+    right: env(safe-area-inset-right, 0rem),
+  ),
+  pane: (
+    fixed: (
+      width: 360rem,
+    ),
   ),
 );
 

@@ -4,10 +4,11 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface UiSplitMenuItem {
   label: string
-  icon?: string
+  icon?: MIconName
   value?: string | number
   action?: () => void
 }

@@ -1,0 +1,8 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+$tokens: (
+  clip: (
+    margin: map.get($theme-focus-link, 'width') + map.get($theme-focus-link, 'offset'),
+  ),
+);
