@@ -13,8 +13,9 @@
 // Spacing reads the 4-unit scale through `spacing()`. Off the scale and kept
 // literal: `panel.max-height` (a cap, not a step) and `arrow.size` (an icon
 // size from the 24dp icon grid, not a gap).
-$item-focus-color: map.get(item.$tokens, state, focus, color);
-$item-focus-opacity: map.get(item.$tokens, state, focus, opacity);
+$item-content-color: map.get(item.$tokens, label, text, color);
+$item-selected-content-color: map.get(item.$tokens, label, text, selected, color);
+$item-focus-opacity: map.get(item.$tokens, state, focus);
 $item-selected-color: map.get(item.$tokens, container, selected, color);
 $tokens: (
   arrow: (
@@ -31,11 +32,12 @@ $tokens: (
     scrollbar-inset: map.get(menu.$tokens, surface, border, radius),
   ),
   // The row under the virtual focus. Same layer the list item paints for its
-  // own `:focus-visible`, so a selected row keeps its container under it.
+  // own `:focus-visible` — its content colour at focus opacity — so a selected
+  // row keeps its container under it.
   option: (
     active: (
-      bg: color-mix(in srgb, #{$item-focus-color} $item-focus-opacity, transparent),
-      selected-bg: color-mix(in srgb, #{$item-focus-color} $item-focus-opacity, #{$item-selected-color}),
+      bg: color-mix(in srgb, #{$item-content-color} $item-focus-opacity, transparent),
+      selected-bg: color-mix(in srgb, #{$item-selected-content-color} $item-focus-opacity, #{$item-selected-color}),
     ),
   ),
   // The clear control is an affordance at rest, not the thing being acted on:

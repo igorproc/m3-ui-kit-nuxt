@@ -1,0 +1,103 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// LINK CARD STATES
+// ==========================================
+// Included inside `.ui-card`. Only a link card (`--link`) is interactive: a
+// static card gets no layer, no hover, no cursor and no transition (ST-01,
+// TH-08). Shape never changes with state — no morph on web.
+
+@mixin link-card($t, $variants) {
+  &--link {
+    position: relative;
+    isolation: isolate;
+    text-decoration: none;
+    transition: box-shadow g($t, 'state.duration') g($t, 'state.easing');
+
+    // State layer in the card's own content colour (craft.md, «Подмена фона»).
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: currentcolor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+    }
+
+    @include can-hover {
+      &:hover::before {
+        opacity: g($t, 'state.hover');
+      }
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+
+      &::before {
+        opacity: g($t, 'state.focus');
+      }
+    }
+
+    &:active::before {
+      opacity: g($t, 'state.pressed');
+    }
+
+    @each $variant in $variants {
+      &.ui-card--#{$variant} {
+        @include can-hover {
+          &:hover {
+            box-shadow: g($t, '#{$variant}.elevation.hover');
+          }
+        }
+
+        &:active {
+          box-shadow: g($t, '#{$variant}.elevation.pressed');
+        }
+      }
+    }
+
+    &.ui-card--outlined:focus-visible {
+      border-color: g($t, 'outlined.outline.focus');
+    }
+
+    @include forced-colors {
+      &:focus-visible {
+        outline-color: Highlight;
+      }
+    }
+  }
+
+  // Only a link card is ever disabled. It has no `href`, so it is out of the
+  // Tab order; `pointer-events` keeps a consumer's click handler from firing.
+  &--disabled {
+    color: g($t, 'disabled.content.color');
+    pointer-events: none;
+
+    .ui-card__subtitle {
+      color: inherit;
+    }
+
+    @each $variant in $variants {
+      &.ui-card--#{$variant} {
+        background-color: g($t, '#{$variant}.disabled.container.color');
+        box-shadow: g($t, '#{$variant}.disabled.elevation');
+      }
+    }
+
+    &.ui-card--outlined {
+      border-color: g($t, 'outlined.disabled.outline.color');
+    }
+
+    // Restated at the outlined rule's weight, which would otherwise keep its border.
+    @include forced-colors {
+      &,
+      &.ui-card--outlined {
+        border-color: GrayText;
+        color: GrayText;
+      }
+    }
+  }
+}

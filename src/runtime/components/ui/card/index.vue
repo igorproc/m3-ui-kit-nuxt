@@ -1,26 +1,34 @@
 <template>
-  <article
+  <component
+    :is="rootTag"
     class="ui-card"
-    :class="`ui-card--${variant}`"
+    :class="rootClass"
+    v-bind="rootAttrs"
   >
     <div
       v-if="$slots.media"
+      ref="media"
       class="ui-card__media"
+      :style="mediaStyle"
     >
       <slot name="media" />
     </div>
 
-    <header
-      v-if="$slots.header || title"
+    <component
+      :is="headerTag"
+      v-if="$slots.header || title || subtitle"
+      ref="header"
       class="ui-card__header"
     >
       <slot name="header">
-        <p
+        <component
+          :is="titleTag"
           v-if="title"
+          v-bind="titleAttrs"
           class="ui-card__title"
         >
           {{ title }}
-        </p>
+        </component>
 
         <p
           v-if="subtitle"
@@ -29,90 +37,92 @@
           {{ subtitle }}
         </p>
       </slot>
-    </header>
+    </component>
 
-    <div class="ui-card__content">
+    <div
+      v-if="$slots.default"
+      ref="content"
+      class="ui-card__content"
+    >
       <slot />
     </div>
 
-    <footer
+    <component
+      :is="footerTag"
       v-if="$slots.actions"
+      ref="actions"
       class="ui-card__actions"
     >
       <slot name="actions" />
-    </footer>
-  </article>
+    </component>
+  </component>
 </template>
 
 <script setup lang="ts">
+import { computed, useSlots, useTemplateRef } from 'vue'
 import { mCardProps } from './props'
+import { useCard } from '#kit/composables/card/useCard'
+import { useCardWarnings } from './useCardWarnings'
 
-defineProps(mCardProps)
+const props = defineProps(mCardProps)
+const slots = useSlots()
+
+const { isLink, isDisabled, rootTag, rootAttrs, titleTag, titleAttrs } = useCard(props, {
+  hasTitle: () => Boolean(props.title) && !slots.header,
+})
+
+// Retired values keep rendering as their replacement until they are removed.
+const RETIRED_VARIANTS: Record<string, string> = { tonal: 'filled', text: 'outlined' }
+
+const rootClass = computed(() => [
+  `ui-card--${RETIRED_VARIANTS[props.variant] ?? props.variant}`,
+  { 'ui-card--link': isLink.value, 'ui-card--disabled': isDisabled.value },
+])
+
+// `<header>` / `<footer>` are scoped by the article; inside a link they would
+// become page-level banner and contentinfo landmarks.
+const headerTag = computed(() => (isLink.value ? 'div' : 'header'))
+const footerTag = computed(() => (isLink.value ? 'div' : 'footer'))
+
+const mediaStyle = computed(() => (props.mediaAspectRatio ? { aspectRatio: props.mediaAspectRatio } : undefined))
+
+const parts = [useTemplateRef<Element>('media'), useTemplateRef<Element>('header'), useTemplateRef<Element>('content'), useTemplateRef<Element>('actions')]
+
+useCardWarnings({
+  variant: () => props.variant,
+  tag: () => props.tag,
+  disabled: () => props.disabled,
+  parts: () => parts.map(part => part.value),
+})
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/card/index' as t;
+@use '#kit/assets/stylesheet/components/card/states' as states;
 
-$prefix: 'md-card';
+$t: material-map(t.$tokens, 'md-card');
+$variants: ('elevated', 'filled', 'outlined');
 
 .ui-card {
-  $t: material-map(t.$tokens, $prefix);
-
   display: flex;
   flex-direction: column;
-  gap: g($t, 'gap');
-  padding: g($t, 'padding');
-  border-radius: g($t, 'radius');
-  border-width: g($t, 'border-width');
-  border-style: solid;
-  border-color: transparent;
-  background-color: map.get($theme-color-link, 'surface');
-  color: map.get($theme-color-link, 'on-surface');
-  box-shadow: elevation(1);
-  transition:
-    box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+  gap: g($t, 'container.gap');
+  min-width: 0;
+  padding: g($t, 'container.padding');
+  border: g($t, 'container.outline.width') solid transparent;
+  border-radius: g($t, 'container.shape');
+  color: g($t, 'content.color');
+  overflow-wrap: anywhere;
 
-  &--elevated {
-    background-color: g($t, 'elevated-bg');
-    border-color: transparent;
-    box-shadow: g($t, 'elevated-shadow');
-
-    @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'elevated-bg')});
-        box-shadow: g($t, 'elevated-hover-shadow');
-      }
-    }
-  }
-
-  &--filled {
-    background-color: g($t, 'filled-bg');
-    border-color: transparent;
-    box-shadow: g($t, 'filled-shadow');
-
-    @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'filled-bg')});
-        box-shadow: g($t, 'filled-hover-shadow');
-      }
+  @each $variant in $variants {
+    &--#{$variant} {
+      background-color: g($t, '#{$variant}.container.color');
+      box-shadow: g($t, '#{$variant}.elevation.rest');
     }
   }
 
   &--outlined {
-    background-color: g($t, 'outlined-bg');
-    border-color: g($t, 'outlined-border-color');
-    box-shadow: g($t, 'outlined-shadow');
-
-    @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, #{g($t, 'state-layer-color')} #{g($t, 'hover-opacity')}, #{g($t, 'outlined-bg')});
-        box-shadow: g($t, 'outlined-hover-shadow');
-      }
-    }
+    border-color: g($t, 'outlined.outline.color');
   }
 
   // Set apart by a shadow or a tone; their border is already there, transparent.
@@ -123,15 +133,27 @@ $prefix: 'md-card';
     }
   }
 
+  // Full-bleed: the media runs to the card's edges, over its padding.
   &__media {
-    overflow: hidden;
-    margin: calc(#{g($t, 'padding')} * -1) calc(#{g($t, 'padding')} * -1) 0; // Full width media
-    border-radius: g($t, 'radius') g($t, 'radius') 0 0;
+    // `clip` is no scroll container, so without this the box would keep its
+    // content-based minimum: a tall image would stretch the reserved ratio.
+    min-height: 0;
+    overflow: clip;
+    margin: calc(#{g($t, 'container.padding')} * -1) calc(#{g($t, 'container.padding')} * -1) 0;
+    border-radius: g($t, 'container.shape') g($t, 'container.shape') 0 0;
+    background-color: g($t, 'media.placeholder');
 
-    img {
+    // The clip widens only while a focus ring shows inside, so at rest the top
+    // corners still round the image; a margin at rest would leave them square.
+    &:has(:focus-visible) {
+      overflow-clip-margin: g($t, 'media.ring');
+    }
+
+    img,
+    video {
       display: block;
       width: 100%;
-      height: auto;
+      height: 100%;
       object-fit: cover;
     }
   }
@@ -139,33 +161,36 @@ $prefix: 'md-card';
   &__header {
     display: flex;
     flex-direction: column;
-    gap: 4rem; // Keeping this small gap internal
+    gap: g($t, 'header.gap');
   }
 
   &__title {
     margin: 0;
 
-    @include typescale(g($t, 'title-type'));
+    @include typescale(g($t, 'title.type'));
   }
 
   &__subtitle {
     margin: 0;
-    color: g($t, 'subtitle-color');
+    color: g($t, 'subtitle.color');
 
-    @include typescale(g($t, 'subtitle-type'));
+    @include typescale(g($t, 'subtitle.type'));
   }
 
   &__content {
     flex: 1 1 auto;
 
-    @include typescale(g($t, 'content-type'));
+    @include typescale(g($t, 'body.type'));
   }
 
   &__actions {
-    margin-top: 8rem; // Keeping this internal
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 8rem;
+    gap: g($t, 'actions.gap');
+    margin-block-start: g($t, 'actions.margin');
   }
+
+  @include states.link-card($t, $variants);
 }
 </style>

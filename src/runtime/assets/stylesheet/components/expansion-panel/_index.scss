@@ -2,70 +2,87 @@
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
-// EXPANSION PANEL M3 COMPONENT TOKENS
+// EXPANSION PANEL COMPONENT TOKENS
 // ==========================================
 
+// Disabled content keeps its own role at the disabled opacity, never another colour.
+@function expansion-panel-disabled($role) {
+  @return color-mix(in srgb, #{map.get($theme-color-link, $role)} state-opacity(disabled-content), transparent);
+}
+
 $tokens: (
-  base: (
-    bg: (
-      default: map.get($theme-color-link, 'surface'),
+  container: (
+    color: (
+      rest: map.get($theme-color-link, 'surface'),
       expanded: map.get($theme-color-link, 'surface-container-low'),
     ),
-    border: (
-      radius: var(--sys-shape-corner-medium),
-    ),
-    expanded: (
-      shadow: elevation(1),
+    shape: map.get($theme-shape-link, 'medium'),
+    elevation: (expanded: elevation(1)),
+  ),
+
+  // MExpansionPanels: segmented like M3 Expressive lists — panels a gap apart,
+  // the group rounded at its outer corners and small where neighbours meet.
+  group: (
+    gap: spacing(2),
+    shape: (
+      outer: map.get($theme-shape-link, 'medium'),
+      inner: map.get($theme-shape-link, 'extra-small'),
     ),
   ),
+
   header: (
-    gap: 16rem,
-    min: (
-      height: 56rem,
-    ),
-    padding: 12rem 24rem,
-    text: (
-      color: map.get($theme-color-link, 'on-surface'),
-    ),
-    hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(hover), transparent),
-    ),
-    active: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(pressed), transparent),
-    ),
-    content: (
-      gap: 4rem,
-    ),
-  ),
-  trailing: (
-    icon: (
-      size: 24rem,
-    ),
-    color: (
-      default: map.get($theme-color-link, 'on-surface-variant'),
-      active: map.get($theme-color-link, 'primary'),
-    ),
-  ),
-  content: (
+    min-height: 56rem,
+    gap: spacing(16),
     padding: (
-      inline: 24rem,
-      bottom: 24rem,
+      block: spacing(12),
+      inline: spacing(24),
     ),
-    text: (
-      color: map.get($theme-color-link, 'on-surface-variant'),
-    ),
+    content: (gap: spacing(4)),
   ),
+
+  title: (
+    color: map.get($theme-color-link, 'on-surface'),
+    typescale: 'body-large',
+  ),
+
   description: (
-    text: (
-      color: map.get($theme-color-link, 'on-surface-variant'),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typescale: 'body-medium',
+  ),
+
+  trailing: (
+    size: 24rem,
+    color: (
+      rest: map.get($theme-color-link, 'on-surface-variant'),
+      expanded: map.get($theme-color-link, 'primary'),
     ),
   ),
-  typography: (
-    title: 'body-large',
-    description: 'body-medium',
-    content: 'body-medium',
+
+  content: (
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typescale: 'body-medium',
+    padding: (
+      inline: spacing(24),
+      block-end: spacing(24),
+    ),
   ),
+
+  // The header tints itself with its own content colour.
+  state: (
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+    pressed: state-opacity(pressed),
+  ),
+
   disabled: (
-    opacity: state-opacity(disabled-content),
+    title: (color: expansion-panel-disabled('on-surface')),
+    description: (color: expansion-panel-disabled('on-surface-variant')),
+    icon: (color: expansion-panel-disabled('on-surface-variant')),
+  ),
+
+  motion: (
+    state: map.get($theme-animation-link, 'duration', 'short', '3'),
+    expand: map.get($theme-animation-link, 'duration', 'medium', '2'),
+    easing: map.get($theme-animation-link, 'easing', 'standard'),
   ),
 );

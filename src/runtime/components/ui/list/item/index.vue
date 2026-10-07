@@ -1,136 +1,114 @@
 <template>
-  <component
-    :is="tag"
-    ref="rootRef"
-    v-ripple="isInteractive && !disabled"
-    class="ui-list-item"
-    :class="{
-      'ui-list-item--interactive': isInteractive,
-      'ui-list-item--disabled': disabled,
-      'ui-list-item--selected': selected,
-      [`ui-list-item--lines-${computedLines}`]: true,
-      [`ui-list-item--density-${resolvedDensity}`]: true,
-    }"
-    :disabled="disabled"
-    :role="a11yRole"
-    :tabindex="a11yTabindex"
-    :aria-disabled="emulatesButton && disabled ? 'true' : undefined"
-    v-bind="bindings"
-    @keydown="onKeydown"
-  >
-    <div
-      v-if="$slots.leading || leadingIcon"
-      class="ui-list-item__leading"
-    >
-      <slot name="leading">
-        <m-icon
-          v-if="leadingIcon"
-          :name="leadingIcon"
-        />
-      </slot>
-    </div>
-
-    <div class="ui-list-item__body">
-      <div
-        v-if="overline || $slots.overline"
-        class="ui-list-item__overline"
-      >
-        <slot name="overline">
-          {{ overline }}
-        </slot>
-      </div>
-
-      <div
-        v-if="headline || $slots.headline"
-        class="ui-list-item__headline"
-      >
-        <slot name="headline">
-          {{ headline }}
-        </slot>
-      </div>
-
-      <slot />
-
-      <div
-        v-if="supportingText || $slots.supporting"
-        class="ui-list-item__supporting"
-      >
-        <slot name="supporting">
-          {{ supportingText }}
-        </slot>
-      </div>
-    </div>
-
-    <div
-      v-if="$slots.trailing || trailingIcon || trailingSupportingText || $slots.trailingSupporting"
-      class="ui-list-item__trailing"
+  <ListRow :wrap="wrapped">
+    <component
+      :is="rowTag"
+      v-ripple="isInteractive && !disabled"
+      v-bind="rowAttrs"
+      class="ui-list-item"
+      :class="rowClasses"
     >
       <div
-        v-if="trailingSupportingText || $slots.trailingSupporting"
-        class="ui-list-item__trailing-supporting"
+        v-if="$slots.leading || leadingIcon"
+        class="ui-list-item__leading"
       >
-        <slot name="trailingSupporting">
-          {{ trailingSupportingText }}
+        <slot name="leading">
+          <MIcon
+            v-if="leadingIcon"
+            :name="leadingIcon"
+          />
         </slot>
       </div>
-      <slot name="trailing">
-        <m-icon
-          v-if="trailingIcon"
-          :name="trailingIcon"
-        />
-      </slot>
-    </div>
-  </component>
+
+      <div class="ui-list-item__body">
+        <div
+          v-if="overline || $slots.overline"
+          class="ui-list-item__overline"
+          :title="clampTitle(overline, !!$slots.overline)"
+        >
+          <slot name="overline">
+            {{ overline }}
+          </slot>
+        </div>
+
+        <div
+          v-if="headline || $slots.headline"
+          class="ui-list-item__headline"
+          :title="clampTitle(headline, !!$slots.headline)"
+        >
+          <slot name="headline">
+            {{ headline }}
+          </slot>
+        </div>
+
+        <slot />
+
+        <div
+          v-if="supportingText || $slots.supporting"
+          class="ui-list-item__supporting"
+          :title="clampTitle(supportingText, !!$slots.supporting)"
+        >
+          <slot name="supporting">
+            {{ supportingText }}
+          </slot>
+        </div>
+      </div>
+
+      <div
+        v-if="$slots.trailing || trailingIcon || trailingSupportingText || $slots.trailingSupporting"
+        class="ui-list-item__trailing"
+      >
+        <div
+          v-if="trailingSupportingText || $slots.trailingSupporting"
+          class="ui-list-item__trailing-supporting"
+        >
+          <slot name="trailingSupporting">
+            {{ trailingSupportingText }}
+          </slot>
+        </div>
+        <slot name="trailing">
+          <MIcon
+            v-if="trailingIcon"
+            :name="trailingIcon"
+          />
+        </slot>
+      </div>
+    </component>
+  </ListRow>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, useSlots } from 'vue'
-import type { ComponentPublicInstance } from 'vue'
-import { type MListItemProps, mListItemProps } from './props'
-import { useListContext } from '../context'
+import { computed, useAttrs, useSlots } from 'vue'
+import { mListItemProps } from './props'
+import { ListRow } from './ListRow'
+import { useListItemControl } from '#kit/composables/list/useListItemControl'
+import { LIST_CONTEXT_FALLBACK, provideListContext, useListContext } from '../context'
+import { useRetiredPropWarning } from '#kit/composables/button/useRetiredValueWarning'
+import MIcon from '#kit/components/ui/icon/index.vue'
 
-const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
+// Consumer attributes belong to the row element, which is not the root when an
+// `li` wraps it.
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps(mListItemProps)
-
+const attrs = useAttrs()
 const slots = useSlots()
+
+useRetiredPropWarning('m-list-item', 'loading', () => props.loading, 'a progress indicator in the `#trailing` slot')
 
 // The row's own prop wins; absent, the enclosing `<MList>` decides. A row with
 // no list ancestor gets the context's fallback.
 const list = useListContext()
 const resolvedDensity = computed(() => props.density ?? list.density.value)
 
-const rootRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
+// What the row's content holds is not a direct child of the list: a divider or
+// a subheader placed inside it must not render as a list item.
+provideListContext({ ...list, present: false, semantic: LIST_CONTEXT_FALLBACK.semantic })
 
-const isInteractive = computed(() => {
-  return props.interactive || props.tag === 'button' || props.tag === 'a' || !!props.to
+const { isInteractive, wrapped, tag: rowTag, rowAttrs } = useListItemControl({
+  props,
+  attrs: () => attrs,
+  semantic: () => list.semantic.value,
 })
-
-// Native interactive elements (button/a/NuxtLink) already provide role,
-// focusability and Enter/Space semantics. A bare interactive `div` must
-// emulate the button role so AT and keyboard users get the same affordance.
-const emulatesButton = computed(() =>
-  isInteractive.value && !props.to && props.tag !== 'button' && props.tag !== 'a',
-)
-
-const a11yRole = computed(() => (emulatesButton.value ? 'button' : undefined))
-const a11yTabindex = computed(() => {
-  if (!emulatesButton.value) return undefined
-  return props.disabled ? -1 : 0
-})
-
-function onKeydown(event: KeyboardEvent) {
-  if (!emulatesButton.value || props.disabled) return
-  if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return
-
-  event.preventDefault()
-
-  const el = rootRef.value instanceof HTMLElement
-    ? rootRef.value
-    : (rootRef.value as ComponentPublicInstance | null)?.$el as HTMLElement | undefined
-
-  el?.click()
-}
 
 const computedLines = computed(() => {
   if (props.lines !== 'auto') {
@@ -148,47 +126,65 @@ const computedLines = computed(() => {
   return 1
 })
 
-const bindings = computed(() => {
-  if (props.to) {
-    return { to: props.to }
-  }
-  return {}
-})
+const clamped = computed(() => props.lines !== 'auto')
 
-const tag = computed(() => {
-  if (props.to) {
-    return NuxtLink
-  }
-  return props.tag
-})
+// A clamped line keeps its full text reachable (CT-02). Slotted content is the
+// consumer's to label.
+const clampTitle = (text: string, slotted: boolean) => (clamped.value && !slotted && text) || undefined
+
+const rowClasses = computed(() => ({
+  'ui-list-item--interactive': isInteractive.value,
+  'ui-list-item--disabled': props.disabled,
+  'ui-list-item--selected': Boolean(props.selected),
+  'ui-list-item--clamped': clamped.value,
+  [`ui-list-item--lines-${computedLines.value}`]: true,
+  [`ui-list-item--density-${resolvedDensity.value}`]: true,
+}))
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/list/item/index' as t;
+@use '#kit/assets/stylesheet/components/list/item/states' as states;
 
 .ui-list-item {
   $t: t.$tokens;
 
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
   gap: g($t, 'padding.between');
-  padding: g($t, 'padding.top') g($t, 'padding.trailing') g($t, 'padding.bottom') g($t, 'padding.leading');
-  border-radius: g($t, 'shape');
-  background-color: g($t, 'container.color');
-  border: none;
-  width: 100%;
-  text-align: left;
-  color: g($t, 'label.text.color');
-  text-decoration: none;
   box-sizing: border-box;
   position: relative;
+  isolation: isolate;
+  width: 100%;
+  margin: 0;
+  padding-block: g($t, 'padding.top') g($t, 'padding.bottom');
+  padding-inline: g($t, 'padding.leading') g($t, 'padding.trailing');
+  border: none;
+  border-radius: g($t, 'container.shape');
   outline: none;
+  background-color: g($t, 'container.color');
+  color: g($t, 'label.text.color');
+  text-align: start;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+
+  // The corner is left out: a selected row takes its shape at once (S3).
   transition:
-    background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    outline var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+    background-color g($t, 'motion.duration') g($t, 'motion.easing'),
+    color g($t, 'motion.duration') g($t, 'motion.easing');
+
+  // State layer in the row's own content colour (craft.md, «Подмена фона»).
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
+  }
 
   // Line count decides the shape of the row; density decides how tall that
   // shape is drawn. Emitted as one matrix so a density can never be
@@ -204,12 +200,20 @@ const tag = computed(() => {
   &--lines-3 {
     align-items: flex-start;
 
-    .ui-list-item__leading {
-      margin-top: 4rem; // align to top for three lines
+    &.ui-list-item--clamped .ui-list-item__supporting {
+      -webkit-line-clamp: 2;
     }
+  }
 
-    .ui-list-item__trailing {
-      margin-top: 4rem; // align to top for three lines
+  // An explicit line count holds the row at that many lines; `auto` wraps.
+  &--clamped {
+    .ui-list-item__overline,
+    .ui-list-item__headline,
+    .ui-list-item__supporting {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
     }
   }
 
@@ -217,81 +221,28 @@ const tag = computed(() => {
     cursor: pointer;
 
     @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), transparent);
+      &:hover::before {
+        opacity: g($t, 'state.hover');
       }
-    }
-
-    &:active {
-      background-color: color-mix(in srgb, g($t, 'state.pressed.color') g($t, 'state.pressed.opacity'), transparent);
     }
 
     &:focus-visible {
-      background-color: color-mix(in srgb, g($t, 'state.focus.color') g($t, 'state.focus.opacity'), transparent);
-
       @include focus-ring(inset);
-    }
-  }
 
-  // Selected State
-  &--selected {
-    background-color: g($t, 'container.selected.color');
-    color: g($t, 'label.text.selected.color');
-
-    .ui-list-item__headline {
-      color: g($t, 'label.text.selected.color');
-    }
-
-    .ui-list-item__supporting {
-      color: g($t, 'supporting.text.selected.color');
-    }
-
-    .ui-list-item__overline {
-      color: g($t, 'overline.selected.color');
-    }
-
-    .ui-list-item__leading {
-      color: g($t, 'leading.icon.selected.color');
-    }
-
-    .ui-list-item__trailing {
-      color: g($t, 'trailing.icon.selected.color');
-
-      &-supporting {
-        color: g($t, 'trailing.supporting.text.selected.color');
+      &::before {
+        opacity: g($t, 'state.focus');
       }
     }
-
-    &.ui-list-item--interactive {
-      @include can-hover {
-        &:hover {
-          background-color: color-mix(in srgb, g($t, 'state.hover.color') g($t, 'state.hover.opacity'), g($t, 'container.selected.color'));
-        }
-      }
-
-      &:active {
-        background-color: color-mix(in srgb, g($t, 'state.pressed.color') g($t, 'state.pressed.opacity'), g($t, 'container.selected.color'));
-      }
-
-      &:focus-visible {
-        background-color: color-mix(in srgb, g($t, 'state.focus.color') g($t, 'state.focus.opacity'), g($t, 'container.selected.color'));
-      }
-    }
-  }
-
-  &--disabled {
-    cursor: default;
-    opacity: g($t, 'container.disabled.opacity');
-    pointer-events: none;
   }
 
   &__leading {
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
+    min-width: g($t, 'leading.icon.size');
     color: g($t, 'leading.icon.color');
     font-size: g($t, 'leading.icon.size');
-    min-width: 24rem;
 
     img {
       width: g($t, 'leading.image.width');
@@ -300,51 +251,52 @@ const tag = computed(() => {
       object-fit: cover;
     }
 
+    video {
+      width: g($t, 'leading.video.width');
+      height: g($t, 'leading.video.height');
+      border-radius: g($t, 'leading.video.shape');
+      object-fit: cover;
+    }
+
     .ui-avatar {
       width: g($t, 'leading.avatar.size');
       height: g($t, 'leading.avatar.size');
-      border-radius: map.get($theme-shape-link, full);
+      border-radius: g($t, 'leading.avatar.shape');
     }
   }
 
   &__body {
     display: flex;
+    flex: 1;
     flex-direction: column;
     justify-content: center;
     min-width: 0;
   }
 
   &__overline {
+    margin-block-end: g($t, 'overline.gap');
     color: g($t, 'overline.color');
-    margin-bottom: 4rem;
 
     @include apply-typography(g($t, 'overline.typography'));
   }
 
   &__headline {
-    color: g($t, 'label.text.color');
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
     @include apply-typography(g($t, 'label.text.typography'));
   }
 
   &__supporting {
+    margin-block-start: g($t, 'supporting.gap');
     color: g($t, 'supporting.text.color');
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 4rem;
 
     @include apply-typography(g($t, 'supporting.text.typography'));
   }
 
   &__trailing {
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
-    gap: 8rem;
+    gap: g($t, 'trailing.gap');
     color: g($t, 'trailing.icon.color');
     font-size: g($t, 'trailing.icon.size');
   }
@@ -355,18 +307,6 @@ const tag = computed(() => {
     @include apply-typography(g($t, 'trailing.supporting.text.typography'));
   }
 
-  // Selected is only a container tone, which forced colors repaint as Canvas.
-  // An edge keeps slotted content in the user's colours; a focused selected
-  // item turns its ring Highlight so focus does not hide the selection.
-  @include forced-colors {
-    &--selected {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
-    }
-
-    &--selected.ui-list-item--interactive:focus-visible {
-      outline-color: Highlight;
-    }
-  }
+  @include states.selection-and-disabled($t);
 }
 </style>

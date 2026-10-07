@@ -15,14 +15,25 @@ $inset-offset: map.get($item-padding, 'leading') + map.get(item.$tokens, 'leadin
 $tokens: (
   min: (height: 48rem),
   padding: (
-    block: 8rem,
+    block: spacing(8),
     inline: map.get($item-padding, 'leading'),
   ),
   inset: (padding: (inline: $inset-offset)),
   typography: map.get($theme-typography-link, 'title', 'small'),
   color: map.get($theme-color-link, 'on-surface-variant'),
   sticky: (
-    container: (color: map.get($theme-color-link, 'surface')),
+    // One fill per surface `<MList surface>` can declare (`MListSurface`): rows
+    // scroll under the label, so it has to be the colour they scroll over.
+    container: (
+      color: (
+        surface: map.get($theme-color-link, 'surface'),
+        surface-container-lowest: map.get($theme-color-link, 'surface-container-lowest'),
+        surface-container-low: map.get($theme-color-link, 'surface-container-low'),
+        surface-container: map.get($theme-color-link, 'surface-container'),
+        surface-container-high: map.get($theme-color-link, 'surface-container-high'),
+        surface-container-highest: map.get($theme-color-link, 'surface-container-highest'),
+      ),
+    ),
     z: 1,
   ),
 );

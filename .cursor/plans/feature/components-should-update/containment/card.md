@@ -2,7 +2,7 @@
 
 <identity>M3: Cards (elevated / filled / outlined; статичная и интерактивная карточка) · Токены Compose: `ElevatedCardTokens.kt`, `FilledCardTokens.kt`, `OutlinedCardTokens.kt`; поведение — `Card.kt` (`Card`, `ElevatedCard`, `OutlinedCard`, `CardDefaults`) · Код: `src/runtime/components/ui/card/`, токены `src/runtime/assets/stylesheet/components/card/_index.scss` · Аудит: `data/card.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Цвета контейнеров, тени по уровням, форма 12 и обводка уже совпадают с M3; hover-тени через `elevation()` и `can-hover` починены фазой C. Шаги 1–2 чинят дефекты без смены API. Интерактивная карточка (шаг 3) ждёт вопросов 1–2.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано (агентом, 2026-10-07). Решения владельца: интерактивная карточка — только ссылка: `tag="link"` делает корнем `NuxtLink`/`<a>`, режима кнопки и растянутой ссылки нет; `#actions` внутри ссылки рендерится, в dev — предупреждение; имя ссылки — заголовок (`aria-labelledby`), без заголовка — содержимое; `headingLevel` без дефолта (общий тип `MHeadingLevel`). Статичная карточка без hover и переходов; у ссылки — слой 8/10/12, тени по токенам, кольцо, disabled по вариантам (`<a>` без `href`, `role="link"`, `aria-disabled`). `variant` сужен до elevated/filled/outlined, `tonal`/`text` на релиз рисуются как `filled`/`outlined` с предупреждением. Шаг 1 (CT-04/07/09, IN-05, RS-01, LY-04, TK-06) выполнен, `mediaAspectRatio`. Поведение — `composables/card/useCard.ts`.</implementation-status>
 
 ## Вердикт
 

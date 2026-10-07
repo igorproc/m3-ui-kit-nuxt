@@ -1,36 +1,86 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+// ==========================================
+// CARD M3 COMPONENT TOKENS
+// ==========================================
+// Containers, elevation steps and the disabled branch follow Compose
+// `ElevatedCardTokens` / `FilledCardTokens` / `OutlinedCardTokens`. M3 fixes no
+// typography or inner spacing for a card; those are the kit's own.
+
+$on-surface: map.get($theme-color-link, 'on-surface');
 $tokens: (
-  padding: 16rem,
-  gap: 12rem,
-  radius: var(--sys-shape-corner-medium),
-  border: (width: 1rem),
+  container: (
+    shape: map.get($theme-shape-link, 'medium'),
+    padding: spacing(16),
+    gap: spacing(12),
+    outline: (width: 1rem),
+  ),
+  content: (color: $on-surface),
 
-  hover: (opacity: state-opacity(hover)),
-  state: (layer: (color: map.get($theme-color-link, 'on-surface'))),
-
+  media: (
+    // Shows while the image loads, and instead of a broken one.
+    placeholder: map.get($theme-color-link, 'surface-container-highest'),
+    // How far a focus ring drawn inside the media reaches past its target.
+    ring: map.get($theme-focus-link, 'width') + map.get($theme-focus-link, 'offset'),
+  ),
+  header: (gap: spacing(4)),
   title: (type: 'title-medium'),
   subtitle: (
     type: 'body-medium',
     color: map.get($theme-color-link, 'on-surface-variant'),
   ),
-  content: (type: 'body-medium'),
+  body: (type: 'body-medium'),
+  actions: (
+    gap: spacing(8),
+    margin: spacing(8),
+  ),
 
+  // Link card only: a layer in the card's content colour (on-surface).
+  state: (
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+    pressed: state-opacity(pressed),
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
+  disabled: (
+    content: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent)),
+  ),
+
+  // Focus keeps the resting elevation in all three variants, so it has no step.
   elevated: (
-    bg: map.get($theme-color-link, 'surface-container-low'),
-    shadow: elevation(1),
-    hover: (shadow: elevation(2)),
+    container: (color: map.get($theme-color-link, 'surface-container-low')),
+    elevation: (rest: elevation(1), hover: elevation(2), pressed: elevation(1)),
+    disabled: (
+      container: (color: map.get($theme-color-link, 'surface')),
+      elevation: elevation(1),
+    ),
   ),
   filled: (
-    bg: map.get($theme-color-link, 'surface-container-highest'),
-    shadow: elevation(0),
-    hover: (shadow: elevation(1)),
+    container: (color: map.get($theme-color-link, 'surface-container-highest')),
+    elevation: (rest: elevation(0), hover: elevation(1), pressed: elevation(0)),
+    disabled: (
+      // Compose: `surface-variant` at `DisabledContainerOpacity` 0.38, left
+      // translucent. The kit retired that role for `surface-container-highest`;
+      // 0.38 is the disabled-content step, not a separate opacity.
+      container: (color: color-mix(in srgb, #{map.get($theme-color-link, 'surface-container-highest')} state-opacity(disabled-content), transparent)),
+      elevation: elevation(0),
+    ),
   ),
   outlined: (
-    bg: map.get($theme-color-link, 'surface'),
-    border: (color: map.get($theme-color-link, 'outline-variant')),
-    shadow: elevation(0),
-    hover: (shadow: elevation(1)),
+    container: (color: map.get($theme-color-link, 'surface')),
+    outline: (
+      color: map.get($theme-color-link, 'outline-variant'),
+      focus: $on-surface,
+    ),
+    // `HoverContainerElevation` is Level1; Compose's `outlinedCardElevation()`
+    // overrides it to the resting 0, the token is followed here.
+    elevation: (rest: elevation(0), hover: elevation(1), pressed: elevation(0)),
+    disabled: (
+      container: (color: map.get($theme-color-link, 'surface')),
+      outline: (color: color-mix(in srgb, #{map.get($theme-color-link, 'outline')} state-opacity(disabled-container), transparent)),
+      elevation: elevation(0),
+    ),
   ),
 );

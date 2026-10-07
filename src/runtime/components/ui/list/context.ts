@@ -2,26 +2,41 @@
  * @module list/context
  *
  * @remarks
- * One-value context: the vertical scale a `<MList>` sets for the rows inside
- * it. A row still takes its own `density` prop, so the context only answers
- * "what should I be if nobody told me". Namespace: `m3:list`.
+ * What a `<MList>` tells the parts inside it. Namespace: `m3:list`.
  *
- * It is a context rather than a prop on every row because the scale belongs to
- * the list as a whole — a panel whose rows disagree about their height is not a
- * list, and making the consumer repeat the prop per row guarantees that one
- * day one of them will be missed.
+ * - `density` — the vertical scale for rows that set none. It is a context
+ *   rather than a prop on every row because the scale belongs to the list as a
+ *   whole: making the consumer repeat it per row guarantees one row will miss it.
+ * - `present` / `semantic` — whether a list encloses the caller, and whether
+ *   that list is a `ul`. A row, a subheader and a divider pick their element
+ *   from them: a direct child of a `ul` has to be an `li`, and a divider inside
+ *   a list is decoration, not a separator.
+ * - `surface` — the colour role the list sits on, which a sticky subheader has
+ *   to fill itself with.
  */
 import { shallowRef } from 'vue'
 import type { Ref } from 'vue'
 import { createContext } from '#kit/shared/utils/context/createContext'
 import type { MListItemDensity } from './item/props'
+import type { MListSurface } from './types'
 
 export interface ListContext {
   /** Scale for the rows of this list. */
-  density: Ref<MListItemDensity>
+  density: Readonly<Ref<MListItemDensity>>
+  /** `false` only when no `<MList>` encloses the caller. */
+  present: boolean
+  /** The list renders as `ul`, so its direct children are `li`. `false` when the consumer gave it a role (a listbox). */
+  semantic: Readonly<Ref<boolean>>
+  /** Colour role of the surface the list sits on. */
+  surface: Readonly<Ref<MListSurface>>
 }
 
-/** Standalone rows (no `<MList>` ancestor) fall back to the default scale. */
-const FALLBACK: ListContext = { density: shallowRef<MListItemDensity>('default') }
+/** No `<MList>` ancestor: default scale, no list semantics, plain surface. */
+export const LIST_CONTEXT_FALLBACK: ListContext = {
+  density: shallowRef<MListItemDensity>('default'),
+  present: false,
+  semantic: shallowRef(false),
+  surface: shallowRef<MListSurface>('surface'),
+}
 
-export const [useListContext, provideListContext] = createContext<ListContext>('m3:list', FALLBACK)
+export const [useListContext, provideListContext] = createContext<ListContext>('m3:list', LIST_CONTEXT_FALLBACK)

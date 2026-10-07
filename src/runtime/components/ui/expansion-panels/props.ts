@@ -6,7 +6,11 @@
 import type { ExtractPublicPropTypes } from 'vue'
 
 export const mExpansionPanelsProps = {
-  /** Allow multiple panels open at once. @default false (exclusive accordion). */
+  /**
+   * Allow multiple panels open at once. Can change after mount: open panels
+   * stay open, and going exclusive keeps the first of them.
+   * @default false (exclusive accordion).
+   */
   multiple: { type: Boolean, default: false },
   /** Keep at least one panel open (exclusive mode only). @default false */
   mandatory: { type: Boolean, default: false },

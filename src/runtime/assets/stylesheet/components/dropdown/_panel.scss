@@ -47,6 +47,12 @@
     scrollbar-gutter: stable;
   }
 
+  // The active fill follows the pointer and the keyboard alike, so the row's
+  // own state layer would draw hover a second time on top of it.
+  &__option.ui-list-item::before {
+    display: none;
+  }
+
   &__option--active:not(.ui-list-item--selected) {
     background-color: g($t, 'option.active.bg');
   }

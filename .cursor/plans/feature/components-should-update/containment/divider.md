@@ -2,7 +2,7 @@
 
 <identity>M3: Divider (full-width, inset, middle-inset; horizontal / vertical) · Токены Compose: `DividerTokens.kt`; поведение — `Divider.kt` (`HorizontalDivider`, `VerticalDivider`, `DividerDefaults`); отступы в контексте — `ListTokens.Divider*Space`, `MenuDefaults.HorizontalDividerPadding` · Код: `src/runtime/components/ui/divider/`, токены `src/runtime/assets/stylesheet/components/divider/_index.scss` · Аудит: `data/divider.json` · Тип: public (+ используется рецептом разделителя меню)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Цвет, толщина и forced colors (фаза C) уже по M3. Шаг 1 чинит переполнение inset и вертикаль без смены API; шаги 2–3 ждут вопросов 1–2.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано (агентом, 2026-10-07). Решения владельца: `inset: 'start' | 'center' | 'end'` (M3 middle назван `center`; `true` = `start` на релиз с предупреждением); семантика по контексту списка — внутри `MList` `li aria-hidden`, в списке с ролью `div aria-hidden`, вне списка `div role="separator"`. Линия рисуется рамкой `max(1px, 1rem)`, без `width/height: 100%`, вертикаль `align-self: stretch`.</implementation-status>
 
 ## Вердикт
 

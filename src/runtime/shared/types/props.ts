@@ -39,6 +39,13 @@ export type MVariant = 'elevated' | 'filled' | 'tonal' | 'outlined' | 'text'
 export type MSize = 'sm' | 'md' | 'lg'
 
 /**
+ * Level of a component's own heading (card title, expansion panel header).
+ * No default anywhere: the kit cannot know the document's outline, so a
+ * component renders a heading only when the consumer names its level.
+ */
+export type MHeadingLevel = 2 | 3 | 4 | 5 | 6
+
+/**
  * MD3 corner-shape scale. Mirrors the `$theme-shape-link` SCSS map
  * (`--sys-shape-corner-*`); used by passive surfaces like `<MSurface>`.
  */

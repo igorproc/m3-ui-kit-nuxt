@@ -1,0 +1,94 @@
+@use '../../../abstracts/forward.scss' as *;
+
+// ==========================================
+// LIST ITEM SELECTED / DISABLED STATES
+// ==========================================
+// Included inside `.ui-list-item`. Both states recolour the row part by part.
+
+@mixin selection-and-disabled($t) {
+  &--selected {
+    border-radius: g($t, 'container.selected.shape');
+    background-color: g($t, 'container.selected.color');
+    color: g($t, 'label.text.selected.color');
+
+    .ui-list-item__overline {
+      color: g($t, 'overline.selected.color');
+    }
+
+    .ui-list-item__supporting {
+      color: g($t, 'supporting.text.selected.color');
+    }
+
+    .ui-list-item__leading {
+      color: g($t, 'leading.icon.selected.color');
+    }
+
+    .ui-list-item__trailing {
+      color: g($t, 'trailing.icon.selected.color');
+
+      &-supporting {
+        color: g($t, 'trailing.supporting.text.selected.color');
+      }
+    }
+  }
+
+  // Comes after selected so it outranks it part by part.
+  &--disabled {
+    cursor: default;
+    pointer-events: none;
+    color: g($t, 'disabled.content.color');
+
+    .ui-list-item__overline,
+    .ui-list-item__supporting,
+    .ui-list-item__leading {
+      color: g($t, 'disabled.content.color');
+    }
+
+    .ui-list-item__trailing {
+      color: g($t, 'disabled.content.color');
+
+      &-supporting {
+        color: g($t, 'disabled.content.color');
+      }
+    }
+
+    .ui-list-item__leading :where(img, video, .ui-avatar) {
+      opacity: g($t, 'disabled.content.opacity');
+    }
+
+    &.ui-list-item--selected {
+      background-color: g($t, 'disabled.selected.container.color');
+    }
+  }
+
+  // Selected is only a container tone, which forced colors repaint as Canvas.
+  // An edge keeps slotted content in the user's colours; a focused selected
+  // item turns its ring Highlight so focus does not hide the selection.
+  // Disabled is only a tone too, so its text turns GrayText.
+  @include forced-colors {
+    &--selected {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+
+    &--selected.ui-list-item--interactive:focus-visible {
+      outline-color: Highlight;
+    }
+
+    &--disabled {
+      &,
+      .ui-list-item__overline,
+      .ui-list-item__supporting,
+      .ui-list-item__leading {
+        color: GrayText;
+      }
+
+      .ui-list-item__trailing {
+        &,
+        &-supporting {
+          color: GrayText;
+        }
+      }
+    }
+  }
+}

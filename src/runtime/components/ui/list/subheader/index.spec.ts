@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { h } from 'vue'
+import { defineComponent, h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MListSubheader from './index.vue'
+import MList from '../index.vue'
+
+const inList = (listAttrs: Record<string, unknown>, props: Record<string, unknown>) =>
+  mountSuspended(defineComponent({ render: () => h(MList, listAttrs, { default: () => h(MListSubheader, props) }) }))
 
 describe('MListSubheader', () => {
   it('renders a passive div label from the title prop', async () => {
@@ -49,5 +53,35 @@ describe('MListSubheader', () => {
   it('renders no misleading label when title and slot are absent', async () => {
     const wrapper = await mountSuspended(MListSubheader)
     expect(wrapper.find('.ui-list-subheader').text()).toBe('')
+  })
+
+  it('is a plain li inside a semantic list', async () => {
+    const wrapper = await inList({}, { title: 'Recent' })
+    const root = wrapper.find('.ui-list-subheader')
+
+    expect(root.element.tagName).toBe('LI')
+    expect(root.attributes('role')).toBeUndefined()
+  })
+
+  it('stays a div inside a list that carries a role', async () => {
+    const wrapper = await inList({ role: 'listbox' }, { title: 'Recent' })
+    const root = wrapper.find('.ui-list-subheader')
+
+    expect(root.element.tagName).toBe('DIV')
+    expect(root.attributes('role')).toBeUndefined()
+  })
+
+  it('lets an explicit tag win over the list', async () => {
+    const wrapper = await inList({}, { title: 'Recent', tag: 'p' })
+    const root = wrapper.find('.ui-list-subheader')
+
+    expect(root.element.tagName).toBe('P')
+    expect(root.attributes('role')).toBeUndefined()
+  })
+
+  it('fills a sticky label with the plain surface outside a list', async () => {
+    const wrapper = await mountSuspended(MListSubheader, { props: { title: 'Pinned', sticky: true } })
+
+    expect(wrapper.find('.ui-list-subheader').classes()).toContain('ui-list-subheader--surface')
   })
 })

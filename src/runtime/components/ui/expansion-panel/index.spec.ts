@@ -46,7 +46,69 @@ describe('m-expansion-panel', () => {
 
     expect(wrapper.classes()).toContain('ui-expansion-panel--expanded')
     expect(wrapper.find('.ui-expansion-panel__header').attributes('aria-expanded')).toBe('true')
-    expect(wrapper.find('[role="region"]').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('[role="region"]').attributes('inert')).toBeUndefined()
+  })
+
+  it('keeps collapsed content inert instead of aria-hidden', async () => {
+    const wrapper = await mountSuspended(MExpansionPanel, {
+      props: { title: 'X', modelValue: false },
+      slots: { default: () => h('a', { href: '#field' }, 'Field') },
+    })
+
+    const region = wrapper.find('[role="region"]')
+    expect(region.attributes('inert')).toBeDefined()
+    expect(region.attributes('aria-hidden')).toBeUndefined()
+  })
+
+  it('puts only phrasing content inside the header button', async () => {
+    const wrapper = await mountSuspended(MExpansionPanel, {
+      props: { title: 'X', description: 'Y' },
+    })
+
+    expect(wrapper.find('.ui-expansion-panel__header').findAll('div')).toHaveLength(0)
+  })
+
+  it('wraps the header button in a heading only when a level is given', async () => {
+    const bare = await mountSuspended(MExpansionPanel, { props: { title: 'X' } })
+    expect(bare.find('h1, h2, h3, h4, h5, h6').exists()).toBe(false)
+    expect(bare.find('.ui-expansion-panel__header').element.parentElement).toBe(bare.element)
+
+    const wrapped = await mountSuspended(MExpansionPanel, { props: { title: 'X', headingLevel: 4 } })
+    const heading = wrapped.find('h4')
+    expect(heading.exists()).toBe(true)
+    expect(heading.find('.ui-expansion-panel__header').exists()).toBe(true)
+  })
+
+  it('sends class and style to the root and every other attribute to the button', async () => {
+    const wrapper = await mountSuspended(MExpansionPanel, {
+      props: { title: 'X' },
+      attrs: {
+        'class': 'faq',
+        'style': 'margin-top: 8px;',
+        'id': 'shipping',
+        'aria-describedby': 'hint',
+        'data-test': 'panel',
+      },
+    })
+
+    const header = wrapper.find('.ui-expansion-panel__header')
+    expect(wrapper.classes()).toContain('faq')
+    expect(wrapper.attributes('style')).toContain('margin-top')
+    expect(wrapper.attributes('id')).toBeUndefined()
+    expect(header.attributes('id')).toBe('shipping')
+    expect(header.attributes('aria-describedby')).toBe('hint')
+    expect(header.attributes('data-test')).toBe('panel')
+    expect(wrapper.find('[role="region"]').attributes('aria-labelledby')).toBe('shipping')
+  })
+
+  it('replaces the chevron through #trailing with the open state', async () => {
+    const wrapper = await mountSuspended(MExpansionPanel, {
+      props: { title: 'X', modelValue: true },
+      slots: { trailing: ({ expanded }: { expanded: boolean }) => h('b', expanded ? 'Hide' : 'Show') },
+    })
+
+    expect(wrapper.find('.ui-expansion-panel__trailing').text()).toBe('Hide')
+    expect(wrapper.find('.ui-expansion-panel__chevron').exists()).toBe(false)
   })
 
   it('toggles the v-model on header click', async () => {

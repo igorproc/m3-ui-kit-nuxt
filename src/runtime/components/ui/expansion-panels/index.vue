@@ -6,9 +6,8 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import type { ComputedRef } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 import { createGroup } from '#kit/composables/registry/createGroup'
-import { createSingle } from '#kit/composables/registry/createSingle'
 import { mExpansionPanelsProps } from './props'
 import {
   provideExpansionPanelGroupContext,
@@ -17,31 +16,23 @@ import type {
   ExpansionPanelGroupContext,
   PanelValue,
 } from '#kit/composables/expansion-panel/useExpansionPanelGroup'
-import type { GroupTicket } from '#kit/composables/registry/createGroup'
-import type { ID } from '#kit/shared/types/registry'
 
 const props = defineProps(mExpansionPanelsProps)
 
 // Open value(s): an array when `multiple`, a single value/undefined otherwise.
 const modelValue = defineModel<PanelValue | PanelValue[] | undefined>({ default: undefined })
 
-// Minimal shared surface both single + group instances satisfy structurally.
-interface PanelSelection {
-  size: number
-  values: () => GroupTicket<{ value: PanelValue }>[]
-  selectedValues: ComputedRef<Set<PanelValue>>
-  register: (ticket: { value: PanelValue, disabled?: unknown }) => GroupTicket<{ value: PanelValue }>
-  unregister: (id: ID) => void
-  toggle: (ids: ID | ID[]) => void
-  apply: (values: unknown[]) => void
-}
+// One selection for both modes: `multiple` and `mandatory` are read on every
+// operation, so switching them after mount needs no second instance that the
+// panels would have to re-register into. `reactive: true` keeps the ticket
+// collection reactive for the model watch below.
+const sel = createGroup<{ value: PanelValue, disabled?: MaybeRefOrGetter<boolean> }>({
+  reactive: true,
+  multiple: () => props.multiple,
+  mandatory: () => props.mandatory && !props.multiple,
+})
 
-// `reactive: true` keeps the ticket collection (and `sel.size`) reactive so the
-// model->selection watch re-applies once slotted panels register — fixes a
-// preset v-model not opening its panel at mount.
-const sel = (props.multiple
-  ? createGroup<{ value: PanelValue }>({ reactive: true })
-  : createSingle<{ value: PanelValue }>({ mandatory: () => props.mandatory, reactive: true })) as unknown as PanelSelection
+const openValues = () => Array.from(sel.selectedValues.value) as PanelValue[]
 
 const modelAsArray = computed(() => {
   const value = modelValue.value
@@ -49,28 +40,41 @@ const modelAsArray = computed(() => {
   return Array.isArray(value) ? value : [value]
 })
 
-// External v-model -> selection.
+// External v-model -> selection. Panels register after the group's setup and
+// again when their `value` changes, so the model is re-applied whenever the
+// registered values move — a preset v-model opens its panel at mount.
 watch(
-  [() => modelAsArray.value, () => sel.size],
+  [() => modelAsArray.value, () => sel.values().map(ticket => ticket.value)],
   () => sel.apply(modelAsArray.value),
   { immediate: true, deep: true },
 )
 
 // Selection -> external v-model.
-watch(
-  () => Array.from(sel.selectedValues.value) as PanelValue[],
-  (values) => {
-    if (props.multiple) {
-      const current = modelAsArray.value
-      const changed = current.length !== values.length
-        || values.some(value => !current.includes(value))
-      if (changed) modelValue.value = values
-    } else {
-      const next = values[0]
-      if (next !== modelValue.value) modelValue.value = next
-    }
-  },
-)
+watch(openValues, (values) => {
+  if (props.multiple) {
+    const current = modelAsArray.value
+    const changed = current.length !== values.length
+      || values.some(value => !current.includes(value))
+    if (changed) modelValue.value = values
+  } else {
+    const next = values[0]
+    if (next !== modelValue.value) modelValue.value = next
+  }
+})
+
+// Switching modes keeps what is open; going exclusive keeps the first open panel.
+watch(() => props.multiple, (multiple) => {
+  const values = openValues()
+
+  if (multiple) {
+    modelValue.value = values
+    return
+  }
+
+  const [first] = values
+  sel.apply(first === undefined ? [] : [first])
+  modelValue.value = first
+})
 
 function ticketsFor(value: PanelValue) {
   return sel.values()
@@ -82,20 +86,49 @@ function toggle(value: PanelValue) {
   const ids = ticketsFor(value)
   if (ids.length === 0) return
 
-  if (props.multiple) {
-    sel.toggle(ids)
-  } else {
-    sel.toggle(ids[0]!)
-  }
+  sel.toggle(props.multiple ? ids : ids[0]!)
 }
 
+const isOpen = (value: PanelValue) => sel.selectedValues.value.has(value)
+
 const context: ExpansionPanelGroupContext = {
-  multiple: props.multiple,
+  get multiple() {
+    return props.multiple
+  },
   register: ({ value, disabled }) => sel.register({ value, disabled }),
   unregister: id => sel.unregister(id),
   toggle,
-  isOpen: value => sel.selectedValues.value.has(value),
+  isOpen,
+  isLocked: value => props.mandatory && !props.multiple && isOpen(value),
 }
 
 provideExpansionPanelGroupContext(context)
 </script>
+
+<style lang="scss">
+@use '#kit/assets/stylesheet/components/expansion-panel/index' as panel;
+
+$t: panel.$tokens;
+
+// Static corners: neighbours meet small and the group is rounded at its ends,
+// with no shape change as panels open or close.
+.ui-expansion-panels {
+  display: flex;
+  flex-direction: column;
+  gap: g($t, 'group.gap');
+
+  > .ui-expansion-panel {
+    border-radius: g($t, 'group.shape.inner');
+
+    &:first-child {
+      border-start-start-radius: g($t, 'group.shape.outer');
+      border-start-end-radius: g($t, 'group.shape.outer');
+    }
+
+    &:last-child {
+      border-end-start-radius: g($t, 'group.shape.outer');
+      border-end-end-radius: g($t, 'group.shape.outer');
+    }
+  }
+}
+</style>

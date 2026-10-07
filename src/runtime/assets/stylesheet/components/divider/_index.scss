@@ -1,8 +1,11 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 $tokens: (
   color: map.get($theme-color-link, 'outline-variant'),
-  thickness: 1rem,
-  inset: (margin: 16rem),
+  // With the root font size in vw, 1rem drops under a device pixel on a narrow
+  // screen and the line disappears; it never gets thinner than one pixel.
+  thickness: max(1px, 1rem),
+  // `ListTokens.DividerLeadingSpace` / `DividerTrailingSpace`.
+  inset: (size: spacing(16)),
 );

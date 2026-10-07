@@ -1,12 +1,11 @@
 /**
  * Public prop surface for `<MListItem>`.
  *
- * `disabled`/`loading` come from the shared state factory; the remaining props
- * are list-item-specific content/behaviour fields.
+ * `disabled` is the only state: a row has no loading state (`loading` is
+ * retired). The remaining props are list-item-specific content/behaviour fields.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
-import { makeStateProps } from '#kit/shared/utils/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
 
 export type MListItemLines = 1 | 2 | 3 | 'auto'
@@ -23,7 +22,13 @@ export type MListItemDensity = MFieldDensity
 
 /** `<MListItem>` props. */
 export const mListItemProps = {
-  ...makeStateProps(),
+  /** Prevents interaction and dims every part of the row. */
+  disabled: { type: Boolean, default: false },
+  /**
+   * @deprecated A row has no loading state; show progress in the `#trailing`
+   * slot. Accepted and ignored for one release.
+   */
+  loading: { type: Boolean, default: undefined },
   headline: { type: String, default: '' },
   supportingText: { type: String, default: '' },
   overline: { type: String, default: '' },
@@ -33,7 +38,17 @@ export const mListItemProps = {
   tag: { type: String, default: 'div' },
   to: { type: [String, Object] as PropType<NuxtLinkProps['to']>, default: undefined },
   interactive: { type: Boolean, default: false },
-  selected: { type: Boolean, default: false },
+  /**
+   * Selection state. Left `undefined` for a plain row; a boolean makes the row
+   * part of a selection, which an interactive row announces — a link as the
+   * current page, a button as pressed.
+   */
+  selected: { type: Boolean, default: undefined },
+  /**
+   * `auto` lets the text wrap and the row grow. A number keeps the row at that
+   * many lines: the headline takes one, supporting text the rest, and a cut
+   * line keeps its full text as a tooltip.
+   */
   lines: { type: [Number, String] as PropType<MListItemLines>, default: 'auto' },
   /**
    * Vertical scale. Left `undefined` on purpose: absence means "inherit from

@@ -1,28 +1,25 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use 'subheader/index' as subheader;
 
 // ==========================================
-// LIST M3 COMPONENT TOKENS (HYPHEN-FREE KEYS)
+// LIST M3 COMPONENT TOKENS
 // ==========================================
+// Rows meet edge to edge (M3 standard list); a selected row is told apart by
+// its container and its corner, not by a gap.
 
 $tokens: (
   container: (
-    gap: 4rem,
+    gap: spacing(0),
     padding: (
-      block: 8rem,
-      inline: 0,
+      block: spacing(8),
+      inline: spacing(0),
     ),
     shape: map.get($theme-shape-link, none),
     color: transparent,
   ),
-
-  // Divider Tokens
-  divider: (
-    color: map.get($theme-color-link, outline-variant),
-    height: 1rem,
-    space: (
-      leading: 16rem,
-      trailing: 16rem,
-    )
-  )
+  // A row scrolled into view under a sticky subheader stops below it.
+  sticky: (
+    scroll-margin: map.get(subheader.$tokens, min, height),
+  ),
 );

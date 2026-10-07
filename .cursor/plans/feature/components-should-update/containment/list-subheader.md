@@ -2,7 +2,7 @@
 
 <identity>M3: нет в Compose Material3 1.5 как компонента; ближайшие аналоги — заголовок секции navigation drawer (`NavigationDrawerTokens.HeadlineFont = TitleSmall`, `HeadlineColor = OnSurfaceVariant`) и метка группы меню (`MenuDefaults.Label`: `label-large`, min 32, отступы 12 / 4) · Токены Compose: `NavigationDrawerTokens.kt`, `ListTokens.kt` (отступы строки, от которых выводится inset) · Код: `src/runtime/components/ui/list/subheader/`, токены `src/runtime/assets/stylesheet/components/list/subheader/_index.scss` · Аудит: `data/list.json` (LY-06, LY-09, TK-04) · Тип: public, часть семейства [MList](list.md)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент реализован 2026-07-16 по утверждённому плану (Vuetify-дельта `VListSubheader`): `title` / слот, `tag`, `sticky`, `inset`, выведенный из колонки leading. План переписан под M3-контракт: остались z-index вне правила `craft.md` §12, строки под sticky-подписью, заливка sticky на чужом фоне, легаси-пути `g()` и выбор тега внутри списка с семантикой (зависит от вопроса 3 плана списка).</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано (агентом, 2026-10-07). Тег из контекста: внутри `ul` — обычный `li` без роли (axe отвергает `li role="presentation"`, решение владельца, decisions.md), вне списка — `div`, явный `tag` побеждает. Заливка липкой подписи — проп `surface` у `MList` (только объявляет фон, статические классы по ролям). `isolation: isolate` у `MList`, `scroll-margin-block-start` у строк под липкой подписью, точечные пути.</implementation-status>
 
 ## Вердикт
 

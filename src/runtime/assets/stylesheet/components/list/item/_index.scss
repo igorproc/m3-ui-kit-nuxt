@@ -4,7 +4,15 @@
 // ==========================================
 // LIST ITEM M3 COMPONENT TOKENS
 // ==========================================
+// Geometry is M3 Expressive (`ListTokens`: block space 10, between space 12,
+// rest corner extra-small, selected corner large) with the baseline 24 icon:
+// the leading column has to line up with a 40 avatar and with the subheader
+// inset, which is derived from these values. The selected corner is static —
+// no state changes the shape (decisions.md, S3).
 
+$-on-surface: map.get($theme-color-link, on-surface);
+$-on-surface-variant: map.get($theme-color-link, on-surface-variant);
+$-on-secondary-container: map.get($theme-color-link, on-secondary-container);
 $tokens: (
   // Vertical scale. The steps mirror the field family's density ladder
   // (-12rem / +8rem around `default`), so a one-line row and a field of the
@@ -21,71 +29,73 @@ $tokens: (
       height: (one: 64rem, two: 80rem, three: 96rem),
     ),
   ),
-  // Spaces / Padding
+  // 10 (`ItemTopSpace` / `ItemBottomSpace`) is off the 4-unit scale. M3 drops
+  // it to 12 for a precise pointer; the kit does not, because density is a
+  // choice and not something derived from the device (decisions.md).
   padding: (
-    leading: 16rem,
-    trailing: 16rem,
-    top: 8rem,
-    bottom: 8rem,
-    between: 16rem,
+    leading: spacing(16),
+    trailing: spacing(16),
+    top: calc(#{spacing(8)} + #{spacing(2)}),
+    bottom: calc(#{spacing(8)} + #{spacing(2)}),
+    between: spacing(12),
   ),
-  // Shape
-  shape: map.get($theme-shape-link, small), // Slight rounded corners for item hover/pressed container
 
-  // Core Colors
   container: (
     color: transparent,
+    shape: map.get($theme-shape-link, extra-small),
     selected: (
-      color: map.get($theme-color-link, primary-container),
+      color: map.get($theme-color-link, secondary-container),
+      shape: map.get($theme-shape-link, large),
     ),
-    disabled: (
-      opacity: state-opacity(disabled-content),
-    )
   ),
 
-  // Content Colors & Typography
+  // Every part dims on its own; a selected row keeps a faint container so
+  // the selection is still visible while it cannot be changed.
+  disabled: (
+    content: (
+      color: color-mix(in srgb, #{$-on-surface} state-opacity(disabled-content), transparent),
+      // Media cannot take a colour, so it fades by the same amount.
+      opacity: state-opacity(disabled-content),
+    ),
+    selected: (
+      container: (
+        color: color-mix(in srgb, #{$-on-surface} state-opacity(disabled-container), transparent),
+      ),
+    ),
+  ),
+
   label: (
     text: (
-      color: map.get($theme-color-link, on-surface),
+      color: $-on-surface,
       typography: map.get($theme-typography-link, body, large),
-      selected: (
-        color: map.get($theme-color-link, on-primary-container),
-      )
-    )
+      selected: (color: $-on-secondary-container),
+    ),
   ),
   supporting: (
+    gap: spacing(4),
     text: (
-      color: map.get($theme-color-link, on-surface-variant),
+      color: $-on-surface-variant,
       typography: map.get($theme-typography-link, body, medium),
-      selected: (
-        color: map.get($theme-color-link, on-primary-container),
-      )
-    )
+      selected: (color: $-on-secondary-container),
+    ),
   ),
   overline: (
-    color: map.get($theme-color-link, on-surface-variant),
+    gap: spacing(4),
+    color: $-on-surface-variant,
     typography: map.get($theme-typography-link, label, small),
-    selected: (
-      color: map.get($theme-color-link, on-primary-container),
-    )
+    selected: (color: $-on-secondary-container),
   ),
 
-  // Media & Icons
   leading: (
     icon: (
-      color: map.get($theme-color-link, on-surface-variant),
+      color: $-on-surface-variant,
       size: 24rem,
-      selected: (
-        color: map.get($theme-color-link, on-primary-container),
-      )
+      selected: (color: $-on-secondary-container),
     ),
+    // Colour and initials belong to `<MAvatar>`; the row only sizes it.
     avatar: (
       size: 40rem,
-      color: map.get($theme-color-link, primary-container),
-      label: (
-        color: map.get($theme-color-link, on-primary-container),
-        typography: map.get($theme-typography-link, title, medium),
-      )
+      shape: map.get($theme-shape-link, full),
     ),
     image: (
       width: 56rem,
@@ -96,40 +106,32 @@ $tokens: (
       width: 100rem,
       height: 56rem,
       shape: map.get($theme-shape-link, small),
-    )
+    ),
   ),
   trailing: (
+    gap: spacing(8),
     icon: (
-      color: map.get($theme-color-link, on-surface-variant),
+      color: $-on-surface-variant,
       size: 24rem,
-      selected: (
-        color: map.get($theme-color-link, on-primary-container),
-      )
+      selected: (color: $-on-secondary-container),
     ),
     supporting: (
       text: (
-        color: map.get($theme-color-link, on-surface-variant),
+        color: $-on-surface-variant,
         typography: map.get($theme-typography-link, label, small),
-        selected: (
-          color: map.get($theme-color-link, on-primary-container),
-        )
-      )
-    )
+        selected: (color: $-on-secondary-container),
+      ),
+    ),
   ),
 
-  // State Colors
+  // Hover and focus tint the row with its own content colour; pressed is the
+  // ripple's alone, so a press never stacks two layers.
   state: (
-    hover: (
-      color: map.get($theme-color-link, on-surface),
-      opacity: state-opacity(hover),
-    ),
-    pressed: (
-      color: map.get($theme-color-link, on-surface),
-      opacity: state-opacity(pressed),
-    ),
-    focus: (
-      color: map.get($theme-color-link, on-surface),
-      opacity: state-opacity(focus),
-    )
-  )
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+  ),
 );
