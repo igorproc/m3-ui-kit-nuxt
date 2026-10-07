@@ -16,31 +16,33 @@
         'ui-segmented-button__segment--selected': isSelected(item.value),
       }"
     >
-      <span
-        v-if="isSelected(item.value) || item.icon"
-        class="ui-segmented-button__icon"
-      >
-        <transition
-          name="ui-segmented-button-icon-scale"
-          mode="out-in"
+      <span class="ui-segmented-button__content">
+        <span
+          v-if="isSelected(item.value) || item.icon"
+          class="ui-segmented-button__icon"
         >
-          <UiIcon
-            v-if="isSelected(item.value)"
-            key="check"
-            :name="ICONS.check"
-          />
-          <UiIcon
-            v-else-if="item.icon"
-            :key="item.icon"
-            :name="item.icon"
-          />
-        </transition>
-      </span>
+          <transition
+            name="ui-segmented-button-icon-scale"
+            mode="out-in"
+          >
+            <UiIcon
+              v-if="isSelected(item.value)"
+              key="check"
+              :name="ICONS.check"
+            />
+            <UiIcon
+              v-else-if="item.icon"
+              :key="item.icon"
+              :name="item.icon"
+            />
+          </transition>
+        </span>
 
-      <span
-        v-if="item.label"
-        class="ui-segmented-button__label"
-      >{{ item.label }}</span>
+        <span
+          v-if="item.label"
+          class="ui-segmented-button__label"
+        >{{ item.label }}</span>
+      </span>
     </button>
   </div>
 </template>
@@ -83,24 +85,27 @@ const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = use
   min-height: g($t, 'container.height');
   border-radius: g($t, 'container.shape');
   border: 1rem solid g($t, 'container.outline.color');
+
+  // Clips the pill; a row too wide even with every label wrapped scrolls
+  // instead of spilling out of its container.
   overflow: hidden;
+  overflow-x: auto;
 
   &--disabled {
     border-color: g($t, 'container.outline.disabled.color');
   }
 
   // Segments keep their natural width and give it up only when the group runs
-  // out of room; a label then wraps rather than being cut off.
+  // out of room; a label then wraps between words, never inside one: the
+  // automatic minimum stops at the longest word (or M3's 58, whichever is wider).
   &__segment {
     position: relative;
     display: inline-flex;
     flex: 0 1 auto;
     align-items: center;
     justify-content: center;
-    min-width: 0;
     padding-block: g($t, 'segment.padding.block');
     padding-inline: g($t, 'segment.padding.inline');
-    gap: g($t, 'segment.gap');
     background-color: g($t, 'unselected.container.color');
     color: g($t, 'unselected.content.color');
     border: none;
@@ -129,6 +134,10 @@ const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = use
       }
     }
 
+    &:focus-visible {
+      background-color: g($t, 'unselected.container.focus.color');
+    }
+
     &:active {
       background-color: g($t, 'unselected.container.pressed.color');
     }
@@ -146,9 +155,15 @@ const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = use
     }
   }
 
+  &__content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: g($t, 'segment.gap');
+    min-width: g($t, 'segment.content.min-width');
+  }
+
   &__label {
-    min-width: 0;
-    overflow-wrap: anywhere;
     text-align: center;
   }
 
@@ -162,6 +177,10 @@ const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = use
         &:hover {
           background-color: g($t, 'selected.#{$scheme}.container.hover.color');
         }
+      }
+
+      &:focus-visible {
+        background-color: g($t, 'selected.#{$scheme}.container.focus.color');
       }
 
       &:active {

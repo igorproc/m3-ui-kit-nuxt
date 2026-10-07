@@ -1,19 +1,20 @@
 /**
  * Public prop surface for `<MButtonExtendedFab>`.
  *
- * Mirrors the FAB contract: shared MD3 color role + surface variant + size +
- * state props. The legacy `surface` color-enum is expressed as `variant:
- * 'tonal'` instead.
+ * Mirrors the FAB contract (colour role, M3 colour set, `density`, state) and
+ * adds `expanded`: collapsed, the button folds into a FAB of the same step.
  */
 import type { ExtractPublicPropTypes } from 'vue'
-import { makeColorProps, makeSizeProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
+import { makeFabProps } from '../fab/props'
 
-/** Extended FAB props — defaults to the filled (role-container) surface. */
+/** Extended FAB props — defaults to the tonal (role-container) set. */
 export const mExtendedFabProps = {
-  ...makeColorProps(),
-  ...makeVariantProps({ variant: 'filled' }),
-  ...makeSizeProps(),
-  ...makeStateProps(),
+  ...makeFabProps(),
+  /**
+   * Shows the label. When `false` the button folds to its icon; the label
+   * stays as the accessible name. Needs a `#prepend` icon to fold to.
+   */
+  expanded: { type: Boolean, default: true },
 }
 
 export type MExtendedFabProps = ExtractPublicPropTypes<typeof mExtendedFabProps>

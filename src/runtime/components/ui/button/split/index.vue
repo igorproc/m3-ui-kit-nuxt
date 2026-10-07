@@ -1,32 +1,46 @@
 <template>
-  <div class="ui-split-button">
+  <div
+    class="ui-split-button"
+    :class="`ui-split-button--${density}`"
+  >
     <div class="ui-split-button__wrapper">
       <UiButton
         class="ui-split-button__action"
         :variant="variant"
         :color="color"
+        :density="density"
         :disabled="disabled"
-        @click="$emit('click')"
+        :loading="loading"
+        @click="emit('click')"
       >
+        <template
+          v-if="$slots.prepend"
+          #prepend
+        >
+          <slot name="prepend" />
+        </template>
         <slot />
       </UiButton>
 
       <UiButton
-        ref="dropdown"
-        class="ui-split-button__dropdown"
+        ref="trailing"
+        class="ui-split-button__trailing"
         :variant="variant"
         :color="color"
-        :disabled="disabled"
-        :aria-label="dropdownAriaLabel"
+        :density="density"
+        :disabled="disabled || loading"
+        :aria-label="trailingLabel"
         :aria-haspopup="hasMenu ? 'menu' : undefined"
         :aria-expanded="hasMenu ? String(isMenuOpen) : undefined"
-        @click="toggleMenu"
+        @click="onTrailing"
       >
         <template #prepend>
-          <UiIcon
-            name="ic:outline-plus"
-            style="transform: rotate(45deg);"
-          />
+          <slot
+            name="trailing"
+            :open="isMenuOpen"
+          >
+            <UiIcon :name="isMenuOpen ? ICONS.keyboardArrowUp : ICONS.keyboardArrowDown" />
+          </slot>
         </template>
       </UiButton>
     </div>
@@ -39,49 +53,50 @@
       class="ui-split-button__menu-container"
       @click-outside="closeMenu"
     >
-      <button
-        v-for="(item, index) in items"
-        :key="item.value || index"
-        type="button"
-        class="ui-menu__item"
-        @click="handleItemClick(item)"
-      >
-        <span class="ui-menu__item-label">{{ item.label }}</span>
-        <UiIcon
-          v-if="item.icon"
-          :name="item.icon"
-        />
-      </button>
+      <slot
+        name="menu"
+        :close="closeMenu"
+      />
     </UiMenu>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, getCurrentInstance, nextTick, ref, useSlots, useTemplateRef, watch } from 'vue'
 
 import UiButton from '#kit/components/ui/button/index.vue'
 import UiIcon from '#kit/components/ui/icon/index.vue'
 import UiMenu from '#kit/components/ui/menu/index.vue'
 import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
+import { useRetiredPropWarning, useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
+import { ICONS } from '#kit/shared/constants/icons'
 import { mSplitButtonProps } from './props'
-import type { UiSplitMenuItem } from './props'
 
 const props = defineProps(mSplitButtonProps)
 
 const emit = defineEmits<{
-  (e: 'click' | 'dropdown'): void
-  (e: 'select', item: UiSplitMenuItem): void
+  /** @deprecated Listen to `trailing`. Still emitted for one release. */
+  (e: 'click' | 'trailing' | 'dropdown'): void
 }>()
 
+const slots = useSlots()
 const isMenuOpen = ref(false)
-const hasMenu = computed(() => props.items.length > 0)
-const dropdown = useTemplateRef<{ $el: HTMLElement }>('dropdown')
+const hasMenu = computed(() => !!slots.menu)
+const trailingLabel = computed(() => props.trailingAriaLabel ?? props.dropdownAriaLabel)
+const trailing = useTemplateRef<{ $el: HTMLElement }>('trailing')
 
-useButtonNameWarning('m-button-split', () => props.dropdownAriaLabel)
+useButtonNameWarning('m-button-split', () => trailingLabel.value)
+useRetiredValueWarning('m-button-split', 'variant', () => props.variant, { text: '`outlined`' })
+useRetiredPropWarning('m-button-split', 'dropdownAriaLabel', () => props.dropdownAriaLabel, '`trailingAriaLabel`')
+if (import.meta.dev && getCurrentInstance()?.vnode.props?.onDropdown) {
+  console.warn('[m-button-split] the `dropdown` event is retired: listen to `trailing`.')
+}
 
-function toggleMenu() {
-  if (props.disabled) return
-  isMenuOpen.value = !isMenuOpen.value
+function onTrailing() {
+  if (props.disabled || props.loading) return
+
+  if (hasMenu.value) isMenuOpen.value = !isMenuOpen.value
+  emit('trailing')
   emit('dropdown')
 }
 
@@ -89,24 +104,16 @@ function closeMenu() {
   isMenuOpen.value = false
 }
 
-function handleItemClick(item: UiSplitMenuItem) {
-  if (item.action) {
-    item.action()
-  }
-  emit('select', item)
-  closeMenu()
-}
-
 // The menu returns focus to its parent element, which here is the wrapper div
 // and cannot take it. When the menu closes with focus left nowhere (an item
-// picked, Escape), it goes back to the dropdown that opened it; a click that
-// moved focus elsewhere is left alone.
+// picked, Escape), it goes back to the trailing button that opened it; a click
+// that moved focus elsewhere is left alone.
 watch(isMenuOpen, async (open) => {
   if (open) return
 
   await nextTick()
   const active = document.activeElement
-  if (!active || active === document.body) dropdown.value?.$el.focus()
+  if (!active || active === document.body) trailing.value?.$el.focus()
 })
 </script>
 
@@ -114,39 +121,61 @@ watch(isMenuOpen, async (open) => {
 @use '#kit/assets/stylesheet/components/button/_index' as t;
 
 $t: material-map(t.$tokens, 'md-button');
+$densities: ('compact', 'default', 'comfortable');
 
 .ui-split-button {
   display: inline-flex;
   flex-direction: column;
   position: relative;
 
-  // Not clipped: each half rounds its own outer corners, so a focus ring drawn
-  // outside either half stays visible.
+  // Not clipped: each button rounds its own corners, so a focus ring drawn
+  // outside either one stays visible.
   &__wrapper {
     display: inline-flex;
     align-items: stretch;
+    gap: g($t, 'split.gap');
     isolation: isolate;
   }
 
-  // The doubled class outranks `.ui-button`'s own radius and padding without
-  // `!important`; a focused half rises over its neighbour so its ring shows.
-  &__action.ui-button,
-  &__dropdown.ui-button {
+  // The wrapper's child combinator outranks `.ui-button`'s own radius, padding
+  // and icon-only box without `!important`; a focused button rises over its
+  // neighbour so its ring shows. Corners stay put on hover, press and open.
+  &__wrapper > &__action.ui-button,
+  &__wrapper > &__trailing.ui-button {
     &:focus-visible {
       z-index: 1;
     }
   }
 
-  &__action.ui-button {
-    border-start-end-radius: 0;
-    border-end-end-radius: 0;
+  &__wrapper > &__action.ui-button {
+    min-width: g($t, 'split.min-width');
+    border-start-end-radius: g($t, 'split.inner');
+    border-end-end-radius: g($t, 'split.inner');
   }
 
-  &__wrapper > &__dropdown.ui-button {
-    border-start-start-radius: 0;
-    border-end-start-radius: 0;
-    padding-inline: g($t, 'split.dropdown.padding.inline');
-    border-inline-start: g($t, 'split.divider.width') solid g($t, 'split.divider.color');
+  &__wrapper > &__trailing.ui-button {
+    padding-inline: 0;
+    border-start-start-radius: g($t, 'split.inner');
+    border-end-start-radius: g($t, 'split.inner');
+  }
+
+  @each $step in $densities {
+    &--#{$step} {
+      $d: 'split.density.#{$step}';
+
+      .ui-split-button__wrapper > .ui-split-button__action.ui-button {
+        padding-inline-end: g($t, '#{$d}.leading.end');
+      }
+
+      .ui-split-button__wrapper > .ui-split-button__trailing.ui-button {
+        width: g($t, '#{$d}.trailing.width');
+
+        .ui-button__icon,
+        .ui-button__spinner {
+          font-size: g($t, '#{$d}.trailing.icon');
+        }
+      }
+    }
   }
 
   // The menu teleports out and positions itself (fixed / CSS anchor); only

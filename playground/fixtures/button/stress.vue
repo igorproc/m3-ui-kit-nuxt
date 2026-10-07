@@ -82,6 +82,23 @@
       >
         Compose
       </MButtonExtendedFab>
+      <MButton
+        :loading="loading"
+        density="compact"
+        data-test="loading-compact"
+      >
+        Submit
+      </MButton>
+      <MButton
+        :loading="loading"
+        density="comfortable"
+        data-test="loading-comfortable"
+      >
+        <template #prepend>
+          <MIcon :name="ICONS.add" />
+        </template>
+        Add item
+      </MButton>
       <MButtonIcon
         :loading="loading"
         aria-label="Refresh"

@@ -31,6 +31,12 @@ export async function expectNoAxeViolations(page: Page) {
   expect(violations.map(v => `${v.id}: ${v.nodes.map(node => node.target.join(' ')).join(' | ')}`)).toEqual([])
 }
 
+/** Waits until every finite CSS transition and animation has finished (spinners loop forever). */
+export async function waitForMotion(page: Page) {
+  await page.waitForFunction(() => document.getAnimations().every(animation =>
+    animation.playState !== 'running' || animation.effect?.getTiming().iterations === Infinity))
+}
+
 export async function expectNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)

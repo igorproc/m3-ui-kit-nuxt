@@ -10,7 +10,9 @@
       class="ui-extended-fab__spinner"
       :class="{ 'ui-extended-fab__spinner--centered': !$slots.prepend }"
       aria-hidden="true"
-    />
+    >
+      <MLoading inline />
+    </span>
     <span
       v-else-if="$slots.prepend"
       class="ui-extended-fab__icon"
@@ -24,21 +26,37 @@
 </template>
 
 <script setup lang="ts">
+import { useSlots, watchEffect } from 'vue'
+import MLoading from '#kit/components/ui/loading/index.vue'
 import { useButton } from '#kit/composables/button/useButton'
+import { useFabProps } from '#kit/composables/button/useFabProps'
 import { mExtendedFabProps } from './props'
 
 const props = defineProps(mExtendedFabProps)
+const slots = useSlots()
 
-const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-extended-fab', props })
+const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
+  block: 'ui-extended-fab',
+  props: useFabProps('m-button-extended-fab', props),
+  modifiers: () => ({ collapsed: !props.expanded }),
+})
+
+if (import.meta.dev) {
+  watchEffect(() => {
+    if (props.expanded || slots.prepend) return
+
+    console.warn('[m-button-extended-fab] `expanded=false` needs a `#prepend` icon to fold to.')
+  })
+}
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/extended-fab' as t;
-@use '#kit/assets/stylesheet/components/button/spinner' as spinner;
 
 .ui-extended-fab {
   $prefix: 'm3-extended-fab';
   $t: material-map(t.$tokens, $prefix);
+  $fold: g($t, 'motion.fold.duration') g($t, 'motion.fold.easing');
 
   display: inline-flex;
   align-items: center;
@@ -50,14 +68,19 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   overflow: hidden;
   max-width: 100%;
   outline: none;
-  padding-inline: g($t, 'container.padding.md');
-  gap: g($t, 'container.gap.md');
   box-shadow: g($t, 'container.elevation.resting');
   transition:
     box-shadow g($t, 'motion.duration') g($t, 'motion.easing'),
-    background-color g($t, 'motion.duration') g($t, 'motion.easing');
+    background-color g($t, 'motion.duration') g($t, 'motion.easing'),
+    width $fold,
+    padding $fold,
+    gap $fold;
 
-  @include typescale('label-large');
+  // Folding animates between the label's width and the square; where `auto`
+  // cannot be interpolated the fold is simply instant.
+  @supports (interpolate-size: allow-keywords) {
+    interpolate-size: allow-keywords;
+  }
 
   &:focus-visible {
     @include focus-ring;
@@ -85,14 +108,15 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   }
 
   &__spinner {
+    justify-content: center;
     flex-shrink: 0;
+    line-height: 0;
 
     // With no icon to stand in for, the spinner sits over the label, which
     // keeps its box (and its accessible name) so the width does not jump.
     &--centered {
       position: absolute;
       inset: 0;
-      margin: auto;
 
       ~ .ui-extended-fab__label {
         opacity: 0;
@@ -134,7 +158,7 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   }
 
   @mixin apply-scheme($scheme) {
-    $variants: ('filled', 'tonal');
+    $variants: ('tonal', 'filled');
 
     @each $v in $variants {
       &.ui-extended-fab--#{$v} {
@@ -143,18 +167,32 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
     }
   }
 
-  @mixin apply-size($size) {
-    min-height: g($t, 'container.height.#{$size}');
-    border-radius: g($t, 'container.shape.#{$size}');
-    padding-inline: g($t, 'container.padding.#{$size}');
-    gap: g($t, 'container.gap.#{$size}');
+  @mixin apply-density($step) {
+    $d: 'density.#{$step}';
 
-    .ui-extended-fab__icon {
-      font-size: g($t, 'icon.size.#{$size}');
+    min-height: g($t, '#{$d}.height');
+    width: auto;
+    border-radius: g($t, '#{$d}.shape');
+    padding-inline: g($t, '#{$d}.padding');
+    gap: g($t, '#{$d}.gap');
+
+    @include typescale(g($t, '#{$d}.font'));
+
+    .ui-extended-fab__icon,
+    .ui-extended-fab__spinner {
+      font-size: g($t, '#{$d}.icon');
     }
 
-    .ui-extended-fab__spinner {
-      @include spinner.spinner(g($t, 'icon.size.#{$size}'));
+    // Folded into the FAB of the same step: a square around the icon. The
+    // label leaves the layout but stays the accessible name.
+    &.ui-extended-fab--collapsed {
+      width: g($t, '#{$d}.height');
+      padding-inline: 0;
+      gap: 0;
+
+      .ui-extended-fab__label {
+        @include sr-only;
+      }
     }
   }
 
@@ -164,10 +202,9 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-exte
   &--tertiary { @include apply-scheme('tertiary'); }
   &--error { @include apply-scheme('error'); }
 
-  // Sizes
-  &--sm { @include apply-size('sm'); }
-  &--md { @include apply-size('md'); }
-  &--lg { @include apply-size('lg'); }
+  &--compact { @include apply-density('compact'); }
+  &--default { @include apply-density('default'); }
+  &--comfortable { @include apply-density('comfortable'); }
 
   // Interactions
   @include can-hover {

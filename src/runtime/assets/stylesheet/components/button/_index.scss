@@ -6,60 +6,106 @@
 // ==========================================
 
 $tokens: (
-  // Базовая геометрия и анимация
-  container: (height: 40rem,
+  container: (
     shape: map.get($theme-shape-link, full),
-    gap: spacing(8),
-    padding: (inline: spacing(24),
-      with-icon: spacing(16),
-      icon-only: spacing(8),
-      text-inline: spacing(12),
+    outline: (width: 1rem),
+  ),
+
+  // The kit's three density steps take M3 Expressive XS / S / M. `square` is the
+  // corner of `shape="square"` and of a selected toggle at that step.
+  density: (
+    compact: (
+      height: 32rem,
+      padding: spacing(12),
+      gap: spacing(4),
+      icon: 20rem,
+      square: map.get($theme-shape-link, medium),
+      font: 'label-large',
+    ),
+    default: (
+      height: 40rem,
+      padding: spacing(16),
+      gap: spacing(8),
+      icon: 20rem,
+      square: map.get($theme-shape-link, medium),
+      font: 'label-large',
+    ),
+    comfortable: (
+      height: 56rem,
+      padding: spacing(24),
+      gap: spacing(8),
+      icon: 24rem,
+      square: map.get($theme-shape-link, large),
+      font: 'title-medium',
     ),
   ),
-  icon: (size: 18rem,
-  ),
-  state: (duration: var(--sys-motion-duration-short-3),
+
+  // Pointer target of a button drawn smaller than M3's 48.
+  target: (size: spacing(48)),
+
+  // Hover and focus tint the button with its own content colour; pressed is the
+  // ripple's alone, so a press never stacks two layers.
+  state: (
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+    duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
   ),
 
-  // MIconButton: a fixed square, not a padded pill.
-  icon-button: (
-    container: (size: 40rem, shape: map.get($theme-shape-link, full)),
-    icon: (size: 24rem),
+  elevation: (
+    tonal: (hover: elevation(1)),
+    filled: (hover: elevation(1)),
+    elevated: (rest: elevation(1), hover: elevation(2), pressed: elevation(1)),
   ),
 
-  // MSplitButton: two halves of one pill, divided by a step of the surface.
+  // MIconButton (and an MButton with only an icon): the height is the density
+  // step's, the width one of M3's three. A selected round button takes the
+  // step's square corner (as MButton does); a selected square one turns round.
+  icon-button: (
+    density: (
+      compact: (icon: 20rem, width: (narrow: 28rem, default: 32rem, wide: 40rem)),
+      default: (icon: 24rem, width: (narrow: 32rem, default: 40rem, wide: 52rem)),
+      comfortable: (icon: 24rem, width: (narrow: 48rem, default: 56rem, wide: 72rem)),
+    ),
+    selected: (square: map.get($theme-shape-link, full)),
+  ),
+
+  // MSplitButton: two buttons a gap apart, rounded small where they meet. The
+  // trailing button's padding is what its width leaves around its icon.
   split: (
-    dropdown: (padding: (inline: spacing(4))),
-    divider: (
-      width: 1rem,
-      color: color-mix(in srgb, map.get($theme-color-link, surface) 30%, transparent),
+    gap: spacing(2),
+    inner: map.get($theme-shape-link, extra-small),
+    min-width: spacing(48),
+    density: (
+      compact: (leading: (end: calc(#{spacing(8)} + #{spacing(2)})), trailing: (width: 48rem, icon: 22rem)),
+      default: (leading: (end: spacing(12)), trailing: (width: 48rem, icon: 22rem)),
+      comfortable: (leading: (end: spacing(24)), trailing: (width: 56rem, icon: 26rem)),
     ),
     menu: (min-width: 150rem),
   ),
 
-  // Схемы (полные наборы для каждого типа)
-  primary: m3-button-scheme(map.get($theme-color-link, primary),
+  primary: m3-button-scheme(
+    map.get($theme-color-link, primary),
     map.get($theme-color-link, on-primary),
     map.get($theme-color-link, primary-container),
-    map.get($theme-color-link, on-primary-container),
-    map.get($theme-color-link, outline)),
-
-  secondary: m3-button-scheme(map.get($theme-color-link, secondary),
+    map.get($theme-color-link, on-primary-container)
+  ),
+  secondary: m3-button-scheme(
+    map.get($theme-color-link, secondary),
     map.get($theme-color-link, on-secondary),
     map.get($theme-color-link, secondary-container),
-    map.get($theme-color-link, on-secondary-container),
-    color-mix(in srgb, map.get($theme-color-link, secondary) 50%, transparent)),
-
-  tertiary: m3-button-scheme(map.get($theme-color-link, tertiary),
+    map.get($theme-color-link, on-secondary-container)
+  ),
+  tertiary: m3-button-scheme(
+    map.get($theme-color-link, tertiary),
     map.get($theme-color-link, on-tertiary),
     map.get($theme-color-link, tertiary-container),
-    map.get($theme-color-link, on-tertiary-container),
-    color-mix(in srgb, map.get($theme-color-link, tertiary) 50%, transparent)),
-
-  error: m3-button-scheme(map.get($theme-color-link, error),
+    map.get($theme-color-link, on-tertiary-container)
+  ),
+  error: m3-button-scheme(
+    map.get($theme-color-link, error),
     map.get($theme-color-link, on-error),
     map.get($theme-color-link, error-container),
-    map.get($theme-color-link, on-error-container),
-    color-mix(in srgb, map.get($theme-color-link, error) 50%, transparent))
+    map.get($theme-color-link, on-error-container)
+  ),
 );

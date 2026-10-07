@@ -145,107 +145,57 @@
 }
 
 
-/// Генератор токенов цветовой схемы для кнопок в стиле Material Design 3.
-/// Возвращает мапу со всеми вариантами и их состояниями.
-/// @param $main - Основной цвет схемы (primary, secondary, error)
-/// @param $on-main - Цвет контента на основном цвете
-/// @param $container - Цвет контейнера схемы
-/// @param $on-container - Цвет контента на контейнере
-/// @param $outline - Цвет границы
-/// @param $surface-tokens - Опционально мапа с системными цветами (on-surface, surface-container-low)
-@function m3-button-scheme(
-  $main,
-  $on-main,
-  $container,
-  $on-container,
-  $outline,
-  $surface-tokens: ()
-) {
-  $hover-opacity: state-opacity(hover);
-  $pressed-opacity: state-opacity(pressed);
-  $disabled-container-opacity: state-opacity(disabled-container);
-  $disabled-content-opacity: state-opacity(disabled-content);
-
-  // Разрешаем системные цвета
-  $on-surface: map.get($surface-tokens, 'on-surface') or map.get($theme-color-link, 'on-surface');
-  $surface-container-low: map.get($surface-tokens, 'surface-container-low') or map.get($theme-color-link, 'surface-container-low');
+/// Colour tokens of one MD3 role for every MButton variant.
+/// Each variant carries its resting colours plus the `unselected` / `selected`
+/// pair a toggle button wears; hover, focus and pressed are drawn by the
+/// button's state layer in its own content colour, so none are premixed here.
+/// @param $main - the role (`primary`, `secondary`, …)
+/// @param $on-main - content on the role
+/// @param $container - the role's container
+/// @param $on-container - content on the role's container
+@function m3-button-scheme($main, $on-main, $container, $on-container) {
+  $on-surface: map.get($theme-color-link, 'on-surface');
+  $on-surface-variant: map.get($theme-color-link, 'on-surface-variant');
+  $outline-variant: map.get($theme-color-link, 'outline-variant');
+  $surface-container: map.get($theme-color-link, 'surface-container');
+  $surface-container-low: map.get($theme-color-link, 'surface-container-low');
+  $role: (container: (color: $main), content: (color: $on-main));
+  $on-surface-container-low: (container: (color: $surface-container-low), content: (color: $main));
+  $role-container: (container: (color: $container), content: (color: $on-container));
+  $bare: (container: (color: transparent), content: (color: $main));
 
   @return (
-    filled: (
-      container: (
-        color: $main,
-        hover: (color: color-mix(in srgb, $on-main $hover-opacity, $main)),
-        pressed: (color: color-mix(in srgb, $on-main $pressed-opacity, $main)),
-        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+    filled: map.merge($role, (
+      unselected: (container: (color: $surface-container), content: (color: $on-surface-variant)),
+      selected: $role,
+    )),
+    elevated: map.merge($on-surface-container-low, (
+      unselected: $on-surface-container-low,
+      selected: $role,
+    )),
+    // The kit's tonal stays on the role container; its selected state inverts
+    // that container instead of borrowing M3's fixed secondary.
+    tonal: map.merge($role-container, (
+      unselected: $role-container,
+      selected: (container: (color: $on-container), content: (color: $container)),
+    )),
+    outlined: map.merge($bare, (
+      outline: (color: $outline-variant),
+      unselected: $bare,
+      selected: (
+        container: (color: map.get($theme-color-link, 'inverse-surface')),
+        content: (color: map.get($theme-color-link, 'inverse-on-surface')),
       ),
-      label: (
-        text: (
-          color: $on-main,
-          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-        )
-      )
+    )),
+    // M3 has no text toggle button; it follows the standard icon button.
+    text: map.merge($bare, (
+      unselected: (container: (color: transparent), content: (color: $on-surface-variant)),
+      selected: $bare,
+    )),
+    disabled: (
+      container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
+      content: (color: color-mix(in srgb, $on-surface-variant state-opacity(disabled-content), transparent)),
+      outline: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
     ),
-    elevated: (
-      container: (
-        color: $surface-container-low,
-        hover: (color: color-mix(in srgb, $main $hover-opacity, $surface-container-low)),
-        pressed: (color: color-mix(in srgb, $main $pressed-opacity, $surface-container-low)),
-        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
-      ),
-      label: (
-        text: (
-          color: $main,
-          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-        )
-      ),
-      shadow: elevation(1),
-      hover: (shadow: elevation(2)),
-    ),
-    tonal: (
-      container: (
-        color: $container,
-        hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
-        pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
-        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
-      ),
-      label: (
-        text: (
-          color: $on-container,
-          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-        )
-      )
-    ),
-    outlined: (
-      container: (
-        color: transparent,
-        hover: (color: color-mix(in srgb, $main $hover-opacity, transparent)),
-        pressed: (color: color-mix(in srgb, $main $pressed-opacity, transparent)),
-        disabled: (color: transparent),
-      ),
-      label: (
-        text: (
-          color: $main,
-          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-        )
-      ),
-      outline: (
-        color: $outline,
-        disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
-      )
-    ),
-    text: (
-      container: (
-        color: transparent,
-        hover: (color: color-mix(in srgb, $main $hover-opacity, transparent)),
-        pressed: (color: color-mix(in srgb, $main $pressed-opacity, transparent)),
-        disabled: (color: transparent),
-      ),
-      label: (
-        text: (
-          color: $main,
-          disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-        )
-      )
-    )
   );
 }

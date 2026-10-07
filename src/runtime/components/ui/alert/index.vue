@@ -194,16 +194,6 @@ const close = () => {
         .ui-alert__close {
           color: g($t, '#{$base}.close.color');
 
-          @include can-hover {
-            &:hover:not(:disabled, .ui-button--disabled) {
-              background-color: g($t, '#{$base}.close.hover.color');
-            }
-          }
-
-          &:active:not(:disabled, .ui-button--disabled) {
-            background-color: g($t, '#{$base}.close.pressed.color');
-          }
-
           &:focus-visible {
             outline: g($t, 'close.focus.width') solid g($t, '#{$base}.close.focus.color');
             outline-offset: g($t, 'close.focus.offset');

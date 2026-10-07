@@ -10,7 +10,7 @@
             State
           </th>
           <th
-            v-for="variant in variants"
+            v-for="variant in iconVariants"
             :key="variant"
             scope="col"
           >
@@ -27,7 +27,7 @@
             {{ state.name }}
           </th>
           <td
-            v-for="variant in variants"
+            v-for="variant in iconVariants"
             :key="variant"
           >
             <MButtonIcon
@@ -42,6 +42,96 @@
         </tr>
       </tbody>
     </table>
+
+    <h2>Icon button — density × width</h2>
+    <div
+      v-for="density in densities"
+      :key="density"
+      class="fixture-row fixture-row--spaced"
+    >
+      <MButtonIcon
+        v-for="width in widths"
+        :key="width"
+        :density="density"
+        :width="width"
+        variant="tonal"
+        :aria-label="`Favourite, ${density} ${width}`"
+        :data-test="`icon-${density}-${width}`"
+      >
+        <MIcon :name="ICONS.star" />
+      </MButtonIcon>
+      <MButtonIcon
+        :density="density"
+        shape="square"
+        variant="tonal"
+        :aria-label="`Favourite, ${density} square`"
+        :data-test="`icon-${density}-square`"
+      >
+        <MIcon :name="ICONS.star" />
+      </MButtonIcon>
+    </div>
+
+    <h2>Icon button — toggle</h2>
+    <table>
+      <tbody>
+        <tr
+          v-for="shape in shapes"
+          :key="shape"
+        >
+          <th scope="row">
+            {{ shape }}
+          </th>
+          <td
+            v-for="variant in iconVariants"
+            :key="variant"
+          >
+            <MButtonIcon
+              v-model:selected="iconToggles[`${shape}-${variant}`]"
+              :variant="variant"
+              :shape="shape"
+              :aria-label="`Add to list, ${shape} ${variant}`"
+              :data-test="`icon-toggle-${shape}-${variant}`"
+            >
+              <template #default="{ selected }">
+                <MIcon :name="selected ? ICONS.check : ICONS.add" />
+              </template>
+            </MButtonIcon>
+          </td>
+          <td>
+            <MButtonIcon
+              :shape="shape"
+              variant="filled"
+              selected
+              disabled
+              :aria-label="`Add to list, ${shape} selected disabled`"
+              :data-test="`icon-selected-disabled-${shape}`"
+            >
+              <MIcon :name="ICONS.star" />
+            </MButtonIcon>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Icon button — content colour</h2>
+    <div
+      class="fixture-row fixture-tinted"
+      data-test="icon-tint-host"
+    >
+      <MButtonIcon
+        aria-label="Inherits"
+        data-test="icon-tint-inherit"
+      >
+        <MIcon :name="ICONS.star" />
+      </MButtonIcon>
+      <MButtonIcon
+        color="error"
+        aria-label="Error role"
+        data-test="icon-tint-role"
+      >
+        <MIcon :name="ICONS.star" />
+      </MButtonIcon>
+    </div>
 
     <h2>FAB</h2>
     <div class="fixture-row">
@@ -61,11 +151,11 @@
         </MButtonFab>
       </template>
       <MButtonFab
-        v-for="size in sizes"
-        :key="size"
-        :size="size"
-        :aria-label="`Compose, ${size}`"
-        :data-test="`fab-size-${size}`"
+        v-for="density in densities"
+        :key="density"
+        :density="density"
+        :aria-label="`Compose, ${density}`"
+        :data-test="`fab-density-${density}`"
       >
         <MIcon :name="ICONS.edit" />
       </MButtonFab>
@@ -90,6 +180,29 @@
           Compose
         </MButtonExtendedFab>
       </template>
+    </div>
+    <div class="fixture-row">
+      <MButtonExtendedFab
+        v-for="density in densities"
+        :key="density"
+        :density="density"
+        :data-test="`extended-density-${density}`"
+      >
+        <template #prepend>
+          <MIcon :name="ICONS.edit" />
+        </template>
+        Compose
+      </MButtonExtendedFab>
+      <MButtonExtendedFab
+        :expanded="extendedExpanded"
+        data-test="extended-fold"
+        @click="extendedExpanded = !extendedExpanded"
+      >
+        <template #prepend>
+          <MIcon :name="ICONS.edit" />
+        </template>
+        Compose
+      </MButtonExtendedFab>
     </div>
 
     <h2>Segmented — single choice</h2>
@@ -129,14 +242,54 @@
     <h2>Split</h2>
     <div class="fixture-row">
       <MButtonSplit
-        v-for="variant in variants"
+        v-for="variant in splitVariants"
         :key="variant"
         :variant="variant"
-        :items="saveOptions"
-        dropdown-aria-label="More save options"
+        trailing-aria-label="More save options"
         :data-test="`split-${variant}`"
         @click="lastEvent = 'save'"
-        @select="item => lastEvent = `select:${item.value}`"
+      >
+        Save
+        <template #menu="{ close }">
+          <button
+            v-for="option in saveOptions"
+            :key="option.value"
+            type="button"
+            class="ui-menu__item"
+            @click="lastEvent = `select:${option.value}`; close()"
+          >
+            {{ option.label }}
+          </button>
+        </template>
+      </MButtonSplit>
+    </div>
+    <div class="fixture-row fixture-row--spaced">
+      <MButtonSplit
+        v-for="density in densities"
+        :key="density"
+        :density="density"
+        trailing-aria-label="More save options"
+        :data-test="`split-density-${density}`"
+      >
+        <template #prepend>
+          <MIcon :name="ICONS.edit" />
+        </template>
+        Save
+      </MButtonSplit>
+      <MButtonSplit
+        trailing-aria-label="Edit before sending"
+        data-test="split-action"
+        @trailing="lastEvent = 'trailing'"
+      >
+        Send
+        <template #trailing>
+          <MIcon :name="ICONS.edit" />
+        </template>
+      </MButtonSplit>
+      <MButtonSplit
+        loading
+        trailing-aria-label="More save options"
+        data-test="split-loading"
       >
         Save
       </MButtonSplit>
@@ -147,7 +300,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MButtonFab from '#kit/components/ui/button/fab/index.vue'
 import MButtonExtendedFab from '#kit/components/ui/button/extended-fab/index.vue'
@@ -155,11 +308,21 @@ import MButtonSegmented from '#kit/components/ui/button/segmented/index.vue'
 import MButtonSplit from '#kit/components/ui/button/split/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import type { MSize, MVariant } from '#kit/shared/types/props'
+import type { MButtonDensity, MButtonShape, MIconButtonVariant, MIconButtonWidth } from '#kit/components/ui/button/props'
+import type { MFabVariant } from '#kit/components/ui/button/fab/props'
+import type { MSplitButtonVariant } from '#kit/components/ui/button/split/props'
+import type { MVariant } from '#kit/shared/types/props'
 
 const variants: MVariant[] = ['elevated', 'filled', 'tonal', 'outlined', 'text']
-const fabVariants: MVariant[] = ['filled', 'tonal']
-const sizes: MSize[] = ['sm', 'md', 'lg']
+const iconVariants: MIconButtonVariant[] = ['filled', 'tonal', 'outlined', 'text']
+const densities: MButtonDensity[] = ['compact', 'default', 'comfortable']
+const widths: MIconButtonWidth[] = ['narrow', 'default', 'wide']
+const shapes: MButtonShape[] = ['round', 'square']
+const iconToggles = reactive<Record<string, boolean>>(Object.fromEntries(
+  shapes.flatMap(shape => iconVariants.map(variant => [`${shape}-${variant}`, false])),
+))
+const fabVariants: MFabVariant[] = ['tonal', 'filled']
+const splitVariants: MSplitButtonVariant[] = ['elevated', 'filled', 'tonal', 'outlined']
 const states = [
   { name: 'enabled', props: {} },
   { name: 'disabled', props: { disabled: true } },
@@ -190,6 +353,7 @@ const period = ref('week')
 const filters = ref<(string | number)[]>(['starred'])
 const layout = ref('grid')
 const lastEvent = ref('')
+const extendedExpanded = ref(true)
 </script>
 
 <style lang="scss">
@@ -208,5 +372,14 @@ const lastEvent = ref('')
   flex-wrap: wrap;
   align-items: center;
   gap: 12rem;
+
+  // Room above and below for the pointer-target probe.
+  &--spaced {
+    padding-block: 24rem;
+  }
+}
+
+.fixture-tinted {
+  color: var(--md-sys-color-tertiary);
 }
 </style>

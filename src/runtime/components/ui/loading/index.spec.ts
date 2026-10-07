@@ -47,6 +47,14 @@ describe('m-loading', () => {
     expect(wrapper.classes()).toContain('ui-loading--inline')
   })
 
+  // A block inside the span is invalid in a <p> or a <button>: the parser
+  // splits the paragraph and SSR hydration mismatches.
+  it('renders only phrasing elements, so it can sit in a line of text or a button', async () => {
+    const wrapper = await mountSuspended(MLoading, { props: { inline: true } })
+
+    expect(wrapper.find('div').exists()).toBe(false)
+  })
+
   it('uses the default and custom accessible label', async () => {
     const def = await mountSuspended(MLoading)
     expect(def.find('.ui-loading').attributes('aria-label')).toBe('Loading')

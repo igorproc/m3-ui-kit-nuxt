@@ -3,6 +3,7 @@
     :is="tag"
     v-ripple="rippleEnabled"
     :class="rootClass"
+    :style="toggleStyle"
     v-bind="rootAttrs"
   >
     <span
@@ -10,7 +11,9 @@
       class="ui-button__spinner"
       :class="{ 'ui-button__spinner--centered': !$slots.prepend }"
       aria-hidden="true"
-    />
+    >
+      <MLoading inline />
+    </span>
 
     <span
       v-else-if="$slots.prepend"
@@ -37,10 +40,16 @@
 
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
+import MLoading from '#kit/components/ui/loading/index.vue'
 import { useButton } from '#kit/composables/button/useButton'
+import { useReducedMotion } from '#kit/composables/useReducedMotion'
+import { toggleTransition } from './morph'
 import { mButtonProps } from './props'
 
 const props = defineProps(mButtonProps)
+const emit = defineEmits<{
+  (e: 'update:selected', selected: boolean): void
+}>()
 const slots = useSlots()
 
 const hasPrepend = computed(() => !!slots.prepend)
@@ -51,62 +60,72 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
   block: 'ui-button',
   props,
   modifiers: () => ({
-    // Kept while loading: the spinner takes the icon's place, so the padding
-    // stays and the button keeps its width.
     'has-prepend': hasPrepend.value,
     'has-append': hasAppend.value,
     'icon-only': !hasDefault.value && (hasPrepend.value || hasAppend.value),
   }),
+  onToggle: selected => emit('update:selected', selected),
 })
+
+const reducedMotion = useReducedMotion()
+const toggleStyle = computed(() => (props.selected === undefined ? undefined : { transition: toggleTransition(reducedMotion.value) }))
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/_index' as t;
-@use '#kit/assets/stylesheet/components/button/spinner' as spinner;
 
 $prefix: 'md-button';
 $t: material-map(t.$tokens, $prefix);
+$variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
+$densities: ('compact', 'default', 'comfortable');
 
-// Applies the tokens of one colour role to every variant.
+@mixin paint($path) {
+  background-color: g($t, '#{$path}.container.color');
+  color: g($t, '#{$path}.content.color');
+}
+
+// Applies the tokens of one colour role to every variant. Disabled comes last
+// in each variant, so it outranks a selected toggle of the same role.
 @mixin apply-scheme($scheme) {
-  $variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
-
   @each $v in $variants {
     &.ui-button--#{$v} {
       $base: '#{$scheme}.#{$v}';
+      $disabled: '#{$scheme}.disabled';
 
-      background-color: g($t, '#{$base}.container.color');
-      color: g($t, '#{$base}.label.text.color');
+      @include paint($base);
 
       @if $v == 'outlined' {
-        border: 1rem solid g($t, '#{$base}.outline.color');
+        border-color: g($t, '#{$base}.outline.color');
       }
 
-      @if $v == 'elevated' {
-        box-shadow: g($t, '#{$base}.shadow');
+      &.ui-button--unselected {
+        @include paint('#{$base}.unselected');
       }
 
-      @include can-hover {
-        &:hover:not(.ui-button--disabled) {
-          background-color: g($t, '#{$base}.container.hover.color');
+      &.ui-button--selected {
+        @include paint('#{$base}.selected');
 
-          @if $v == 'elevated' {
-            box-shadow: g($t, '#{$base}.hover.shadow');
-          }
+        @if $v == 'outlined' {
+          border-color: transparent;
         }
       }
 
-      &:active:not(.ui-button--disabled) {
-        background-color: g($t, '#{$base}.container.pressed.color');
-      }
-
       &.ui-button--disabled {
-        background-color: g($t, '#{$base}.container.disabled.color');
-        color: g($t, '#{$base}.label.text.disabled.color');
-        box-shadow: none;
+        color: g($t, '#{$disabled}.content.color');
+
+        @if $v == 'outlined' or $v == 'text' {
+          background-color: transparent;
+        } @else {
+          background-color: g($t, '#{$disabled}.container.color');
+        }
 
         @if $v == 'outlined' {
-          border-color: g($t, '#{$base}.outline.disabled.color');
+          border-color: g($t, '#{$disabled}.outline.color');
+
+          &.ui-button--selected {
+            background-color: g($t, '#{$disabled}.container.color');
+            border-color: transparent;
+          }
         }
 
         @include forced-colors {
@@ -124,20 +143,16 @@ $t: material-map(t.$tokens, $prefix);
   justify-content: center;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
   max-width: 100%;
   cursor: pointer;
   text-decoration: none;
   border: none;
   background-color: transparent;
   outline: none;
-  gap: g($t, 'container.gap');
-  min-height: g($t, 'container.height');
   border-radius: g($t, 'container.shape');
-  padding-inline: g($t, 'container.padding.inline');
 
-  @include typescale('label-large');
-
+  // `border-radius` stays out: a plain button never changes shape. A toggle
+  // replaces this list inline with its spring morph (`morph.ts`).
   transition:
     background-color g($t, 'state.duration') g($t, 'state.easing'),
     color g($t, 'state.duration') g($t, 'state.easing'),
@@ -145,15 +160,42 @@ $t: material-map(t.$tokens, $prefix);
     border-color g($t, 'state.duration') g($t, 'state.easing'),
     transform g($t, 'state.duration') g($t, 'state.easing');
 
+  // State layer in the button's own content colour (craft.md, «Подмена фона»).
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+  }
+
+  @include can-hover {
+    &:hover:not(.ui-button--disabled)::before {
+      opacity: g($t, 'state.hover');
+    }
+  }
+
   // Covers the whole family — icon/split inherit `.ui-button`.
   &:focus-visible {
     @include focus-ring;
+
+    &:not(.ui-button--disabled)::before {
+      opacity: g($t, 'state.focus');
+    }
   }
 
   // Filled, tonal, elevated and text buttons draw their edge with a background
   // or a shadow, which forced colors drops; outlined keeps its own border.
   @include forced-colors {
     border: 1px solid ButtonText;
+  }
+
+  &--outlined {
+    border: g($t, 'container.outline.width') solid transparent;
   }
 
   // The button grows with its label rather than clipping it; an unbroken
@@ -173,14 +215,16 @@ $t: material-map(t.$tokens, $prefix);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: g($t, 'icon.size');
     line-height: 0;
     z-index: 1;
   }
 
+  // Sizes the inline MLoading like the icon it stands in for.
   &__spinner {
-    @include spinner.spinner(g($t, 'icon.size'));
-
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
     flex-shrink: 0;
     z-index: 1;
 
@@ -189,7 +233,6 @@ $t: material-map(t.$tokens, $prefix);
     &--centered {
       position: absolute;
       inset: 0;
-      margin: auto;
 
       ~ .ui-button__label,
       ~ .ui-button__icon {
@@ -198,17 +241,54 @@ $t: material-map(t.$tokens, $prefix);
     }
   }
 
-  &--has-prepend {
-    padding-inline-start: g($t, 'container.padding.with-icon');
+  @each $step in $densities {
+    &--#{$step} {
+      $d: 'density.#{$step}';
+
+      min-height: g($t, '#{$d}.height');
+      gap: g($t, '#{$d}.gap');
+      padding-inline: g($t, '#{$d}.padding');
+
+      @include typescale(g($t, '#{$d}.font'));
+
+      .ui-button__icon,
+      .ui-button__spinner {
+        font-size: g($t, '#{$d}.icon');
+      }
+
+      // A selected toggle is square whatever its resting shape (M3
+      // ToggleButton `checkedShape`), and keeps it while disabled or loading;
+      // it gets there on a spring (`morph.ts`).
+      &.ui-button--square,
+      &.ui-button--selected {
+        border-radius: g($t, '#{$d}.square');
+      }
+    }
   }
 
-  &--has-append {
-    padding-inline-end: g($t, 'container.padding.with-icon');
-  }
-
+  // An icon with no label is an icon button: its square and its glyph size.
   &--icon-only {
-    padding-inline: g($t, 'container.padding.icon-only');
-    width: g($t, 'container.height');
+    padding-inline: 0;
+
+    @each $step in $densities {
+      &.ui-button--#{$step} {
+        width: g($t, 'density.#{$step}.height');
+
+        .ui-button__icon,
+        .ui-button__spinner {
+          font-size: g($t, 'icon-button.density.#{$step}.icon');
+        }
+      }
+    }
+  }
+
+  // Drawn under 48 (compact, every icon button), a button still takes a 48
+  // pointer target, centred on it; at 48 and above the inset resolves to 0.
+  &--compact::after,
+  &.ui-icon-button::after {
+    content: '';
+    position: absolute;
+    inset: min(0rem, calc((100% - #{g($t, 'target.size')}) / 2));
   }
 
   @include apply-scheme('primary');
@@ -225,14 +305,56 @@ $t: material-map(t.$tokens, $prefix);
     @include apply-scheme('error');
   }
 
+  // No role (set by MButtonIcon when it has no `color`): a standard or outlined
+  // button takes its container's content colour (Compose LocalContentColor)
+  // until it is selected, which needs one. Kept at the role schemes'
+  // specificity, so a host that recolours the button still wins.
+  &--current {
+    &.ui-button--text,
+    &.ui-button--outlined {
+      color: inherit;
+
+      &.ui-button--unselected:not(.ui-button--disabled) {
+        color: inherit;
+      }
+    }
+  }
+
+  &--elevated {
+    box-shadow: g($t, 'elevation.elevated.rest');
+  }
+
+  @include can-hover {
+    &--filled:hover:not(.ui-button--disabled) {
+      box-shadow: g($t, 'elevation.filled.hover');
+    }
+
+    &--tonal:hover:not(.ui-button--disabled) {
+      box-shadow: g($t, 'elevation.tonal.hover');
+    }
+
+    &--elevated:hover:not(.ui-button--disabled) {
+      box-shadow: g($t, 'elevation.elevated.hover');
+    }
+  }
+
+  &--elevated:active:not(.ui-button--disabled) {
+    box-shadow: g($t, 'elevation.elevated.pressed');
+  }
+
   &--disabled {
     cursor: default;
     pointer-events: none;
+    box-shadow: none;
   }
 
-  &--loading {
-    cursor: default;
-    pointer-events: none;
+  // Last in the sheet, so it outranks the role schemes' selected fills, which
+  // forcing would flatten to Canvas.
+  @include forced-colors {
+    &.ui-button--selected:not(.ui-button--disabled) {
+      background-color: Highlight;
+      color: HighlightText;
+    }
   }
 }
 </style>

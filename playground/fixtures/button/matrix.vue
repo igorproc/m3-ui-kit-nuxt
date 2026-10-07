@@ -42,6 +42,74 @@
       </tbody>
     </table>
 
+    <h2>Density × shape</h2>
+    <div
+      v-for="density in densities"
+      :key="density"
+      class="fixture-row fixture-row--spaced"
+    >
+      <MButton
+        v-for="shape in shapes"
+        :key="shape"
+        :density="density"
+        :shape="shape"
+        :data-test="`density-${density}-${shape}`"
+      >
+        <template #prepend>
+          <MIcon :name="ICONS.add" />
+        </template>
+        {{ density }} {{ shape }}
+      </MButton>
+    </div>
+
+    <h2>Icon only</h2>
+    <div class="fixture-row">
+      <MButton
+        aria-label="Add item"
+        data-test="icon-only-default"
+      >
+        <template #prepend>
+          <MIcon :name="ICONS.add" />
+        </template>
+      </MButton>
+    </div>
+
+    <h2>Toggle</h2>
+    <table>
+      <tbody>
+        <tr
+          v-for="row in toggleRows"
+          :key="row"
+        >
+          <th scope="row">
+            {{ row }}
+          </th>
+          <td
+            v-for="variant in variants"
+            :key="variant"
+          >
+            <MButton
+              v-if="row === 'toggle'"
+              v-model:selected="toggles[variant]"
+              :variant="variant"
+              :data-test="`toggle-${variant}`"
+            >
+              {{ variant }}
+            </MButton>
+            <MButton
+              v-else
+              :variant="variant"
+              selected
+              :disabled="row === 'selected-disabled'"
+              :data-test="`${row}-${variant}`"
+            >
+              {{ variant }}
+            </MButton>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
     <h2>Colors (filled)</h2>
     <div class="fixture-row">
       <MButton
@@ -59,12 +127,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
+import MIcon from '#kit/components/ui/icon/index.vue'
+import { ICONS } from '#kit/shared/constants/icons'
+import type { MButtonDensity, MButtonShape } from '#kit/components/ui/button/props'
 import type { MColor, MVariant } from '#kit/shared/types/props'
 
 const variants: MVariant[] = ['elevated', 'filled', 'tonal', 'outlined', 'text']
 const colors: MColor[] = ['primary', 'secondary', 'tertiary', 'error']
+const densities: MButtonDensity[] = ['compact', 'default', 'comfortable']
+const shapes: MButtonShape[] = ['round', 'square']
+const toggleRows = ['toggle', 'selected', 'selected-disabled'] as const
+const toggles = reactive<Record<string, boolean>>(Object.fromEntries(variants.map(variant => [variant, false])))
 const states = [
   { name: 'enabled', props: {} },
   { name: 'disabled', props: { disabled: true } },
@@ -88,5 +163,10 @@ const activations = ref(0)
   display: flex;
   flex-wrap: wrap;
   gap: 12rem;
+
+  // Room above and below for the pointer-target probe of compact buttons.
+  &--spaced {
+    padding-block: 24rem;
+  }
 }
 </style>

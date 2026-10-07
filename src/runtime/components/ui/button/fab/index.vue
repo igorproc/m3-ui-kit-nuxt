@@ -10,7 +10,9 @@
       v-if="loading"
       class="ui-fab__spinner"
       aria-hidden="true"
-    />
+    >
+      <MLoading inline />
+    </span>
     <span
       v-else
       class="ui-fab__icon"
@@ -21,20 +23,24 @@
 </template>
 
 <script setup lang="ts">
+import MLoading from '#kit/components/ui/loading/index.vue'
 import { useButton } from '#kit/composables/button/useButton'
 import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
+import { useFabProps } from '#kit/composables/button/useFabProps'
 import { mFabProps } from './props'
 
 const props = defineProps(mFabProps)
 
-const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({ block: 'ui-fab', props })
+const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
+  block: 'ui-fab',
+  props: useFabProps('m-button-fab', props),
+})
 
 useButtonNameWarning('m-button-fab', () => props.ariaLabel)
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/fab' as t;
-@use '#kit/assets/stylesheet/components/button/spinner' as spinner;
 
 .ui-fab {
   $prefix: 'm3-fab';
@@ -75,6 +81,8 @@ useButtonNameWarning('m-button-fab', () => props.ariaLabel)
   &__spinner {
     position: relative;
     z-index: 1;
+    display: inline-flex;
+    line-height: 0;
   }
 
   // One variant's surface for the active scheme. Focus and pressed are separate
@@ -112,7 +120,7 @@ useButtonNameWarning('m-button-fab', () => props.ariaLabel)
 
   // Cross every MD3 role with every surface variant for DRY application.
   @mixin apply-scheme($scheme) {
-    $variants: ('filled', 'tonal');
+    $variants: ('tonal', 'filled');
 
     @each $v in $variants {
       &.ui-fab--#{$v} {
@@ -121,17 +129,16 @@ useButtonNameWarning('m-button-fab', () => props.ariaLabel)
     }
   }
 
-  @mixin apply-size($size) {
-    width: g($t, '#{$size}.container.size');
-    height: g($t, '#{$size}.container.size');
-    border-radius: g($t, '#{$size}.container.shape');
+  @mixin apply-density($step) {
+    $d: 'density.#{$step}';
 
-    .ui-fab__icon {
-      font-size: g($t, '#{$size}.icon.size');
-    }
+    width: g($t, '#{$d}.container.size');
+    height: g($t, '#{$d}.container.size');
+    border-radius: g($t, '#{$d}.container.shape');
 
+    .ui-fab__icon,
     .ui-fab__spinner {
-      @include spinner.spinner(g($t, '#{$size}.icon.size'));
+      font-size: g($t, '#{$d}.icon.size');
     }
   }
 
@@ -141,10 +148,9 @@ useButtonNameWarning('m-button-fab', () => props.ariaLabel)
   &--tertiary { @include apply-scheme('tertiary'); }
   &--error { @include apply-scheme('error'); }
 
-  // Sizes
-  &--sm { @include apply-size('sm'); }
-  &--md { @include apply-size('md'); }
-  &--lg { @include apply-size('lg'); }
+  &--compact { @include apply-density('compact'); }
+  &--default { @include apply-density('default'); }
+  &--comfortable { @include apply-density('comfortable'); }
 
   // Interactions
   @include can-hover {

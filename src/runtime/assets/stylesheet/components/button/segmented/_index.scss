@@ -3,6 +3,7 @@
 
 // Material 3 State Opacities
 $hover-state-layer-opacity: state-opacity(hover);
+$focus-state-layer-opacity: state-opacity(focus);
 $pressed-state-layer-opacity: state-opacity(pressed);
 $disabled-container-opacity: state-opacity(disabled-container);
 $disabled-content-opacity: state-opacity(disabled-content);
@@ -15,6 +16,7 @@ $outline: map.get($theme-color-link, 'outline');
 @function segmented-selected($container, $on-container) {
   @return (container: (color: $container,
       hover: (color: color-mix(in srgb, $on-container $hover-state-layer-opacity, $container)),
+      focus: (color: color-mix(in srgb, $on-container $focus-state-layer-opacity, $container)),
       pressed: (color: color-mix(in srgb, $on-container $pressed-state-layer-opacity, $container)),
     ),
     content: (color: $on-container));
@@ -31,6 +33,9 @@ $tokens: (
   ),
 
   segment: (
+    // M3 `ButtonDefaults.MinWidth`, held by the content box so a long word can
+    // still widen the segment past it.
+    content: (min-width: calc(58rem - 2 * #{spacing(12)})),
     padding: (
       inline: spacing(12),
       // Only matters once a label wraps: a single line is centred in the height.
@@ -44,6 +49,7 @@ $tokens: (
     container: (
       color: transparent,
       hover: (color: color-mix(in srgb, $on-surface $hover-state-layer-opacity, transparent)),
+      focus: (color: color-mix(in srgb, $on-surface $focus-state-layer-opacity, transparent)),
       pressed: (color: color-mix(in srgb, $on-surface $pressed-state-layer-opacity, transparent)),
     ),
     content: (

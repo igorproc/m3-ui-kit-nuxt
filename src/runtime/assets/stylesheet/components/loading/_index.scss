@@ -11,6 +11,14 @@ $tokens: (
     medium: 24rem,
     large: 32rem,
   ),
+  // Arc stroke. `inline` follows the host's font size, so the stroke scales
+  // with the indicator instead of staying a fixed width.
+  thickness: (
+    small: 3rem,
+    medium: 4rem,
+    large: 5rem,
+    inline: 0.1em,
+  ),
   spinner: (
     color: map.get($theme-color-link, 'primary'),
   ),

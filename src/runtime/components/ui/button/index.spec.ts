@@ -76,7 +76,8 @@ describe('m-button', () => {
       slots: { prepend: () => 'icon' },
     })
 
-    expect(wrapper.find('.ui-button__spinner').exists()).toBe(true)
+    expect(wrapper.find('.ui-button__spinner .ui-loading--inline').exists()).toBe(true)
+    expect(wrapper.find('.ui-button__spinner').attributes('aria-hidden')).toBe('true')
     expect(wrapper.classes()).toContain('ui-button--loading')
     expect(wrapper.find('button').attributes('aria-busy')).toBe('true')
     // The spinner takes the prepend icon's place and keeps its padding, so the
@@ -105,11 +106,81 @@ describe('m-button', () => {
     expect(wrapper.find('.ui-button__label').exists()).toBe(false)
   })
 
-  it('loading also disables the button (pointer-events / disabled attr)', async () => {
+  // IN-08: a native `disabled` would throw focus to <body> when the work starts.
+  it('loading makes the button inert but keeps it focusable', async () => {
     const wrapper = await mountSuspended(MButton, { props: { loading: true } })
 
     expect(wrapper.classes()).toContain('ui-button--disabled')
-    expect(wrapper.find('button').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('button').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('button').attributes('aria-disabled')).toBe('true')
+  })
+
+  it('a click on a loading button reaches no handler', async () => {
+    let clicks = 0
+    const wrapper = await mountSuspended(MButton, {
+      props: { loading: true },
+      attrs: { onClick: () => { clicks += 1 } },
+    })
+
+    await wrapper.find('button').trigger('click')
+
+    expect(clicks).toBe(0)
+  })
+
+  it.each(['compact', 'default', 'comfortable'] as const)(
+    'maps the %s density to a class',
+    async (density) => {
+      const wrapper = await mountSuspended(MButton, { props: { density } })
+
+      expect(wrapper.classes()).toContain(`ui-button--${density}`)
+    },
+  )
+
+  it('defaults to the default density and the round shape', async () => {
+    const wrapper = await mountSuspended(MButton)
+
+    expect(wrapper.classes()).toContain('ui-button--default')
+    expect(wrapper.classes()).toContain('ui-button--round')
+  })
+
+  it('maps the square shape to a class', async () => {
+    const wrapper = await mountSuspended(MButton, { props: { shape: 'square' } })
+
+    expect(wrapper.classes()).toContain('ui-button--square')
+  })
+
+  it('is a plain action without aria-pressed unless selected is bound', async () => {
+    const wrapper = await mountSuspended(MButton)
+
+    expect(wrapper.find('button').attributes('aria-pressed')).toBeUndefined()
+  })
+
+  it('toggles through v-model:selected', async () => {
+    const wrapper = await mountSuspended(MButton, { props: { selected: false } })
+
+    expect(wrapper.find('button').attributes('aria-pressed')).toBe('false')
+    await wrapper.find('button').trigger('click')
+
+    expect(wrapper.emitted('update:selected')).toEqual([[true]])
+  })
+
+  it('moves the shape and colours of a toggle on springs; a plain button keeps the stylesheet', async () => {
+    const toggle = await mountSuspended(MButton, { props: { selected: false } })
+    const transition = (toggle.element as HTMLElement).style.transition
+
+    expect(transition).toContain('border-radius')
+    expect(transition).toContain('linear(')
+
+    const plain = await mountSuspended(MButton)
+    expect((plain.element as HTMLElement).style.transition).toBe('')
+  })
+
+  it('does not toggle while disabled', async () => {
+    const wrapper = await mountSuspended(MButton, { props: { selected: false, disabled: true } })
+
+    await wrapper.find('button').trigger('click')
+
+    expect(wrapper.emitted('update:selected')).toBeUndefined()
   })
 
   it('renders prepend and append slots with icon wrappers', async () => {

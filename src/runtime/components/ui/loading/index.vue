@@ -10,18 +10,18 @@
     :aria-label="ariaLabel"
   >
     <!-- Classic Circular Spinner -->
-    <div
+    <span
       v-if="type === 'circular'"
       class="ui-loading__spinner"
     >
-      <div class="ui-loading__left">
-        <div class="ui-loading__circle"></div>
-      </div>
+      <span class="ui-loading__left">
+        <span class="ui-loading__circle"></span>
+      </span>
 
-      <div class="ui-loading__right">
-        <div class="ui-loading__circle"></div>
-      </div>
-    </div>
+      <span class="ui-loading__right">
+        <span class="ui-loading__circle"></span>
+      </span>
+    </span>
 
     <!-- M3 Expressive Morphing Shape -->
     <m-shape
@@ -35,12 +35,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useTimer } from '#kit/composables/useTimer'
-import MShape from '#kit/components/ui/shape/index.vue'
 import { resolveTransition } from '#kit/utils/motion'
 import { mLoadingProps } from './props'
 import type { M3ShapeName } from '#kit/assets/icon/shapes'
+
+// Loaded only for the expressive type: the shape paths and the morph weigh far
+// more than the circular spinner, which every loading button renders.
+const MShape = defineAsyncComponent(() => import('#kit/components/ui/shape/index.vue'))
 
 const props = defineProps(mLoadingProps)
 
@@ -93,6 +96,10 @@ $cycle-duration: calc(4 * $arc-duration);
 $linear-rotate-duration: calc($arc-duration * 360 / 306);
 $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
+// Reduced motion slows the spinner instead of stopping it: a frozen arc reads
+// as a finished or broken control, not as waiting.
+$calm: 2;
+
 .ui-loading {
   $prefix: 'md-loading';
   $t: material-map(t.$tokens, $prefix);
@@ -103,42 +110,36 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   contain: strict;
   content-visibility: auto;
+  color: g($t, 'spinner.color');
 
-  &--small {
-    width: g($t, 'size-small');
-    height: g($t, 'size-small');
+  @each $size in ('small', 'medium', 'large') {
+    &--#{$size} {
+      width: g($t, 'size.#{$size}');
+      height: g($t, 'size.#{$size}');
 
-    --ui-loading-thickness: 3rem;
+      .ui-loading__circle {
+        border-width: g($t, 'thickness.#{$size}');
+      }
+    }
   }
 
-  &--medium {
-    width: g($t, 'size-medium');
-    height: g($t, 'size-medium');
-
-    --ui-loading-thickness: 4rem;
-  }
-
-  &--large {
-    width: g($t, 'size-large');
-    height: g($t, 'size-large');
-
-    --ui-loading-thickness: 5rem;
-  }
-
+  // Inside a line of text or a control the indicator takes the surrounding
+  // font size and colour, so a host sizes and tints it like an icon.
   &--inline {
+    width: 1em;
+    height: 1em;
     vertical-align: middle;
+    color: inherit;
+
+    .ui-loading__circle {
+      border-width: g($t, 'thickness.inline');
+    }
   }
 
   // 3. linear-rotate wrapper
   &--circular {
     animation: linear infinite ui-loading-linear-rotate;
     animation-duration: $linear-rotate-duration;
-  }
-
-  // The expressive indicator's rotation rides on the morph itself (each
-  // transition carries its own turn), so no CSS rotation is layered on top.
-  &--expressive {
-    color: g($t, 'spinner-color');
   }
 
   &__spinner,
@@ -150,8 +151,9 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
     inset: 0;
   }
 
+  // The expressive indicator's rotation rides on the morph itself (each
+  // transition carries its own turn), so no CSS rotation is layered on top.
   &__expressive {
-    color: g($t, 'spinner-color');
     display: block;
   }
 
@@ -176,12 +178,12 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   &__circle {
     box-sizing: border-box;
     border-radius: 50%;
-    border: solid var(--ui-loading-thickness);
-    border-color: g($t, 'spinner-color') g($t, 'spinner-color') transparent transparent;
+    border-style: solid;
+    border-color: currentcolor currentcolor transparent transparent;
     animation: ui-loading-expand-arc;
     animation-iteration-count: infinite;
     animation-fill-mode: both;
-    animation-duration: $arc-duration, $cycle-duration;
+    animation-duration: $arc-duration;
     animation-timing-function: $indeterminate-easing;
   }
 
@@ -193,7 +195,25 @@ $indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
   &__right &__circle {
     transform: rotate(100deg);
     inset: 0 0 0 -100%;
-    animation-delay: calc(-0.5 * $arc-duration), 0ms;
+    animation-delay: calc(-0.5 * $arc-duration);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &--circular {
+      animation-duration: calc($linear-rotate-duration * $calm);
+    }
+
+    &__spinner {
+      animation-duration: calc($cycle-duration * $calm);
+    }
+
+    &__circle {
+      animation-duration: calc($arc-duration * $calm);
+    }
+
+    &__right &__circle {
+      animation-delay: calc(-0.5 * $arc-duration * $calm);
+    }
   }
 
   // The arc is two coloured border sides beside two transparent ones; pinned,

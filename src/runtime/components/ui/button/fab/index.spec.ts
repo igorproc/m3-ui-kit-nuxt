@@ -13,23 +13,33 @@ describe('m-button-fab', () => {
     expect(wrapper.text()).toContain('icon')
   })
 
-  it('defaults to the filled variant, primary color and md size', async () => {
+  it('defaults to the tonal set, primary color and default density', async () => {
     const wrapper = await mountSuspended(MFab)
 
-    expect(wrapper.classes()).toContain('ui-fab--filled')
+    expect(wrapper.classes()).toContain('ui-fab--tonal')
     expect(wrapper.classes()).toContain('ui-fab--primary')
-    expect(wrapper.classes()).toContain('ui-fab--md')
+    expect(wrapper.classes()).toContain('ui-fab--default')
   })
 
-  it('maps color, variant and size props to classes', async () => {
+  it('maps color, variant and density props to classes', async () => {
     const wrapper = await mountSuspended(MFab, {
-      props: { color: 'secondary', variant: 'tonal', size: 'lg' },
+      props: { color: 'secondary', variant: 'filled', density: 'comfortable' },
     })
 
     expect(wrapper.classes()).toContain('ui-fab--secondary')
-    expect(wrapper.classes()).toContain('ui-fab--tonal')
-    expect(wrapper.classes()).toContain('ui-fab--lg')
+    expect(wrapper.classes()).toContain('ui-fab--filled')
+    expect(wrapper.classes()).toContain('ui-fab--comfortable')
   })
+
+  it.each([['sm', 'compact'], ['md', 'default'], ['lg', 'comfortable']] as const)(
+    'still honours the retired size %s as the %s density',
+    async (size, density) => {
+      const wrapper = await mountSuspended(MFab, { props: { size, density: 'default' } })
+
+      expect(wrapper.classes()).toContain(`ui-fab--${density}`)
+      expect(wrapper.classes()).not.toContain(`ui-fab--${size}`)
+    },
+  )
 
   it('exposes ariaLabel as the accessible name', async () => {
     const wrapper = await mountSuspended(MFab, {
@@ -52,7 +62,7 @@ describe('m-button-fab', () => {
       slots: { default: () => 'icon' },
     })
 
-    expect(wrapper.find('.ui-fab__spinner').exists()).toBe(true)
+    expect(wrapper.find('.ui-fab__spinner .ui-loading--inline').exists()).toBe(true)
     expect(wrapper.find('.ui-fab__icon').exists()).toBe(false)
     expect(wrapper.classes()).toContain('ui-fab--loading')
     expect(wrapper.find('button').attributes('aria-busy')).toBe('true')

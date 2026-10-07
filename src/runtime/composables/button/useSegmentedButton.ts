@@ -2,7 +2,8 @@
  * @module useSegmentedButton
  *
  * @remarks
- * Behaviour of `<MButtonSegmented>`: selection, the ARIA pattern and the
+ * Selection engine of the button family's choice controls — `<MButtonSegmented>`
+ * and the connected `<MButtonGroup>`: selection, the ARIA pattern and the
  * keyboard model. It produces attribute bags and no classes.
  *
  * The two modes are two different widgets, so they get two APG patterns:
@@ -120,10 +121,14 @@ export function useSegmentedButton(model: Ref<SegmentedValue | undefined>, props
     }
   }
 
-  /** Template ref for segment `index`; arrow keys move focus through these. */
+  /**
+   * Template ref for segment `index`, on an element or a component (its root);
+   * arrow keys move focus through these.
+   */
   function segmentRef(index: number) {
     return (el: unknown) => {
-      segments[index] = el instanceof HTMLElement ? el : null
+      const node = el instanceof HTMLElement ? el : (el as { $el?: unknown } | null)?.$el
+      segments[index] = node instanceof HTMLElement ? node : null
     }
   }
 

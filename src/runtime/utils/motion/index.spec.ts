@@ -8,6 +8,7 @@ import {
   springDuration,
   springEasing,
   springOvershoot,
+  springToCss,
 } from '#kit/utils/motion'
 import { expressive } from '#kit/utils/motion/expressive/transitions'
 
@@ -54,6 +55,22 @@ describe('springEasing', () => {
     const values = sample(at)
     for (const v of values) expect(v).toBeLessThanOrEqual(1)
     expect(values.at(-2)!).toBeGreaterThan(0.99)
+  })
+})
+
+describe('springToCss', () => {
+  it('samples the spring into a CSS linear() easing over its settling time', () => {
+    const css = springToCss(M3_SPRING.spatial.default)
+    const points = css.easing.slice('linear('.length, -1).split(', ').map(Number)
+
+    expect(css.duration).toBe(springDuration(M3_SPRING.spatial.default))
+    expect(points).toHaveLength(33)
+    expect(points[0]).toBe(0)
+    expect(points.at(-1)).toBe(1)
+  })
+
+  it('is deterministic, so server and client agree', () => {
+    expect(springToCss(M3_SPRING.effects.default)).toEqual(springToCss(M3_SPRING.effects.default))
   })
 })
 

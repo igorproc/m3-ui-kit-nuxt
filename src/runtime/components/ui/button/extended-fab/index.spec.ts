@@ -13,22 +13,44 @@ describe('m-button-extended-fab', () => {
     expect(wrapper.text()).toContain('Compose')
   })
 
-  it('defaults to the filled variant, primary color and md size', async () => {
+  it('defaults to the tonal set, primary color and default density', async () => {
     const wrapper = await mountSuspended(MExtendedFab)
 
-    expect(wrapper.classes()).toContain('ui-extended-fab--filled')
+    expect(wrapper.classes()).toContain('ui-extended-fab--tonal')
     expect(wrapper.classes()).toContain('ui-extended-fab--primary')
-    expect(wrapper.classes()).toContain('ui-extended-fab--md')
+    expect(wrapper.classes()).toContain('ui-extended-fab--default')
   })
 
-  it('maps color, variant and size props to classes', async () => {
+  it('maps color, variant and density props to classes', async () => {
     const wrapper = await mountSuspended(MExtendedFab, {
-      props: { color: 'error', variant: 'tonal', size: 'sm' },
+      props: { color: 'error', variant: 'filled', density: 'compact' },
     })
 
     expect(wrapper.classes()).toContain('ui-extended-fab--error')
-    expect(wrapper.classes()).toContain('ui-extended-fab--tonal')
-    expect(wrapper.classes()).toContain('ui-extended-fab--sm')
+    expect(wrapper.classes()).toContain('ui-extended-fab--filled')
+    expect(wrapper.classes()).toContain('ui-extended-fab--compact')
+  })
+
+  it('still honours the retired size as a density step', async () => {
+    const wrapper = await mountSuspended(MExtendedFab, { props: { size: 'lg' } })
+
+    expect(wrapper.classes()).toContain('ui-extended-fab--comfortable')
+  })
+
+  it('folds when not expanded but keeps the label as the accessible name', async () => {
+    const wrapper = await mountSuspended(MExtendedFab, {
+      props: { expanded: false },
+      slots: { default: () => 'Compose', prepend: () => 'I' },
+    })
+
+    expect(wrapper.classes()).toContain('ui-extended-fab--collapsed')
+    expect(wrapper.find('.ui-extended-fab__label').text()).toBe('Compose')
+  })
+
+  it('is expanded by default', async () => {
+    const wrapper = await mountSuspended(MExtendedFab, { slots: { default: () => 'Compose' } })
+
+    expect(wrapper.classes()).not.toContain('ui-extended-fab--collapsed')
   })
 
   it('renders the prepend icon slot when provided', async () => {
@@ -54,7 +76,7 @@ describe('m-button-extended-fab', () => {
       slots: { prepend: () => 'I' },
     })
 
-    expect(wrapper.find('.ui-extended-fab__spinner').exists()).toBe(true)
+    expect(wrapper.find('.ui-extended-fab__spinner .ui-loading--inline').exists()).toBe(true)
     expect(wrapper.find('.ui-extended-fab__icon').exists()).toBe(false)
     expect(wrapper.classes()).toContain('ui-extended-fab--loading')
     expect(wrapper.find('button').attributes('aria-busy')).toBe('true')

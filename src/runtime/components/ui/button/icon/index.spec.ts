@@ -28,6 +28,42 @@ describe('m-icon-button', () => {
     expect(wrapper.classes()).toContain('ui-button--tertiary')
   })
 
+  // B-3: a standard icon button takes its container's content colour.
+  it('has no colour role unless one is given', async () => {
+    const plain = await mountSuspended(MIconButton)
+    expect(plain.classes()).toContain('ui-button--current')
+
+    const tinted = await mountSuspended(MIconButton, { props: { color: 'primary' } })
+    expect(tinted.classes()).toContain('ui-button--primary')
+    expect(tinted.classes()).not.toContain('ui-button--current')
+  })
+
+  it.each(['narrow', 'default', 'wide'] as const)('maps the %s width to a class', async (width) => {
+    const wrapper = await mountSuspended(MIconButton, { props: { width } })
+
+    expect(wrapper.classes()).toContain(`ui-icon-button--${width}`)
+  })
+
+  it('passes density and shape through to the base button', async () => {
+    const wrapper = await mountSuspended(MIconButton, { props: { density: 'compact', shape: 'square' } })
+
+    expect(wrapper.classes()).toContain('ui-button--compact')
+    expect(wrapper.classes()).toContain('ui-button--square')
+  })
+
+  it('toggles through v-model:selected and hands the state to the slot', async () => {
+    const wrapper = await mountSuspended(MIconButton, {
+      props: { selected: true, ariaLabel: 'Favourite' },
+      slots: { default: ({ selected }: { selected?: boolean }) => (selected ? 'filled' : 'outline') },
+    })
+
+    expect(wrapper.find('button').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.text()).toBe('filled')
+
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.emitted('update:selected')).toEqual([[false]])
+  })
+
   it('exposes ariaLabel as the accessible name', async () => {
     const wrapper = await mountSuspended(MIconButton, {
       props: { ariaLabel: 'Close dialog' },

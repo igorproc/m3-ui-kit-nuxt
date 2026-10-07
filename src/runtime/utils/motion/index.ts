@@ -11,6 +11,7 @@
  * - `expressive/` — the transitions tuned past it for the M3 Expressive morph.
  */
 
+export { springTiming, springToCss, transitionList } from './shared/css'
 export { defineTransition } from './shared/define'
 export { MORPH_TRANSITIONS, resolveTransition } from './shared/resolve'
 export { prefersReducedMotion } from './shared/reduced-motion'
@@ -21,6 +22,7 @@ export { M3_EASING, M3_SPRING } from './standard/tokens'
 export { bouncy, expressive } from './expressive/transitions'
 export { calm, standard } from './standard/transitions'
 
+export type { CssSpring } from './shared/css'
 export type {
   EasingFn,
   MorphTransition,

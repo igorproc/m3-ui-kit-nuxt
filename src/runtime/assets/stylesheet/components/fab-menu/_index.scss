@@ -6,54 +6,84 @@
 // ==========================================
 
 $hover-opacity: state-opacity(hover);
+$focus-opacity: state-opacity(focus);
 $pressed-opacity: state-opacity(pressed);
 $on-surface: map.get($theme-color-link, 'on-surface');
 
-// Drawer-item pill scheme for one MD3 role (`<role>-container` fill).
-@function fab-menu-item-scheme($container, $on-container) {
-  @return (bg: (color: $container),
-    text: (color: $on-container),
-    hover: (color: color-mix(in srgb, $on-surface $hover-opacity, $container)),
-    pressed: (color: color-mix(in srgb, $on-surface $pressed-opacity, $container)));
+// One surface with its state layers, drawn in its own content colour.
+@function fab-menu-surface($container, $on-container) {
+  @return (
+    container: (
+      color: $container,
+      hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
+      focus: (color: color-mix(in srgb, $on-container $focus-opacity, $container)),
+      pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
+    ),
+    content: (color: $on-container),
+  );
+}
+
+// One MD3 role: the actions on its container, the open FAB on the role itself.
+@function fab-menu-scheme($role, $on-role, $container, $on-container) {
+  @return (
+    item: fab-menu-surface($container, $on-container),
+    open: fab-menu-surface($role, $on-role),
+  );
 }
 
 $tokens: (
-  icon: (
-    size: 24rem,
-  ),
-  drawer: (
-    margin: (
-      bottom: 16rem,
-    ),
-  ),
+  // M3 `FabMenuBaselineTokens`. Actions sit 4 apart and 8 above the FAB; the
+  // list keeps 8 of room around them for their shadow, so it is drawn that
+  // much past the FAB's edge and its gap to the FAB is that padding.
   list: (
-    gap: 16rem,
-  ),
-
-  // Drawer-item pill scheme per MD3 color role
-  item-scheme: (
-    primary: fab-menu-item-scheme(map.get($theme-color-link, 'primary-container'),
-      map.get($theme-color-link, 'on-primary-container')),
-    secondary: fab-menu-item-scheme(map.get($theme-color-link, 'secondary-container'),
-      map.get($theme-color-link, 'on-secondary-container')),
-    tertiary: fab-menu-item-scheme(map.get($theme-color-link, 'tertiary-container'),
-      map.get($theme-color-link, 'on-tertiary-container')),
-    error: fab-menu-item-scheme(map.get($theme-color-link, 'error-container'),
-      map.get($theme-color-link, 'on-error-container')),
+    gap: spacing(4),
+    room: spacing(8),
   ),
 
   item: (
-    gap: 16rem,
-    type: 'label-large',
-    border: (
-      radius: 16rem,
-    ),
-    padding: (12rem 16rem),
+    height: 56rem,
+    shape: map.get($theme-shape-link, 'full'),
+    padding: spacing(24),
+    gap: spacing(8),
+    font: 'title-medium',
     shadow: elevation(3),
-    icon: (
-      size: 24rem,
-    ),
+    icon: (size: 24rem),
+    // A long label wraps inside the screen rather than running off it.
+    max-width: calc(100vw - 2 * #{spacing(16)}),
   ),
+
+  // The open FAB: a 56 circle of the role with a 20 close icon, whatever the
+  // closed FAB's step was.
+  open: (
+    size: 56rem,
+    shape: map.get($theme-shape-link, 'full'),
+    icon: (size: 20rem),
+  ),
+
+  disabled: (
+    container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
+    content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
+  ),
+
+  primary: fab-menu-scheme(map.get($theme-color-link, 'primary'),
+    map.get($theme-color-link, 'on-primary'),
+    map.get($theme-color-link, 'primary-container'),
+    map.get($theme-color-link, 'on-primary-container')),
+  secondary: fab-menu-scheme(map.get($theme-color-link, 'secondary'),
+    map.get($theme-color-link, 'on-secondary'),
+    map.get($theme-color-link, 'secondary-container'),
+    map.get($theme-color-link, 'on-secondary-container')),
+  tertiary: fab-menu-scheme(map.get($theme-color-link, 'tertiary'),
+    map.get($theme-color-link, 'on-tertiary'),
+    map.get($theme-color-link, 'tertiary-container'),
+    map.get($theme-color-link, 'on-tertiary-container')),
+  error: fab-menu-scheme(map.get($theme-color-link, 'error'),
+    map.get($theme-color-link, 'on-error'),
+    map.get($theme-color-link, 'error-container'),
+    map.get($theme-color-link, 'on-error-container')),
+
+  // Durations are system tokens, so reduced motion shortens them as it does
+  // everywhere else. The FAB morph is a spring (see the component).
   motion: (
     item: (
       duration: var(--sys-motion-duration-medium-2),
@@ -62,15 +92,11 @@ $tokens: (
         duration: var(--sys-motion-duration-short-4),
         easing: var(--sys-motion-easing-emphasized-accelerate),
       ),
-      stagger: 50ms,
-      shift: 16rem,
+      stagger: var(--sys-motion-duration-short-1),
+      shift: spacing(16),
     ),
     icon: (
       duration: var(--sys-motion-duration-medium-1),
-      easing: var(--sys-motion-easing-standard),
-    ),
-    drawer: (
-      duration: var(--sys-motion-duration-medium-2),
       easing: var(--sys-motion-easing-standard),
     ),
   ),
