@@ -136,7 +136,7 @@
 | MList (+item, subheader) | переработка | [list](containment/list.md), [list-subheader](containment/list-subheader.md) | `list` |
 | MDivider | дрейф | [divider](containment/divider.md) | `divider` |
 | MExpansionPanel(s) | авторский | [expansion-panel](containment/expansion-panel.md) | `expansion-panel` |
-| MCarousel | нет в ките | [carousel](../low-priority-compponents/carousel/index.md) (+ item) | `carousel` |
+| MCarousel | нет в ките | [carousel](../low-priority-components/carousel/index.md) (+ item) | `carousel` |
 
 ### Обратная связь — `components-should-update/feedback/`
 
@@ -170,12 +170,47 @@
 | MApp | авторский | [app](foundation/app.md) | — |
 | MLazy | авторский | [lazy](foundation/lazy.md) | — |
 
+## Отложенные компоненты (в ките их нет)
+
+Переписаны в тот же формат 2026-10-07 (полный шаблон, `state="pending"`, условие продвижения
+сохранено). Папки разложены по статусу. Рендеры — только концепты и только у визуальных компонентов.
+
+### Ожидают решения — `pending-components/`
+
+| Компонент | M3 | План | Рендер |
+|---|---|---|---|
+| MStepper (+ item, actions, vertical, vertical-item, vertical-actions, window, window-item) | нет (был в M2) | [stepper](../pending-components/stepper/index.md) | `stepper` |
+| MWindow (+ item) | нет; переходы — shared axis / fade through | [window](../pending-components/window/index.md) | — (поведение) |
+| MTreeview (+ item, group, children) | нет; строка — из [list](containment/list.md) | [treeview](../pending-components/treeview/index.md) | `treeview` |
+| MCalendar (+ daily, weekly, category) | нет; сетка — из [date-picker](inputs/date-picker.md) | [calendar](../pending-components/calendar/index.md) | `calendar` |
+| Сетка месяцев date-picker | меню месяцев в docked M3 | [date-picker-months](../pending-components/date-picker-months.md) | `date-picker-months` |
+| MImage | нет (гайдлайны изображений) | [image](../pending-components/image.md) | `image` |
+| Parallax | нет | [parallax](../pending-components/parallax.md) | `image` |
+| Валидация форм (API) | — | [validation](../pending-components/validation.md) | — |
+| Hover / focus (API) | — | [hover-focused](../pending-components/hover-focused.md) | — |
+
+### Низкий приоритет — `low-priority-components/`
+
+| Компонент | M3 | План | Рендер |
+|---|---|---|---|
+| MCarousel (+ item) | есть в каталоге | [carousel](../low-priority-components/carousel/index.md) | `carousel` |
+| MEmptyState | нет | [empty-state](../low-priority-components/empty-state.md) | `empty-state` |
+| Pull to refresh | есть в Compose, нет в каталоге сайта | [pull-to-refresh](../low-priority-components/pull-to-refresh.md) | `pull-to-refresh` |
+| MSlideGroup (+ item) | нет | [slide-group](../low-priority-components/slide-group/index.md) | `slide-group` |
+| Data iterator (композабл) | — | [data-iterator](../low-priority-components/data-iterator.md) | — |
+
+### Лаборатория графиков — `paid-charts-lab/`
+
+| Компонент | План | Рендер |
+|---|---|---|
+| Лаборатория (граница, коммерческое условие) | [index](../paid-charts-lab/index.md) | `charts` |
+| MSparkline (+ tooltip) | [sparkline](../paid-charts-lab/sparkline/index.md) | `charts` |
+| MBarline | [barline](../paid-charts-lab/barline.md) | `charts` |
+| MTrendline | [trendline](../paid-charts-lab/trendline.md) | `charts` |
+
 ## Что не переписывалось
 
-- `pendind-components/*` (stepper, treeview, calendar, window и др.) — компонентов нет ни в ките,
-  ни в M3, кроме `date-picker-months.md`, на который ссылается план date-picker.
-- `low-priority-compponents/*`, кроме carousel (это компонент M3).
-- `paid-charts-plab/*`, `phases/*`, `layout-zone-gaps.md`, `overlay-top-layer.md`.
+- `phases/*`, `layout-zone-gaps.md`, `overlay-top-layer.md` — не планы компонентов.
 - Папка `vuetify-run/` удалена 2026-10-07 по решению владельца: все переписанные планы перенесены сюда
   по категориям. `virtual-scroll.md` (план композабла `useVirtualScroll`) перенесён в
   [foundation/virtual-scroll.md](foundation/virtual-scroll.md). `summary.md` и `reuse-map.md`

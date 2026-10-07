@@ -2,7 +2,7 @@
 
 <identity>M3: Segmented buttons (baseline; в Expressive вместо них рекомендована connected button group) · Токены Compose: `OutlinedSegmentedButtonTokens`; поведение — `SegmentedButton.kt` (`SingleChoiceSegmentedButtonRow`, `MultiChoiceSegmentedButtonRow`, `SegmentedButtonDefaults`) · Код: `src/runtime/components/ui/button/segmented/`, композабл `src/runtime/composables/button/useSegmentedButton.ts`, токены `assets/stylesheet/components/button/segmented/_index.scss` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы. Компонент близок к baseline M3; основная работа — общий движок выбора с MButtonGroup (group.md) и мелкие токены.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано. В-1 остаётся рядом с connected-группой на общем движке (`useSegmentedButton` переиспользуется `MButtonGroup`, принимает ref компонента). В-2 слот `#item` не добавлен. Мин. ширина 58 (держит контентный блок), слой фокуса 10%, подписи переносятся только по словам; если ряд не помещается — горизонтальная прокрутка. Pressed 12% (СВ-1).</implementation-status>
 
 ## Вердикт
 

@@ -2,7 +2,7 @@
 
 <identity>M3: Icon buttons (standard, filled, tonal, outlined; toggle) · Токены Compose: `XSmallIconButtonTokens`, `SmallIconButtonTokens`, `MediumIconButtonTokens`, `IconButtonTokens` (`StandardIconButtonTokens`), `FilledIconButtonTokens`, `FilledTonalIconButtonTokens`, `OutlinedIconButtonTokens`; поведение — `IconButton.kt`, `IconButtonDefaults.kt` · Код: `src/runtime/components/ui/button/icon/` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы. Компонент — тонкая обёртка над `MButton`; почти все шаги наследуют оси семьи из index.md. Учтены решения владельца от 2026-10-07: `density` из трёх ступеней (compact = XS, default = S, comfortable = M), без морфа формы и пружин, tonal = `<role>-container`.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано. В-1 ось `width`; В-2 `elevated` снят из типа (dev-предупреждение, рендер сохранён на релиз); В-3 без `color` — цвет контента контейнера (`ui-button--current`), явный `color` — роль; В-4 MButton без подписи = геометрия кнопки-иконки. `density` × `width`, `shape`, toggle (round → square, square → round на пружине), слот `{ selected }`, цель 48 у всех ступеней.</implementation-status>
 
 ## Вердикт
 

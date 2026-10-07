@@ -2,7 +2,7 @@
 
 <identity>M3: Button groups — standard и connected (M3 Expressive; connected заменяет segmented button) · Токены Compose: `ButtonGroupSmallTokens`, `ConnectedButtonGroupSmallTokens` (+ цвета toggle-кнопок из `FilledButtonTokens`, `TonalButtonTokens`, `ElevatedButtonTokens`, `OutlinedButtonTokens`); поведение — `ButtonGroup.kt` (`ButtonGroup`, `ButtonGroupDefaults`, `animateWidth`, overflow), `ToggleButton.kt` · Код: нет (предлагается `src/runtime/components/ui/button/group/`) · Аудит: нет (компонента нет) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Gap-план. Компонента в ките нет. Зависит от осей семьи (index.md: `density`, форма, toggle) и от общего движка выбора (segmented.md шаг 2). Учтены решения владельца от 2026-10-07: `density` из трёх ступеней, без морфа ширины и формы при нажатии; выбранная кнопка — статичная пилюля без анимации перехода.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано частично по решению владельца: только connected-группа как `MButtonGroup` (`items` + `v-model` / `multiple`, radiogroup / toggle-кнопки на движке segmented). Standard group отложена до заказчика (В-1 → один компонент; В-2 connected на `items`; В-4 переполнение отложено). Зазор 2 и внутренние углы 8 на всех ступенях (Compose и MDC задают только S; MDC применяет то же правило ко всем размерам). Выбранная кнопка становится пилюлей на пружине.</implementation-status>
 
 ## Вердикт
 

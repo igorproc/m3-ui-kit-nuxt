@@ -27,7 +27,7 @@
 | Прочие | App bars | `MAppBar` | дрейф | [app-bar](navigation/app-bar.md) |
 | Прочие | Badges | `MBadge` | дрейф | [badge](feedback/badge.md) |
 | Прочие | Cards | `MCard` | дрейф | [card](containment/card.md) |
-| Прочие | Carousel | — | нет в ките | [carousel](../low-priority-compponents/carousel/index.md) |
+| Прочие | Carousel | — | нет в ките | [carousel](../low-priority-components/carousel/index.md) |
 | Прочие | Checkbox | `MCheckbox` | дрейф | [checkbox](form/checkbox.md) |
 | Прочие | Chips | `MChip` (+ `MChipGroup`) | переработка | [chip](form/chip.md) |
 | Прочие | Dialogs | `MDialog` | дрейф | [dialog](overlays/dialog.md) |

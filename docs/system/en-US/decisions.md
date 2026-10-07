@@ -21,6 +21,7 @@ would otherwise have to re-derive.
 | `MFieldGroup` (the spec's `row` shape) | Deferred, not rejected. | Taken up as its own task; `inline` placement returns with it. |
 | `underline` for the selection family (`<MDropdown>`, `<MAutocomplete>`) | It is the only field shape with no container, and these put chips, a clear button and a menu anchor *inside* the box; a row of chips on a bare line has nothing holding it. It is also the Material 2 "standard" field, which M3 dropped. | Never for these two. If `underline` itself is reconsidered, that is a question for the whole field family. |
 | Primitive arrays as `items` (`['Moscow', 'SPb']`) | `id` is mandatory on an item, so a bare string cannot be one. One `.map(v => ({ id: v, label: v }))` at the call site buys a resolver with no `typeof` branch in it. | — |
+| Animated shape change (S3) and M3 Expressive springs (S4) are not used in components | A morph mechanism costs bundle for an effect a web UI already carries with colour and the state layer. A state's shape is static (a selected toggle is square, with no transition), and transitions run on the `--sys-motion-*` tokens. **Exceptions** (owner's decisions, 2026-10-07): the `<MFabMenu>` FAB turns into the close button on `M3_SPRING` springs (size and corners spatial, colour effects); toggle buttons (`selected` on `<MButton>` / `<MButtonIcon>`, the buttons of `<MButtonGroup>`) reach their selected shape on a spring (shape fast spatial, colour effects), like Compose's `ToggleButton`. A plain button and a press never change shape. The springs are sampled into CSS `linear()` (`springToCss`), so no per-frame loop ships. The JS springs of `MShape` and the loading indicator stay as they were. | A second component needs a morph — through the same `springToCss` recipe, not a new mechanism. |
 
 ## Architectural trades
 
@@ -42,6 +43,7 @@ would otherwise have to re-derive.
 | Rows blocked by `max` are skipped by the arrows, not just marked | APG allows either. At the limit the only legal move is to deselect, and walking onto rows that cannot be chosen offers moves that do nothing. They keep `aria-disabled` and the disabled look. |
 | The panel's `maxHeight` travels as a custom property | Live geometry supplied at runtime — the one case the zero-runtime rule allows. The token is the fallback, so a hundred options are capped without a prop. |
 | Clamping the panel to the space actually available is `<MMenu>`'s job, not the dropdown's | Neither of the menu's two positioning paths clamps today, and the same gap affects tooltip and popover through `usePopover`. Fixing it inside the dropdown would fix one of three. |
+| `<MButtonFab>` and `<MButtonExtendedFab>` keep `disabled` | M3 advises hiding a FAB rather than disabling it. The kit keeps `disabled` as an extension: "submit" forms disable the main action until the form is valid, and dropping the prop is a breaking change with nothing gained. |
 
 ## Settled, migration pending
 

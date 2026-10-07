@@ -2,7 +2,7 @@
 
 <identity>M3: FAB menu (M3 Expressive) · Токены Compose: `FabMenuBaselineTokens` (+ `FabBaselineTokens`, `FabMediumTokens`, `FabLargeTokens`, `FabPrimaryContainerTokens` для кнопки); поведение — `FloatingActionButtonMenu.kt` (`FloatingActionButtonMenu`, `FloatingActionButtonMenuItem`, `ToggleFloatingActionButton`) · Код: `src/runtime/components/ui/fab-menu/`, композабл `src/runtime/composables/useFabMenu.ts`, токены `assets/stylesheet/components/fab-menu/_index.scss` · Аудит: `data/fab-menu.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование, рендеры и перепроверка аудита готовы. Код не менялся. Ждут решения В-1…В-4 и решений по FAB (button/fab.md В-1, В-2). Учтено решение владельца от 2026-10-07: пружин и анимированного морфа нет, открытое состояние FAB статично (В-4).</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано. В-1 disclosure (`aria-expanded`/`aria-controls`, Escape и выбор возвращают фокус, ArrowDown — на верхний пункт); В-2 по решению владельца столбец в верхнем слое (popover + якорное позиционирование, JS-запас, RTL); В-3 тень level 3; В-4 по решению владельца FAB морфится в круглую кнопку закрытия 56 на пружинах M3 (`fab-menu/morph.ts`). `v-model:open`, `density` (`size` на релиз), `align: start | end` (`left`/`right` на релиз), `variant` и `loading` сняты, `label` пункта обязателен, иконки по умолчанию из `ICONS`. Пункты — фрагмент `fragments/fab-menu/Actions.vue`.</implementation-status>
 
 ## Вердикт
 

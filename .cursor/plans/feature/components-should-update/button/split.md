@@ -2,7 +2,7 @@
 
 <identity>M3: Split button · Токены Compose: `SplitButtonXSmallTokens`, `SplitButtonSmallTokens`, `SplitButtonMediumTokens` + цвета вариантов кнопки (`FilledButtonTokens` и др.); поведение — `SplitButton.kt` (`SplitButtonLayout`, `SplitButtonDefaults.LeadingButton` / `TrailingButton`) · Код: `src/runtime/components/ui/button/split/`, токены — ветка `split` в `assets/stylesheet/components/button/_index.scss:32-39` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы. Компонент переделывается из «одна пилюля с перегородкой» в «две кнопки с зазором»; API почти не меняется. Учтены решения владельца от 2026-10-07: `density` из трёх ступеней, внутренние углы статичны, у открытого меню нет круглой кнопки — меняется только направление шеврона.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано с изменением API по решению владельца: `items` и событие `select` убраны (кнопка справа не обязана открывать меню). Меню — слот `#menu="{ close }"`, иконка — `#trailing` (шеврон по умолчанию, вверх при открытом меню), событие `trailing`, имя `trailingAriaLabel`; `dropdown`/`dropdownAriaLabel` работают релиз с предупреждением. Две кнопки с зазором 2 и статичными внутренними углами 4, `density`, `#prepend`, `variant` без `text`, `loading` работает (спиннер в главной, правая выключена). Находка про `MMenu` + `client-only` уже в плане меню.</implementation-status>
 
 ## Вердикт
 

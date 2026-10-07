@@ -2,7 +2,7 @@
 
 <identity>M3: FAB (FAB, Medium FAB, Large FAB) · Токены Compose: `FabBaselineTokens`, `FabMediumTokens`, `FabLargeTokens`, `FabSmallTokens` (baseline, в Expressive не входит), `FabPrimaryContainerTokens`, `FabSecondaryContainerTokens`; поведение — `FloatingActionButton.kt` · Код: `src/runtime/components/ui/button/fab/`, токены `assets/stylesheet/components/button/fab/_index.scss` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы. Ждут решения В-1 (лестница размеров) и В-2 (цвет/вариант) — оба ломают API.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано. В-1 по решению владельца не `size`, а `density` = 40 / 56 / 96 (бывшие sm/md/lg; `size` работает релиз с предупреждением); Medium FAB 80 не вводится. В-2 `tonal` = контейнер (новый дефолт), `filled` = роль, surface FAB снят. В-3 disabled остаётся (decisions.md). Pressed 12% (СВ-1).</implementation-status>
 
 ## Вердикт
 

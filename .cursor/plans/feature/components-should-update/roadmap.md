@@ -114,5 +114,16 @@
 
 - Слой панелей раскладки (list-detail) — после вопроса 2 в [layout](foundation/layout.md).
 - Carousel — после появления заказчика.
+- Отложенные компоненты по своим условиям продвижения (карта — [index.md](index.md), раздел
+  «Отложенные компоненты»):
+  - stepper вместе с window;
+  - treeview — после шага 3 плана list и indeterminate у checkbox;
+  - calendar — на сетке date-picker;
+  - image и parallax;
+  - empty-state — сначала общий фрагмент для слотов `#empty`;
+  - pull-to-refresh;
+  - slide-group — как примитив прокрутки для chip-group и tabs;
+  - data iterator;
+  - лаборатория графиков — по коммерческому решению.
 - `MConfirmEdit` — после решения владельца.
 - Предложения по UX, одобренные владельцем, — по мере решений.

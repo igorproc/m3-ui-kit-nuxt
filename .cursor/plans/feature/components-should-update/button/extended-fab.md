@@ -2,7 +2,7 @@
 
 <identity>M3: Extended FAB (Small, Medium, Large) · Токены Compose: `ExtendedFabSmallTokens`, `ExtendedFabMediumTokens`, `ExtendedFabLargeTokens`, `ExtendedFabPrimaryTokens` (baseline), `FabPrimaryContainerTokens`; поведение — `FloatingActionButton.kt` (`SmallExtendedFloatingActionButton` … `LargeExtendedFloatingActionButton`, параметр `expanded`) · Код: `src/runtime/components/ui/button/extended-fab/`, токены `assets/stylesheet/components/button/extended-fab/_index.scss` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы. Лестница и цветовые наборы идут общим решением с fab.md; своё здесь — сворачивание (`expanded`) и типографика.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано. Лестница `density` 40 / 56 / 96 как у FAB: 56 и 96 — значения M3 Expressive S и L (шрифт, иконка, отступы, радиус), 40 — значения кита. В-1: только проп `expanded`; свёрнутая кнопка — квадрат ступени, подпись остаётся доступным именем (`sr-only`), ширина анимируется через `interpolate-size`, где он есть.</implementation-status>
 
 ## Вердикт
 
