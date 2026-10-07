@@ -1,42 +1,120 @@
-# MCarousel: low priority
+# MCarousel — прокручиваемый ряд элементов с ключевыми линиями (низкий приоритет)
 
-<identity>
-Status: low priority · Vuetify reference: `VCarousel` · Candidate target: public `MCarousel` with private `CarouselItem`
-</identity>
+<identity>M3: Carousel (multi-browse, uncontained, hero, full-screen) · Исходник: Compose `carousel/` (`Carousel.kt`, `Keylines.kt`, `Strategy.kt`, `MultiAspectCarousel.kt`); отдельных `*Tokens.kt` нет · Код: нет (предлагается `src/runtime/components/ui/carousel/` + приватный элемент, см. [item.md](item.md)) · Аудит: нет · Тип: public (gap)</identity>
 
-<reason-for-low-priority>
-Carousel is a substantial media/content presentation composite rather than a foundational navigation primitive. A correct implementation needs controlled value selection, transitions, touch gesture arbitration, autoplay pause rules, controls/indicators, inactive-content semantics, reduced motion and responsive media behavior. These capabilities are useful but do not currently block core product flows.
-</reason-for-low-priority>
+<implementation-status state="pending" updated="2026-10-07">Компонента нет. План остаётся в low-priority: продвигается, когда у продукта появится конкретная поверхность с каруселью.</implementation-status>
 
-<candidate-scope>
-Compose the approved `MWindow` foundation with carousel-specific previous/next controls, indicators, optional autoplay and swipe. Use stable item values rather than index as the public model. The root is the only selection/timer owner; private items adapt content into Window panels.
-</candidate-scope>
+## Вердикт
 
-<candidate-api>
-Typed items/value model, interval/cycle policy, arrows/indicators visibility, touch, direction, mount policy and slots for item/controls/indicators. Exact autoplay naming/defaults require later review. Autoplay must be opt-in and never hidden behind an ambiguous default.
-</candidate-api>
+`нет в ките`. Прежний план был по образцу Vuetify: одно окно за раз, стрелки, автопрокрутка.
+**Карусель M3 устроена иначе.** Это горизонтально прокручиваемый ряд, где размер элемента
+задают ключевые линии (keylines):
+- крупные элементы в фокусе;
+- средние и маленькие (40–56) выглядывают с краёв;
+- элементы маскируются скруглением extra-large 28 и разделены зазором 8.
 
-<autoplay-policy>
-When enabled, pause on hover, focus within, document hidden and user interaction; resume only according to an explicit policy. Stop timers on scope disposal. Reduced-motion preference disables automatic animated movement or requires explicit consumer override. Announce slide changes conservatively and never create repeated live-region noise.
-</autoplay-policy>
+Раскладки: multi-browse, uncontained, hero, full-screen. Автопрокрутка в M3 не основа, а
+исключение.
 
-<interaction>
-Keyboard previous/next/Home/End operates only within focused carousel controls. Touch uses `useDrag` and confirms horizontal intent before blocking native scroll. RTL uses logical direction. Controls use `MButtonIcon`; inactive retained slides are hidden/inert through `MWindow`.
-</interaction>
+Отказы прежнего плана остаются:
+- нет автопрокрутки по умолчанию;
+- нет загрузки данных;
+- нет модели «только индекс».
 
-<reuse>
-`MWindow`/WindowItem, `useTimer`, `useDrag`, `useRaf`, `useEventListener`, `MButtonIcon`, future image pipeline and system motion. Do not create a second panel selection engine, raw timers/listeners or implicit image fetching.
-</reuse>
+## Рендеры
 
-<non-goals>
-- no default autoplay;
-- no direct dependency on unfinished MImg architecture;
-- no data fetching/content CMS integration;
-- no index-only business model;
-- no carousel behavior inside generic MWindow.
-</non-goals>
+| Сейчас | Концепт M3 |
+|---|---|
+| — (нет в ките) | ![Концепт](../../renders/carousel/concept.webp) |
 
-<promotion-gate>
-Promote when a concrete product surface needs a carousel and MWindow plus gesture/timer/image foundations have passed integration testing. Expand parent/item plans together before implementation.
-</promotion-gate>
+Кадры концепта:
+1. Четыре раскладки на ширине 412.
+2. Анатомия (large, medium, small), индикатор позиции и правила поведения.
 
+## Анатомия
+
+| # | Часть M3 | Предлагаемая реализация |
+|---|---|---|
+| 1 | Контейнер прокрутки | `div` с `overflow-x: auto`, `scroll-snap-type: x mandatory`, `overscroll-behavior-x: contain` |
+| 2 | Элемент с маской (corner extra-large) | приватный `CarouselItem` ([item.md](item.md)) |
+| 3 | Размеры по ключевым линиям: large, medium, small 40–56 | ширины из стратегии раскладки (вопрос 1) |
+| 4 | Индикатор позиции (необязателен) | точки с активной «таблеткой» |
+| 5 | Стрелки (на указателе, не на таче) | `MButtonIcon` |
+
+## Оси дизайна
+
+| Ось | Значения | Комментарий |
+|---|---|---|
+| `layout` | `multi-browse \| uncontained \| hero \| full-screen` | раскладка M3 |
+| `itemWidth` | число (large) | максимум для крупного элемента; остальное выводится стратегией |
+| `autoplay` | `false \| { interval }` | по умолчанию выключено |
+| `density` | — | не вводить |
+
+## Оси состояний
+
+| Ось | Нужно |
+|---|---|
+| Фокус | маленький элемент в фокусе прокручивается в крупную позицию |
+| Прокрутка | snap к ключевой линии; под reduced motion без плавной прокрутки |
+| Автопрокрутка | пауза на hover, на фокусе внутри, при скрытой вкладке; видимая кнопка паузы (WCAG 2.2.2) |
+
+## Токены (новая карта)
+
+| Часть | M3 | Токен |
+|---|---|---|
+| Скругление элемента | extra-large 28 | `item.shape` |
+| Зазор | 8 | `item.gap: spacing(8)` |
+| Маленький элемент | 40–56 | `item.small.min/max` |
+| Индикатор | — | `indicator.*` |
+
+## Поведение и доступность
+
+- Корень — `role="region"`, `aria-roledescription="carousel"` и имя.
+- Элементы — `role="group"`, `aria-roledescription="slide"`, «n из N».
+- Стрелки, Home и End сдвигают по одному элементу. Tab входит только в текущий элемент.
+- Прокрутка нативная, со `scroll-snap`, без JS-физики: это совпадает с решением владельца не
+  наращивать бандл механизмами анимации.
+- RTL — логическое направление.
+
+## API
+
+`items` (объекты с `id`), `v-model` — `id` текущего элемента, слот `#item`, `layout`,
+`itemWidth`, `autoplay`, `ariaLabel` (обязателен).
+
+## План работ (после продвижения)
+
+1. **M — контейнер прокрутки, snap и раскладки со статичными ширинами по стратегии.**
+2. **S — приватный элемент с маской** ([item.md](item.md)).
+3. **M — клавиатура и роли.**
+4. **S — стрелки на указателе, индикатор.**
+5. **M — автопрокрутка с паузой** (opt-in).
+6. **S — изменение ширин при прокрутке** — по вопросу 1.
+
+## Тесты
+
+Snap-позиции, клавиатура, роли и «n из N», пауза автопрокрутки, RTL, отсутствие
+горизонтального переполнения страницы.
+
+## Готово, когда
+
+Четыре раскладки M3, доступная клавиатура, без автопрокрутки по умолчанию.
+
+## Предложения по UX
+
+Расширения сверх паритета с M3. Это предложения владельцу, а не шаги плана. Без Expressive-анимаций и без новых зависимостей.
+
+| Предложение | Что получает пользователь | Заказчик | Цена | Рекомендация |
+|---|---|---|---|---|
+| Ленивая загрузка медиа элементов вне видимости (через `MLazy` / `loading="lazy"`) | Быстрее первая отрисовка ленты | любые медиа-ленты | S | да |
+| Кнопка «Показать все» в конце ряда, ведущая в сетку | Пользователь не листает 30 элементов по одному | каталоги | S · слот `#end` | да |
+
+## Открытые вопросы
+
+**1. Меняются ли размеры элементов во время прокрутки (как в Compose)?**
+1. Нет: ширины статичны по стратегии, работает только snap. Ноль JS, но без характерного
+   «перетекания» M3.
+2. CSS scroll-driven animations (`view-timeline`) как прогрессивное улучшение. Без JS там, где
+   поддерживается; в остальных браузерах — вариант 1.
+3. JS по `scroll` с rAF. Везде одинаково, но это механизм, который владелец просил не вводить.
+
+Рекомендация: 1 сейчас, 2 позже.

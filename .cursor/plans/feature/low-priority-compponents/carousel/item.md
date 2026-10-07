@@ -1,16 +1,44 @@
-# CarouselItem: low priority private leaf
+# CarouselItem — элемент карусели (приватная часть)
 
-<identity>Status: low priority · Vuetify `VCarouselItem` · Candidate target: private adapter leaf</identity>
+<identity>M3: Carousel item (маска, ключевые линии) · Исходник: Compose `CarouselItemScope.kt` · Код: нет (предлагается приватный `components/ui/carousel/item.vue`) · Тип: sub, приватный (gap)</identity>
 
-<problem>Each slide needs stable-value panel registration, active/visited state, ids and transition/inert behavior without an independent model.</problem>
+<implementation-status state="pending" updated="2026-10-07">Нет. Продвигается вместе с [родителем](index.md).</implementation-status>
 
-<candidate-contract>Internal normalized source item/value/key/disabled and content slot exposing active/visited. No public import, direct navigation or timer.</candidate-contract>
+## Вердикт
 
-<composition>Thin adapter over `WindowItem`; parent carousel owns selection, swipe, controls, indicators and autoplay. The leaf does not register a second carousel ticket.</composition>
+`нет в ките`. Элемент обрезает содержимое маской со скруглением extra-large 28 и занимает
+ширину, которую ему назначает стратегия родителя (large, medium или small). В Compose маска
+меняет ширину во время прокрутки. Здесь ширина статична по вопросу 1 родителя.
 
-<reuse>`WindowItem` mount/active/inert behavior and carousel nested content tokens. Media content remains consumer/future image-pipeline owned.</reuse>
+## Рендеры
 
-<accessibility>Slide position/set size and labelling must remain coherent for retained/lazy panels; inactive content is hidden/inert and never focusable.</accessibility>
+Общие с родителем: `renders/carousel/concept.webp`.
 
-<promotion-gate>Finalize only with parent and approved MWindow/autoplay/accessibility policy.</promotion-gate>
+## Анатомия
 
+| # | Часть | Предлагаемая реализация |
+|---|---|---|
+| 1 | Маска | `overflow: clip`, `border-radius: item.shape`, `scroll-snap-align: start` |
+| 2 | Содержимое | слот (картинка, заголовок) |
+| 3 | Текст на крупном элементе | виден только у large; у medium и small скрыт от глаз, но доступен AT |
+
+## Поведение и доступность
+
+- `role="group"`, `aria-roledescription="slide"`, `aria-label` «n из N» — текст шаблона из
+  родителя, без английского дефолта.
+- Фокус на маленьком элементе прокручивает его в крупную позицию (`scrollIntoView` с
+  `inline: 'start'`). Под reduced motion — без плавности.
+- Ссылки и кнопки внутри неактивных элементов получают `tabindex="-1"`, чтобы Tab не уходил в
+  невидимое.
+
+## Готово, когда
+
+Маска, snap, роли и фокусировка работают внутри родителя.
+
+## Предложения по UX
+
+Нет: расширения — у [родителя](index.md).
+
+## Открытые вопросы
+
+Нет (вопрос о ширинах при прокрутке — у родителя).
