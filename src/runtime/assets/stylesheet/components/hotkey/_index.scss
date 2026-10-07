@@ -1,26 +1,30 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 // Zero-runtime M3 tokens for `<MHotkey>`. Supporting-information styling, not a
 // physical-keyboard skin: keycaps use surface/on-surface-variant/outline roles.
 $tokens: (
-  container: (gap: 4rem),
+  container: (gap: spacing(4)),
   key: (
-    min-width: 20rem,
-    padding-block: 1rem,
-    padding-inline: 4rem,
-    radius: var(--sys-shape-corner-extra-small),
+    min-size: spacing(20),
+    padding: (inline: spacing(4)),
+    radius: map.get($theme-shape-link, 'extra-small'),
     typography: 'label-small',
+    border: (width: 1rem),
     enabled: (
       color: map.get($theme-color-link, 'on-surface-variant'),
       bg: map.get($theme-color-link, 'surface-container-high'),
       border: map.get($theme-color-link, 'outline-variant'),
     ),
     pressed: (
-      color: map.get($theme-color-link, 'on-secondary-container'),
-      bg: map.get($theme-color-link, 'secondary-container'),
+      layer: map.get($theme-color-link, 'on-surface-variant'),
+      opacity: state-opacity(pressed),
     ),
-    disabled: (color: map.get($theme-color-link, 'on-surface')),
+    disabled: (
+      color: color-mix(in srgb, map.get($theme-color-link, 'on-surface') state-opacity(disabled-content), transparent),
+      bg: color-mix(in srgb, map.get($theme-color-link, 'on-surface') state-opacity(disabled-container), transparent),
+      border: transparent,
+    ),
   ),
   separator: (color: map.get($theme-color-link, 'on-surface-variant')),
 );

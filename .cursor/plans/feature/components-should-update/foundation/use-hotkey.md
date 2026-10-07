@@ -2,7 +2,7 @@
 
 <identity>M3: нет (поведенческий композабл, без вида) · Код: `src/runtime/composables/hotkey/` (`useHotkey`, реестр, `format.ts`) · Аудит: отдельного отчёта нет (визуальная часть — `data/hotkey.json`, см. [hotkey-visual.md](hotkey.md)) · Тип: public composable + внутренний реестр</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован в фазе 1: одна декларация сочетания без ручных слушателей, платформенный `mod`, модель представления для `<MHotkey>`, печать в полях не перехватывается, приоритет верхнего слоя (диалог, редактор) над фоном, реактивное включение и переназначение. Правки — только в общем `format.ts`.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Одна `normalizeKey` для вида и реестра, `ariaKeyShortcuts` в модели, открытый модальный диалог автоматически глушит сочетания фона, состояние реестра и слушатели создаются только на клиенте (через `useGlobalListener`), спеки `format.spec.ts` и `registry.spec.ts`.</implementation-status>
 
 ## Вердикт
 

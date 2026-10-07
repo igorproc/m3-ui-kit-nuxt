@@ -12,71 +12,54 @@
  * decide whether to load more — the composable does not represent that request.
  */
 import { computed, onScopeDispose, readonly, ref, toValue, watch } from 'vue'
-import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue'
+import type { CSSProperties } from 'vue'
 import { useEventListener } from '#kit/composables/useEventListener'
 import { useRaf } from '#kit/composables/useRaf'
 import { useSSRWindowSize } from '#kit/composables/useSSRWindowSize'
+import { useTimer } from '#kit/composables/useTimer'
+import { IN_BROWSER } from '#kit/shared/constants/globals'
+import { prefersReducedMotion } from '#kit/utils/motion/shared/reduced-motion'
+import { toLogicalScrollLeft, toPhysicalScrollLeft } from '#kit/utils/viewport/logicalScroll'
+import type { InlineDirection } from '#kit/utils/viewport/logicalScroll'
 import { buildMeasurement, computeRange } from './geometry'
 import type { VirtualRange } from './geometry'
+import type {
+  UseVirtualScrollOptions,
+  UseVirtualScrollReturn,
+  VirtualItem,
+  VirtualScrollAlignment,
+  VirtualScrollAnchor,
+  VirtualScrollAttrs,
+  VirtualScrollDirection,
+  VirtualScrollState,
+} from './types'
 
-export type VirtualScrollState = 'idle' | 'scrolling' | 'programmatic' | 'settling'
-export type VirtualScrollDirection = 'forward' | 'backward' | null
-export type VirtualScrollAlignment = 'start' | 'center' | 'end' | 'auto'
-
-export interface UseVirtualScrollOptions {
-  container: MaybeRefOrGetter<HTMLElement | null>
-  count: MaybeRefOrGetter<number>
-  /** Size known before render: a constant or a synchronous index function. */
-  itemSize: number | ((index: number) => number)
-  getKey?: (index: number) => PropertyKey
-  overscan?: number
-  horizontal?: boolean
-  enabled?: MaybeRefOrGetter<boolean>
-  paddingStart?: number
-  paddingEnd?: number
-  initialOffset?: number
-  threshold?: { start?: number, end?: number }
-}
-
-export interface VirtualItem {
-  index: number
-  key: PropertyKey
-  start: number
-  end: number
-  size: number
-}
-
-export interface VirtualScrollAnchor {
-  key: PropertyKey
-  offsetWithinViewport: number
-}
-
-export interface UseVirtualScrollReturn {
-  virtualItems: Readonly<ComputedRef<VirtualItem[]>>
-  range: Readonly<ComputedRef<VirtualRange>>
-  totalSize: Readonly<ComputedRef<number>>
-  scrollOffset: Readonly<Ref<number>>
-  viewportSize: Readonly<Ref<number>>
-  isAtStart: Readonly<ComputedRef<boolean>>
-  isAtEnd: Readonly<ComputedRef<boolean>>
-  scrollDirection: Readonly<Ref<VirtualScrollDirection>>
-  state: Readonly<Ref<VirtualScrollState>>
-  isScrolling: Readonly<ComputedRef<boolean>>
-  scrollToOffset: (offset: number, options?: { behavior?: ScrollBehavior }) => Promise<boolean>
-  scrollToIndex: (index: number, options?: { align?: VirtualScrollAlignment, behavior?: ScrollBehavior }) => Promise<boolean>
-  ensureVisible: (index: number, options?: { align?: VirtualScrollAlignment, behavior?: ScrollBehavior }) => Promise<boolean>
-  captureAnchor: () => VirtualScrollAnchor | null
-  restoreAnchor: (anchor: VirtualScrollAnchor) => void
-  measure: () => void
-  refresh: () => void
-}
-
-const IN_BROWSER = typeof window !== 'undefined'
 /** Frames of quiet before a native scroll is considered settled. */
 const SETTLE_MS = 120
 
-function prefersReducedMotion() {
-  return IN_BROWSER && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+const INTENT_EVENTS = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+
+interface PendingScroll {
+  target: number
+  offset: number
+  movedAt: number
+  resolve: (reached: boolean) => void
+}
+
+function px(value: number) {
+  return `${value}px`
+}
+
+function spacerStyle(totalSize: number, horizontal: boolean): CSSProperties {
+  return horizontal
+    ? { position: 'relative', inlineSize: px(totalSize), blockSize: '100%' }
+    : { position: 'relative', blockSize: px(totalSize) }
+}
+
+function itemStyle(item: VirtualItem, horizontal: boolean): CSSProperties {
+  return horizontal
+    ? { position: 'absolute', insetBlock: '0', insetInlineStart: px(item.start), inlineSize: px(item.size) }
+    : { position: 'absolute', insetInline: '0', insetBlockStart: px(item.start), blockSize: px(item.size) }
 }
 
 export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualScrollReturn {
@@ -106,6 +89,8 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
 
   const scrollDirection = ref<VirtualScrollDirection>(null)
   const state = ref<VirtualScrollState>('idle')
+  let direction: InlineDirection = 'ltr'
+  let pending: PendingScroll | undefined
 
   const measurement = computed(() => buildMeasurement(itemCount.value, itemSize, paddingStart))
   const totalSize = computed(() => measurement.value.totalSize + paddingEnd)
@@ -126,6 +111,12 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
     return items
   })
 
+  const spacerAttrs = computed<VirtualScrollAttrs>(() => ({ style: spacerStyle(totalSize.value, horizontal) }))
+
+  function getItemAttrs(item: VirtualItem): VirtualScrollAttrs {
+    return { style: itemStyle(item, horizontal) }
+  }
+
   const startThreshold = Math.max(0, threshold.start ?? 0)
   const endThreshold = Math.max(0, threshold.end ?? 0)
 
@@ -138,35 +129,29 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
 
   /** Logical scroll offset of the container, RTL-normalized. */
   function readOffset(element: HTMLElement) {
-    const raw = horizontal ? element.scrollLeft : element.scrollTop
-    // RTL horizontal scroll is reported as a negative offset by modern engines;
-    // the absolute value restores a logical start-to-end axis.
-    return horizontal ? Math.abs(raw) : raw
+    return horizontal ? toLogicalScrollLeft(element.scrollLeft, direction) : Math.max(0, element.scrollTop)
+  }
+
+  function syncOffset(next: number) {
+    if (next === scrollOffset.value) return false
+    scrollDirection.value = next > scrollOffset.value ? 'forward' : 'backward'
+    scrollOffset.value = next
+    return true
   }
 
   // --- native scroll → machine -------------------------------------------
+  const settle = useTimer(() => {
+    state.value = 'idle'
+    scrollDirection.value = null
+  }, { duration: SETTLE_MS })
+
   const scheduleUpdate = useRaf(() => {
     const element = toValue(container)
     if (!element) return
-
-    const next = readOffset(element)
-    if (next !== scrollOffset.value) {
-      scrollDirection.value = next > scrollOffset.value ? 'forward' : 'backward'
-      scrollOffset.value = next
-    }
-
-    if (state.value !== 'programmatic') state.value = 'scrolling'
-    armSettle()
+    if (!syncOffset(readOffset(element)) || state.value === 'programmatic') return
+    state.value = 'scrolling'
+    settle.start()
   })
-
-  let settleTimer: ReturnType<typeof setTimeout> | undefined
-  function armSettle() {
-    if (settleTimer) clearTimeout(settleTimer)
-    settleTimer = setTimeout(() => {
-      state.value = 'idle'
-      scrollDirection.value = null
-    }, SETTLE_MS)
-  }
 
   useEventListener(
     () => toValue(container),
@@ -177,10 +162,18 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
     { passive: true },
   )
 
+  useEventListener(
+    () => toValue(container),
+    [...INTENT_EVENTS],
+    () => finishProgrammatic(false, 'scrolling'),
+    { passive: true, capture: true },
+  )
+
   // --- viewport measurement ----------------------------------------------
   function measure() {
     const element = toValue(container)
     if (!element) return
+    if (horizontal) direction = getComputedStyle(element).direction === 'rtl' ? 'rtl' : 'ltr'
     viewportSize.value = horizontal ? element.clientWidth : element.clientHeight
     scrollOffset.value = readOffset(element)
   }
@@ -196,22 +189,66 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
 
   // Re-attach the observer whenever the container element itself is replaced.
   watch(() => toValue(container), (element) => {
+    finishProgrammatic(false, 'settling')
     observe(element ?? null)
     if (element) measure()
   }, { immediate: true, flush: 'post' })
 
+  watch(isEnabled, (on) => {
+    if (on) measure()
+    else finishProgrammatic(false, 'settling')
+  })
+
   // --- programmatic navigation -------------------------------------------
-  let requestId = 0
+  function release(reached: boolean) {
+    const request = pending
+    pending = undefined
+    poll.cancel()
+    request?.resolve(reached)
+  }
+
+  function finishProgrammatic(reached: boolean, next: Extract<VirtualScrollState, 'settling' | 'scrolling'>) {
+    if (!pending) return
+    release(reached)
+    state.value = next
+    settle.start()
+  }
+
+  const poll = useRaf((timestamp) => {
+    const request = pending
+    if (!request) return
+
+    const element = toValue(container)
+    if (!element) {
+      finishProgrammatic(false, 'settling')
+      return
+    }
+
+    // Read the container directly: an instant scroll lands before its
+    // scroll event fires, so polling the element beats waiting on the ref.
+    const offset = readOffset(element)
+    syncOffset(offset)
+
+    if (Math.abs(offset - request.target) <= 1) {
+      finishProgrammatic(true, 'settling')
+      return
+    }
+    if (offset !== request.offset) {
+      request.offset = offset
+      request.movedAt = timestamp
+    } else if (timestamp - request.movedAt >= SETTLE_MS) {
+      finishProgrammatic(false, 'settling')
+      return
+    }
+    poll()
+  })
 
   function applyScroll(offset: number, behavior: ScrollBehavior) {
     const element = toValue(container)
     if (!element) return
     const resolved = prefersReducedMotion() ? 'auto' : behavior
-    // In RTL the physical scrollLeft is the negated logical offset.
-    const rtl = horizontal && getComputedStyle(element).direction === 'rtl'
-    const physical = horizontal && rtl ? -offset : offset
-    if (horizontal) element.scrollTo({ left: physical, behavior: resolved })
-    else element.scrollTo({ top: physical, behavior: resolved })
+    if (horizontal) element.scrollTo({ left: toPhysicalScrollLeft(offset, direction), behavior: resolved })
+    else element.scrollTo({ top: offset, behavior: resolved })
   }
 
   function clampOffset(offset: number) {
@@ -219,40 +256,21 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
     return Math.min(Math.max(offset, 0), maxOffset)
   }
 
-  async function settleTo(target: number): Promise<boolean> {
-    const id = ++requestId
-    state.value = 'programmatic'
-
-    return await new Promise<boolean>((resolve) => {
-      const check = useRaf(() => {
-        // A newer request or a user scroll supersedes this one.
-        if (id !== requestId) return resolve(false)
-
-        const element = toValue(container)
-        if (!element) return resolve(false)
-
-        // Read the container directly: an instant scroll lands before its
-        // scroll event fires, so polling the element beats waiting on the ref.
-        const offset = readOffset(element)
-        scrollOffset.value = offset
-
-        if (Math.abs(offset - target) <= 1) {
-          state.value = 'idle'
-          scrollDirection.value = null
-          return resolve(true)
-        }
-        check()
-      })
-      check()
-    })
-  }
-
   async function scrollToOffset(offset: number, opts: { behavior?: ScrollBehavior } = {}): Promise<boolean> {
-    if (!isEnabled.value) return false
+    const element = toValue(container)
+    if (!isEnabled.value || !element || !IN_BROWSER) return false
     const target = clampOffset(offset)
+    if (!pending && Math.abs(readOffset(element) - target) <= 1) return true
+
+    release(false)
+    settle.stop()
+    state.value = 'programmatic'
     applyScroll(target, opts.behavior ?? 'auto')
     // `auto` lands synchronously; a settle poll still confirms it for `smooth`.
-    return await settleTo(target)
+    return await new Promise<boolean>((resolve) => {
+      pending = { target, offset: Number.NaN, movedAt: 0, resolve }
+      poll()
+    })
   }
 
   function offsetForIndex(index: number, align: VirtualScrollAlignment): number {
@@ -312,7 +330,7 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
   }
 
   onScopeDispose(() => {
-    if (settleTimer) clearTimeout(settleTimer)
+    release(false)
     observer?.disconnect()
   })
 
@@ -320,6 +338,8 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
     virtualItems,
     range,
     totalSize,
+    spacerAttrs,
+    getItemAttrs,
     scrollOffset: readonly(scrollOffset),
     viewportSize: readonly(viewportSize),
     isAtStart,

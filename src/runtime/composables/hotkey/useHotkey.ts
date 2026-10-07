@@ -10,26 +10,37 @@
  * Local keyboard navigation (arrow keys inside a menu, roving tabindex) is NOT
  * this — that belongs to the owning DOM component.
  */
-import { computed, onMounted, onScopeDispose, readonly, ref, toValue } from 'vue'
+import { computed, onScopeDispose, readonly, ref, toValue } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
-import {
-  buildAriaLabel,
-  buildDisplayKeys,
-  detectPlatform,
-  isModifierToken,
-  normalizeKeyToken,
-  resolveMod,
-} from './format'
-import { pressedKeys as globalPressedKeys, pressedState, registerHotkey } from './registry'
+import { tryUseNuxtApp } from '#app'
+import { injectModalContext } from '#kit/composables/modal/useModalContext'
+import { isKeyHeld, registerHotkey } from './registry'
+import { useHotkeyPresentation } from './useHotkeyPresentation'
 import type {
   HotkeyDefinition,
   HotkeyKey,
-  ResolvedHotkeyPlatform,
+  HotkeyPlatform,
   UseHotkeyOptions,
   UseHotkeyReturn,
 } from '#kit/shared/types/hotkey'
 
 type HotkeySource = HotkeyKey[] | HotkeyDefinition
+
+function useTopLayer(): () => boolean {
+  const modal = injectModalContext()
+  const service = tryUseNuxtApp()?.$material?.modal
+  if (!service) return () => true
+
+  const ownLayer = () => {
+    for (let context = modal; context; context = context.parent) {
+      const id = context.id
+      if (service.modals.some(entry => entry.id === id)) return id
+    }
+    return undefined
+  }
+
+  return () => service.openedModals.at(-1)?.id === ownLayer()
+}
 
 /**
  * Register an application shortcut. `source` is either a `HotkeyKey[]` (the
@@ -48,7 +59,7 @@ export function useHotkey(
     return Array.isArray(value) ? value : value.keys
   }
 
-  const platformOption = () => {
+  const platformOption = (): HotkeyPlatform => {
     const value = readSource()
     return (Array.isArray(value) ? 'auto' : value.platform) ?? 'auto'
   }
@@ -57,24 +68,20 @@ export function useHotkey(
   const scope = () => toValue(options.scope)
   const paused = ref(false)
 
-  // SSR-safe platform: stable neutral on the server, refined after hydration
-  // when `auto`. An explicit platform is deterministic on both sides.
-  const initialPlatform = platformOption()
-  const resolvedPlatform = ref<ResolvedHotkeyPlatform>(
-    initialPlatform === 'auto' ? 'windows' : initialPlatform,
-  )
-  if (initialPlatform === 'auto') {
-    onMounted(() => {
-      resolvedPlatform.value = detectPlatform()
-    })
-  }
+  const presentation = useHotkeyPresentation({
+    keys: keysGetter,
+    platform: platformOption,
+    active: () => enabled() && !paused.value,
+    isHeld: isKeyHeld,
+  })
 
   const { stop } = registerHotkey({
     getKeys: keysGetter,
     getEnabled: enabled,
     getScope: scope,
-    getPlatform: () => resolvedPlatform.value,
+    getPlatform: () => presentation.platform.value,
     isPaused: () => paused.value,
+    isOnTopLayer: useTopLayer(),
     event: options.event ?? 'keydown',
     inputs: options.inputs ?? false,
     preventDefault: options.preventDefault ?? true,
@@ -86,33 +93,13 @@ export function useHotkey(
 
   onScopeDispose(stop)
 
-  const canonicalKeys = computed(() => keysGetter().map(key => normalizeKeyToken(String(key))))
-  const displayKeys = computed(() => buildDisplayKeys(keysGetter(), resolvedPlatform.value))
-  const ariaLabel = computed(() => buildAriaLabel(displayKeys.value))
-  const platform = computed(() => resolvedPlatform.value)
-  const isActive = computed(() => enabled() && !paused.value)
-
-  function tokenPressed(token: HotkeyKey): boolean {
-    if (isModifierToken(token)) {
-      const modifier = token === 'mod' ? resolveMod(resolvedPlatform.value) : token
-      return pressedState[modifier as 'ctrl' | 'meta' | 'alt' | 'shift']
-    }
-    return globalPressedKeys.has(token)
-  }
-
-  const pressedKeys = computed(() => canonicalKeys.value.filter(tokenPressed))
   const isPressed = computed(() => {
-    const def = canonicalKeys.value
-    return def.length > 0 && def.every(tokenPressed)
+    const total = presentation.keys.value.length
+    return total > 0 && presentation.pressedKeys.value.length === total
   })
 
   return {
-    keys: canonicalKeys,
-    displayKeys,
-    ariaLabel,
-    platform,
-    isActive,
-    pressedKeys,
+    ...presentation,
     isPressed,
     isPaused: readonly(paused),
     pause: () => { paused.value = true },

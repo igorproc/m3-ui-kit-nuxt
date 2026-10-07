@@ -45,7 +45,7 @@
   "scripts": {
     "build": "nuxt-module-build build",
     "prepack": "npm run build",
-    "dev": "nuxi dev playground",
+    "dev": "nuxi dev playground --port 3000 --host ::",
     "dev:prepare": "nuxi prepare playground",
     "generate": "nuxi generate playground",
     "preview": "nuxi preview playground",

@@ -13,9 +13,9 @@ $tokens: (
       color: map.get($theme-color-link, 'on-surface-variant'),
     ),
     padding: (
-      inline: 8rem,
+      inline: spacing(8),
     ),
-    gap: 8rem,
+    gap: spacing(8),
     typography: 'label-small',
   ),
   icon: (

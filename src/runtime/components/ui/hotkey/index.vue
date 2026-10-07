@@ -2,51 +2,56 @@
   <span
     class="ui-hotkey"
     :class="{ 'ui-hotkey--disabled': isDisabled }"
-    role="img"
-    :aria-label="resolvedAriaLabel"
+    v-bind="rootAttrs"
   >
-    <template
-      v-for="(entry, index) in displayKeys"
-      :key="index"
+    <span
+      v-for="layer in layers"
+      :key="layer.name"
+      class="ui-hotkey__combo"
+      :class="{ 'ui-hotkey__combo--reserve': layer.reserve }"
+      aria-hidden="true"
     >
-      <span
-        v-if="index > 0"
-        class="ui-hotkey__separator"
-        aria-hidden="true"
+      <template
+        v-for="(entry, index) in layer.keys"
+        :key="index"
       >
-        <slot
-          name="separator"
-          :index="index"
-          :platform="resolvedPlatform"
-        >{{ separatorText }}</slot>
-      </span>
+        <span
+          v-if="index > 0"
+          class="ui-hotkey__separator"
+        >
+          <slot
+            name="separator"
+            :index="index"
+            :platform="layer.platform"
+          >{{ separatorFor(layer.platform) }}</slot>
+        </span>
 
-      <kbd
-        class="ui-hotkey__key"
-        :class="{
-          'ui-hotkey__key--pressed': pressedSet.has(entry.key),
-          'ui-hotkey__key--modifier': entry.isModifier,
-        }"
-        aria-hidden="true"
-      >
-        <slot
-          name="key"
-          :token="entry.key"
-          :label="entry.label"
-          :pressed="pressedSet.has(entry.key)"
-          :disabled="isDisabled"
-          :index="index"
-        >{{ entry.symbol }}</slot>
-      </kbd>
-    </template>
+        <kbd
+          class="ui-hotkey__key"
+          :class="{
+            'ui-hotkey__key--pressed': !layer.reserve && pressedSet.has(entry.key),
+            'ui-hotkey__key--modifier': entry.isModifier,
+          }"
+        >
+          <slot
+            name="key"
+            :token="entry.key"
+            :label="entry.label"
+            :pressed="!layer.reserve && pressedSet.has(entry.key)"
+            :disabled="isDisabled"
+            :index="index"
+          >{{ entry.symbol }}</slot>
+        </kbd>
+      </template>
+    </span>
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watchEffect } from 'vue'
-import { buildAriaLabel, buildDisplayKeys, detectPlatform } from '#kit/composables/hotkey/format'
+import { computed, watchEffect } from 'vue'
+import { useHotkeyPresentation } from '#kit/composables/hotkey/useHotkeyPresentation'
 import { mHotkeyProps } from './props'
-import type { ResolvedHotkeyPlatform } from '#kit/shared/types/hotkey'
+import type { HotkeyDisplayKey, ResolvedHotkeyPlatform } from '#kit/shared/types/hotkey'
 
 const props = defineProps(mHotkeyProps)
 
@@ -65,43 +70,37 @@ if (import.meta.dev) {
   })
 }
 
-// SSR-safe platform for static `keys` mode (behavioral mode reuses the
-// composable's already-resolved platform).
-const platformOption = computed(() => props.platform ?? 'auto')
-const staticPlatform = ref<ResolvedHotkeyPlatform>(
-  platformOption.value === 'auto' ? 'windows' : platformOption.value,
-)
-if (platformOption.value === 'auto') {
-  onMounted(() => {
-    staticPlatform.value = detectPlatform()
-  })
-}
-
-const resolvedPlatform = computed<ResolvedHotkeyPlatform>(() =>
-  props.hotkey ? props.hotkey.platform.value : staticPlatform.value,
-)
-
-const displayKeys = computed(() =>
-  props.hotkey ? props.hotkey.displayKeys.value : buildDisplayKeys(props.keys ?? [], staticPlatform.value),
-)
-
-const resolvedAriaLabel = computed(() => {
-  if (props.ariaLabel) return props.ariaLabel
-  if (props.hotkey) return props.hotkey.ariaLabel.value
-  return buildAriaLabel(displayKeys.value)
+const standalone = useHotkeyPresentation({
+  keys: () => props.keys ?? [],
+  platform: () => props.platform,
+  active: () => !props.disabled,
 })
 
-const isDisabled = computed(() => (props.hotkey ? !props.hotkey.isActive.value : props.disabled))
+const view = computed(() => props.hotkey ?? standalone)
 
-const pressedSet = computed(() => new Set(props.hotkey ? props.hotkey.pressedKeys.value : []))
+const isDisabled = computed(() => !view.value.isActive.value)
 
-const separatorText = computed(() =>
-  props.separator ?? (resolvedPlatform.value === 'mac' ? '' : '+'),
-)
+const rootAttrs = computed(() => {
+  const name = props.ariaLabel ?? view.value.ariaLabel.value
+  if (!name) return {}
+  return { 'role': 'img', 'aria-label': name, 'aria-disabled': isDisabled.value ? 'true' as const : undefined }
+})
+
+const pressedSet = computed(() => new Set(isDisabled.value ? [] : view.value.pressedKeys.value))
+
+const layers = computed(() => {
+  const shown = { name: 'shown', keys: view.value.displayKeys.value, platform: view.value.platform.value, reserve: false }
+  const reserved: HotkeyDisplayKey[] = view.value.reservedKeys.value
+  if (!reserved.length) return [shown]
+  return [shown, { name: 'reserved', keys: reserved, platform: 'windows' as ResolvedHotkeyPlatform, reserve: true }]
+})
+
+function separatorFor(platform: ResolvedHotkeyPlatform): string {
+  return props.separator ?? (platform === 'mac' ? '' : '+')
+}
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/hotkey/index' as t;
 
 $prefix: 'md-hotkey';
@@ -109,34 +108,50 @@ $prefix: 'md-hotkey';
 .ui-hotkey {
   $t: material-map(t.$tokens, $prefix);
 
-  display: inline-flex;
-  align-items: center;
-  gap: g($t, 'container.gap');
+  display: inline-grid;
   vertical-align: middle;
 
+  &__combo {
+    display: inline-flex;
+    flex-wrap: wrap;
+    grid-area: 1 / 1;
+    align-items: center;
+    gap: g($t, 'container.gap');
+
+    &--reserve {
+      visibility: hidden;
+    }
+  }
+
   &__key {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: g($t, 'key.min-width');
-    padding: g($t, 'key.padding-block') g($t, 'key.padding-inline');
+    min-inline-size: g($t, 'key.min-size');
+    min-block-size: g($t, 'key.min-size');
+    padding-inline: g($t, 'key.padding.inline');
+    border: g($t, 'key.border.width') solid g($t, 'key.enabled.border');
     border-radius: g($t, 'key.radius');
-    border: 1rem solid g($t, 'key.enabled.border');
     background-color: g($t, 'key.enabled.bg');
     color: g($t, 'key.enabled.color');
-    font-family: inherit;
-    transition:
-      background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+    isolation: isolate;
 
     @include typescale(g($t, 'key.typography'));
 
-    &--pressed {
-      background-color: g($t, 'key.pressed.bg');
-      color: g($t, 'key.pressed.color');
-      border-color: transparent;
-      transform: translateY(1rem);
+    &::before {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: g($t, 'key.pressed.layer');
+      content: '';
+      opacity: 0;
+      transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+    }
+
+    &--pressed::before {
+      opacity: g($t, 'key.pressed.opacity');
     }
   }
 
@@ -146,15 +161,38 @@ $prefix: 'md-hotkey';
     @include typescale(g($t, 'key.typography'));
   }
 
-  &--disabled {
-    .ui-hotkey__key {
-      border-color: transparent;
-      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} state-opacity(disabled-content), transparent);
-      background-color: color-mix(in srgb, #{g($t, 'key.disabled.color')} state-opacity(disabled-container), transparent);
+  &--disabled &__key {
+    border-color: g($t, 'key.disabled.border');
+    background-color: g($t, 'key.disabled.bg');
+    color: g($t, 'key.disabled.color');
+  }
+
+  &--disabled &__separator {
+    color: g($t, 'key.disabled.color');
+  }
+
+  @include forced-colors {
+    &__key {
+      border-color: ButtonText;
+
+      &::before {
+        display: none;
+      }
+
+      &--pressed {
+        border-color: Highlight;
+        background-color: Highlight;
+        color: HighlightText;
+      }
     }
 
-    .ui-hotkey__separator {
-      color: color-mix(in srgb, #{g($t, 'key.disabled.color')} state-opacity(disabled-content), transparent);
+    &--disabled &__key {
+      border-color: GrayText;
+      color: GrayText;
+    }
+
+    &--disabled &__separator {
+      color: GrayText;
     }
   }
 }

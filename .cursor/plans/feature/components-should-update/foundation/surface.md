@@ -2,7 +2,7 @@
 
 <identity>M3: отдельного компонента нет; основа — Styles → Color (surface-container roles), Elevation, Shape · Токены Compose: `ColorSchemeKeyTokens` (surface*), `ElevationTokens`, `ShapeTokens` · Код: `src/runtime/components/ui/surface/` · Аудит: `data/surface.json` · Тип: public, пассивный примитив</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент, карта токенов и спеки существуют (реализован 2026-07-13). План — довести до системы: точечные пути токенов, шкала форм Expressive, hairline при vw-корне.</implementation-status>
+<implementation-status state="planned" updated="2026-10-07">Шаг 1 сделан: стили на точечных путях, цвет контента и форма по умолчанию в карте токенов, пресеты генерирует `@each`, dev-предупреждение о `@click` без роли, фикстуры и e2e; шаги 2–4 перенесены.</implementation-status>
 
 ## Вердикт
 
@@ -83,11 +83,13 @@
 
 1. **S — точечные пути.** `index.vue`: все `g()` перевести на точки. Проверить собранный CSS:
    каждое правило пресета на месте.
-2. **S — hairline.** По ответу на вопрос 2: `outline.width` → общий токен hairline, если он
-   появится в системе.
-3. **S — `MSurfaceVariant` через `Extract<>`.** Делается вместе с миграцией «`plain` входит в
-   `MVariant`» из `decisions.md`, отдельно не начинать.
-4. **S — документация границ.** Таблица выбора контейнера в docs:
+2. **S — hairline.** **Перенесено:** новый системный токен запрещён, решение нужно одно на все
+   outlined-компоненты; до него `outline.width: 1rem` остаётся в карте компонента. По ответу на
+   вопрос 2: `outline.width` → общий токен hairline, если он появится в системе.
+3. **S — `MSurfaceVariant` через `Extract<>`.** **Перенесено:** делается вместе с миграцией
+   «`plain` входит в `MVariant`» из `decisions.md`, отдельно не начинать.
+4. **S — документация границ.** **Перенесено:** docs_v2 живёт вне этого репозитория.
+   Таблица выбора контейнера в docs:
    - собственная область → MSurface;
    - структурированный контент с действием → MCard;
    - ширина страницы → MContainer/MLayout;

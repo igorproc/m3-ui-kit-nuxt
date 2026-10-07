@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MSurface from './index.vue'
 
@@ -49,10 +49,39 @@ describe('m-surface', () => {
     expect(wrapper.attributes('aria-label')).toBe('Panel')
   })
 
-  it('does not add role, tabindex or interaction state classes', async () => {
-    const wrapper = await mountSuspended(MSurface)
+  it('merges a consumer class with its own preset classes', async () => {
+    const wrapper = await mountSuspended(MSurface, {
+      props: { variant: 'outlined', shape: 'medium' },
+      attrs: { class: 'ui-alert' },
+    })
 
+    expect(wrapper.classes()).toEqual(expect.arrayContaining([
+      'ui-alert',
+      'ui-surface',
+      'ui-surface--outlined',
+      'ui-surface--shape-medium',
+    ]))
+  })
+
+  it('does not add role, tabindex or interaction state classes', async () => {
+    for (const variant of ['plain', 'filled', 'elevated', 'outlined'] as const) {
+      const wrapper = await mountSuspended(MSurface, { props: { variant } })
+
+      expect(wrapper.attributes('role')).toBeUndefined()
+      expect(wrapper.attributes('tabindex')).toBeUndefined()
+      expect(wrapper.classes()).toEqual(['ui-surface', `ui-surface--${variant}`, 'ui-surface--shape-none'])
+    }
+  })
+
+  it('stays passive when a consumer attaches a click handler', async () => {
+    const onClick = vi.fn()
+    const wrapper = await mountSuspended(MSurface, { attrs: { onClick } })
+
+    await wrapper.trigger('click')
+
+    expect(onClick).toHaveBeenCalledOnce()
     expect(wrapper.attributes('role')).toBeUndefined()
     expect(wrapper.attributes('tabindex')).toBeUndefined()
+    expect(wrapper.classes()).toEqual(['ui-surface', 'ui-surface--plain', 'ui-surface--shape-none'])
   })
 })

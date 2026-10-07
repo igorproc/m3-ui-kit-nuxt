@@ -2,126 +2,127 @@
   <div
     ref="root"
     class="ui-lazy"
-    :class="`ui-lazy--${status}`"
-    :style="boundaryStyle"
-    @pointerenter="onInteraction('pointerenter', $event)"
-    @pointerdown="onInteraction('pointerdown', $event)"
-    @click="onInteraction('click', $event)"
-    @focusin="onInteraction('focus', $event)"
+    :class="rootClasses"
+    :style="reserveStyle"
+    v-bind="rootAttrs"
   >
-    <Transition
-      :name="transitionName"
-      mode="out-in"
+    <div
+      v-if="view === 'placeholder'"
+      class="ui-lazy__placeholder"
+    >
+      <slot
+        name="placeholder"
+        v-bind="slotState"
+      />
+    </div>
+
+    <div
+      v-else-if="view === 'fallback'"
+      class="ui-lazy__fallback"
+    >
+      <slot
+        name="fallback"
+        v-bind="slotState"
+      />
+    </div>
+
+    <div
+      v-else-if="view === 'error' && $slots.error"
+      class="ui-lazy__error"
+    >
+      <slot
+        name="error"
+        v-bind="slotState"
+        :error="error"
+      />
+    </div>
+
+    <Suspense
+      v-if="isMounted"
+      :key="attempt"
+      v-bind="suspenseAttrs"
+    >
+      <div class="ui-lazy__content">
+        <slot v-bind="slotState" />
+      </div>
+    </Suspense>
+
+    <div
+      v-if="!$slots.error"
+      class="ui-lazy__alert"
     >
       <div
-        v-if="status === 'error'"
-        key="error"
-        class="ui-lazy__error"
+        v-bind="alertAttrs"
+        class="ui-lazy__message"
       >
-        <slot
-          name="error"
-          v-bind="slotState"
-          :error="capturedError"
-        />
+        {{ view === 'error' ? errorText : '' }}
       </div>
 
-      <div
-        v-else-if="isActivated"
-        :key="retryKey"
-        class="ui-lazy__content"
+      <MButton
+        v-if="view === 'error'"
+        variant="outlined"
+        @click="retry"
       >
-        <Suspense
-          @pending="onPending"
-          @resolve="onResolve"
-        >
-          <div class="ui-lazy__boundary">
-            <slot v-bind="slotState" />
-          </div>
-
-          <template #fallback>
-            <div class="ui-lazy__fallback">
-              <slot
-                v-if="$slots.fallback"
-                name="fallback"
-                v-bind="slotState"
-              />
-              <slot
-                v-else
-                name="placeholder"
-                v-bind="slotState"
-              />
-            </div>
-          </template>
-        </Suspense>
-      </div>
-
-      <div
-        v-else
-        key="placeholder"
-        class="ui-lazy__placeholder"
-      >
-        <slot
-          name="placeholder"
-          v-bind="slotState"
-        />
-      </div>
-    </Transition>
+        {{ retryLabel }}
+      </MButton>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useIntersectionObserver } from '@vueuse/core'
+import { computed, onMounted, shallowRef } from 'vue'
+import MButton from '#kit/components/ui/button/index.vue'
+import { useLazyControl } from '#kit/composables/lazy/useLazyControl'
+import { useLazyWarnings } from '#kit/composables/lazy/useLazyWarnings'
 import { mLazyProps } from './props'
-import type { MLazyInteraction } from './props'
-
-export type MLazyStatus = 'idle' | 'pending' | 'active' | 'error'
-export type MLazyActivationReason = 'eager' | 'idle' | 'view' | 'interaction' | 'manual'
-
-export interface MLazyActivation {
-  reason: MLazyActivationReason
-  event?: Event
-}
-
-export interface MLazySlotState {
-  status: MLazyStatus
-  isActive: boolean
-  activation: MLazyActivation | null
-  activate: () => void
-  retry: () => void
-}
+import type { MLazyEmits, MLazySlots, MLazySlotState } from './props'
 
 const props = defineProps(mLazyProps)
 const activeModel = defineModel<boolean | undefined>('active', { default: undefined })
+const emit = defineEmits<MLazyEmits>()
+const slots = defineSlots<MLazySlots>()
 
-const emit = defineEmits<{
-  (event: 'activate', activation: MLazyActivation): void
-  (event: 'visible' | 'pending' | 'resolve'): void
-  (event: 'error', error: unknown): void
-}>()
-
-defineSlots<{
-  default(props: MLazySlotState): unknown
-  placeholder?(props: MLazySlotState): unknown
-  fallback?(props: MLazySlotState): unknown
-  error?(props: MLazySlotState & { error: unknown }): unknown
-}>()
-
-const root = ref<HTMLElement>()
-const internalActive = ref(props.disabled || props.mode === 'eager' || activeModel.value === true)
-const status = ref<MLazyStatus>(internalActive.value ? 'pending' : 'idle')
-const activation = shallowRef<MLazyActivation | null>(
-  props.disabled || props.mode === 'eager' ? { reason: 'eager' } : null,
-)
-const capturedError = shallowRef<unknown>()
-const retryKey = ref(0)
-
-const isControlled = computed(() => activeModel.value !== undefined)
-const isActivated = computed(() => isControlled.value ? activeModel.value === true : internalActive.value)
-const transitionName = computed(() => {
-  if (props.transition === false) return undefined
-  return props.transition === true ? mLazyProps.transition.default : props.transition
+const {
+  root,
+  status,
+  view,
+  attempt,
+  isMounted,
+  isActivator,
+  activation,
+  error,
+  activate,
+  retry,
+  rootAttrs,
+  suspenseAttrs,
+  alertAttrs,
+} = useLazyControl(activeModel, props, {
+  onActivate: next => emit('activate', next),
+  onVisible: () => emit('visible'),
+  onPending: () => emit('pending'),
+  onResolve: () => emit('resolve'),
+  onError: captured => emit('error', captured),
+}, {
+  hasFallback: () => Boolean(slots.fallback),
 })
-const boundaryStyle = computed(() => ({
+
+useLazyWarnings(props, slots, () => root.value, () => isActivator.value)
+
+const waitedOnClient = shallowRef(false)
+
+onMounted(() => {
+  waitedOnClient.value = status.value === 'idle'
+})
+
+const rootClasses = computed(() => [
+  `ui-lazy--${status.value}`,
+  {
+    'ui-lazy--animated': props.transition && (waitedOnClient.value || attempt.value > 0),
+    'ui-lazy--activator': isActivator.value,
+  },
+])
+
+const reserveStyle = computed(() => ({
   minWidth: toCssSize(props.minWidth),
   minHeight: toCssSize(props.minHeight),
 }))
@@ -130,142 +131,13 @@ const slotState = computed<MLazySlotState>(() => ({
   status: status.value,
   isActive: status.value === 'active',
   activation: activation.value,
-  activate: () => activate('manual'),
+  activate,
   retry,
 }))
 
-const observer = useIntersectionObserver(
-  root,
-  (entries) => {
-    const visible = entries.some(entry => entry.isIntersecting)
-
-    if (visible) {
-      emit('visible')
-      activate('view')
-    } else if (!props.once && props.mode === 'on-view' && !isControlled.value) {
-      deactivate()
-    }
-  },
-  {
-    immediate: false,
-    rootMargin: props.rootMargin,
-    threshold: props.threshold,
-  },
-)
-
-let cancelIdle: (() => void) | undefined
-
 function toCssSize(value: string | number | undefined) {
-  if (typeof value === 'number') return `${value}rem`
-  return value
+  return typeof value === 'number' ? `${value}rem` : value
 }
-
-function activate(reason: MLazyActivationReason, event?: Event) {
-  if (isActivated.value || (props.once && status.value === 'active')) return
-
-  const nextActivation = { reason, event }
-  activation.value = nextActivation
-  capturedError.value = undefined
-  status.value = 'pending'
-  internalActive.value = true
-  activeModel.value = true
-  emit('activate', nextActivation)
-
-  if (props.once) stopTriggers()
-}
-
-function deactivate() {
-  internalActive.value = false
-  activeModel.value = false
-  status.value = 'idle'
-  activation.value = null
-}
-
-function retry() {
-  capturedError.value = undefined
-  status.value = 'pending'
-  retryKey.value += 1
-
-  if (!isActivated.value) activate('manual')
-}
-
-function onPending() {
-  status.value = 'pending'
-  emit('pending')
-}
-
-function onResolve() {
-  status.value = 'active'
-  emit('resolve')
-}
-
-function onInteraction(interaction: MLazyInteraction, event: Event) {
-  if (props.mode !== 'on-interaction' || !props.interactions.includes(interaction)) return
-  activate('interaction', event)
-}
-
-function scheduleIdle() {
-  if (!import.meta.client) return
-
-  const idleWindow: Partial<Pick<Window, 'requestIdleCallback' | 'cancelIdleCallback'>> = window
-
-  if (idleWindow.requestIdleCallback) {
-    const handle = idleWindow.requestIdleCallback(() => activate('idle'), { timeout: props.timeout })
-    cancelIdle = () => idleWindow.cancelIdleCallback?.(handle)
-    return
-  }
-
-  const handle = window.setTimeout(() => activate('idle'), props.timeout)
-  cancelIdle = () => window.clearTimeout(handle)
-}
-
-function stopTriggers() {
-  observer.stop()
-  cancelIdle?.()
-  cancelIdle = undefined
-}
-
-function startTriggers() {
-  stopTriggers()
-
-  if (props.disabled || props.mode === 'eager') {
-    activate('eager')
-  } else if (props.mode === 'on-view') {
-    observer.resume()
-  } else if (props.mode === 'on-idle') {
-    scheduleIdle()
-  }
-}
-
-watch(
-  () => [props.mode, props.disabled, props.rootMargin, props.threshold] as const,
-  () => {
-    if (!isActivated.value || !props.once) startTriggers()
-  },
-)
-
-watch(activeModel, (value) => {
-  if (value === true && !internalActive.value) {
-    internalActive.value = true
-    activation.value = { reason: 'manual' }
-    status.value = 'pending'
-  } else if (value === false) {
-    internalActive.value = false
-    status.value = 'idle'
-    activation.value = null
-    if (!props.once) nextTick(startTriggers)
-  }
-})
-
-onErrorCaptured((error) => {
-  capturedError.value = error
-  status.value = 'error'
-  emit('error', error)
-  return false
-})
-
-onMounted(startTriggers)
-onScopeDispose(stopTriggers)
 </script>
 
 <style lang="scss">
@@ -276,43 +148,48 @@ onScopeDispose(stopTriggers)
 
   display: block;
 
-  &__content,
-  &__boundary,
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &--activator {
+    cursor: pointer;
+  }
+
   &__placeholder,
   &__fallback,
-  &__error {
+  &__error,
+  &__content {
     min-width: inherit;
     min-height: inherit;
   }
 
-  &-enter-active {
-    transition:
-      opacity g($t, 'motion-duration') g($t, 'motion-easing'),
-      transform g($t, 'motion-duration') g($t, 'motion-easing');
+  &__alert {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: g($t, 'alert.gap');
   }
 
-  &-leave-active {
-    transition: opacity g($t, 'motion-exit-duration') g($t, 'motion-easing');
+  &__message {
+    max-width: 100%;
+    color: g($t, 'alert.message.color');
+    overflow-wrap: anywhere;
+
+    @include typescale('body-medium');
   }
 
-  &-enter-from,
-  &-leave-to {
+  &--animated > &__fallback,
+  &--animated > &__error,
+  &--animated > &__content,
+  &--animated#{&}--error > &__alert {
+    animation: ui-lazy-reveal g($t, 'reveal.duration') g($t, 'reveal.easing');
+  }
+}
+
+@keyframes ui-lazy-reveal {
+  from {
     opacity: 0;
-  }
-
-  &-enter-from {
-    transform: translateY(g($t, 'motion-offset'));
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    &-enter-active,
-    &-leave-active {
-      transition: none;
-    }
-
-    &-enter-from {
-      transform: none;
-    }
   }
 }
 </style>

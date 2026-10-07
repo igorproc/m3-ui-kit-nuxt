@@ -51,6 +51,30 @@ export interface HotkeyDisplayKey {
   isModifier: boolean
 }
 
+export interface HotkeyKeyLabels {
+  command: string
+  windows: string
+  super: string
+  control: string
+  option: string
+  alt: string
+  shift: string
+  enter: string
+  escape: string
+  space: string
+  tab: string
+  backspace: string
+  delete: string
+  arrowUp: string
+  arrowDown: string
+  arrowLeft: string
+  arrowRight: string
+}
+
+export interface HotkeyLabels extends Partial<HotkeyKeyLabels> {
+  disabled?: string
+}
+
 export interface UseHotkeyOptions {
   /** Reactive enable flag. @default true */
   enabled?: MaybeRefOrGetter<boolean>
@@ -75,7 +99,9 @@ export interface HotkeyPresentation {
   keys: Readonly<ComputedRef<HotkeyKey[]>>
   displayKeys: Readonly<ComputedRef<HotkeyDisplayKey[]>>
   ariaLabel: Readonly<ComputedRef<string>>
+  ariaKeyShortcuts: Readonly<ComputedRef<string>>
   platform: Readonly<ComputedRef<ResolvedHotkeyPlatform>>
+  reservedKeys: Readonly<ComputedRef<HotkeyDisplayKey[]>>
   /** Whether the shortcut is currently enabled (not disabled/paused). */
   isActive: Readonly<ComputedRef<boolean>>
   /** Definition keys currently held down. */

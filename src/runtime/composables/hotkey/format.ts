@@ -7,10 +7,10 @@
  * shown to the user and the combination actually matched are derived from one
  * source. No DOM, no listeners.
  */
-import { IN_BROWSER } from '#kit/shared/constants/globals'
 import type {
   HotkeyDisplayKey,
   HotkeyKey,
+  HotkeyKeyLabels,
   ResolvedHotkeyPlatform,
 } from '#kit/shared/types/hotkey'
 
@@ -21,63 +21,97 @@ const MODIFIER_TOKENS = new Set(['mod', 'ctrl', 'meta', 'alt', 'shift'])
 
 /** Aliases → canonical token. */
 const KEY_ALIASES: Record<string, HotkeyKey> = {
-  'esc': 'escape',
-  'return': 'enter',
-  ' ': 'space',
-  'spacebar': 'space',
-  'del': 'delete',
-  'up': 'arrow-up',
-  'down': 'arrow-down',
-  'left': 'arrow-left',
-  'right': 'arrow-right',
-  'control': 'ctrl',
-  'command': 'meta',
-  'cmd': 'meta',
-  'option': 'alt',
-  'opt': 'alt',
-  'win': 'meta',
-  'windows': 'meta',
-  'super': 'meta',
+  mod: 'mod',
+  ctrl: 'ctrl',
+  control: 'ctrl',
+  meta: 'meta',
+  command: 'meta',
+  cmd: 'meta',
+  win: 'meta',
+  windows: 'meta',
+  super: 'meta',
+  os: 'meta',
+  alt: 'alt',
+  option: 'alt',
+  opt: 'alt',
+  shift: 'shift',
+  enter: 'enter',
+  return: 'enter',
+  escape: 'escape',
+  esc: 'escape',
+  space: 'space',
+  spacebar: 'space',
+  tab: 'tab',
+  backspace: 'backspace',
+  delete: 'delete',
+  del: 'delete',
+  arrowup: 'arrow-up',
+  up: 'arrow-up',
+  arrowdown: 'arrow-down',
+  down: 'arrow-down',
+  arrowleft: 'arrow-left',
+  left: 'arrow-left',
+  arrowright: 'arrow-right',
+  right: 'arrow-right',
 }
 
-/** `KeyboardEvent.key` → canonical token. */
-const EVENT_KEY_MAP: Record<string, HotkeyKey> = {
-  ' ': 'space',
-  'Escape': 'escape',
-  'Esc': 'escape',
-  'Enter': 'enter',
-  'Tab': 'tab',
-  'Backspace': 'backspace',
-  'Delete': 'delete',
-  'ArrowUp': 'arrow-up',
-  'ArrowDown': 'arrow-down',
-  'ArrowLeft': 'arrow-left',
-  'ArrowRight': 'arrow-right',
+interface NamedKey {
+  label: keyof HotkeyKeyLabels
+  symbol: string
+  macSymbol?: string
+  aria: string
+}
+
+const NAMED_KEYS: Record<string, NamedKey> = {
+  'enter': { label: 'enter', symbol: '↵', aria: 'Enter' },
+  'escape': { label: 'escape', symbol: 'Esc', macSymbol: '⎋', aria: 'Escape' },
+  'space': { label: 'space', symbol: 'Space', aria: 'Space' },
+  'tab': { label: 'tab', symbol: '⇥', aria: 'Tab' },
+  'backspace': { label: 'backspace', symbol: '⌫', aria: 'Backspace' },
+  'delete': { label: 'delete', symbol: '⌦', aria: 'Delete' },
+  'arrow-up': { label: 'arrowUp', symbol: '↑', aria: 'ArrowUp' },
+  'arrow-down': { label: 'arrowDown', symbol: '↓', aria: 'ArrowDown' },
+  'arrow-left': { label: 'arrowLeft', symbol: '←', aria: 'ArrowLeft' },
+  'arrow-right': { label: 'arrowRight', symbol: '→', aria: 'ArrowRight' },
+}
+
+const ARIA_MODIFIERS: Record<ResolvedModifier, string> = {
+  ctrl: 'Control',
+  meta: 'Meta',
+  alt: 'Alt',
+  shift: 'Shift',
+}
+
+const PLATFORM_HINTS: Record<string, ResolvedHotkeyPlatform> = {
+  'macos': 'mac',
+  'ios': 'mac',
+  'windows': 'windows',
+  'linux': 'linux',
+  'android': 'linux',
+  'chrome os': 'linux',
+  'chromium os': 'linux',
 }
 
 /** Normalize an authored key token (case-insensitive, alias-aware). */
-export function normalizeKeyToken(token: string): HotkeyKey {
-  const lower = token.length === 1 ? token.toLowerCase() : token.toLowerCase()
-  return KEY_ALIASES[lower] ?? lower
-}
-
-/** Normalize a live `KeyboardEvent.key` to a canonical token. */
-export function normalizeEventKey(key: string): HotkeyKey {
-  return EVENT_KEY_MAP[key] ?? key.toLowerCase()
+export function normalizeKey(token: string): HotkeyKey {
+  if (token === ' ') return 'space'
+  if (token.length === 1) return token.toLowerCase()
+  const compact = token.trim().toLowerCase().replace(/[\s_-]+/g, '')
+  return KEY_ALIASES[compact] ?? compact
 }
 
 export function isModifierToken(token: string): boolean {
   return MODIFIER_TOKENS.has(token)
 }
 
-/** SSR-safe platform detection (server returns a stable neutral `windows`). */
-export function detectPlatform(): ResolvedHotkeyPlatform {
-  if (!IN_BROWSER) return 'windows'
-  const platform = navigator.platform || ''
-  const ua = navigator.userAgent || ''
-  if (/Mac|iPhone|iPad|iPod/.test(platform) || /Mac OS X|iPhone|iPad/.test(ua)) return 'mac'
-  if (/Linux/.test(platform) || /Linux/.test(ua)) return 'linux'
-  return 'windows'
+export function platformFromHints(hint?: string, userAgent?: string): ResolvedHotkeyPlatform | undefined {
+  const fromHint = hint ? PLATFORM_HINTS[hint.replace(/"/g, '').trim().toLowerCase()] : undefined
+  if (fromHint) return fromHint
+  if (!userAgent) return undefined
+  if (/Mac OS X|Macintosh|iPhone|iPad|iPod/.test(userAgent)) return 'mac'
+  if (/Windows/.test(userAgent)) return 'windows'
+  if (/Linux/.test(userAgent)) return 'linux'
+  return undefined
 }
 
 /** Which physical modifier `mod` maps to on the given platform. */
@@ -94,7 +128,7 @@ export function parseForMatch(
   const mainKeys: HotkeyKey[] = []
 
   for (const raw of keys) {
-    const token = normalizeKeyToken(String(raw))
+    const token = normalizeKey(String(raw))
     if (token === 'mod') requiredMods.add(resolveMod(platform))
     else if (isModifierToken(token)) requiredMods.add(token as ResolvedModifier)
     else mainKeys.push(token)
@@ -109,8 +143,12 @@ function effectiveModifier(token: HotkeyKey, platform: ResolvedHotkeyPlatform): 
   return token === 'mod' ? resolveMod(platform) : (token as ResolvedModifier)
 }
 
+function legend(token: HotkeyKey): string {
+  return token.length === 1 ? token.toUpperCase() : token.charAt(0).toUpperCase() + token.slice(1)
+}
+
 /** Spoken label + glyph for a single canonical token. */
-function displayForToken(token: HotkeyKey, platform: ResolvedHotkeyPlatform): HotkeyDisplayKey {
+function displayForToken(token: HotkeyKey, platform: ResolvedHotkeyPlatform, labels: HotkeyKeyLabels): HotkeyDisplayKey {
   const mac = platform === 'mac'
 
   if (isModifierToken(token)) {
@@ -118,58 +156,66 @@ function displayForToken(token: HotkeyKey, platform: ResolvedHotkeyPlatform): Ho
     switch (resolved) {
       case 'meta':
         return mac
-          ? { key: token, label: 'Command', symbol: '⌘', isModifier: true }
+          ? { key: token, label: labels.command, symbol: '⌘', isModifier: true }
           : platform === 'linux'
-            ? { key: token, label: 'Super', symbol: 'Super', isModifier: true }
-            : { key: token, label: 'Windows', symbol: 'Win', isModifier: true }
+            ? { key: token, label: labels.super, symbol: 'Super', isModifier: true }
+            : { key: token, label: labels.windows, symbol: 'Win', isModifier: true }
       case 'ctrl':
-        return { key: token, label: 'Control', symbol: mac ? '⌃' : 'Ctrl', isModifier: true }
+        return { key: token, label: labels.control, symbol: mac ? '⌃' : 'Ctrl', isModifier: true }
       case 'alt':
         return mac
-          ? { key: token, label: 'Option', symbol: '⌥', isModifier: true }
-          : { key: token, label: 'Alt', symbol: 'Alt', isModifier: true }
+          ? { key: token, label: labels.option, symbol: '⌥', isModifier: true }
+          : { key: token, label: labels.alt, symbol: 'Alt', isModifier: true }
       case 'shift':
-        return { key: token, label: 'Shift', symbol: mac ? '⇧' : 'Shift', isModifier: true }
+        return { key: token, label: labels.shift, symbol: mac ? '⇧' : 'Shift', isModifier: true }
     }
   }
 
-  switch (token) {
-    case 'enter': return { key: token, label: 'Enter', symbol: '↵', isModifier: false }
-    case 'escape': return { key: token, label: 'Escape', symbol: mac ? '⎋' : 'Esc', isModifier: false }
-    case 'space': return { key: token, label: 'Space', symbol: 'Space', isModifier: false }
-    case 'tab': return { key: token, label: 'Tab', symbol: '⇥', isModifier: false }
-    case 'backspace': return { key: token, label: 'Backspace', symbol: '⌫', isModifier: false }
-    case 'delete': return { key: token, label: 'Delete', symbol: '⌦', isModifier: false }
-    case 'arrow-up': return { key: token, label: 'Up', symbol: '↑', isModifier: false }
-    case 'arrow-down': return { key: token, label: 'Down', symbol: '↓', isModifier: false }
-    case 'arrow-left': return { key: token, label: 'Left', symbol: '←', isModifier: false }
-    case 'arrow-right': return { key: token, label: 'Right', symbol: '→', isModifier: false }
+  const named = NAMED_KEYS[token]
+  if (named) {
+    return { key: token, label: labels[named.label], symbol: (mac && named.macSymbol) || named.symbol, isModifier: false }
   }
 
-  const upper = String(token).toUpperCase()
-  return { key: token, label: upper, symbol: upper, isModifier: false }
+  const text = legend(token)
+  return { key: token, label: text, symbol: text, isModifier: false }
 }
 
-/** Build the ordered display model: normalized modifiers first, then keys. */
-export function buildDisplayKeys(
-  keys: readonly HotkeyKey[],
-  platform: ResolvedHotkeyPlatform,
-): HotkeyDisplayKey[] {
+function orderTokens(keys: readonly HotkeyKey[], platform: ResolvedHotkeyPlatform): HotkeyKey[] {
   const mods: HotkeyKey[] = []
   const mains: HotkeyKey[] = []
 
   for (const raw of keys) {
-    const token = normalizeKeyToken(String(raw))
+    const token = normalizeKey(String(raw))
     if (isModifierToken(token)) mods.push(token)
     else mains.push(token)
   }
 
   mods.sort((a, b) => MODIFIER_ORDER[effectiveModifier(a, platform)] - MODIFIER_ORDER[effectiveModifier(b, platform)])
 
-  return [...mods, ...mains].map(token => displayForToken(token, platform))
+  return [...mods, ...mains]
+}
+
+/** Build the ordered display model: normalized modifiers first, then keys. */
+export function buildDisplayKeys(
+  keys: readonly HotkeyKey[],
+  platform: ResolvedHotkeyPlatform,
+  labels: HotkeyKeyLabels,
+): HotkeyDisplayKey[] {
+  return orderTokens(keys, platform).map(token => displayForToken(token, platform, labels))
 }
 
 /** Spoken accessible label, e.g. `Command Shift P`. */
-export function buildAriaLabel(displayKeys: readonly HotkeyDisplayKey[]): string {
-  return displayKeys.map(entry => entry.label).join(' ')
+export function buildAriaLabel(displayKeys: readonly HotkeyDisplayKey[], state?: string): string {
+  const name = displayKeys.map(entry => entry.label).join(' ')
+  return state ? `${name}, ${state}` : name
+}
+
+function ariaKeyName(token: HotkeyKey, platform: ResolvedHotkeyPlatform): string {
+  if (isModifierToken(token)) return ARIA_MODIFIERS[effectiveModifier(token, platform)]
+  if (token === '+') return 'Plus'
+  return NAMED_KEYS[token]?.aria ?? legend(token)
+}
+
+export function buildAriaKeyShortcuts(keys: readonly HotkeyKey[], platform: ResolvedHotkeyPlatform): string {
+  return orderTokens(keys, platform).map(token => ariaKeyName(token, platform)).join('+')
 }

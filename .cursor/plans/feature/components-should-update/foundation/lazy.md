@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; из системы берутся Loading indicator (ожидание < 5 с) и Progress indicators как рекомендуемая заглушка · Токены Compose: `LoadingIndicatorTokens` (для рецепта заглушки) · Код: `src/runtime/components/ui/lazy/` · Аудит: `data/lazy.json` · Тип: public, инфраструктура</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-13: четыре режима, Suspense после активации, слоты, `v-model:active`. Аудит нашёл 18 FAIL. Главные — доступность ожидания и ошибки, резервирование места, потеря фокуса при `once=false`.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Шаги 1–7 и 9 сделаны: машина состояний и control-композабл в `composables/lazy/`, общий IntersectionObserver, `aria-busy`, постоянный alert с повтором, фокус держит содержимое при `once=false`, корень-активатор с клавиатуры, `fallbackDelay`, fade без смещения; шаг 8 (документация) перенесён.</implementation-status>
 
 ## Вердикт
 
@@ -88,7 +88,7 @@ indicator. Ни того, ни другого сейчас нет.
 5. **M — общий наблюдатель** (EN-05, EN-10).
 6. **S — `fallbackDelay`** (DT-11).
 7. **S — токены** (TK-02).
-8. **M — документация** (DC-01…05).
+8. **M — документация** (DC-01…05). **Перенесено**: `docs_v2` вне репозитория, решение владельца 2026-10-07.
    - Когда `MLazy`, а когда `loading="lazy"`, `content-visibility`, `defineAsyncComponent` или
      `hydrate-on-*`.
    - Анатомия.
