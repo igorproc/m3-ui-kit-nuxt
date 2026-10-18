@@ -37,7 +37,6 @@
   &__list {
     --ui-scrollbar-inset-block: #{g($t, 'panel.scrollbar-inset')};
 
-    max-height: var(--m-dropdown-panel-max-height, #{g($t, 'panel.max-height')});
     padding-block: g($t, 'panel.padding-block');
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -45,6 +44,13 @@
     // Filtering adds and removes the scrollbar; a stable gutter keeps the
     // rows from changing width under the user's eyes.
     scrollbar-gutter: stable;
+
+    // Each density stops halfway through a row of its own height.
+    @each $density in compact, default, comfortable {
+      &--#{$density} {
+        max-height: var(--m-dropdown-panel-max-height, #{g($t, 'panel.max-height.#{$density}')});
+      }
+    }
   }
 
   // The active fill follows the pointer and the keyboard alike, so the row's
@@ -53,22 +59,31 @@
     display: none;
   }
 
+  // Under the pointer a row shows hover (8%) …
   &__option--active:not(.ui-list-item--selected) {
-    background-color: g($t, 'option.active.bg');
+    background-color: g($t, 'option.hover.bg');
   }
 
   &__option--active.ui-list-item--selected {
-    background-color: g($t, 'option.active.selected-bg');
+    background-color: g($t, 'option.hover.selected-bg');
   }
 
-  // Keyboard focus on a row is the kit's focus ring, as on any other item; the
-  // fill alone is what hover also draws.
+  // … under the keyboard, focus (10%) and the kit's focus ring, as on any
+  // other item.
   &__option--keyboard.ui-list-item {
     @include focus-ring(inset);
 
     @include forced-colors {
       outline-color: Highlight;
     }
+  }
+
+  &__option--keyboard:not(.ui-list-item--selected) {
+    background-color: g($t, 'option.keyboard.bg');
+  }
+
+  &__option--keyboard.ui-list-item--selected {
+    background-color: g($t, 'option.keyboard.selected-bg');
   }
 
   // A row wraps rather than truncating — a choice has to be readable — and an
@@ -81,6 +96,8 @@
   &__state {
     padding: g($t, 'state.padding');
     color: g($t, 'state.color');
+
+    @include typescale(g($t, 'state.typography'));
   }
 
   &__status {

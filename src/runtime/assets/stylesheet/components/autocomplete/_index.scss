@@ -6,9 +6,7 @@
 // ==========================================
 // The autocomplete is the dropdown plus a query, and draws the same panel,
 // rows and chrome — so it reads the dropdown's tokens instead of keeping a copy
-// that drifts. What it adds is the toggle button, which is the same affordance
-// as the clear control: neutral at rest, `on-surface` once acted on.
+// that drifts. Its toggle is an icon button with no colour of its own: it
+// takes the field's trailing-zone roles, as the dropdown's arrow does.
 
-$tokens: map.merge(dropdown.$tokens, (
-  toggle: map.get(dropdown.$tokens, clear),
-));
+$tokens: dropdown.$tokens;

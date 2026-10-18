@@ -7,22 +7,39 @@
  * appropriate button/link component.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import type { MShape } from '#kit/shared/types/props'
-import { makeSizeProps } from '#kit/shared/utils/props'
+import type { MShape, MSize, MVariant } from '#kit/shared/types/props'
+import type { MFieldDensity } from '#kit/components/ui/text-field/props'
 
 /** MD3 surface presets meaningful for an identity surface. */
-export type MAvatarVariant = 'tonal' | 'filled' | 'outlined'
+export type MAvatarVariant = Extract<MVariant, 'tonal' | 'filled' | 'outlined'>
 
 /** Corner shapes that keep an avatar readable as an identity surface. */
 export type MAvatarShape = Extract<MShape, 'full' | 'large' | 'medium' | 'small'>
 
+/** Avatar scale: the kit's density steps at 24 / 40 / 56. */
+export type MAvatarDensity = MFieldDensity
+
+/** Retired `size` → the `density` step that replaced it. */
+export const AVATAR_SIZE_TO_DENSITY: Record<MSize, MAvatarDensity> = {
+  sm: 'compact',
+  md: 'default',
+  lg: 'comfortable',
+}
+
 export const mAvatarProps = {
-  ...makeSizeProps(),
+  /** Box, icon and initials step: 24 / 40 / 56. */
+  density: { type: String as PropType<MAvatarDensity>, default: 'default' },
+  /**
+   * @deprecated Use `density`: `sm` → `compact`, `md` → `default`,
+   * `lg` → `comfortable`. Still honoured for one release.
+   */
+  size: { type: String as PropType<MSize>, default: undefined },
   /** Image source. An empty or failing source enters the fallback pipeline. */
   src: { type: String, default: undefined },
   /**
-   * Alternative text of the image. A non-empty string names the image; `''`
-   * marks it decorative; omitting it lets `name` label the avatar root.
+   * Alternative text. A non-empty string names the avatar — the image while it
+   * shows, the avatar itself once the fallback takes over; `''` marks it
+   * decorative; omitting it lets `name` label the avatar.
    */
   alt: { type: String, default: undefined },
   /** Display name used for derived initials and the accessible label. */
@@ -39,7 +56,7 @@ export type MAvatarProps = ExtractPublicPropTypes<typeof mAvatarProps>
 
 /** Payload of the `default` slot, which replaces all built-in rendering. */
 export interface MAvatarDefaultSlot {
-  size: string
+  density: MAvatarDensity
   failed: boolean
 }
 

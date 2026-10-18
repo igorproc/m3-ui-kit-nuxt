@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MFileUpload](index.md)) · Код: `src/runtime/components/fragments/file-upload/Dropzone.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: пунктирная зона с иконкой, текстом и кнопкой «Choose files», класс `--dragging`, делегирование выбора в `MFileInput` родителя. Открыты: нет disabled/readonly-вида и состояния «тип не подходит», при перетаскивании меняется только фон, нет forced colors, английские строки.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: состояния accepting / refusing / inactive различимы не только цветом и в forced colors, подсказка ограничений связана `aria-describedby`, единственная кнопка — «выбрать».</implementation-status>
 
 ## Вердикт
 

@@ -15,6 +15,59 @@
       />
     </div>
 
+    <h2>Variants</h2>
+    <div
+      v-for="variant in variants"
+      :key="variant"
+      class="fixture-otp__row"
+    >
+      <div
+        v-for="state in variantStates"
+        :key="state.name"
+        :data-test="`${variant}-${state.name}`"
+      >
+        <MOtpInput
+          :model-value="state.value"
+          :variant="variant"
+          :length="4"
+          :label="`Code, ${variant} ${state.name}`"
+          v-bind="state.props"
+        />
+      </div>
+    </div>
+
+    <h2>Pattern and masking</h2>
+    <div
+      class="fixture-otp__case"
+      data-test="placeholder"
+    >
+      <MOtpInput
+        v-model="patterned"
+        label="Code, with a pattern"
+        placeholder="000000"
+      />
+    </div>
+    <div
+      class="fixture-otp__case"
+      data-test="mask-last"
+    >
+      <MOtpInput
+        v-model="lastMasked"
+        label="Code, masked after a moment"
+        mask="last"
+      />
+    </div>
+    <div
+      class="fixture-otp__case"
+      data-test="required"
+    >
+      <MOtpInput
+        v-model="required"
+        label="Code, required"
+        required
+      />
+    </div>
+
     <div
       class="fixture-otp__case"
       data-test="live"
@@ -39,7 +92,7 @@ const states = [
   { name: 'partial', props: {} },
   { name: 'filled', props: {} },
   { name: 'grouped', props: { groups: [3, 3], separator: '–' } },
-  { name: 'masked', props: { mask: true } },
+  { name: 'masked', props: { mask: 'always' as const } },
   { name: 'alphanumeric', props: { mode: 'alphanumeric' as const, length: 4 } },
   { name: 'error-message', props: { errorMessage: 'The code is wrong' } },
   { name: 'error-only', props: { error: true } },
@@ -61,6 +114,18 @@ const values = reactive<Record<string, string>>({
   'loading': '123456',
 })
 
+const variants = ['outlined', 'filled', 'underline'] as const
+const variantStates = [
+  { name: 'empty', value: '', props: {} },
+  { name: 'partial', value: '12', props: {} },
+  { name: 'error', value: '1234', props: { errorMessage: 'The code is wrong' } },
+  { name: 'disabled', value: '12', props: { disabled: true } },
+]
+
+const patterned = ref('')
+const lastMasked = ref('')
+const required = ref('')
+
 const liveCode = ref('')
 const liveError = ref<string>()
 const completions = ref(0)
@@ -77,5 +142,11 @@ function validate(code: string) {
   display: grid;
   gap: 24rem;
   justify-items: start;
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24rem;
+  }
 }
 </style>

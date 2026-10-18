@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита — поле M3 (`MTextField`) + кнопка-образец + всплывающий `MColorPicker` · Токены Compose: через `MTextField` · Код: `src/runtime/components/ui/color-input/` · Аудит: `data/color-input.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован и одобрен 2026-07-14: композиция `MTextField + MButtonIcon + MMenu + MColorPicker`, черновик и коммит (`commit: change | input`), `format` с `auto`, `clearable`, `picker`. Открыты: всплывающая панель — `role="menu"`, которое ломает клавиатуру пикера; фокус после Escape уходит на `span`; ошибка без текста; `required`, `name`, `density` и атрибуты не доходят до инпута.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 2–5 (документация — в docs). Шаг 1 (всплывающий диалог вместо `MMenu`) заблокирован планом меню; временно пикер гасит навигационные клавиши до `MMenu`, фокус возвращается на кнопку при закрытии.</implementation-status>
 
 ## Вердикт
 
@@ -113,3 +113,7 @@
 ## Открытые вопросы
 
 Нет: переход на всплывающий диалог был предусмотрен прежним решением («future MOverlay»).
+
+## Заметки реализации
+
+- Ломающее: «Open color picker…» → `pickerLabel`; пропы — `mFieldProps` + `density`.

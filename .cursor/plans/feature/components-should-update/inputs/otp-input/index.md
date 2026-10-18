@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 — авторский компонент; системные правила берутся из семейства полей (`color-and-state.md`, таблица ролей «ячейки, чипы, шаги…») и из ролей `OutlinedTextFieldTokens` / `FilledTextFieldTokens` (кромка, disabled 12 / 38 %) · Токены Compose: прямых нет · Код: `src/runtime/components/ui/otp-input/` (`index.vue`, `props.ts`), `src/runtime/composables/otp-input/{useOtpValue,useOtpControl}.ts`, `src/runtime/shared/constants/otp.ts`, токены `src/runtime/assets/stylesheet/components/otp-input/_index.scss` · Аудит: `data/otp-input.json` · Тип: public. Дочерние части — [field.md](field.md) (ячейка), [group.md](group.md) (группа), [separator.md](separator.md) (разделитель): отдельными компонентами они больше не существуют</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент прошёл QA фазы D (клик по ячейке, санитайз вставки до `maxlength`, постоянный `role="alert"`, слияние слушателей, `loading` → `aria-busy`). План выравнивает ячейки по таблице ролей системы, чинит раскладку в grid/flex-родителе и переносит из концепта 2026-09-05 то, что согласовано, но не построено (ось `variant`, `placeholder`, режимы `mask`). Шаги 1–2 без смены API; остальное ждёт вопросов 1–7.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–5, 7–9. Ось `variant` (outlined по умолчанию), `placeholder` через `OtpCell.hint`, `mask: false | last | always`, `required`, `path` → `useField`, загрузка — `MLoading` в строке сообщения. Шаг 6 (фокус заполненного кода) — вопрос лиду.</implementation-status>
 
 ## Вердикт
 
@@ -290,3 +290,9 @@ underline`, но код остался гибридом (кромка у все�
 3. Оставить как есть. Цена: проп с тем же именем ведёт себя иначе, чем у семейства.
 
 Рекомендация: 1.
+
+## Заметки реализации
+
+- Вопросы: 1 → 1; 2 → 1; 3 → 1; 4 → 1 с поправкой сессии (MLoading inline вместо MProgressLinear); 5 → 1 (без density, запись в decisions.md предложена); 6 → 1; 7 → 1.
+- Ломающее: `mask: true` и строка-символ сняты (работают релиз с предупреждением), вид по умолчанию — outlined без заливки, класс `--complete` убран.
+- Константа `OTP_MASK_REVEAL = 1000` добавлена в `shared/constants/otp.ts`.

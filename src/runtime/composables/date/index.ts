@@ -1,175 +1,118 @@
-import { ref, computed, watch, nextTick } from 'vue'
-import type { Ref } from 'vue'
+/**
+ * @module useDatePicker
+ *
+ * @remarks
+ * The state of a date picker: the chosen date, the month on screen, the view
+ * (days or years) and the bounds — all of it reactive, the locale included.
+ * The day grid's keyboard and ARIA live in {@link useDateGridControl}; the
+ * math and the text in {@link createCalendar}.
+ *
+ * "Today" is set on the client only: the server cannot know the reader's date,
+ * so its HTML marks none and the mark arrives after mount.
+ */
+import { computed, onMounted, ref, watch } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
 import dayjs from 'dayjs'
-import 'dayjs/locale/ru' // Ensure dayjs localizations are imported if necessary
+import { createCalendar } from './createCalendar'
+import type { Calendar, CalendarBounds } from './createCalendar'
 
-export type ViewMode = 'calendar' | 'year'
-
-export interface DayCell {
-  key: string
-  date: dayjs.Dayjs
-  label: number
-  inCurrentMonth: boolean
-  isToday: boolean
-  isSelected: boolean
-  isDisabled: boolean
-  ariaLabel: string
-}
+export type DatePickerView = 'calendar' | 'year'
+export type DatePickerValue = Date | string | number
 
 export interface UseDatePickerOptions {
-  minDate?: Date | string | number
-  maxDate?: Date | string | number
+  model: Ref<DatePickerValue | null>
+  locale: () => string
+  min: () => DatePickerValue | undefined
+  max: () => DatePickerValue | undefined
 }
 
-export function useDatePicker(
-  modelValue: Ref<Date | string | number | null>,
-  options: UseDatePickerOptions = {},
-) {
-  const view = ref<ViewMode>('calendar')
-  const today = dayjs()
-  const displayDate = ref(modelValue.value ? dayjs(modelValue.value) : dayjs())
-  const yearGrid = ref<HTMLElement | null>(null)
+export interface UseDatePickerReturn {
+  calendar: ComputedRef<Calendar>
+  /** The model as a date; `null` when empty or unreadable. */
+  selected: ComputedRef<Date | null>
+  /** First day of the month on screen. */
+  month: Ref<Date>
+  view: Ref<DatePickerView>
+  today: Ref<Date | null>
+  bounds: ComputedRef<CalendarBounds>
+  years: ComputedRef<number[]>
+  canGoPrev: ComputedRef<boolean>
+  canGoNext: ComputedRef<boolean>
+  prevMonth: () => void
+  nextMonth: () => void
+  toggleView: () => void
+  /** Shows the same month of another year, back on the day view. */
+  selectYear: (year: number) => void
+  select: (date: Date) => void
+}
 
-  // Normalized bounds (day granularity). Undefined when the bound is absent,
-  // preserving fully-unbounded behavior byte-identically.
-  const minDay = computed(() =>
-    options.minDate !== undefined ? dayjs(options.minDate).startOf('day') : undefined,
-  )
-  const maxDay = computed(() =>
-    options.maxDate !== undefined ? dayjs(options.maxDate).startOf('day') : undefined,
-  )
+/** How far the year list reaches each way when no bound limits it. */
+const YEAR_SPAN = 100
 
-  function isDisabledDay(date: dayjs.Dayjs): boolean {
-    if (minDay.value && date.isBefore(minDay.value, 'day')) return true
-    if (maxDay.value && date.isAfter(maxDay.value, 'day')) return true
-    return false
+function toDate(value: DatePickerValue | null | undefined): Date | null {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = dayjs(value)
+  return parsed.isValid() ? parsed.toDate() : null
+}
+
+export function useDatePicker(options: UseDatePickerOptions): UseDatePickerReturn {
+  const calendar = computed(() => createCalendar(options.locale()))
+  const selected = computed(() => toDate(options.model.value))
+
+  // Bounds are read on every change, not once at setup (EN-05).
+  const bounds = computed<CalendarBounds>(() => {
+    const min = toDate(options.min()) ?? undefined
+    const max = toDate(options.max()) ?? undefined
+    if (import.meta.dev && min && max && dayjs(min).isAfter(max, 'day')) {
+      console.warn('[m-date-picker] `min-date` is after `max-date`: no day can be chosen.')
+    }
+    return { min, max }
+  })
+
+  const startOfMonth = (date: Date) => dayjs(date).startOf('month').toDate()
+  const month = ref<Date>(startOfMonth(selected.value ?? new Date()))
+  const view = ref<DatePickerView>('calendar')
+  const today = ref<Date | null>(null)
+
+  onMounted(() => {
+    today.value = new Date()
+  })
+
+  watch(selected, (date) => {
+    if (date && !dayjs(date).isSame(month.value, 'month')) month.value = startOfMonth(date)
+  })
+
+  const years = computed(() => {
+    const anchor = dayjs().year()
+    const first = bounds.value.min ? dayjs(bounds.value.min).year() : anchor - YEAR_SPAN
+    const last = bounds.value.max ? dayjs(bounds.value.max).year() : anchor + YEAR_SPAN
+    return Array.from({ length: Math.max(0, last - first + 1) }, (_, index) => first + index)
+  })
+
+  const canGoPrev = computed(() => !bounds.value.min || dayjs(month.value).isAfter(bounds.value.min, 'month'))
+  const canGoNext = computed(() => !bounds.value.max || dayjs(month.value).isBefore(bounds.value.max, 'month'))
+
+  function prevMonth() {
+    if (canGoPrev.value) month.value = dayjs(month.value).subtract(1, 'month').toDate()
   }
 
-  // Label Computations
-  const selectedLabel = computed(() => {
-    if (!modelValue.value) return 'Select date'
-    return dayjs(modelValue.value).format('ddd, MMM D')
-  })
+  function nextMonth() {
+    if (canGoNext.value) month.value = dayjs(month.value).add(1, 'month').toDate()
+  }
 
-  const currentMonthYearLabel = computed(() => {
-    return displayDate.value.format('MMMM YYYY')
-  })
-
-  const weekdayLabels = computed(() => {
-    const weekdays = []
-    for (let i = 0; i < 7; i++) {
-      weekdays.push(dayjs().day(i).format('dd').charAt(0))
-    }
-    return weekdays
-  })
-
-  // Days calculations
-  const days = computed<DayCell[]>(() => {
-    const startOfMonth = displayDate.value.startOf('month')
-    const endOfMonth = displayDate.value.endOf('month')
-
-    const startOfWeek = startOfMonth.startOf('week')
-    const endOfWeek = endOfMonth.endOf('week')
-
-    const result: DayCell[] = []
-    let current = startOfWeek
-
-    while (current.isBefore(endOfWeek) || current.isSame(endOfWeek, 'day')) {
-      result.push({
-        key: current.format('YYYY-MM-DD'),
-        date: current,
-        label: current.date(),
-        inCurrentMonth: current.month() === displayDate.value.month(),
-        isToday: current.isSame(today, 'day'),
-        isSelected: modelValue.value ? current.isSame(dayjs(modelValue.value), 'day') : false,
-        isDisabled: isDisabledDay(current),
-        ariaLabel: current.format('MMMM D, YYYY'),
-      })
-      current = current.add(1, 'day')
-    }
-
-    return result
-  })
-
-  // Years generation. Clamped to the bounds' years when present; only years
-  // within [minYear, maxYear] are produced (out-of-range years are not
-  // rendered at all). Falls back to the ±100 window when a bound is absent.
-  const years = computed(() => {
-    const currentYear = today.year()
-    const start = minDay.value ? minDay.value.year() : currentYear - 100
-    const end = maxDay.value ? maxDay.value.year() : currentYear + 100
-    const result = []
-    for (let i = start; i <= end; i++) {
-      result.push(i)
-    }
-    return result
-  })
-
-  // Month-navigation edge detection: disable prev/next at the month containing
-  // the respective bound. Always allowed when unbounded.
-  const canGoPrev = computed(() => {
-    if (!minDay.value) return true
-    return displayDate.value.startOf('month').isAfter(minDay.value.startOf('month'))
-  })
-
-  const canGoNext = computed(() => {
-    if (!maxDay.value) return true
-    return displayDate.value.startOf('month').isBefore(maxDay.value.startOf('month'))
-  })
-
-  // Navigation and interactions
   function toggleView() {
     view.value = view.value === 'calendar' ? 'year' : 'calendar'
-    if (view.value === 'year') {
-      nextTick(() => {
-        const selectedYear = yearGrid.value?.querySelector('.ui-date-picker__year--selected')
-        selectedYear?.scrollIntoView({ block: 'center' })
-      })
-    }
   }
 
-  function goToPreviousMonth() {
-    if (!canGoPrev.value) return
-    displayDate.value = displayDate.value.subtract(1, 'month')
-  }
-
-  function goToNextMonth() {
-    if (!canGoNext.value) return
-    displayDate.value = displayDate.value.add(1, 'month')
-  }
-
-  function onSelect(date: dayjs.Dayjs) {
-    if (isDisabledDay(date)) return
-    modelValue.value = date.toDate()
-  }
-
-  function onSelectYear(year: number) {
-    displayDate.value = displayDate.value.year(year)
+  function selectYear(year: number) {
+    month.value = dayjs(month.value).year(year).toDate()
     view.value = 'calendar'
   }
 
-  watch(modelValue, (next) => {
-    if (next) {
-      displayDate.value = dayjs(next)
-    }
-  })
-
-  return {
-    view,
-    today,
-    displayDate,
-    yearGrid,
-    selectedLabel,
-    currentMonthYearLabel,
-    weekdayLabels,
-    days,
-    years,
-    canGoPrev,
-    canGoNext,
-    toggleView,
-    goToPreviousMonth,
-    goToNextMonth,
-    onSelect,
-    onSelectYear,
+  function select(date: Date) {
+    if (calendar.value.isOutside(date, bounds.value)) return
+    options.model.value = date
   }
+
+  return { calendar, selected, month, view, today, bounds, years, canGoPrev, canGoNext, prevMonth, nextMonth, toggleView, selectYear, select }
 }

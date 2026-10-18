@@ -18,14 +18,13 @@
       v-model:focused="focused"
       class="ui-dropdown__field"
       :model-value="control.displayTitle.value"
-      :populated="hasChips"
       :label="label"
       :placeholder="control.hasSelection.value ? undefined : placeholder"
       :helper-text="helperText"
       :error="isError"
       :error-message="displayError"
       :variant="variant"
-      :rounded="rounded"
+      :shape="fieldShape"
       :label-placement="labelPlacement"
       :density="density"
       :name="name ?? path"
@@ -139,6 +138,7 @@
           <MList
             v-bind="control.listboxAttrs.value"
             class="ui-dropdown__list"
+            :class="`ui-dropdown__list--${density}`"
             :density="density"
             :style="control.panelStyle.value"
           >
@@ -153,9 +153,13 @@
               :disabled="entry.disabled"
               :lines="1"
             >
-              <template #leading>
+              <!-- At the end, and only on the chosen row: the row text then
+                   starts where the value does in the field above it. -->
+              <template
+                v-if="entry.selected"
+                #trailing
+              >
                 <MIcon
-                  v-if="entry.selected"
                   :name="ICONS.check"
                   class="ui-dropdown__check"
                 />
@@ -208,6 +212,7 @@ import { useDropdownControl } from '#kit/composables/dropdown/useDropdownControl
 import { usePanelStatus } from '#kit/composables/dropdown/usePanelStatus'
 import type { DropdownContext, DropdownEntry, DropdownItemBase } from '#kit/composables/dropdown/types'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
 import { useField } from '#kit/composables/useField'
 import { ICONS } from '#kit/shared/constants/icons'
 import { MESSAGES } from '#kit/shared/constants/messages'
@@ -244,6 +249,7 @@ const control = useDropdownControl<TItem, TValue>({
   props,
   model,
   open,
+  pending: () => field.meta.pending,
   onSelect: entry => emit('select', entry.item),
   onRemove: entry => emit('remove', entry.item),
   onClear: () => emit('clear'),
@@ -252,6 +258,7 @@ const control = useDropdownControl<TItem, TValue>({
 })
 
 const hasChips = computed(() => props.multiple && control.selectedEntries.value.length > 0)
+const fieldShape = useFieldShape('m-dropdown', props)
 
 // The pointer also moves the virtual focus (hovering a row makes it active), so
 // the ring that marks keyboard focus is drawn only while the keyboard drives.
@@ -322,25 +329,12 @@ defineExpose({ open: control.openPanel, close: control.closePanel, clear: contro
     cursor: inherit;
   }
 
-  // `.ui-button` is repeated to outweigh the button's own two-class colour rule
-  // (`.ui-button.ui-button--text`) without depending on stylesheet order.
-  &__clear.ui-button.ui-button {
-    color: g($t, 'clear.color');
-
-    @include can-hover {
-      &:hover:not(.ui-button--disabled) {
-        color: g($t, 'clear.active-color');
-      }
-    }
-
-    &:focus-visible {
-      color: g($t, 'clear.active-color');
-    }
-  }
-
+  // The clear button and the arrow take their ink from the field's trailing
+  // zone, so they follow its roles — `on-surface-variant` at rest, `error` in
+  // an invalid field, `on-error-container` when that field is hovered, 38%
+  // when disabled — without a second copy of any of them.
   &__arrow {
     font-size: g($t, 'arrow.size');
-    color: g($t, 'arrow.color');
     transition: transform g($t, 'motion.duration') g($t, 'motion.easing');
   }
 

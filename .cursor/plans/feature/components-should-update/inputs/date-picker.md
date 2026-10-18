@@ -2,7 +2,7 @@
 
 <identity>M3: Date pickers — docked, modal, modal input; range (DateRangePicker) · Токены Compose: `DatePickerModalTokens.kt`, `DateInputModalTokens.kt`; поведение — `DatePicker.kt`, `DateRangePicker.kt`, `DateInput.kt`, `DateRangeInput.kt`, `DatePickerDialog.kt` · Код: `src/runtime/components/ui/date-picker/`, `src/runtime/components/ui/dialog/date/`, фрагменты `src/runtime/components/fragments/date-picker/{header-nav,day-grid,year-grid}/`, `src/runtime/composables/date/index.ts`, токены `src/runtime/assets/stylesheet/components/date-picker/` · Аудит: `data/date-picker.json`, `data/dialog.json` (части про date) · Тип: public (`MDatePicker`, `MDialogDate`), sub (фрагменты)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Шаги 1–3 не ломают API и могут идти сразу. Шаги 4–6 ждут ответов на вопросы 1–3 и 6. Range и docked закрыты вопросами 4–5.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–6 (документация — шаг 9, в docs). Одна карта токенов, `createCalendar` + `useDateGridControl` (APG grid), локаль через `Intl`, анатомия M3 (title, headline, переключатель режима, divider, `mode: picker | input`), `MDialogDate` на `MOverlay` + `MDatePicker` (≈150 строк). Range (шаг 7) и docked (шаг 8) не делаются по ответам на вопросы 5 и 4.</implementation-status>
 
 ## Вердикт
 
@@ -292,3 +292,10 @@
 3. Оставить глобальный dayjs и требовать от приложения выставить локаль. Цена: CT-13 остаётся, страница SSR зависит от процесса.
 
 Рекомендация: 1. Без новых зависимостей; `MNumberInput` уже держит проп `locale`.
+
+## Заметки реализации
+
+- Вопросы: 1 → 1 (встроенный без actions, клик коммитит; `#actions` для своих кнопок); 2 → 1 (дни соседних месяцев не рисуются); 3 → 2 (плоская карточка large без тени); 4 → 2 (без `MDateField`, запись в decisions.md); 5 → 3 (range не делается, запись в decisions.md, обещание снять в docs); 6 → 1 (`Intl` + арифметика dayjs).
+- Из предложений UX: терпимый разбор ввода частично (любой разделитель, год из двух цифр); кнопка «Сегодня» и причина недоступности дня не делались.
+- Ломающее: футер и события `cancel`/`confirm` у `MDatePicker` сняты; `headline` → `label` (алиас на релиз); классы `__headline-label`, `__year-grid`, `--placeholder` убраны; `_docked`, `_modal-picker`, `_modal-input` удалены. `MDialogDate`: пропы `label`, `inputTitle`, `initialMode`, `minDate`, `maxDate`, `locale`, `cancelLabel`, `confirmLabel`, `v-model:mode`; Escape и скрим эмитят `cancel`, OK не закрывает при отказанном вводе (`validate()`).
+- Узкий контейнер: ячейки сжимаются (`minmax(0, 48)`), круг дня — `min(40, 100%)`.

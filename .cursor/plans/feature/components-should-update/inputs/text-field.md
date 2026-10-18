@@ -2,7 +2,7 @@
 
 <identity>M3: Text fields (filled, outlined) · Токены Compose: `FilledTextFieldTokens.kt`, `OutlinedTextFieldTokens.kt`; поведение и раскладка — `TextField.kt`, `OutlinedTextField.kt`, `TextFieldDefaults.kt` (`TextFieldLabelPosition`), `internal/TextFieldImpl.kt`, `SecureTextField.kt` · Код: `src/runtime/components/ui/text-field/` (+ `composables/text-field/useTextField.ts`, токены `assets/stylesheet/components/text-field/_index.scss`) · Аудит: `data/text-field.json` · Тип: public; база композитов (`dropdown`, `autocomplete`, `file-input`, `color-input`, `fragments/color-picker/Edit.vue`, `fragments/form-renderer/field`)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент прошёл QA фазы D (фокус, ошибка, a11y, RTL, autofill, forced colors). План доводит токены до M3 и снимает расхождения внутри семейства полей. Ломающих шагов без решения владельца нет.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–7, 9–12. Лейбл всегда поднят статично, высота filled 56 (LY-02), inset внутри коробки на всех формах, строка поддержки 16, prefix/suffix, `useTextFieldControl`, `rounded` → `shape` с алиасом на релиз, dev-предупреждение на `type="number"`. Шаг 8 (счётчик) и reveal не делаются по ответам на вопросы 4 и 6. 4% disabled-контейнера filled — системный ключ `disabled-container-subtle` по решению владельца (ST-05).</implementation-status>
 
 ## Вердикт
 
@@ -302,3 +302,9 @@ textarea — body-medium; в форме из двух полей лейблы р
    Цена: два слова для одной оси.
 
 Рекомендация: 1, вместе с миграцией `size` → `density` из `decisions.md`, одним мажором.
+
+## Заметки реализации
+
+- Вопросы: 1 → 1 (лейбл не движется, float всегда поднят); 2 → 2 (dev-warn на `type="number"`, путь — `MNumberInput`); 3 → 1 (`top` = `body-medium`); 4 → 2 (счётчика нет, запись в decisions.md предложена); 5 → 1 (пропы `prefix`/`suffix`); 6 → 2 (reveal нет, CT-13); 7 → 1 (`shape` + алиас `rounded`).
+- Ломающее: `rounded` → `shape` (`none | extra-small | medium | large | full`, алиас на релиз с предупреждением), `populated` снят (предупреждение), классы `--<rounded>` → `--shape-<shape>`, `--populated` убран.
+- `useFieldShape` лежит в `components/ui/text-field/`, а не в `composables/` — чтобы не попасть в авто-импорт приложения.

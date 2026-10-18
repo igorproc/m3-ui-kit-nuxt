@@ -1,0 +1,146 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NUMBER INPUT · LABEL PLACEMENT AND OUTLINE
+// ==========================================
+// Included inside `.ui-number-input`. Mechanics shared with `<MTextField>`:
+// base is `top`, overlay placements are positions held from the first frame —
+// the label never moves (color-and-state.md, «Лейблы не двигаются») — and
+// `inset` stays inside the box on every shape.
+
+@mixin label($t) {
+  &__label {
+    overflow-wrap: anywhere;
+    color: g($t, 'label.color');
+    transition: color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include typescale(g($t, 'typography.label.top'));
+  }
+
+  &__required {
+    color: g($t, 'label.required.color');
+  }
+
+  &--label-float,
+  &--label-inset {
+    .ui-number-input__label {
+      position: absolute;
+      top: var(--ui-number-input-label-top);
+      inset-inline-start: var(--ui-number-input-inset);
+      z-index: 1;
+      max-width: g($t, 'label.max-width');
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: var(--ui-number-input-label-raised-inside);
+
+      // Scale around the vertical centre, so shrinking never shifts the
+      // label's centre and the raise stays pure `height / 2` math.
+      transform-origin: left center;
+
+      @include typescale(g($t, 'typography.label.overlay'));
+
+      &:dir(rtl) {
+        transform-origin: right center;
+      }
+    }
+  }
+
+  // A leading split zone would sit under an overlaid label; start it past the
+  // zone. In flow the label is above the box, so nothing overlaps.
+  &--split {
+    --ui-number-input-label-notch-shift: #{g($t, 'label.split.notch.shift')};
+
+    // The shift is a physical translate, so it runs the other way in RTL.
+    &:dir(rtl) {
+      --ui-number-input-label-notch-shift: calc(#{g($t, 'label.split.notch.shift')} * -1);
+    }
+  }
+
+  &--label-float.ui-number-input--split,
+  &--label-inset.ui-number-input--split {
+    .ui-number-input__label {
+      inset-inline-start: g($t, 'label.split.left');
+      max-width: g($t, 'label.split.max-width');
+    }
+  }
+
+  &--label-hidden .ui-number-input__label {
+    @include sr-only;
+  }
+
+  // `float` on outlined lands on the top border, in the gap the legend opens.
+  &--label-float.ui-number-input--outlined {
+    .ui-number-input__label {
+      transform: translateX(var(--ui-number-input-label-notch-shift, 0)) var(--ui-number-input-label-raised-notch);
+    }
+
+    .ui-number-input__notch {
+      max-width: 100%;
+    }
+  }
+
+  // The value gives a label sitting inside the box room above it, and the
+  // zones ride down with it so they line up with the digits. A label on the
+  // notch takes no room; scrub has no overlaid label at all — its handle is
+  // the label, on the value's own line.
+  &--label-float.ui-number-input--filled:not(.ui-number-input--scrub),
+  &--label-inset:not(.ui-number-input--scrub) {
+    .ui-number-input__input {
+      padding-top: var(--ui-number-input-input-padding-top);
+      padding-bottom: var(--ui-number-input-input-padding-bottom);
+    }
+
+    .ui-number-input__stepper {
+      margin-top: var(--ui-number-input-zone-offset);
+    }
+
+    .ui-number-input__stacked {
+      margin-top: var(--ui-number-input-stacked-offset);
+    }
+  }
+
+  // ── outline · rendered by the outlined shape only ──
+  // A `<fieldset>` over the control's frame, so the browser cuts the notch: the
+  // hidden `<legend>` holds the label text at the raised size, and the border
+  // breaks exactly where it sits. No patch is painted behind the label, and
+  // the gap is correct in the server-rendered HTML — nothing is measured. Its
+  // colour is the control's own border colour, so every state writes one
+  // property for both shapes.
+  &__outline {
+    position: absolute;
+    inset: 0;
+    min-width: 0;
+    padding-block: 0;
+    padding-inline: g($t, 'outlined.outline.padding.start') 0;
+    margin: 0;
+    border-width: g($t, 'container.border.width');
+    border-style: solid;
+    border-color: inherit;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color g($t, 'state.duration') g($t, 'state.easing');
+  }
+
+  // As tall as the border it sits on, so the fieldset never shifts its top edge
+  // to centre a taller legend. Its width is the only thing that matters.
+  &__notch {
+    display: block;
+    width: auto;
+    max-width: g($t, 'outlined.notch.collapsed');
+    height: g($t, 'container.border.width');
+    padding: 0;
+    overflow: hidden;
+    visibility: hidden;
+    white-space: nowrap;
+
+    @include typescale(g($t, 'typography.label.overlay'));
+  }
+
+  &__notch-text {
+    display: inline-block;
+    padding-inline: g($t, 'outlined.notch.padding.inline');
+    font-size: g($t, 'outlined.notch.font-size');
+  }
+}

@@ -10,6 +10,9 @@ import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { mDropdownProps } from '#kit/components/ui/dropdown/props'
 import type { MDropdownProps } from '#kit/components/ui/dropdown/props'
 import type { DropdownItemBase } from '#kit/composables/dropdown/types'
+import type { AutocompleteOpenOnFocus } from '#kit/composables/autocomplete/useAutocomplete'
+
+export type { AutocompleteOpenOnFocus }
 
 /** `false` turns filtering off entirely (remote / pre-filtered lists). */
 export type AutocompleteFilter<TItem> = false | ((item: TItem, query: string, title: string) => boolean)
@@ -43,8 +46,12 @@ export const mAutocompleteProps = {
   hideSelected: { type: Boolean, default: false },
   /** Put the virtual focus on the first row as soon as the rows change. */
   autoSelectFirst: { type: Boolean, default: false },
-  /** Open the panel when the field takes focus. */
-  openOnFocus: { type: Boolean, default: true },
+  /**
+   * Open the panel when the field takes focus. `'pointer'` opens it for a
+   * press on the field only, so Tab through a form does not unfold every list
+   * on the way (WAI-ARIA APG); `true` opens it for any focus, `false` never.
+   */
+  openOnFocus: { type: [Boolean, String] as PropType<AutocompleteOpenOnFocus>, default: 'pointer' },
 }
 
 export type MAutocompleteRuntimeProps = ExtractPublicPropTypes<typeof mAutocompleteProps>
@@ -58,5 +65,5 @@ export interface MAutocompleteProps<TItem extends DropdownItemBase, TValue = TIt
   minSearchLength?: number
   hideSelected?: boolean
   autoSelectFirst?: boolean
-  openOnFocus?: boolean
+  openOnFocus?: AutocompleteOpenOnFocus
 }

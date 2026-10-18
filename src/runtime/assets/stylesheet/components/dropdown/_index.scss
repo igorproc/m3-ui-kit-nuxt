@@ -11,44 +11,62 @@
 // panel's box, the keyboard-active highlight and the empty/loading row.
 
 // Spacing reads the 4-unit scale through `spacing()`. Off the scale and kept
-// literal: `panel.max-height` (a cap, not a step) and `arrow.size` (an icon
-// size from the 24dp icon grid, not a gap).
+// literal: `arrow.size` (an icon size from the 24dp icon grid, not a gap) and
+// the visible row counts below.
 $item-content-color: map.get(item.$tokens, label, text, color);
 $item-selected-content-color: map.get(item.$tokens, label, text, selected, color);
+$item-hover-opacity: state-opacity(hover);
 $item-focus-opacity: map.get(item.$tokens, state, focus);
 $item-selected-color: map.get(item.$tokens, container, selected, color);
+$panel-padding-block: spacing(8);
+
+// The panel stops halfway through a row, so a long list visibly continues on
+// systems whose scrollbar only appears on scroll (CT-11). The cap stays near
+// 320 at every density; a row is as tall as the field that opens it.
+@function panel-cap($density, $rows) {
+  $row: map.get(item.$tokens, density, $density, height, one);
+
+  @return $rows * $row + 2 * $panel-padding-block;
+}
+
 $tokens: (
+  // The arrow takes its colour from the field's trailing zone, which carries
+  // the roles (rest, error, error + hover, disabled).
   arrow: (
     size: 24rem,
-    color: map.get($theme-color-link, on-surface-variant),
   ),
   panel: (
     // A hundred options must not run off the screen. Overridable per instance
     // through `maxHeight`, which arrives as a custom property.
-    max-height: 320rem,
-    padding-block: spacing(8),
+    max-height: (
+      compact: panel-cap(compact, 6.5),
+      default: panel-cap(default, 5.5),
+      comfortable: panel-cap(comfortable, 4.5),
+    ),
+    padding-block: $panel-padding-block,
     // The list scrolls inside the menu surface and has to keep its thumb clear
     // of that surface's corners.
     scrollbar-inset: map.get(menu.$tokens, surface, border, radius),
   ),
-  // The row under the virtual focus. Same layer the list item paints for its
-  // own `:focus-visible` — its content colour at focus opacity — so a selected
-  // row keeps its container under it.
+  // The row under the virtual focus — the list item's own layer, its content
+  // colour over whatever container it has, so a selected row keeps its
+  // container under it. The pointer draws hover (8%), the keyboard draws focus
+  // (10%) plus the focus ring.
   option: (
-    active: (
+    hover: (
+      bg: color-mix(in srgb, #{$item-content-color} $item-hover-opacity, transparent),
+      selected-bg: color-mix(in srgb, #{$item-selected-content-color} $item-hover-opacity, #{$item-selected-color}),
+    ),
+    keyboard: (
       bg: color-mix(in srgb, #{$item-content-color} $item-focus-opacity, transparent),
       selected-bg: color-mix(in srgb, #{$item-selected-content-color} $item-focus-opacity, #{$item-selected-color}),
     ),
   ),
-  // The clear control is an affordance at rest, not the thing being acted on:
-  // `primary` is reserved for activity, so it only arrives with hover/focus.
-  clear: (
-    color: map.get($theme-color-link, on-surface-variant),
-    active-color: map.get($theme-color-link, on-surface),
-  ),
   state: (
     padding: spacing(24),
     color: map.get($theme-color-link, on-surface-variant),
+    // The supporting text of a row, not a value: a step below the rows.
+    typography: 'body-medium',
   ),
   motion: (
     duration: var(--sys-motion-duration-short-3),

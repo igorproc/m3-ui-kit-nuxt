@@ -1,76 +1,104 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+// ==========================================
+// COLOR PICKER TOKENS
+// ==========================================
 // Zero-runtime tokens for the MColorPicker family (root + private leaves). The
-// chosen color itself is only ever an inline CSS value/gradient, never a token.
+// chosen color itself is only ever an inline CSS value or gradient, never a
+// token.
+
+$on-surface: map.get($theme-color-link, on-surface);
 $tokens: (
   root: (
     width: 280rem,
-    gap: 16rem,
-    padding: 16rem,
-    radius: var(--sys-shape-corner-large),
-    surface: map.get($theme-color-link, 'surface-container-high'),
-    color: map.get($theme-color-link, 'on-surface'),
+    gap: spacing(16),
+    padding: spacing(16),
+    radius: map.get($theme-shape-link, large),
+    surface: map.get($theme-color-link, surface-container-high),
+    color: $on-surface,
     elevation: elevation(1),
   ),
+  // The 2-D field's ends are the math of HSV — pure white to the left, pure
+  // black at the bottom — not theme colours.
   canvas: (
     height: 160rem,
-    radius: var(--sys-shape-corner-medium),
+    radius: map.get($theme-shape-link, medium),
     saturation-color: white,
     value-color: black,
     thumb: (
-      size: 14rem,
-      border: map.get($theme-color-link, 'surface'),
+      size: 16rem,
+      shape: map.get($theme-shape-link, full),
+      border: map.get($theme-color-link, surface),
       border-width: 2rem,
-      shadow: 0 0 0 1rem color-mix(in srgb, #{map.get($theme-color-link, 'shadow')} 30%, transparent),
+      shadow: elevation(1),
     ),
   ),
+  // The band is 16, the target 40 (WCAG 2.5.8 with the kit's 40 targets): the
+  // input's padding above and below is pointer area with no paint. The radius
+  // is given per axis so the painted band, clipped to the content box, keeps
+  // round ends: inline half the band, block half the band plus the padding.
   slider: (
-    height: 14rem,
-    radius: var(--sys-shape-corner-full),
-    gap: 12rem,
+    target: spacing(40),
+    inset: calc((#{spacing(40)} - #{spacing(16)}) / 2),
+    radius: (
+      inline: calc(#{spacing(16)} / 2),
+      block: calc(#{spacing(16)} / 2 + (#{spacing(40)} - #{spacing(16)}) / 2),
+    ),
+    gap: 0,
     thumb: (
-      size: 16rem,
-      border: map.get($theme-color-link, 'surface'),
+      size: spacing(20),
+      shape: map.get($theme-shape-link, full),
+      border: map.get($theme-color-link, surface),
       border-width: 2rem,
-      shadow: 0 0 0 1rem color-mix(in srgb, #{map.get($theme-color-link, 'shadow')} 30%, transparent),
+      shadow: elevation(1),
     ),
   ),
   preview: (
-    gap: 12rem,
-    size: 40rem,
-    radius: var(--sys-shape-corner-medium),
-    outline: map.get($theme-color-link, 'outline-variant'),
+    gap: spacing(12),
+    size: spacing(40),
+    radius: map.get($theme-shape-link, medium),
+    // The kit's hairline: a light colour on a light surface needs an edge.
+    outline: map.get($theme-color-link, outline-variant),
     outline-width: 1rem,
-    value: (color: map.get($theme-color-link, 'on-surface-variant'), type: 'body-small'),
+    value: (color: map.get($theme-color-link, on-surface-variant), type: 'body-small'),
   ),
   edit: (
-    gap: 8rem,
-    inputs-gap: 12rem,
-    channel: (
-      min: (
-        width: 56rem,
-      ),
-    ),
+    gap: spacing(8),
+    inputs-gap: spacing(12),
+    channel: (min: (width: 56rem)),
   ),
   swatches: (
-    gap: 8rem,
-    size: 24rem,
-    radius: var(--sys-shape-corner-small),
-    outline: map.get($theme-color-link, 'outline-variant'),
+    gap: spacing(8),
+    size: spacing(32),
+    radius: map.get($theme-shape-link, small),
+    outline: map.get($theme-color-link, outline-variant),
     outline-width: 1rem,
-    selected: map.get($theme-color-link, 'primary'),
-    selected-width: 2rem,
+    // The chosen swatch: a check and a ring in the content ink, never colour
+    // alone.
+    selected: (
+      ring: $on-surface,
+      width: 2rem,
+      check: (
+        size: 20rem,
+        on-dark: map.get($theme-color-link, surface),
+        on-light: $on-surface,
+      ),
+    ),
+    // A small lift under the pointer, only where motion is welcome.
     hover-scale: 1.1,
-    disabled-opacity: 50%,
-    motion-duration: var(--sys-motion-duration-short-2),
-    motion-easing: var(--sys-motion-easing-standard),
+    motion: (
+      duration: var(--sys-motion-duration-short-2),
+      easing: var(--sys-motion-easing-standard),
+    ),
   ),
-  disabled: (opacity: 60%),
+  // Colour surfaces (the field, the sliders, the swatches) cannot take a
+  // disabled colour of their own, so they recede by the content opacity.
+  disabled: (opacity: state-opacity(disabled-content)),
   // Checkerboard for alpha/transparency, expressed via two gradients.
   checker: (
-    a: map.get($theme-color-link, 'surface-container-highest'),
-    b: map.get($theme-color-link, 'surface-container-low'),
-    size: 8rem,
+    a: map.get($theme-color-link, surface-container-highest),
+    b: map.get($theme-color-link, surface-container-low),
+    size: spacing(8),
   ),
 );

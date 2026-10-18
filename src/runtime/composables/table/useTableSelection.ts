@@ -2,106 +2,84 @@
  * @module useTableSelection
  *
  * @remarks
- * Routes `<MTable>` row selection through a `createGroup` registry instance keyed
- * by `row.id` (replacing the old `JSON.stringify` equality). Keeps the public
- * `v-model:selected-rows` contract: an external array of full row objects syncs
- * two-way with the registry. A ticket is registered per data row; the set is
- * re-synced whenever `data` changes.
+ * Row selection of `<MTable>`, driven by the model (`v-model:selected-rows`),
+ * the way the dropdown family keeps its value: the table renders one page of
+ * rows, but the selection is the app's set of records and outlives the page.
  *
- * The returned helpers (`isSelected`, `toggleRow`, `isAllSelected`, `toggleAll`)
- * derive from the group so the view stays thin.
+ * - A selected row that is not on the current page stays selected; only the
+ *   rows on the page are rendered and can be toggled.
+ * - Select-all acts on the current page: it adds the page's unselected rows or,
+ *   when the whole page is selected, takes the page's rows out. Rows of other
+ *   pages are never touched by it.
+ * - The table never drops a row from the selection by itself — not when the
+ *   page changes and not when the row disappears from the data (it cannot tell
+ *   a row on another page from a deleted one). Pruning deleted records is the
+ *   app's job.
+ *
+ * Without a bound `v-model` the selection is kept locally, so a table that only
+ * listens to `update:selectedRows` still shows what was ticked.
  */
-import { computed, toValue, watch } from 'vue'
-import type { MaybeRefOrGetter } from 'vue'
-import { createGroup } from '#kit/composables/registry/createGroup'
+import { computed, shallowRef, toValue, watch } from 'vue'
+import type { ComputedRef, MaybeRefOrGetter } from 'vue'
 import type { TableData } from '#kit/components/ui/table/types'
 
 export interface UseTableSelectionOptions<T extends TableData> {
-  /** Source rows; tickets are kept in sync with this list. */
+  /** Rows of the current page. */
   data: MaybeRefOrGetter<T[]>
-  /** External selection (the `selectedRows` prop / v-model). */
+  /** External selection (the `selectedRows` prop / v-model), across pages. */
   selectedRows: MaybeRefOrGetter<T[]>
   /** Emit the next `update:selectedRows` payload. */
   onChange: (rows: T[]) => void
 }
 
-export function useTableSelection<T extends TableData>(options: UseTableSelectionOptions<T>) {
-  const group = createGroup<{ value: T['id'] }>()
+export interface UseTableSelectionReturn<T extends TableData> {
+  isSelected: (row: T) => boolean
+  toggleRow: (row: T) => void
+  /** Every row of the current page is selected (and the page has rows). */
+  isAllSelected: ComputedRef<boolean>
+  /** Some rows of the current page are selected, not all. */
+  isMixed: ComputedRef<boolean>
+  /** Selects the page's remaining rows, or clears the page when all are selected. */
+  toggleAll: () => void
+}
 
-  // Keep one ticket per data row, keyed by `row.id`. Re-sync on data changes.
-  watch(
-    () => toValue(options.data),
-    (rows) => {
-      const nextIds = new Set(rows.map(row => row.id))
+export function useTableSelection<T extends TableData>(options: UseTableSelectionOptions<T>): UseTableSelectionReturn<T> {
+  const selection = shallowRef<T[]>(toValue(options.selectedRows))
 
-      for (const ticket of [...group.values()]) {
-        if (!nextIds.has(ticket.value as T['id'])) group.unregister(ticket.id)
-      }
-
-      const knownIds = new Set(group.values().map(ticket => ticket.value as T['id']))
-
-      for (const row of rows) {
-        if (!knownIds.has(row.id)) group.register({ value: row.id })
-      }
-    },
-    { immediate: true, deep: true },
-  )
-
-  // External `selectedRows` -> registry.
-  watch(
-    [() => toValue(options.selectedRows), () => group.size],
-    () => {
-      group.apply(toValue(options.selectedRows).map(row => row.id))
-    },
-    { immediate: true, deep: true },
-  )
-
-  const rowById = computed(() => {
-    const map = new Map<T['id'], T>()
-    for (const row of toValue(options.data)) map.set(row.id, row)
-    return map
+  watch(() => toValue(options.selectedRows), (rows) => {
+    selection.value = rows
   })
 
-  // Registry -> external `selectedRows`.
-  watch(group.selectedValues, (ids) => {
-    const next: T[] = []
-    for (const id of ids) {
-      const row = rowById.value.get(id as T['id'])
-      if (row) next.push(row)
-    }
-
-    const current = toValue(options.selectedRows)
-    const sameLength = current.length === next.length
-    const unchanged = sameLength && next.every(row => current.some(r => r.id === row.id))
-
-    if (!unchanged) options.onChange(next)
-  })
-
-  const selectedIds = computed(() => group.selectedValues.value as Set<T['id']>)
+  const selectedIds = computed(() => new Set(selection.value.map(row => row.id)))
+  const pageRows = computed(() => toValue(options.data))
 
   function isSelected(row: T): boolean {
     return selectedIds.value.has(row.id)
   }
 
-  function toggleRow(row: T): void {
-    const ids = group.values()
-      .filter(ticket => ticket.value === row.id)
-      .map(ticket => ticket.id)
-
-    group.toggle(ids)
+  function commit(rows: T[]) {
+    selection.value = rows
+    options.onChange(rows)
   }
 
-  const isAllSelected = computed(() => group.isAllSelected.value)
+  function toggleRow(row: T): void {
+    commit(isSelected(row)
+      ? selection.value.filter(selected => selected.id !== row.id)
+      : [...selection.value, row])
+  }
+
+  const isAllSelected = computed(() => pageRows.value.length > 0 && pageRows.value.every(isSelected))
+  const isMixed = computed(() => !isAllSelected.value && pageRows.value.some(isSelected))
 
   function toggleAll(): void {
-    group.toggleAll()
+    if (isAllSelected.value) {
+      const pageIds = new Set(pageRows.value.map(row => row.id))
+      commit(selection.value.filter(row => !pageIds.has(row.id)))
+      return
+    }
+
+    commit([...selection.value, ...pageRows.value.filter(row => !isSelected(row))])
   }
 
-  return {
-    group,
-    isSelected,
-    toggleRow,
-    isAllSelected,
-    toggleAll,
-  }
+  return { isSelected, toggleRow, isAllSelected, isMixed, toggleAll }
 }

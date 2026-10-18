@@ -1,9 +1,7 @@
 <template>
   <ol
     class="ui-timeline"
-    :class="`ui-timeline--density-${density}`"
-    :data-side="side"
-    :data-line="line"
+    :class="[`ui-timeline--side-${side}`, `ui-timeline--line-${line}`, `ui-timeline--density-${density}`]"
   >
     <slot />
   </ol>
@@ -28,14 +26,21 @@ provideTimelineContext(createTimelineContext({
 .ui-timeline {
   $t: material-map(t.$tokens, 'md-timeline');
 
+  // Items collapse `alternate` against the timeline's own width, not the
+  // window's (`item/index.vue`).
+  container: ui-timeline / inline-size;
   display: flex;
   flex-direction: column;
   margin: 0;
   padding: 0;
   list-style: none;
 
-  @each $name in ('compact', 'default', 'comfortable') {
-    &--density-#{$name} { gap: g($t, 'density-#{$name}-gap'); }
+  // The space after an item is the item's own padding, so the rail runs
+  // through it; the last item has nothing to connect to.
+  @each $step in ('compact', 'default', 'comfortable') {
+    &--density-#{$step} > .ui-timeline-item:not(:last-child) {
+      padding-block-end: g($t, 'density.#{$step}.gap');
+    }
   }
 }
 </style>

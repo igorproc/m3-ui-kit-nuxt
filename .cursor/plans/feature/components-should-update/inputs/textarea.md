@@ -2,7 +2,7 @@
 
 <identity>M3: Text fields, многострочный режим (Compose `TextField` с `lineLimits = MultiLine`, material-web `type="textarea"`) · Токены Compose: `FilledTextFieldTokens.kt`, `OutlinedTextFieldTokens.kt` (те же, что у text-field) · Код: `src/runtime/components/ui/textarea/` (`index.vue`, `footer.vue` = `MTextareaFooter`, `props.ts`) + `composables/textarea/{useTextareaControl,useTextareaResize}.ts`, токены `assets/stylesheet/components/textarea/_index.scss` · Аудит: `data/textarea.json` · Тип: public (+ sub `MTextareaFooter`)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент собран по спеке полей (2026-09-03) и прошёл QA фазы D. План выравнивает роли состояний с text-field и M3 и чинит границы роста; авторские решения не трогает.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–5, 7. Счётчик в строке поддержки с состоянием `over`, рост без поправки на паддинг, outlined disabled без заливки, hover outlined только кромкой. Шаг 6 по решению владельца: футер в disabled гаснет ролями (контент 38%, без своей поверхности) и inert, слоты футера получают `{ disabled, readonly }`; read-only не гаснет.</implementation-status>
 
 ## Вердикт
 
@@ -223,3 +223,8 @@ outlined меняет только рамку, M3 — тоже.
    расходится с M3, outlined получает фон, которого у него нет в покое.
 
 Рекомендация: 1.
+
+## Заметки реализации
+
+- Вопросы: 1 → 1 (счётчик в строке поддержки, запись в decisions.md предложена); 2 → 1 (hover outlined — только кромка).
+- Новый класс `ui-textarea__counter--over`, у `useTextareaControl` счётчик отдаёт `over`.

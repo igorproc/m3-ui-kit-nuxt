@@ -24,24 +24,36 @@
  */
 import { computed, onScopeDispose, shallowRef, useId } from 'vue'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
+import { useField } from '#kit/composables/useField'
 import { useGlobalListener } from '#kit/composables/useGlobalListener'
+import { useTimer } from '#kit/composables/useTimer'
 import { useOtpValue } from '#kit/composables/otp-input/useOtpValue'
 import type { OtpValueHooks, OtpValueProps, UseOtpValueReturn } from '#kit/composables/otp-input/useOtpValue'
-import { OTP_AUTOCOMPLETE, OTP_INPUT_MODE, OTP_MASK_CHARACTER } from '#kit/shared/constants/otp'
+import { OTP_AUTOCOMPLETE, OTP_INPUT_MODE, OTP_MASK_CHARACTER, OTP_MASK_REVEAL } from '#kit/shared/constants/otp'
+
+/** When typed characters are hidden; see `MOtpInputMask`. */
+export type OtpMaskMode = false | 'last' | 'always'
 
 export interface OtpControlProps extends OtpValueProps {
   label?: string
   name?: string
+  /** Validation-adapter path. Evaluated once at setup; absent means inert. */
   path?: string
   error?: boolean
   errorMessage?: string
   disabled?: boolean
   readonly?: boolean
+  required?: boolean
   /** A check is running (typically after `complete`): the code is held still. */
   loading?: boolean
   autofocus?: boolean
-  /** `true` masks with the default bullet; a string masks with that character. */
-  mask?: boolean | string
+  /**
+   * When characters are hidden. A retired `true` reads as `'always'`, and a
+   * retired glyph string as `'always'` drawn with that glyph.
+   */
+  mask?: OtpMaskMode | boolean | string
+  /** Per-cell pattern for empty cells; see {@link OtpCell.hint}. */
+  placeholder?: string
 }
 
 /** One drawn position. Purely descriptive — the real value is in the input. */
@@ -58,6 +70,8 @@ export interface OtpCell {
   /** `true` when this cell should render `maskCharacter` instead of its value. */
   masked: boolean
   maskCharacter: string
+  /** The placeholder pattern's character for this cell; drawn only while it is empty. */
+  hint: string
 }
 
 export interface OtpInputAttrs {
@@ -69,12 +83,14 @@ export interface OtpInputAttrs {
   'maxlength': number
   'disabled': boolean
   'readonly': boolean
+  'required': boolean
   'autofocus': boolean
   'aria-busy': 'true' | undefined
+  'aria-required': 'true' | undefined
   'aria-labelledby': string
   'aria-invalid': 'true' | undefined
   'aria-describedby': string | undefined
-  'onFocus': () => void
+  'onFocus': (event: FocusEvent) => void
   'onBlur': () => void
   'onClick': (event: MouseEvent) => void
   'onInput': (event: Event) => void
@@ -114,6 +130,8 @@ export interface UseOtpControlReturn {
   message: ComputedRef<string | undefined>
   /** Put the caret on a position and focus the field. */
   focusAt: (index: number) => void
+  /** Focus the field and select the whole code, so the next keystroke starts a new one. */
+  selectAll: () => void
   inputAttrs: ComputedRef<OtpInputAttrs>
   labelAttrs: ComputedRef<OtpLabelAttrs>
   supportAttrs: ComputedRef<OtpSupportAttrs>
@@ -147,10 +165,40 @@ export function useOtpControl(
   const cells = new Map<number, Element>()
 
   const value = useOtpValue(model, props, hooks)
+  const field = useField({ path: props.path, model })
 
-  const isError = computed(() => Boolean(props.error) || Boolean(props.errorMessage))
-  const message = computed(() => props.errorMessage)
-  const maskCharacter = computed(() => (typeof props.mask === 'string' ? props.mask : OTP_MASK_CHARACTER))
+  const isError = computed(() => Boolean(props.error) || Boolean(props.errorMessage) || field.hasError.value)
+  const message = computed(() => field.errorMessage.value || props.errorMessage)
+
+  const maskMode = computed<OtpMaskMode>(() => {
+    if (props.mask === 'last' || props.mask === 'always' || props.mask === false) return props.mask
+    return props.mask ? 'always' : false
+  })
+  // A retired glyph string keeps drawing with that glyph for its grace release.
+  const maskCharacter = computed(() => (typeof props.mask === 'string' && props.mask !== 'last' && props.mask !== 'always'
+    ? props.mask
+    : OTP_MASK_CHARACTER))
+
+  // `last` leaves the newest character readable for a moment, so a mistyped
+  // digit can be caught before it disappears behind the mask.
+  const revealIndex = shallowRef<number | null>(null)
+  const revealTimer = useTimer(() => {
+    revealIndex.value = null
+  }, { duration: OTP_MASK_REVEAL })
+
+  function revealNewest(previous: string, next: string, caret: number | null) {
+    if (maskMode.value !== 'last') return
+
+    revealIndex.value = next.length === previous.length + 1 && caret ? caret - 1 : null
+    if (revealIndex.value === null) revealTimer.stop()
+    else revealTimer.start()
+  }
+
+  const hintFor = (index: number) => props.placeholder?.[index] ?? props.placeholder?.[0] ?? ''
+
+  const isMasked = (index: number, character: string) => character !== ''
+    && maskMode.value !== false
+    && !(maskMode.value === 'last' && revealIndex.value === index)
 
   const groups = computed(() => value.ranges.value.map(range => Array.from(
     { length: range.end - range.start },
@@ -169,8 +217,9 @@ export function useOtpControl(
         error: isError.value,
         disabled: Boolean(props.disabled),
         readonly: Boolean(props.readonly),
-        masked: character !== '' && Boolean(props.mask),
+        masked: isMasked(index, character),
         maskCharacter: maskCharacter.value,
+        hint: character === '' ? hintFor(index) : '',
       }
     },
   )))
@@ -207,12 +256,14 @@ export function useOtpControl(
   onScopeDispose(stopWatchingCaret, true)
 
   function applyInput(target: HTMLInputElement) {
+    const previous = model.value
     const committed = value.commit(target.value)
 
     // The DOM value is rewritten to the sanitized one, which also collapses the
     // selection to the end — so the caret is read back after, not before.
     target.value = committed
     syncCaret(target.selectionStart)
+    revealNewest(previous, committed, target.selectionStart)
   }
 
   // `maxlength` cuts a paste down to the length *before* it is sanitised, so a
@@ -246,6 +297,14 @@ export function useOtpControl(
     activeIndex.value = caret
   }
 
+  function selectAll() {
+    if (props.disabled) return
+
+    element.value?.focus()
+    element.value?.select()
+    activeIndex.value = 0
+  }
+
   /** The drawn cell under a horizontal pointer position: the one containing it, else the nearest. */
   function cellAt(x: number) {
     let nearest: { index: number, distance: number } | undefined
@@ -270,14 +329,25 @@ export function useOtpControl(
     'maxlength': value.length.value,
     'disabled': Boolean(props.disabled),
     'readonly': Boolean(props.readonly) || Boolean(props.loading),
+    'required': Boolean(props.required),
     'autofocus': Boolean(props.autofocus),
-    'aria-busy': props.loading ? 'true' : undefined,
+    'aria-busy': props.loading || field.meta.pending ? 'true' : undefined,
+    'aria-required': props.required ? 'true' : undefined,
     'aria-labelledby': labelId,
     'aria-invalid': isError.value ? 'true' : undefined,
     'aria-describedby': message.value ? messageId : undefined,
-    'onFocus': () => {
+    'onFocus': (event: FocusEvent) => {
       focused.value = true
       watchCaret()
+
+      // A code that came back wrong is retyped, not edited: with all of it
+      // selected the first keystroke starts the new code, and `maxlength` no
+      // longer blocks typing into a full field. A click that follows still
+      // puts the caret on the cell under the pointer.
+      if (value.isComplete.value && isError.value) {
+        (event.target as HTMLInputElement).select()
+        activeIndex.value = 0
+      }
     },
     'onBlur': () => {
       focused.value = false
@@ -333,6 +403,7 @@ export function useOtpControl(
     isError,
     message,
     focusAt,
+    selectAll,
     inputAttrs,
     labelAttrs,
     supportAttrs,

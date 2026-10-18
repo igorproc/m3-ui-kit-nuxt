@@ -1,0 +1,171 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// FILE UPLOAD · DROPZONE AND QUEUE
+// ==========================================
+// Included inside `.ui-file-upload`. The parts are private fragments, so
+// their rules live with the component that owns their tokens.
+
+@mixin dropzone($t) {
+  &__dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: g($t, 'dropzone.gap');
+    min-height: g($t, 'dropzone.min-height');
+    padding: g($t, 'dropzone.padding');
+    border: g($t, 'dropzone.border.width') g($t, 'dropzone.border.style') g($t, 'dropzone.outline');
+    border-radius: g($t, 'dropzone.shape');
+    color: g($t, 'dropzone.color');
+    text-align: center;
+    overflow-wrap: anywhere;
+    transition:
+      border-color g($t, 'motion.duration') g($t, 'motion.easing'),
+      background-color g($t, 'motion.duration') g($t, 'motion.easing'),
+      color g($t, 'motion.duration') g($t, 'motion.easing');
+
+    @include typescale(g($t, 'dropzone.typography'));
+
+    @each $state in accepting, refusing {
+      &--#{$state} {
+        border-color: g($t, 'dropzone.#{$state}.outline');
+        background-color: g($t, 'dropzone.#{$state}.container');
+        color: g($t, 'dropzone.#{$state}.color');
+      }
+    }
+
+    // Disabled recedes; read-only keeps its ink — the text stays readable, only
+    // the drop and the button are off.
+    &--disabled {
+      border-color: g($t, 'dropzone.disabled.outline');
+      color: g($t, 'dropzone.disabled.color');
+    }
+
+    // The drag states are drawn by fill and edge colour alone, which forced
+    // colours flatten: the edge turns solid and takes the system highlight.
+    @include forced-colors {
+      &--accepting,
+      &--refusing {
+        border-style: solid;
+        border-color: Highlight;
+      }
+
+      &--disabled {
+        border-color: GrayText;
+      }
+    }
+  }
+
+  &__dropzone-icon {
+    font-size: g($t, 'dropzone.icon.size');
+  }
+
+  &__hint {
+    @include typescale(g($t, 'dropzone.hint.typography'));
+  }
+}
+
+@mixin queue($t) {
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: g($t, 'list.gap');
+    max-height: g($t, 'list.max-height');
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: g($t, 'list.scroll-padding');
+    list-style: none;
+
+    @include use-scrollbar;
+  }
+
+  &__item {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: g($t, 'item.gap');
+    min-width: 0;
+    padding: g($t, 'item.padding');
+    border-radius: g($t, 'item.shape');
+    background-color: g($t, 'item.container');
+    color: g($t, 'item.color');
+
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
+  }
+
+  &__item-icon {
+    flex: 0 0 auto;
+    font-size: g($t, 'item.icon.size');
+  }
+
+  &__item--error &__item-icon,
+  &__item--error &__item-meta {
+    color: g($t, 'item.error.color');
+  }
+
+  &__item--success &__item-icon {
+    color: g($t, 'item.success.color');
+  }
+
+  &__item-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  // Middle ellipsis: the stem gives way, the extension does not.
+  &__item-name {
+    display: flex;
+    min-width: 0;
+    white-space: nowrap;
+
+    @include typescale(g($t, 'item.name.typography'));
+  }
+
+  &__item-stem {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__item-extension {
+    flex: 0 0 auto;
+  }
+
+  &__item-meta {
+    color: g($t, 'item.meta.color');
+
+    @include typescale(g($t, 'item.meta.typography'));
+  }
+
+  &__item-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: g($t, 'item.actions.gap');
+  }
+
+  &__empty {
+    margin: 0;
+    color: g($t, 'empty.color');
+
+    @include typescale(g($t, 'empty.typography'));
+  }
+}
+
+// Rows arrive and leave by fading, on the motion tokens; reduced motion is
+// shortened globally.
+.ui-file-upload-row-enter-active,
+.ui-file-upload-row-leave-active {
+  transition: opacity var(--sys-motion-duration-short-4) var(--sys-motion-easing-standard);
+}
+
+.ui-file-upload-row-enter-from,
+.ui-file-upload-row-leave-to {
+  opacity: 0;
+}

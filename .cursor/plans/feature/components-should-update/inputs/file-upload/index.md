@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита на системе M3 (поле, кнопки, прогресс) · Токены Compose: нет · Код: `src/runtime/components/ui/file-upload/`, части `src/runtime/components/fragments/file-upload/{Dropzone,List,Item}.vue` ([dropzone.md](dropzone.md), [list.md](list.md), [item.md](item.md)), очередь `useFileUploadQueue` · Аудит: `data/file-upload.json` (33 FAIL) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован в фазе 2: ровно один `MFileInput` как нативный picker, dropzone делегирует ему, общий `useFileSelection`/`createFilePolicy`, очередь с `upload`, `autoStart`, `concurrency`. Открыты: вложенное поле без имени, `autoStart` не запускает начальную модель (рендер), длинное имя налезает на действия, действия игнорируют disabled/readonly, причина отказа не показывается, статусы объявляются ненадёжно.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–9 и тесты (документация — в docs). Группа с подписью, скрытый picker (вопрос 1 → 1), постоянный регион отказа под dropzone, двусторонняя синхронизация модели, причины ошибок, фокус после действий, все строки — `messages`. CT-08 закрыт ограничением высоты списка (list.md). Disabled-группа несёт `aria-disabled`, read-only dropzone не гаснет. Старый дефект очереди исправлен с одобрения владельца: планируются только запрошенные строки (`start(id)` — одна строка, `cancel` перепланирует лишь после остановленной загрузки).</implementation-status>
 
 ## Вердикт
 
@@ -154,3 +154,8 @@
    экране два способа выбрать файл подряд.
 
 Рекомендация: 1. Очередь уже показывает выбранное, а поле повторяет её строкой.
+
+## Заметки реализации
+
+- Ломающее: все английские строки → проп `messages` (`MFileUploadMessages`), вложенное поле скрыто, корень — `role="group"`.
+- Помощники `splitFileName`, `actionName`, `dragRefused` лежат в `fragments/file-upload/upload.ts` (вне авто-импорта).

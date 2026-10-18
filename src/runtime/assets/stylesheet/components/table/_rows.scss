@@ -1,0 +1,97 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TABLE BODY: caption, rows, cells
+// ==========================================
+// Included inside `.ui-table` with the resolved token map.
+
+@mixin rows($t) {
+  width: 100%;
+  border-collapse: collapse;
+
+  &__caption {
+    padding: g($t, 'caption.padding.block') g($t, 'cell.padding.inline');
+    color: g($t, 'caption.color');
+    text-align: start;
+
+    @include typescale(g($t, 'caption.typography'));
+  }
+
+  &__row {
+    border-block-end: g($t, 'row.divider.width') solid g($t, 'row.divider.color');
+    color: g($t, 'row.content.color');
+
+    // The last row meets the container's edge or the footer's own divider.
+    &:last-child {
+      border-block-end-width: 0;
+    }
+
+    &--selected {
+      background-color: g($t, 'row.selected.container.color');
+      color: g($t, 'row.selected.content.color');
+    }
+  }
+
+  &__cell {
+    position: relative;
+    isolation: isolate;
+    padding: g($t, 'cell.padding.block') g($t, 'cell.padding.inline');
+    text-align: start;
+
+    // A long unbroken value (a URL, an article number) wraps inside its column
+    // instead of pushing every other column aside.
+    overflow-wrap: anywhere;
+
+    @include typescale(g($t, 'cell.typography'));
+
+    // State layer in the row's content colour (craft.md §1): it lies over the
+    // selected tone instead of replacing it, so a selected row stays selected
+    // under the pointer. Drawn per cell: a table row cannot hold a layer.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-color: currentcolor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+    }
+
+    &--center { text-align: center; }
+    &--end { text-align: end; }
+
+    // Figures line up digit under digit and never break.
+    &--numeric {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    &--checkbox {
+      width: g($t, 'cell.checkbox.width');
+      padding-block: 0;
+      padding-inline: g($t, 'cell.checkbox.padding.inline');
+    }
+  }
+
+  @include can-hover {
+    .ui-table__row:hover > .ui-table__cell::before {
+      opacity: g($t, 'state.hover');
+    }
+  }
+
+  @each $step in ('compact', 'default', 'comfortable') {
+    .ui-table-container--density-#{$step} &__row {
+      height: g($t, 'density.#{$step}.row');
+    }
+  }
+
+  // The selected tone is a background, which forced colors drop; an edge marks
+  // the row without recolouring the cells' slotted content.
+  @include forced-colors {
+    &__row--selected {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+  }
+}

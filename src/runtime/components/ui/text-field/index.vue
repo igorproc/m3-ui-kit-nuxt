@@ -6,7 +6,7 @@
   >
     <label
       v-if="label"
-      :for="fieldId"
+      v-bind="labelAttrs"
       class="ui-text-field__label"
     >
       {{ label }}
@@ -43,57 +43,42 @@
       </span>
 
       <div
-        v-if="$slots['leading-content']"
+        v-if="hasRow"
         class="ui-text-field__field ui-text-field__row"
       >
-        <span class="ui-text-field__leading">
+        <span
+          v-if="$slots['leading-content']"
+          class="ui-text-field__leading"
+        >
           <slot name="leading-content" />
         </span>
 
+        <span
+          v-if="prefix"
+          v-bind="prefixAttrs"
+          class="ui-text-field__affix ui-text-field__affix--prefix"
+        >{{ prefix }}</span>
+
         <input
-          :id="fieldId"
           ref="inputRef"
           v-model="modelValue"
+          v-bind="inputBindings()"
           class="ui-text-field__input"
-          v-bind="controlAttrs(inputAttrs)"
-          :type="type"
-          :name="name ?? path"
-          :placeholder="placeholder"
-          :disabled="disabled"
-          :readonly="readonly"
-          :required="required"
-          :autofocus="autofocus"
-          :autocomplete="autocomplete"
-          :aria-invalid="isError || undefined"
-          :aria-busy="meta.pending || inputAttrs?.['aria-busy'] || undefined"
-          :aria-required="required || undefined"
-          :aria-describedby="describedBy"
-          @focus="onFocus"
-          @blur="onBlur"
         >
+
+        <span
+          v-if="suffix"
+          v-bind="suffixAttrs"
+          class="ui-text-field__affix ui-text-field__affix--suffix"
+        >{{ suffix }}</span>
       </div>
 
       <input
         v-else
-        :id="fieldId"
         ref="inputRef"
         v-model="modelValue"
+        v-bind="inputBindings()"
         class="ui-text-field__input ui-text-field__row"
-        v-bind="controlAttrs(inputAttrs)"
-        :type="type"
-        :name="name ?? path"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        :readonly="readonly"
-        :required="required"
-        :autofocus="autofocus"
-        :autocomplete="autocomplete"
-        :aria-invalid="isError || undefined"
-        :aria-busy="meta.pending || inputAttrs?.['aria-busy'] || undefined"
-        :aria-required="required || undefined"
-        :aria-describedby="describedBy"
-        @focus="onFocus"
-        @blur="onBlur"
       >
 
       <span
@@ -107,7 +92,7 @@
     <!-- Always rendered: the line keeps its height, and the alert region exists
          before an error is written into it, so the first one is announced. -->
     <p
-      :id="supportId"
+      v-bind="supportAttrs"
       class="ui-text-field__support"
       :class="isError ? 'ui-text-field__support--error' : 'ui-text-field__support--helper'"
     >
@@ -119,34 +104,38 @@
       />
 
       <span
+        v-bind="alertAttrs"
         class="ui-text-field__alert"
-        role="alert"
       >
         <slot
           v-if="isError"
           name="error"
-          :message="displayMessage"
+          :message="message"
         >
-          {{ displayMessage }}
+          {{ message }}
         </slot>
       </span>
 
       <slot
         v-if="!isError"
         name="helper"
-        :message="displayMessage"
+        :message="message"
       >
-        {{ displayMessage }}
+        {{ message }}
       </slot>
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
+import { mergeProps } from 'vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { mTextFieldProps } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
+import { useTextFieldControl } from '#kit/composables/text-field/useTextFieldControl'
+import { useRetiredPropWarning, useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
 
 // The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
 defineOptions({ inheritAttrs: false })
@@ -160,32 +149,36 @@ const inputRef = ref<HTMLInputElement | null>(null)
 
 const modelValue = defineModel<string>({ default: '' })
 const isFocused = defineModel<boolean>('focused', { default: false })
-const fieldId = useId()
 
-const { errorMessage, isError, meta, onFocus, onBlur } = useTextField({
-  path: props.path,
-  model: modelValue,
-  focused: isFocused,
-  error: () => props.error,
-  externalError: () => props.errorMessage,
-})
+const {
+  isError,
+  message,
+  inputAttrs,
+  labelAttrs,
+  supportAttrs,
+  alertAttrs,
+  prefixAttrs,
+  suffixAttrs,
+} = useTextFieldControl(modelValue, isFocused, props)
+
+const shape = useFieldShape('m-text-field', props)
+useRetiredValueWarning('m-text-field', 'type', () => props.type, { number: '`<MNumberInput>`' })
+useRetiredPropWarning('m-text-field', 'populated', () => props.populated, 'nothing — the label no longer moves')
 
 const hasPrepend = computed(() => Boolean(slots.prepend))
 const hasAppend = computed(() => Boolean(slots.append))
-// Not truthiness: v-model casts a `type="number"` value, and 0 is a value.
-const isPopulated = computed(() => props.populated || (modelValue.value != null && modelValue.value !== ''))
+const hasRow = computed(() => Boolean(slots['leading-content'] || props.prefix || props.suffix))
 
 // The notch is sized by this copy of the label, so it carries the asterisk too.
 const notchText = computed(() => props.required ? `${props.label} *` : props.label)
 
 const rootClasses = computed(() => [
   `ui-text-field--${props.variant}`,
-  `ui-text-field--${props.rounded}`,
+  `ui-text-field--shape-${shape.value}`,
   `ui-text-field--label-${props.labelPlacement}`,
   `ui-text-field--density-${props.density}`,
   {
     'ui-text-field--focused': isFocused.value,
-    'ui-text-field--populated': isPopulated.value,
     'ui-text-field--error': isError.value,
     'ui-text-field--disabled': props.disabled,
     'ui-text-field--prepend': hasPrepend.value,
@@ -193,9 +186,11 @@ const rootClasses = computed(() => [
   },
 ])
 
-const displayMessage = computed(() => errorMessage.value || (props.error ? props.helperText : undefined) || props.helperText)
-const supportId = `${fieldId}-support`
-const describedBy = computed(() => displayMessage.value ? supportId : undefined)
+// A composite's bag (`inputAttrs`) merges under the field's own, and the
+// consumer's fallthrough under both: the field's own values win a clash,
+// listeners from all three are chained. Called from the template, because
+// fallthrough attributes are current on every render but not reactive.
+const inputBindings = () => controlAttrs(mergeProps({ ...props.inputAttrs }, inputAttrs.value))
 
 /**
  * The two boxes a composite field needs to reach: `control` is the drawn
@@ -207,6 +202,8 @@ defineExpose({ control: controlRef, input: inputRef })
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/text-field' as t;
+@use '#kit/assets/stylesheet/components/text-field/label' as label;
+@use '#kit/assets/stylesheet/components/text-field/states' as states;
 
 .ui-text-field {
   $t: material-map(t.$tokens, 'm-text-field');
@@ -224,7 +221,7 @@ defineExpose({ control: controlRef, input: inputRef })
   gap: g($t, 'container.gap');
   min-width: 0;
 
-  // ── axes · a modifier only picks values; every rule below reads them once ──
+  // ── axes · a modifier only picks values; every rule reads them once ──
   @each $d in compact, default, comfortable {
     &--density-#{$d} {
       --ui-text-field-height: #{g($t, 'density.#{$d}.height')};
@@ -236,16 +233,16 @@ defineExpose({ control: controlRef, input: inputRef })
     }
   }
 
-  @each $r in sharp, small, medium, large, pill {
-    &--#{$r} {
-      --ui-text-field-radius: #{g($t, 'rounded.#{$r}')};
+  @each $shape in none, extra-small, medium, large, full {
+    &--shape-#{$shape} {
+      --ui-text-field-radius: #{g($t, 'shape.#{$shape}')};
     }
   }
 
   // A filled box has a flat bottom, so a full-radius top would dome it on a short
-  // field — cap `pill` at the large tier for filled only.
-  &--filled.ui-text-field--pill {
-    --ui-text-field-radius: #{g($t, 'rounded.large')};
+  // field — cap `full` at the large tier for filled only.
+  &--filled#{&}--shape-full {
+    --ui-text-field-radius: #{g($t, 'shape.large')};
   }
 
   &--outlined {
@@ -256,65 +253,14 @@ defineExpose({ control: controlRef, input: inputRef })
     --ui-text-field-start: right;
   }
 
-  &__label {
-    color: g($t, 'label.color');
-
-    @include typescale(g($t, 'typography.label'));
-  }
-
-  &__required {
-    color: g($t, 'label.required.color');
-  }
-
-  // ── label placement · an axis of its own, independent of the shape ──
-  // Base is `top`: the label is a block above the container. Everything else is
-  // an override, so a placement can never be half-applied by a missing branch.
-
-  // Overlay placements. The label is lifted out of flow and onto the container;
-  // it moves by transform only, so position and font-size never animate.
-  &--label-float,
-  &--label-inset {
-    .ui-text-field__label {
-      position: absolute;
-      top: var(--ui-text-field-label-top);
-      inset-inline-start: var(--ui-text-field-inset);
-      z-index: 1;
-      max-width: g($t, 'label.max-width');
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      pointer-events: none;
-      transform: translateY(-50%);
-
-      // Scale around the vertical center so shrinking never shifts the label's
-      // center — the raise is then pure `height/2` math (no fudge factor).
-      transform-origin: var(--ui-text-field-start) center;
-      transition:
-        transform g($t, 'state.duration') g($t, 'state.easing'),
-        color g($t, 'state.duration') g($t, 'state.easing');
-    }
-  }
-
-  // Present for assistive tech, absent for the eye.
-  &--label-hidden .ui-text-field__label {
-    @include sr-only;
-  }
-
-  &--prepend {
-    --ui-text-field-label-notch-shift: #{g($t, 'label.prepend.notch.shift')};
-
-    .ui-text-field__label {
-      inset-inline-start: g($t, 'label.prepend.left');
-    }
-  }
-
-  // translateX is physical: the shift back to the start edge flips with it.
-  &--prepend:dir(rtl) {
-    --ui-text-field-label-notch-shift: calc(-1 * #{g($t, 'label.prepend.notch.shift')});
-  }
+  @include label.label($t);
 
   &__control {
     position: relative;
+
+    // Contains the filled state layer, so its negative z-index cannot slip
+    // behind an ancestor's background.
+    isolation: isolate;
     display: flex;
     align-items: center;
     min-height: var(--ui-text-field-height);
@@ -323,8 +269,7 @@ defineExpose({ control: controlRef, input: inputRef })
     border-radius: var(--ui-text-field-radius);
     transition:
       border-color g($t, 'state.duration') g($t, 'state.easing'),
-      background-color g($t, 'state.duration') g($t, 'state.easing'),
-      box-shadow g($t, 'state.duration') g($t, 'state.easing');
+      background-color g($t, 'state.duration') g($t, 'state.easing');
   }
 
   &--prepend .ui-text-field__control {
@@ -344,11 +289,12 @@ defineExpose({ control: controlRef, input: inputRef })
     outline: none;
     background-color: transparent;
     color: g($t, 'input.color');
+    caret-color: g($t, 'input.caret.color');
 
     @include typescale(g($t, 'typography.input'));
 
     &::placeholder {
-      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+      color: g($t, 'input.placeholder.color');
     }
 
     // Autofill paints an !important background and text colour of its own,
@@ -360,17 +306,17 @@ defineExpose({ control: controlRef, input: inputRef })
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: g($t, 'input.color');
-      caret-color: g($t, 'input.color');
     }
   }
 
-  // Composite input row: inline content (chips) + native input on one scrolling row.
+  // Composite input row: inline content (chips), affixes and the native input
+  // on one scrolling row. Spacing is per part, not a flex gap: an affix hugs
+  // the value closer than the chips do.
   &__field {
     display: flex;
     flex: 1;
     flex-wrap: nowrap;
     align-items: center;
-    gap: g($t, 'container.field.gap');
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
@@ -392,6 +338,23 @@ defineExpose({ control: controlRef, input: inputRef })
     flex: 0 0 auto;
     align-items: center;
     gap: g($t, 'container.field.gap');
+    margin-inline-end: g($t, 'container.field.gap');
+  }
+
+  &__affix {
+    flex: 0 0 auto;
+    color: g($t, 'affix.color');
+    white-space: nowrap;
+
+    @include typescale(g($t, 'typography.affix'));
+
+    &--prefix {
+      margin-inline-end: g($t, 'affix.gap');
+    }
+
+    &--suffix {
+      margin-inline-start: g($t, 'affix.gap');
+    }
   }
 
   &__icon {
@@ -401,6 +364,7 @@ defineExpose({ control: controlRef, input: inputRef })
     min-width: g($t, 'icon.width');
     color: g($t, 'icon.color');
     font-size: g($t, 'icon.size');
+    transition: color g($t, 'state.duration') g($t, 'state.easing');
 
     &--prepend {
       margin-inline-end: g($t, 'icon.prepend.margin');
@@ -411,285 +375,26 @@ defineExpose({ control: controlRef, input: inputRef })
     }
   }
 
-  // ── outline · rendered by the outlined shape only ─────────────
-  // A `<fieldset>` laid over the control's own (transparent) border, so the
-  // browser cuts the notch: the hidden `<legend>` holds the label text at the
-  // raised size, and the border breaks exactly where it sits. No patch is painted
-  // behind the label, so the field reads right on any surface, and the gap is
-  // correct in the server-rendered HTML — nothing is measured.
-  &__outline {
-    position: absolute;
-    inset: g($t, 'outlined.outline.inset');
-    min-width: 0;
-    padding-block: 0;
-    padding-inline: g($t, 'outlined.outline.padding.start') 0;
-    margin: 0;
-    border: g($t, 'container.border.width') solid g($t, 'outlined.border.color');
-    border-radius: inherit;
-    pointer-events: none;
-    transition: border-color g($t, 'state.duration') g($t, 'state.easing');
-  }
-
-  @include can-hover {
-    &__control:hover .ui-text-field__outline {
-      border-color: g($t, 'outlined.hover.border.color');
-    }
-  }
-
-  // As tall as the border it sits on, so the fieldset never shifts its top edge
-  // to centre a taller legend. Its width is the only thing that matters.
-  &__notch {
-    display: block;
-    width: auto;
-    max-width: 0.01rem;
-    height: g($t, 'container.border.width');
-    padding: 0;
-    overflow: hidden;
-    visibility: hidden;
-    white-space: nowrap;
-    transition: max-width g($t, 'state.duration') g($t, 'state.easing');
-
-    @include typescale(g($t, 'typography.label'));
-  }
-
-  &__notch-text {
-    display: inline-block;
-    padding-inline: g($t, 'outlined.notch.padding.inline');
-    font-size: g($t, 'outlined.notch.font-size');
-  }
-
-  // Disabled content. A shape that has its own disabled ink overrides it below.
-  &--disabled .ui-text-field__control {
-    cursor: default;
-
-    .ui-text-field__input {
-      color: g($t, 'filled.disabled.input.color');
-    }
-
-    .ui-text-field__icon {
-      color: g($t, 'filled.disabled.icon.color');
-    }
-  }
-
-  // ── shapes · each walks its states in ascending order ─────────
-  // base → hover → focused → error → error + focused → disabled. Every state
-  // rule within a shape carries the same weight, so the later one wins.
-  &--filled {
-    .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.border.bottom.color');
-      border-bottom-right-radius: 0;
-      border-bottom-left-radius: 0;
-      background-color: g($t, 'filled.bg');
-
-      @include can-hover {
-        &:hover {
-          border-bottom-color: g($t, 'filled.hover.border.bottom.color');
-          background-color: g($t, 'filled.hover.bg');
-        }
-      }
-    }
-
-    &.ui-text-field--focused {
-      .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.focused.border.bottom.color');
-        background-color: g($t, 'filled.focused.bg');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'filled.focused.label.color');
-      }
-    }
-
-    &.ui-text-field--error {
-      .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.error.border.bottom.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'filled.error.label.color');
-      }
-    }
-
-    &.ui-text-field--error.ui-text-field--focused .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.error.focused.border.bottom.color');
-    }
-
-    &.ui-text-field--disabled {
-      .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.disabled.border.bottom.color');
-        background-color: g($t, 'filled.disabled.bg');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'filled.disabled.label.color');
-      }
-    }
-  }
-
-  // The control's own border stays transparent — the outline carries the colour.
-  &--outlined {
-    &.ui-text-field--focused {
-      .ui-text-field__outline {
-        border-color: g($t, 'outlined.focused.border.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'outlined.focused.label.color');
-      }
-    }
-
-    &.ui-text-field--error {
-      .ui-text-field__outline {
-        border-color: g($t, 'outlined.error.border.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'outlined.error.label.color');
-      }
-    }
-
-    &.ui-text-field--error.ui-text-field--focused .ui-text-field__outline {
-      border-color: g($t, 'outlined.error.focused.border.color');
-    }
-
-    &.ui-text-field--disabled {
-      .ui-text-field__outline {
-        border-color: g($t, 'outlined.disabled.border.color');
-      }
-
-      .ui-text-field__input {
-        color: g($t, 'outlined.disabled.input.color');
-      }
-
-      .ui-text-field__icon {
-        color: g($t, 'outlined.disabled.icon.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'outlined.disabled.label.color');
-      }
-    }
-  }
-
-  // A single bottom rule, lowest ink.
-  &--underline {
-    .ui-text-field__control {
-      padding-inline: 0;
-      border: none;
-      border-bottom: g($t, 'container.border.width') solid g($t, 'outlined.border.color');
-      border-radius: 0;
-
-      @include can-hover {
-        &:hover {
-          border-bottom-color: g($t, 'outlined.hover.border.color');
-        }
-      }
-    }
-
-    .ui-text-field__label {
-      inset-inline-start: 0;
-    }
-
-    &.ui-text-field--focused {
-      .ui-text-field__control {
-        border-bottom-color: g($t, 'outlined.focused.border.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'outlined.focused.label.color');
-      }
-    }
-
-    &.ui-text-field--error {
-      .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.error.border.bottom.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'filled.error.label.color');
-      }
-    }
-
-    &.ui-text-field--error.ui-text-field--focused .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.error.focused.border.bottom.color');
-    }
-
-    &.ui-text-field--disabled {
-      .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.disabled.border.bottom.color');
-      }
-
-      .ui-text-field__label {
-        color: g($t, 'filled.disabled.label.color');
-      }
-    }
-  }
-
-  // ── raised label · `inset` always, `float` once focused or filled ──
-  &--label-inset,
-  &--label-float.ui-text-field--focused,
-  &--label-float.ui-text-field--populated {
-    &.ui-text-field--filled .ui-text-field__label,
-    &.ui-text-field--underline .ui-text-field__label {
-      transform: var(--ui-text-field-label-raised-inside);
-    }
-
-    // The label rises onto the top border, into the gap the legend opens for it.
-    &.ui-text-field--outlined {
-      .ui-text-field__label {
-        transform: translateX(var(--ui-text-field-label-notch-shift, 0)) var(--ui-text-field-label-raised-notch);
-      }
-
-      .ui-text-field__notch {
-        max-width: 100%;
-      }
-    }
-  }
-
-  // The asymmetric padding exists only to clear a label sitting inside the box.
-  // It is applied to the row the label sits over (`__row`): the bare input, or —
-  // when a composite field fills `leading-content` — the row that holds the chips
-  // *and* the input. Padding only the input would leave the chips centred in the
-  // box, under the raised label.
-  &--label-float.ui-text-field--filled,
-  &--label-inset.ui-text-field--filled {
-    .ui-text-field__row {
-      padding-top: var(--ui-text-field-input-padding-top);
-      padding-bottom: var(--ui-text-field-input-padding-bottom);
-    }
-  }
-
-  // A placeholder is hidden only while a resting floating label sits on top of
-  // it. Every other placement leaves the first line free.
-  &--label-float .ui-text-field__input::placeholder {
-    opacity: 0;
-  }
-
-  &--label-float.ui-text-field--focused .ui-text-field__input::placeholder,
-  &--label-float.ui-text-field--populated .ui-text-field__input::placeholder {
-    opacity: 1;
-  }
-
-  // ── support line · reserved height so valid⇄invalid never reflows ──
+  // ── support line · reserved height so valid ⇄ invalid never reflows ──
   &__support {
     display: flex;
     align-items: center;
     min-width: 0;
-    min-height: g($t, 'helper.min-height');
-    padding-inline: g($t, 'helper.padding.inline');
-    margin-top: g($t, 'helper.margin.top');
+    min-height: g($t, 'support.min-height');
+    padding-inline: g($t, 'support.padding.inline');
+    margin-top: g($t, 'support.margin.top');
 
     // A URL or an address in a message has no break opportunity of its own.
     overflow-wrap: anywhere;
 
-    @include typescale(g($t, 'typography.helper'));
+    @include typescale(g($t, 'typography.support'));
 
     &--helper {
-      color: g($t, 'helper.color');
+      color: g($t, 'support.color');
     }
 
     &--error {
-      color: g($t, 'filled.error.helper.color');
+      color: g($t, 'error.color');
     }
   }
 
@@ -698,63 +403,14 @@ defineExpose({ control: controlRef, input: inputRef })
   // alert region beside it is empty whenever the helper is shown.
   &__support-icon {
     flex: 0 0 auto;
-    margin-inline-end: g($t, 'helper.icon.gap');
-    font-size: g($t, 'helper.icon.size');
+    margin-inline-end: g($t, 'support.icon.gap');
+    font-size: g($t, 'support.icon.size');
   }
 
   &__alert {
     min-width: 0;
   }
 
-  // ── forced colours · every edge turns CanvasText, so the states that were a
-  // colour change alone are restated in system colours ──
-  @include forced-colors {
-    // The control's transparent border under the outline is forced visible
-    // too, and would run straight through the label's notch.
-    &--outlined .ui-text-field__control {
-      border-color: Canvas;
-    }
-
-    // `.ui-text-field` is repeated to match the error + focused rule's weight,
-    // so source order alone decides — and focus outranks error.
-    // Error is a dashed edge: a system colour for it (Mark) can vanish on a
-    // light contrast theme, a line style cannot.
-    &.ui-text-field--error {
-      &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control {
-        border-bottom-style: dashed;
-        border-bottom-color: CanvasText;
-      }
-
-      &.ui-text-field--outlined .ui-text-field__outline {
-        border-style: dashed;
-        border-color: CanvasText;
-      }
-    }
-
-    &.ui-text-field--focused {
-      &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control {
-        border-bottom-color: Highlight;
-      }
-
-      &.ui-text-field--outlined .ui-text-field__outline {
-        border-color: Highlight;
-      }
-    }
-
-    &.ui-text-field--disabled {
-      &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control,
-      &.ui-text-field--outlined .ui-text-field__outline {
-        border-color: GrayText;
-      }
-
-      .ui-text-field__label,
-      .ui-text-field__input {
-        color: GrayText;
-      }
-    }
-  }
+  @include states.states($t);
 }
 </style>

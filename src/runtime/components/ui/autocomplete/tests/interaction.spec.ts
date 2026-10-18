@@ -137,6 +137,56 @@ describe('m-autocomplete · interaction', () => {
     expect(wrapper.emitted('update:open')?.at(-1)).toEqual([false])
   })
 
+  it('opens on a press into the field, not on a keyboard focus', async () => {
+    const wrapper = await mount(base)
+    const input = wrapper.find('input.ui-text-field__input')
+
+    await input.trigger('focus')
+    await nextTick()
+    expect(wrapper.emitted('update:open')).toBeFalsy()
+
+    await input.trigger('blur')
+    await input.trigger('pointerdown')
+    await input.trigger('focus')
+    await nextTick()
+    expect(wrapper.emitted('update:open')?.at(-1)).toEqual([true])
+  })
+
+  it('opens on any focus with open-on-focus set to true', async () => {
+    const wrapper = await mount({ ...base, openOnFocus: true })
+
+    await wrapper.find('input.ui-text-field__input').trigger('focus')
+    await nextTick()
+
+    expect(wrapper.emitted('update:open')?.at(-1)).toEqual([true])
+  })
+
+  it('shows the selected title from the first render, without reporting a query', async () => {
+    const wrapper = await mount({ ...base, modelValue: 3 })
+
+    expect((wrapper.find('input.ui-text-field__input').element as HTMLInputElement).value).toBe('Gamma')
+    expect(wrapper.emitted('update:search')).toBeFalsy()
+  })
+
+  it('leaves the query empty for a multiple selection — the chips name it', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1] })
+
+    expect((wrapper.find('input.ui-text-field__input').element as HTMLInputElement).value).toBe('')
+  })
+
+  it('finds a title regardless of its diacritics', async () => {
+    const wrapper = await mount({ ...base, items: [{ id: 1, name: 'Zürich' }, { id: 2, name: 'São Paulo' }] })
+    const input = wrapper.find('input.ui-text-field__input')
+
+    await input.setValue('zurich')
+    await nextTick()
+    expect(optionByText('Zürich')).toBeTruthy()
+
+    await input.setValue('sao')
+    await nextTick()
+    expect(optionByText('São Paulo')).toBeTruthy()
+  })
+
   it('keeps the rows while a new query loads', async () => {
     const wrapper = await mount(base)
     await openMenu(wrapper)

@@ -1,0 +1,266 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// DATE PICKER · HEADER, DAY GRID, YEAR LIST
+// ==========================================
+// Included inside `.ui-date-picker`. Days and years carry the MD3 state layer
+// in their own ink (`::before`), so a selected cell hovers in `on-primary`
+// over `primary` without a premixed colour. Focus is the kit's ring around
+// the cell's own shape.
+
+@mixin state-layer($t) {
+  position: relative;
+  isolation: isolate;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  @include can-hover {
+    &:hover::before {
+      opacity: g($t, 'layer.hover');
+    }
+  }
+
+  &:active::before {
+    opacity: g($t, 'layer.pressed');
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@mixin header($t) {
+  &__header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: g($t, 'header.min-height');
+    padding:
+      g($t, 'header.padding.top')
+      g($t, 'header.padding.inline-end')
+      g($t, 'header.padding.bottom')
+      g($t, 'header.padding.inline-start');
+  }
+
+  &__title {
+    margin: 0;
+    color: g($t, 'title.color');
+
+    @include typescale(g($t, 'title.typography'));
+  }
+
+  &__headline-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: spacing(8);
+  }
+
+  &__headline {
+    min-width: 0;
+    margin: 0;
+    color: g($t, 'headline.color');
+    overflow-wrap: anywhere;
+
+    @include typescale(g($t, 'headline.typography'));
+  }
+
+  &__mode {
+    flex: 0 0 auto;
+  }
+
+  &__divider {
+    border-block-start: g($t, 'divider.width') solid g($t, 'divider.color');
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: g($t, 'nav.height');
+    padding-inline: g($t, 'nav.padding.inline');
+    color: g($t, 'nav.color');
+  }
+
+  &__view-toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: g($t, 'nav.height');
+    padding-inline: spacing(12);
+    border: none;
+    border-radius: g($t, 'day.shape');
+    background: none;
+    color: inherit;
+
+    @include typescale(g($t, 'nav.typography'));
+    @include state-layer($t);
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  // One glyph that turns, rather than two that swap.
+  &__view-toggle-icon {
+    transition: transform g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  &__view-toggle--open &__view-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  &__arrows {
+    display: flex;
+  }
+
+  // The chevrons point the way time runs, which turns with the writing.
+  &__arrow:dir(rtl) {
+    transform: scaleX(-1);
+  }
+}
+
+@mixin grid($t) {
+  // Cells give way below 360 (a phone with page margins) rather than push
+  // the grid out of the card; the day keeps its circle by shrinking with them.
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, g($t, 'grid.cell')));
+    grid-auto-rows: g($t, 'grid.cell');
+    place-items: center;
+    justify-content: center;
+  }
+
+  // Rows carry the grid's semantics only; their cells are the grid items.
+  &__row {
+    display: contents;
+  }
+
+  &__weekday {
+    color: g($t, 'weekday.color');
+
+    @include typescale(g($t, 'weekday.typography'));
+  }
+
+  &__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(#{g($t, 'day.size')}, 100%);
+    aspect-ratio: 1;
+    border: g($t, 'day.today.outline.width') solid transparent;
+    border-radius: g($t, 'day.shape');
+    color: g($t, 'day.color');
+
+    @include typescale(g($t, 'day.typography'));
+    @include state-layer($t);
+
+    &--today {
+      border-color: g($t, 'day.today.outline.color');
+      color: g($t, 'day.today.color');
+    }
+
+    &--selected {
+      background-color: g($t, 'day.selected.container');
+      color: g($t, 'day.selected.color');
+    }
+
+    // Unavailable stays focusable and announced; it only recedes and takes no
+    // press.
+    &--unavailable {
+      opacity: g($t, 'day.disabled.opacity');
+      cursor: default;
+
+      &::before {
+        display: none;
+      }
+    }
+
+    // Forcing drops the selected fill; the system highlight restates it.
+    @include forced-colors {
+      &--selected {
+        forced-color-adjust: none;
+        background-color: Highlight;
+        color: HighlightText;
+      }
+
+      &--today {
+        border-color: CanvasText;
+      }
+    }
+  }
+
+  &--disabled &__day,
+  &--readonly &__day {
+    cursor: default;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  &--disabled &__grid,
+  &--disabled &__years {
+    opacity: g($t, 'day.disabled.opacity');
+  }
+}
+
+@mixin years($t) {
+  &__years {
+    display: grid;
+    grid-template-columns: repeat(g($t, 'year.columns'), 1fr);
+    row-gap: g($t, 'year.row-gap');
+    place-items: center;
+    height: g($t, 'year.height-total');
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    @include use-scrollbar;
+  }
+
+  &__year {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: g($t, 'year.width');
+    height: g($t, 'year.height');
+    border: g($t, 'year.current.outline.width') solid transparent;
+    border-radius: g($t, 'year.shape');
+    color: g($t, 'year.color');
+
+    @include typescale(g($t, 'year.typography'));
+    @include state-layer($t);
+
+    &--current {
+      border-color: g($t, 'year.current.outline.color');
+      color: g($t, 'year.current.color');
+    }
+
+    &--selected {
+      background-color: g($t, 'year.selected.container');
+      color: g($t, 'year.selected.color');
+    }
+
+    @include forced-colors {
+      &--selected {
+        forced-color-adjust: none;
+        background-color: Highlight;
+        color: HighlightText;
+      }
+
+      &--current {
+        border-color: CanvasText;
+      }
+    }
+  }
+}

@@ -5,11 +5,12 @@
     :class="{
       'ui-search--focused': isFocused,
       'ui-search--empty': !modelValue,
+      'ui-search--disabled': disabled,
     }"
   >
-    <span class="ui-search__icon ui-search__icon--leading">
+    <span class="ui-search__leading">
       <slot name="leading">
-        <m-icon
+        <MIcon
           :name="ICONS.search"
           aria-hidden="true"
         />
@@ -19,101 +20,185 @@
     <input
       v-bind="controlAttrs()"
       :id="fieldId"
+      ref="input"
       v-model="modelValue"
       class="ui-search__input"
       type="search"
       :placeholder="placeholder"
-      :aria-label="ariaLabel || placeholder"
+      :aria-label="ariaLabel"
       :disabled="disabled"
-      @focus="onFocus"
-      @blur="onBlur"
+      @focus="isFocused = true"
+      @blur="isFocused = false"
+      @keydown.enter="emit('submit', modelValue)"
     >
 
-    <button
-      v-if="modelValue && !disabled"
+    <!-- Rendered while hidden, so its arrival never reflows the query. -->
+    <MButtonIcon
       type="button"
-      class="ui-search__icon ui-search__icon--trailing"
-      aria-label="Clear search"
+      class="ui-search__clear"
+      :class="{ 'ui-search__clear--hidden': !canClear }"
+      :aria-label="clearLabel"
+      :disabled="!canClear"
       @click="onClear"
     >
       <slot name="clear">
-        <m-icon :name="ICONS.close" />
+        <MIcon :name="ICONS.close" />
       </slot>
-    </button>
+    </MButtonIcon>
+
+    <span
+      v-if="$slots.trailing"
+      class="ui-search__trailing"
+    >
+      <slot name="trailing" />
+    </span>
+
+    <span
+      v-if="$slots.avatar"
+      class="ui-search__avatar"
+    >
+      <slot name="avatar" />
+    </span>
   </div>
 </template>
 
 <script setup lang="ts">
+import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
+import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { mSearchProps } from './props'
+import type { MSearchEmits } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 
 // The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
-defineProps(mSearchProps)
+const props = defineProps(mSearchProps)
+const emit = defineEmits<MSearchEmits>()
+
+defineSlots<{
+  /** Before the query — the search glyph by default, a navigation button in an app bar. */
+  leading?: () => unknown
+  /** Content of the clear button. */
+  clear?: () => unknown
+  /** Actions after the query: voice input, filters. Icon buttons, 48 targets. */
+  trailing?: () => unknown
+  /** The account avatar at the end of the bar — M3 draws it at 30. */
+  avatar?: () => unknown
+}>()
 
 const modelValue = defineModel<string>({ default: '' })
-
 const isFocused = defineModel<boolean>('focused', { default: false })
 
 const fieldId = useId()
+const canClear = computed(() => Boolean(modelValue.value) && !props.disabled)
 
-function onFocus() {
-  isFocused.value = true
+// The kit ships no default name: it would be English in a kit with no i18n.
+// An unnamed field or an unnamed clear button is worse, so say it in dev.
+if (import.meta.dev) {
+  const attrs = useAttrs()
+
+  watchEffect(() => {
+    if (!props.ariaLabel && !attrs['aria-label'] && !attrs['aria-labelledby']) {
+      console.warn('[m-search] has no accessible name: pass `aria-label` or `aria-labelledby` — a placeholder is not a name.')
+    }
+
+    if (canClear.value && !props.clearLabel) {
+      console.warn('[m-search] the clear button has no accessible name: pass `clear-label`.')
+    }
+  })
 }
 
-function onBlur() {
-  isFocused.value = false
-}
+const input = ref<HTMLInputElement | null>(null)
 
 function onClear() {
   modelValue.value = ''
+  emit('clear')
+  // The button disappears under the pointer; the query field is where the
+  // user goes next.
+  input.value?.focus()
 }
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/search' as t;
 
 .ui-search {
-  $prefix: 'md-search';
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'm-search');
 
   position: relative;
-  display: inline-flex;
+  isolation: isolate;
+  display: flex;
   align-items: center;
-  gap: g($t, 'gap');
+  gap: g($t, 'container.gap');
   width: 100%;
-  max-width: g($t, 'max-width');
-  padding-inline: g($t, 'padding-inline');
-  min-height: g($t, 'min-height');
-  border-radius: var(--sys-shape-corner-full);
-  background-color: g($t, 'bg-color');
-  color: g($t, 'text-color');
-  box-shadow: 0 0 0 g($t, 'border-width') g($t, 'border-color');
-  transition:
-    box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+  max-width: g($t, 'container.max-width');
+  min-height: g($t, 'container.height');
+  padding-inline: g($t, 'container.padding.inline');
+  border-radius: g($t, 'container.shape');
+  background-color: g($t, 'container.color');
+  color: g($t, 'input.color');
+
+  // MD3 state layer: the content's ink over the container, under the parts.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: g($t, 'layer.color');
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+  }
+
+  @include can-hover {
+    &:not(.ui-search--disabled):hover::before {
+      opacity: g($t, 'layer.hover');
+    }
+  }
+
+  // A control, not a form field: no label and no support line to recolour,
+  // so focus is the ring every other control wears.
+  &--focused {
+    @include focus-ring;
+  }
+
+  &__leading,
+  &__trailing {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: g($t, 'icon.target');
+    min-height: g($t, 'icon.target');
+    font-size: g($t, 'icon.size');
+  }
+
+  &__leading {
+    color: g($t, 'icon.leading.color');
+  }
+
+  &__trailing {
+    gap: g($t, 'container.gap');
+    color: g($t, 'icon.color');
+  }
 
   &__input {
     flex: 1;
+    min-width: 0;
+    padding: 0;
     border: none;
     outline: none;
     background: transparent;
-    color: g($t, 'text-color');
-    padding-block: g($t, 'input-padding-block');
+    color: g($t, 'input.color');
+    caret-color: g($t, 'input.caret.color');
 
-    // Always reserve room for the absolutely-positioned clear button so its
-    // appearance/removal never reflows the input (no CLS).
-    padding-right: calc(#{g($t, 'icon-trailing-size')} + #{g($t, 'gap')});
-
-    @include typescale(g($t, 'input-text-type'));
+    @include typescale(g($t, 'input.typography'));
 
     &::placeholder {
-      color: g($t, 'placeholder-color');
+      color: g($t, 'input.placeholder.color');
       opacity: 1;
     }
 
@@ -123,65 +208,39 @@ function onClear() {
     }
   }
 
-  &__icon {
-    display: inline-flex;
+  // The clear button keeps its place while there is nothing to clear.
+  &__clear {
+    flex: 0 0 auto;
+    color: g($t, 'icon.color');
+
+    &--hidden {
+      visibility: hidden;
+    }
+  }
+
+  // A 48 target around the consumer's avatar; the avatar keeps its own size.
+  &__avatar {
+    display: flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    color: g($t, 'icon-color');
-
-    &--trailing {
-      position: absolute;
-      top: 50%;
-      right: g($t, 'padding-inline');
-      transform: translateY(-50%);
-      width: g($t, 'icon-trailing-size');
-      height: g($t, 'icon-trailing-size');
-      border-radius: 999rem;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      padding: 0;
-
-      @include can-hover {
-        &:hover {
-          background-color: color-mix(
-            in srgb,
-            #{map.get($theme-color-link, 'on-surface')} state-opacity(hover),
-            transparent
-          );
-        }
-      }
-    }
+    width: g($t, 'icon.target');
+    height: g($t, 'icon.target');
   }
 
-  &--focused {
-    box-shadow: 0 0 0 g($t, 'focused-border-width') g($t, 'focused-border-color');
-    background-color: g($t, 'bg-color');
-  }
-
-  &--empty {
-    .ui-search__icon--leading {
-      color: g($t, 'icon-color');
-    }
-  }
-
-  @include can-hover {
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        #{map.get($theme-color-link, 'on-surface')} 4%,
-        g($t, 'bg-color')
-      );
-    }
-  }
-
-  &:has(.ui-search__input:disabled) {
-    opacity: g($t, 'disabled-opacity');
+  &--disabled {
+    color: g($t, 'disabled.content');
     cursor: default;
+
+    .ui-search__leading,
+    .ui-search__trailing,
+    .ui-search__input,
+    .ui-search__input::placeholder {
+      color: g($t, 'disabled.content');
+    }
   }
 
-  // Both the edge and its focused colour are box-shadows, which forced colours
-  // drop. An outline sits where the shadow's spread did and takes no room.
+  // The container is drawn by its fill alone, which forced colours drop.
   @include forced-colors {
     outline: 1px solid CanvasText;
 
@@ -189,7 +248,7 @@ function onClear() {
       outline-color: Highlight;
     }
 
-    &:has(.ui-search__input:disabled) {
+    &--disabled {
       outline-color: GrayText;
     }
   }

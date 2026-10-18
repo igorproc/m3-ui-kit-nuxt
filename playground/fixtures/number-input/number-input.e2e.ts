@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx } from '../../e2e/support'
 
 /** The drawn edge of a field: the fieldset for outlined, the control's bottom border for filled. */
 async function edgeColor(page: Page, testId: string) {
@@ -131,6 +131,16 @@ test.describe('MNumberInput', () => {
       await expect(page.getByRole('button', { name: 'Change unit GiB' })).toBeFocused()
     })
 
+    test('the chosen unit is marked by a check, not by colour alone', async ({ page }) => {
+      await openFixture(page, 'number-input/matrix')
+      await page.getByRole('button', { name: 'Change unit MiB' }).click()
+
+      const chosen = page.getByRole('menuitemradio', { name: 'MiB' })
+      await expect(chosen).toHaveAttribute('aria-checked', 'true')
+      await expect(chosen.locator('.ui-number-input__unit-check')).toBeVisible()
+      await expect(page.getByRole('menuitemradio', { name: 'KiB' }).locator('.ui-number-input__unit-check')).toHaveCount(0)
+    })
+
     test('closes on Escape and returns focus to the trigger', async ({ page }) => {
       await openFixture(page, 'number-input/matrix')
       const trigger = page.getByRole('button', { name: 'Change unit MiB' })
@@ -170,13 +180,79 @@ test.describe('MNumberInput', () => {
     }
   })
 
-  test('the support line is a live region before any error arrives', async ({ page }) => {
+  test('the alert region is mounted before any error arrives, and the helper stays outside it', async ({ page }) => {
     await openFixture(page, 'number-input/matrix')
 
-    const region = page.getByTestId('empty-filled-split')
-    const describedRegion = await region.evaluate(input => input.closest('.ui-number-input')!
-      .querySelector('.ui-number-input__support')!.getAttribute('role'))
-    expect(describedRegion).toBe('alert')
+    const [emptyAlert, helperAlert, helperSupport, errorAlert] = await Promise.all([
+      page.getByTestId('empty-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
+      page.getByTestId('populated-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
+      page.getByTestId('populated-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('.ui-number-input__support')!.textContent?.trim()),
+      page.getByTestId('error-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
+    ])
+
+    expect(emptyAlert).toBe('')
+    expect(helperAlert).toBe('')
+    expect(helperSupport).toBe('Helper')
+    expect(errorAlert).toBe('Too large')
+  })
+
+  for (const density of ['compact', 'default', 'comfortable']) {
+    test(`a filled field is as tall as a text field of the same density (${density})`, async ({ page }) => {
+      await openFixture(page, 'number-input/matrix')
+      const height = (id: string) => page.getByTestId(id).evaluate(input =>
+        input.closest('.ui-number-input, .ui-text-field')!.querySelector('[class$="__control"]')!.getBoundingClientRect().height)
+
+      const text = await height(`family-text-${density}`)
+      expect(await height(`family-number-${density}`)).toBeCloseTo(text, 0)
+      expect(await height(`family-stacked-${density}`)).toBeCloseTo(text, 0)
+    })
+
+    test(`the stacked column stays inside a filled box (${density})`, async ({ page }) => {
+      await openFixture(page, 'number-input/matrix')
+      const [column, control] = await page.getByTestId(`family-stacked-${density}`).evaluate((input) => {
+        const root = input.closest('.ui-number-input')!
+        return [root.querySelector('.ui-number-input__stacked')!, root.querySelector('.ui-number-input__control')!]
+          .map(el => el.getBoundingClientRect()).map(rect => ({ top: rect.top, bottom: rect.bottom }))
+      })
+
+      expect(column!.top).toBeGreaterThanOrEqual(control!.top)
+      expect(column!.bottom).toBeLessThanOrEqual(control!.bottom)
+    })
+  }
+
+  test('the scrub handle and the value share one line in a filled field', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const [handle, value] = await page.getByTestId('populated-filled-scrub').evaluate((input) => {
+      const root = input.closest('.ui-number-input')!
+      return [root.querySelector('.ui-number-input__scrub')!, input]
+        .map(el => el.getBoundingClientRect()).map(rect => rect.top + rect.height / 2)
+    })
+
+    expect(Math.abs(handle! - value!)).toBeLessThanOrEqual(1)
+  })
+
+  test('outlined has no surface when disabled', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const surface = await page.getByTestId('disabled-outlined-none').evaluate(input =>
+      getComputedStyle(input.closest('.ui-number-input')!.querySelector('.ui-number-input__control')!).backgroundColor)
+
+    expect(surface).toBe('rgba(0, 0, 0, 0)')
+  })
+
+  test('a zone at its bound recedes its tone, not only its glyph', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const [increment, decrement] = await page.getByTestId('error-outlined-split').evaluate(input => ['increment', 'decrement']
+      .map(side => getComputedStyle(input.closest('.ui-number-input')!.querySelector(`.ui-number-input__stepper--${side}`)!).backgroundColor))
+
+    expect(increment).not.toBe(decrement)
+  })
+
+  test('the support line is one body-small line high', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const height = await page.getByTestId('empty-outlined-split').evaluate(input =>
+      input.closest('.ui-number-input')!.querySelector('.ui-number-input__support')!.getBoundingClientRect().height)
+
+    expect(height / await remInPx(page)).toBeCloseTo(16, 0)
   })
 
   test('an error without a message still shows a non-colour cue', async ({ page }) => {

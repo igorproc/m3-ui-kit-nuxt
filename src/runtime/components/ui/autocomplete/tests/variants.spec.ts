@@ -193,5 +193,37 @@ describe('m-autocomplete · variants', () => {
       await nextTick()
       expect(document.body.textContent).toContain('No match for zzz')
     })
+
+    it('hands the no-results slot an action that empties the query', async () => {
+      let reset: (() => void) | undefined
+      const wrapper = await mount(base, {
+        'no-results': ({ clear }: { clear: () => void }) => {
+          reset = clear
+          return 'Nothing'
+        },
+      })
+      await wrapper.find('input.ui-text-field__input').setValue('zzz')
+      await nextTick()
+
+      reset!()
+      await nextTick()
+
+      expect(wrapper.emitted('update:search')?.at(-1)).toEqual([''])
+      expect(options()).toHaveLength(items.length)
+    })
+
+    it('shows the hint slot instead of "no results" while the query is too short', async () => {
+      const wrapper = await mount(
+        { ...base, minSearchLength: 3 },
+        {
+          'hint': ({ missing }: { missing: number }) => `Type ${missing} more`,
+          'no-results': () => 'No results',
+        },
+      )
+      await openMenu(wrapper)
+
+      expect(document.body.textContent).toContain('Type 3 more')
+      expect(document.body.textContent).not.toContain('No results')
+    })
   })
 })

@@ -10,7 +10,7 @@ describe('m-dropdown · axes', () => {
     const wrapper = await mount({
       ...base,
       variant: 'outlined',
-      rounded: 'large',
+      shape: 'large',
       labelPlacement: 'top',
       density: 'compact',
       label: 'City',
@@ -18,9 +18,17 @@ describe('m-dropdown · axes', () => {
 
     const field = wrapper.find('.ui-text-field')
     expect(field.classes()).toContain('ui-text-field--outlined')
-    expect(field.classes()).toContain('ui-text-field--large')
+    expect(field.classes()).toContain('ui-text-field--shape-large')
     expect(field.classes()).toContain('ui-text-field--label-top')
     expect(field.classes()).toContain('ui-text-field--density-compact')
+  })
+
+  // The dev warning is not observable under Vitest (`import.meta.dev` is
+  // false); the retired value still has to reach the field for one release.
+  it('still forwards a retired rounded value as its shape for one release', async () => {
+    const wrapper = await mount({ ...base, rounded: 'pill' })
+
+    expect(wrapper.find('.ui-text-field').classes()).toContain('ui-text-field--shape-full')
   })
 
   it('carries its density into the rows of the panel', async () => {

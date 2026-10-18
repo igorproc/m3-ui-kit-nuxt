@@ -1,8 +1,18 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+// ==========================================
+// OTP INPUT COMPONENT TOKENS
+// ==========================================
+// The cells follow the role table of color-and-state.md — empty is
+// `outline-variant`, a cell with a character is `outline`, the active cell is
+// `primary` — and each variant states a state with the property it already
+// owns: `outlined` its edge, `filled` its tone, `underline` its rule.
+
 $on-surface: map.get($theme-color-link, on-surface);
 $message-typography: body-small;
+$disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
+$disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
 $tokens: (
   root: (
     gap: spacing(12),
@@ -14,28 +24,53 @@ $tokens: (
   label: (
     color: map.get($theme-color-link, on-surface-variant),
     typography: body-medium,
+    required: (color: map.get($theme-color-link, error)),
   ),
   field: (
     size: 48rem,
-    shape: var(--sys-shape-corner-medium),
+    shape: map.get($theme-shape-link, 'medium'),
     border: (width: 1rem),
-    outline: map.get($theme-color-link, outline),
     color: $on-surface,
     typography: title-large,
-    filled: (container: map.get($theme-color-link, surface-container-highest)),
-    // An outlined cell hovers the way an outlined text field does: the edge
-    // darkens, nothing else moves.
-    hover: (outline: $on-surface),
-    // The one ring in the field family (see color-and-state): with no caret,
-    // the active cell is the only place focus can be seen.
-    active: (outline: map.get($theme-color-link, primary), width: 2rem),
-    error: (outline: map.get($theme-color-link, error)),
-    // The family's disabled roles, not one opacity over the whole cell.
-    disabled: (
-      outline: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent),
-      color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent),
-      container: color-mix(in srgb, $on-surface 4%, transparent),
+    // A per-cell pattern shown in empty cells, the field family's placeholder.
+    placeholder: (color: map.get($theme-color-link, on-surface-variant)),
+    // The one ring in the field family (color-and-state.md): with no caret, the
+    // active cell is the only place focus can be seen.
+    active: (color: map.get($theme-color-link, primary), width: 2rem),
+    error: (color: map.get($theme-color-link, error)),
+    disabled: (color: $disabled-content),
+  ),
+  outlined: (
+    outline: (
+      empty: map.get($theme-color-link, outline-variant),
+      filled: map.get($theme-color-link, outline),
+      // An outlined cell hovers the way an outlined text field does: the edge
+      // darkens, nothing else moves.
+      hover: $on-surface,
+      disabled: $disabled-container,
     ),
+  ),
+  filled: (
+    container: (
+      empty: map.get($theme-color-link, surface-container-high),
+      filled: map.get($theme-color-link, surface-container-highest),
+      error: map.get($theme-color-link, error-container),
+      // `DisabledContainerOpacity`: on-surface at 4%.
+      disabled: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container-subtle), transparent),
+    ),
+    error: (color: map.get($theme-color-link, on-error-container)),
+    // Hover on a tone is a state layer in the content's ink, not a premixed
+    // background (craft.md, «Подмена фона»).
+    layer: (color: $on-surface, hover: state-opacity(hover)),
+  ),
+  underline: (
+    rule: (
+      empty: map.get($theme-color-link, outline-variant),
+      filled: map.get($theme-color-link, outline),
+      hover: $on-surface,
+      disabled: $disabled-container,
+    ),
+    shape: map.get($theme-shape-link, 'none'),
   ),
   separator: (
     color: map.get($theme-color-link, on-surface-variant),
@@ -48,6 +83,9 @@ $tokens: (
     // One line, reserved even while empty.
     min-height: var(--md-sys-typescale-#{$message-typography}-line-height),
     icon: (size: 16rem),
+    // A check in progress: the indicator stands where an error would appear,
+    // in the content's quiet ink.
+    loading: (color: map.get($theme-color-link, on-surface-variant)),
   ),
   state: (
     duration: map.get($theme-animation-link, 'duration', 'short', '3'),

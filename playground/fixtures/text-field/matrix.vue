@@ -57,6 +57,40 @@
       </MTextField>
     </div>
 
+    <h2>Affixes</h2>
+    <div class="fixture-row">
+      <MTextField
+        v-model="price"
+        label="Price"
+        prefix="$"
+        suffix="USD"
+        data-test="affixes"
+      />
+      <MTextField
+        v-model="mailbox"
+        variant="outlined"
+        label="Mailbox"
+        suffix="@example.com"
+        data-test="suffix-outlined"
+      />
+    </div>
+
+    <h2>Trailing icon in error</h2>
+    <div class="fixture-row">
+      <MTextField
+        v-for="variant in variants"
+        :key="variant"
+        :variant="variant"
+        :label="`Error with icon ${variant}`"
+        error-message="Check the address"
+        :data-test="`error-append-${variant}`"
+      >
+        <template #append>
+          <MIcon name="info" />
+        </template>
+      </MTextField>
+    </div>
+
     <h2>Density</h2>
     <div class="fixture-row">
       <MTextField
@@ -71,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import type { MFieldDensity, MFieldLabelPlacement, MTextFieldVariant } from '#kit/components/ui/text-field/props'
@@ -88,8 +122,11 @@ const states: { name: string, props: Record<string, unknown>, value?: string }[]
   { name: 'readonly', props: { readonly: true }, value: 'Read only' },
   { name: 'error', props: { errorMessage: 'Enter a name' } },
   { name: 'flagged', props: { error: true } },
-  { name: 'disabled', props: { disabled: true }, value: 'Disabled' },
+  { name: 'disabled', props: { disabled: true, helperText: 'Locked by an administrator' }, value: 'Disabled' },
 ]
+
+const price = ref('12')
+const mailbox = ref('ada')
 
 const values = reactive<Record<string, string>>({})
 for (const state of states) {

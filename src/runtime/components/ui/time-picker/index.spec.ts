@@ -1,105 +1,148 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { nextTick } from 'vue'
 import MTimePicker from './index.vue'
-import MTimePickerKeyboard from '#kit/components/fragments/time-picker/keyboard/index.vue'
-import MTimePickerDial from '#kit/components/fragments/time-picker/dial/index.vue'
 
 describe('m-time-picker', () => {
-  it('renders the dial face by default (mode="dial")', async () => {
+  it('turns a dial by default, with two selectors over it and no fields', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '14:30' } })
+
+    expect(wrapper.find('.ui-time-picker--picker').exists()).toBe(true)
+    expect(wrapper.findAll('[role="radio"]').map(radio => radio.text())).toEqual(['14', '30'])
+    expect(wrapper.find('[role="slider"]').attributes('aria-valuenow')).toBe('14')
+    expect(wrapper.find('input:not([type="hidden"])').exists()).toBe(false)
+  })
+
+  it('is a group named by its headline, or by a phrase when there is none', async () => {
+    const named = await mountSuspended(MTimePicker, { props: { label: 'Alarm' } })
+    const group = named.find('[role="group"]')
+    expect(named.find(`#${group.attributes('aria-labelledby')}`).text()).toBe('Alarm')
+
+    const bare = await mountSuspended(MTimePicker)
+    expect(bare.find('[role="group"]').attributes('aria-label')).toBe('Select time')
+  })
+
+  it('pads the hour to two digits', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '09:05' } })
+
+    expect(wrapper.find('.ui-time-picker__selector').text()).toBe('09')
+  })
+
+  it('shows nothing chosen on an empty model', async () => {
     const wrapper = await mountSuspended(MTimePicker)
 
-    expect(wrapper.find('.ui-time-picker-dial').exists()).toBe(true)
-    expect(wrapper.find('.ui-time-picker-dial__face').exists()).toBe(true)
+    expect(wrapper.find('.ui-time-picker__selector--selected').exists()).toBe(false)
+    expect(wrapper.find('.ui-time-picker__hand').exists()).toBe(false)
   })
 
-  it('renders the keyboard variant when mode="keyboard"', async () => {
-    const wrapper = await mountSuspended(MTimePicker, {
-      props: { mode: 'keyboard' },
-    })
+  it('switches the dial to minutes from the minute selector', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '14:30' } })
 
-    expect(wrapper.find('.ui-time-picker-keyboard').exists()).toBe(true)
-    expect(wrapper.find('.ui-time-picker-dial').exists()).toBe(false)
+    await wrapper.findAll('.ui-time-picker__selector')[1]!.trigger('click')
+    await nextTick()
+
+    const dial = wrapper.find('[role="slider"]')
+    expect(dial.attributes('aria-label')).toBe('Minute')
+    expect(dial.attributes('aria-valuetext')).toBe('30 minutes')
   })
 
-  it('forwards the layout prop to the dial modifier class', async () => {
-    const wrapper = await mountSuspended(MTimePicker, {
-      props: { layout: 'horizontal' },
-    })
+  it('draws the period as a radio group of toggle buttons in a 12-hour cycle only', async () => {
+    const h23 = await mountSuspended(MTimePicker, { props: { modelValue: '21:00' } })
+    expect(h23.find('.ui-time-picker__period').exists()).toBe(false)
+    // The cycle is a modifier, so a 24-hour picker keeps no column for a period.
+    expect(h23.find('.ui-time-picker').classes()).toContain('ui-time-picker--h23')
 
-    expect(wrapper.find('.ui-time-picker-dial--horizontal').exists()).toBe(true)
+    const h12 = await mountSuspended(MTimePicker, { props: { modelValue: '21:00', hourCycle: 'h12' } })
+    const options = h12.findAll('.ui-time-picker__period-option')
+    expect(h12.find('.ui-time-picker__period').attributes('role')).toBe('radiogroup')
+    expect(options.map(option => option.attributes('type'))).toEqual(['button', 'button'])
+    expect(options.map(option => option.attributes('aria-checked'))).toEqual(['false', 'true'])
+    expect(h12.find('.ui-time-picker__selector').text()).toBe('09')
+    expect(h12.find('.ui-time-picker').classes()).toContain('ui-time-picker--h12')
   })
 
-  it('passes the model value down into the keyboard inputs', async () => {
-    const wrapper = await mountSuspended(MTimePicker, {
-      props: { mode: 'keyboard', modelValue: '08:30' },
-    })
+  it('re-reads the same model when the cycle changes', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '00:15', hourCycle: 'h23' } })
+    expect(wrapper.find('.ui-time-picker__selector').text()).toBe('00')
 
-    // Hours are stored unpadded until blur; minutes keep the raw model string.
-    const inputs = wrapper.findAll('.ui-time-picker-keyboard__input')
-    expect((inputs[0]!.element as HTMLInputElement).value).toBe('8')
-    expect((inputs[1]!.element as HTMLInputElement).value).toBe('30')
-  })
-})
-
-describe('m-time-picker keyboard leaf', () => {
-  it('renders hour/minute inputs with a11y labels', async () => {
-    const wrapper = await mountSuspended(MTimePickerKeyboard, {
-      props: { modelValue: '12:00' },
-    })
-
-    const inputs = wrapper.findAll('.ui-time-picker-keyboard__input')
-    expect(inputs).toHaveLength(2)
-    expect(inputs[0]!.attributes('aria-label')).toBe('Hours')
-    expect(inputs[1]!.attributes('aria-label')).toBe('Minutes')
+    await wrapper.setProps({ hourCycle: 'h12' })
+    expect(wrapper.find('.ui-time-picker__selector').text()).toBe('12')
+    expect(wrapper.find('.ui-time-picker').classes()).toContain('ui-time-picker--h12')
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy()
   })
 
-  it('renders the AM/PM toggle only in 12h mode', async () => {
-    const h24 = await mountSuspended(MTimePickerKeyboard, {
-      props: { modelValue: '13:00', is24h: true },
-    })
-    expect(h24.find('.ui-time-picker-keyboard__ampm').exists()).toBe(false)
+  it('still reads the retired is24h and mode spellings for one release', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '21:00', is24h: false, mode: 'keyboard' } })
 
-    const h12 = await mountSuspended(MTimePickerKeyboard, {
-      props: { modelValue: '01:00', is24h: false },
-    })
-    expect(h12.find('.ui-time-picker-keyboard__ampm').exists()).toBe(true)
-    expect(h12.findAll('.ui-time-picker-keyboard__ampm-btn')).toHaveLength(2)
+    expect(wrapper.find('.ui-time-picker--input').exists()).toBe(true)
+    expect(wrapper.find('.ui-time-picker__period').exists()).toBe(true)
+    warn.mockRestore()
   })
 
-  it('emits an updated model value when an input changes', async () => {
-    const wrapper = await mountSuspended(MTimePickerKeyboard, {
-      props: { modelValue: '08:30' },
-    })
+  it('types the time in two fields named by the labels under them', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input', modelValue: '08:30' } })
+    const fields = wrapper.findAll('.ui-time-picker__field')
 
-    const hours = wrapper.findAll('.ui-time-picker-keyboard__input')[0]!
-    await hours.setValue('09')
-
-    const emitted = wrapper.emitted('update:modelValue')
-    expect(emitted).toBeTruthy()
-    expect(emitted!.at(-1)).toEqual(['09:30'])
+    expect(fields.map(field => (field.element as HTMLInputElement).value)).toEqual(['08', '30'])
+    expect(fields.map(field => field.attributes('type'))).toEqual(['text', 'text'])
+    expect(wrapper.find(`#${fields[0]!.attributes('aria-labelledby')}`).text()).toBe('Hour')
   })
 
-  it('renders the label only when not in dial mode', async () => {
-    const standalone = await mountSuspended(MTimePickerKeyboard, {
-      props: { modelValue: '00:00', label: 'Pick a time' },
-    })
-    expect(standalone.find('.ui-time-picker-keyboard__label').text()).toBe('Pick a time')
+  it('shows a refused hour as an error instead of clamping it', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input', modelValue: '08:30', hourError: 'No such hour' } })
+    const hours = wrapper.find('.ui-time-picker__field')
 
-    const dialChild = await mountSuspended(MTimePickerKeyboard, {
-      props: { modelValue: '00:00', label: 'Pick a time', isDial: true },
-    })
-    expect(dialChild.find('.ui-time-picker-keyboard__label').exists()).toBe(false)
+    await hours.setValue('75')
+    await hours.trigger('keydown', { key: 'Enter' })
+
+    expect(wrapper.find('[role="alert"]').text()).toBe('No such hour')
+    expect(hours.classes()).toContain('ui-time-picker__field--error')
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy()
   })
-})
 
-describe('m-time-picker dial leaf', () => {
-  it('renders the clock face and embedded keyboard header', async () => {
-    const wrapper = await mountSuspended(MTimePickerDial, {
-      props: { modelValue: '10:15' },
-    })
+  it('lets a host read a typed time not yet committed', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input', required: true } })
+    const validate = (wrapper.vm as unknown as { validate: () => boolean }).validate
 
-    expect(wrapper.find('.ui-time-picker-dial__face').exists()).toBe(true)
-    expect(wrapper.find('.ui-time-picker-dial__header .ui-time-picker-keyboard').exists()).toBe(true)
-    expect(wrapper.findAll('.ui-time-picker-dial__number').length).toBeGreaterThan(0)
+    expect(validate()).toBe(false)
+    await wrapper.find('.ui-time-picker__field').setValue('7')
+    await wrapper.findAll('.ui-time-picker__field')[1]!.setValue('5')
+    expect(validate()).toBe(true)
+    expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual(['07:05'])
+  })
+
+  it('shows the app\'s error and marks the fields invalid', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input', error: true, errorMessage: 'Too late' } })
+
+    expect(wrapper.find('[role="alert"]').text()).toBe('Too late')
+    expect(wrapper.find('.ui-time-picker__field').attributes('aria-invalid')).toBe('true')
+  })
+
+  it('takes no change while read-only, and leaves the tab order while disabled', async () => {
+    const readonly = await mountSuspended(MTimePicker, { props: { modelValue: '10:00', readonly: true } })
+    await readonly.find('[role="slider"]').trigger('keydown', { key: 'ArrowUp' })
+    expect(readonly.emitted('update:modelValue')).toBeFalsy()
+    expect(readonly.find('[role="slider"]').attributes('aria-readonly')).toBe('true')
+
+    const disabled = await mountSuspended(MTimePicker, { props: { modelValue: '10:00', disabled: true } })
+    expect(disabled.find('[role="slider"]').attributes('tabindex')).toBe('-1')
+    expect(disabled.find('.ui-time-picker__selector').attributes('disabled')).toBeDefined()
+  })
+
+  it('submits the value with a form under its name', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '10:15', name: 'start' } })
+    const hidden = wrapper.find('input[type="hidden"]')
+
+    expect(hidden.attributes('name')).toBe('start')
+    expect((hidden.element as HTMLInputElement).value).toBe('10:15')
+  })
+
+  it('renders the helper slot and points the fields at it', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input' }, slots: { helper: () => 'Opening hours 9–18' } })
+    const helper = wrapper.find('.ui-time-picker__helper')
+
+    expect(helper.text()).toBe('Opening hours 9–18')
+    expect(wrapper.find('.ui-time-picker__field').attributes('aria-describedby')).toContain(helper.attributes('id'))
   })
 })

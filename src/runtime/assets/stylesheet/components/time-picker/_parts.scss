@@ -1,0 +1,297 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TIME PICKER · DISPLAY, PERIOD, DIAL
+// ==========================================
+// Included inside `.ui-time-picker`. Selectors and period options carry the
+// MD3 state layer in their own ink (`::before`); focus is the kit's ring on
+// buttons and the dial, and a colour change on the typed fields. The time
+// reads left to right in any writing direction, as in Compose.
+
+@mixin state-layer($t) {
+  position: relative;
+  isolation: isolate;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  @include can-hover {
+    &:hover::before {
+      opacity: g($t, 'layer.hover');
+    }
+  }
+
+  &:active::before {
+    opacity: g($t, 'layer.pressed');
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@mixin display($t) {
+  // A grid of `part separator part`: each part grows up to its spec width and
+  // shrinks to nothing, so the row's max-content is the full 96 + 24 + 96
+  // (the picker's grid sizes to it) while its min-content is the separator
+  // alone (a narrow column squeezes the parts instead of overflowing).
+  &__display {
+    display: grid;
+    grid-area: display;
+    grid-template-columns: minmax(0, g($t, 'selector.width')) g($t, 'separator.width') minmax(0, g($t, 'selector.width'));
+    align-items: start;
+    min-width: 0;
+    direction: ltr;
+  }
+
+  &--input &__display {
+    grid-template-columns: minmax(0, g($t, 'field.width')) g($t, 'separator.width') minmax(0, g($t, 'field.width'));
+  }
+
+  &__selector {
+    min-width: 0;
+    height: g($t, 'selector.height');
+    padding: 0;
+    border: none;
+    border-radius: g($t, 'selector.shape');
+    background-color: g($t, 'selector.color.container');
+    color: g($t, 'selector.color.label');
+
+    @include typescale(g($t, 'selector.typography'));
+    @include state-layer($t);
+
+    &--selected {
+      background-color: g($t, 'selector.selected.container');
+      color: g($t, 'selector.selected.label');
+    }
+  }
+
+  &__separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: g($t, 'selector.height');
+    color: g($t, 'separator.color');
+
+    @include typescale(g($t, 'separator.typography'));
+  }
+
+  &--input &__separator {
+    height: g($t, 'field.height');
+  }
+
+  &__field-box {
+    display: flex;
+    flex-direction: column;
+    gap: g($t, 'support.gap');
+    min-width: 0;
+  }
+
+  // The edge is always there, transparent at rest: focus changes colours
+  // only, and the digits never shift.
+  &__field {
+    box-sizing: border-box;
+    width: 100%;
+    height: g($t, 'field.height');
+    padding: 0;
+    border: g($t, 'field.outline') solid transparent;
+    border-radius: g($t, 'field.shape');
+    outline: none;
+    background-color: g($t, 'field.color.container');
+    color: g($t, 'field.color.label');
+    text-align: center;
+    caret-color: g($t, 'field.focus.outline');
+    transition:
+      background-color g($t, 'motion.duration') g($t, 'motion.easing'),
+      border-color g($t, 'motion.duration') g($t, 'motion.easing');
+
+    @include typescale(g($t, 'field.typography'));
+
+    &:focus {
+      border-color: g($t, 'field.focus.outline');
+      background-color: g($t, 'field.focus.container');
+      color: g($t, 'field.focus.label');
+    }
+
+    &--error,
+    &--error:focus {
+      border-color: g($t, 'field.error.outline');
+      background-color: g($t, 'field.error.container');
+      color: g($t, 'field.error.label');
+      caret-color: g($t, 'field.error.outline');
+    }
+  }
+
+  &__field-label {
+    color: g($t, 'support.color');
+
+    @include typescale(g($t, 'support.typography'));
+  }
+
+  &__field-box--error &__field-label {
+    color: g($t, 'support.error');
+  }
+}
+
+@mixin period($t) {
+  &__period {
+    display: flex;
+    flex-direction: column;
+    grid-area: period;
+    gap: g($t, 'period.gap');
+    width: g($t, 'period.vertical.width');
+    height: g($t, 'period.vertical.height');
+    margin-inline-start: g($t, 'period.offset.vertical');
+    direction: ltr;
+  }
+
+  &--input &__period {
+    height: g($t, 'period.input.height');
+  }
+
+  // The selected option squares off; the change is instant (no morph).
+  &__period-option {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    border-radius: g($t, 'period.shape');
+    background-color: g($t, 'period.color.container');
+    color: g($t, 'period.color.label');
+
+    @include typescale(g($t, 'period.typography'));
+    @include state-layer($t);
+
+    &--selected {
+      border-radius: g($t, 'period.selected.shape');
+      background-color: g($t, 'period.selected.container');
+      color: g($t, 'period.selected.label');
+      font-weight: g($t, 'period.selected.weight');
+    }
+  }
+}
+
+@mixin dial($t) {
+  &__dial {
+    position: relative;
+    grid-area: dial;
+    width: min(#{g($t, 'dial.size')}, 100%);
+    aspect-ratio: 1;
+    margin-block-start: g($t, 'layout.gap');
+    border-radius: g($t, 'dial.shape');
+    background-color: g($t, 'dial.color');
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    direction: ltr;
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  // Geometry is physical on purpose: a clock face does not mirror.
+  &__center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: g($t, 'dial.hand.center');
+    height: g($t, 'dial.hand.center');
+    border-radius: g($t, 'dial.shape');
+    background-color: g($t, 'dial.hand.color');
+    transform: translate(-50%, -50%);
+  }
+
+  &__hand {
+    position: absolute;
+    bottom: 50%;
+    left: calc(50% - #{g($t, 'dial.hand.track')} / 2);
+    width: g($t, 'dial.hand.track');
+    background-color: g($t, 'dial.hand.color');
+    transform-origin: 50% 100%;
+    transition:
+      transform g($t, 'motion.duration') g($t, 'motion.easing'),
+      height g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  &__handle {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: g($t, 'dial.hand.handle');
+    height: g($t, 'dial.hand.handle');
+    border-radius: g($t, 'dial.shape');
+    background-color: g($t, 'dial.hand.color');
+    transform: translate(-50%, -50%);
+  }
+
+  &__handle-dot {
+    width: g($t, 'dial.hand.dot.size');
+    height: g($t, 'dial.hand.dot.size');
+    border-radius: g($t, 'dial.shape');
+    background-color: g($t, 'dial.hand.dot.color');
+  }
+
+  &__numbers {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__number {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: g($t, 'dial.number.size');
+    height: g($t, 'dial.number.size');
+    color: g($t, 'dial.number.color');
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+
+    @include typescale(g($t, 'dial.number.typography'));
+
+    &--selected {
+      color: g($t, 'dial.number.selected');
+    }
+  }
+
+  // Face, hand and handle are backgrounds, which forcing drops: the system
+  // highlight restates them.
+  @include forced-colors {
+    &__dial {
+      border: 1px solid CanvasText;
+    }
+
+    &__center,
+    &__hand,
+    &__handle {
+      forced-color-adjust: none;
+      background-color: Highlight;
+    }
+
+    &__number--selected {
+      forced-color-adjust: none;
+      color: HighlightText;
+    }
+
+    &__selector--selected,
+    &__period-option--selected {
+      forced-color-adjust: none;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+}

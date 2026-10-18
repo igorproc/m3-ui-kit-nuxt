@@ -10,8 +10,15 @@
  * What is left here is what no prop configures.
  */
 
-/** What `mask: true` draws. Not a default — it is what masking means. */
+/** What a mask draws. Not a default — it is what masking means. */
 export const OTP_MASK_CHARACTER = '•'
+
+/**
+ * How long `mask="last"` leaves the newest character readable, in ms — long
+ * enough to catch a typo, short enough that the code is hidden by the time the
+ * next one is typed. Part of what the mode means, so no prop configures it.
+ */
+export const OTP_MASK_REVEAL = 1000
 
 /**
  * The attribute the whole component exists for — it is what lets the platform

@@ -7,25 +7,32 @@
     :placeholder="placeholder"
     :helper-text="helperText"
     :variant="variant"
+    :shape="shape"
+    :label-placement="labelPlacement"
+    :density="density"
+    :name="name"
     :disabled="disabled"
     :readonly="readonly"
+    :required="required"
+    :autofocus="autofocus"
     :error="error || invalid"
-    :error-message="errorMessage"
+    :error-message="displayError"
     :path="path"
     autocomplete="off"
     :input-attrs="colorInputAttrs"
     @keydown.enter.prevent="commitDraft"
-    @keydown.esc.prevent="revertDraft"
+    @keydown.esc="onEscape"
   >
     <template #append>
       <span class="ui-color-input__trigger-wrap">
         <MButtonIcon
+          ref="trigger"
           type="button"
           class="ui-color-input__trigger"
           :disabled="disabled || readonly"
           aria-haspopup="dialog"
           :aria-expanded="open"
-          :aria-label="`Open color picker${swatchLabel ? `, current ${swatchLabel}` : ''}`"
+          :aria-label="pickerLabel"
           @click="togglePicker"
         >
           <span
@@ -38,15 +45,23 @@
           v-if="picker"
           v-model="open"
           absolute
-          origin="bottom right"
+          :origin="origin"
         >
-          <div class="ui-color-input__picker">
+          <!-- The picker is a set of controls, not a menu: its arrows, Home and
+               End belong to its sliders and fields, so they stop here instead
+               of reaching the menu's item navigation. -->
+          <div
+            class="ui-color-input__picker"
+            @keydown="isolateKeys"
+          >
             <MColorPicker
               v-model="pickerModel"
               v-model:format="pickerFormat"
               :formats="formats"
               :swatches="swatches"
               :disabled="disabled"
+              :label="pickerLabel"
+              :messages="pickerMessages"
               @change="onPickerChange"
             />
           </div>
@@ -57,13 +72,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import MMenu from '#kit/components/ui/menu/index.vue'
+import type { UiMenuOrigin } from '#kit/components/ui/menu/types'
 import MColorPicker from '#kit/components/ui/color-picker/index.vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import { formatColor, parseColor, toCssColor } from '#kit/shared/utils/color'
 import type { ColorFormat, ColorParseError } from '#kit/shared/utils/color'
 import { mColorInputProps } from './props'
+import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
 
 const props = defineProps(mColorInputProps)
 
@@ -95,10 +112,15 @@ const swatchCss = computed(() => {
   return parsed.ok ? toCssColor(parsed.rgba) : 'transparent'
 })
 
-const swatchLabel = computed(() => model.value ?? '')
+const shape = useFieldShape('m-color-input', props)
+const displayError = computed(() => props.errorMessage ?? (invalid.value ? props.formatHint : undefined))
 const colorInputAttrs = {
   spellcheck: false,
   autocapitalize: 'none',
+}
+
+if (import.meta.dev && props.picker && !props.pickerLabel) {
+  console.warn('[m-color-input] the swatch button has no accessible name: pass `picker-label`.')
 }
 
 // Keep the draft aligned with the committed value while the field is idle.
@@ -176,6 +198,20 @@ function revertDraft() {
   invalid.value = false
 }
 
+// Escape rolls an edit back; with nothing to roll back it belongs to whatever
+// is around the field — a dialog closing on it, for one.
+function onEscape(event: KeyboardEvent) {
+  if (draft.value === displayValue.value && !invalid.value) return
+  event.preventDefault()
+  revertDraft()
+}
+
+const NAVIGATION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'])
+
+function isolateKeys(event: KeyboardEvent) {
+  if (NAVIGATION_KEYS.has(event.key)) event.stopPropagation()
+}
+
 // Picker <-> field bridge.
 const pickerModel = computed<string | null>({
   get: () => model.value,
@@ -193,13 +229,29 @@ function onPickerChange(value: string | null) {
   emit('change', value)
 }
 
+const trigger = ref<{ $el: HTMLElement } | null>(null)
+const origin = ref<UiMenuOrigin>('bottom right')
+
 function togglePicker() {
   if (props.disabled || props.readonly || !props.picker) return
+  // The trigger stands at the inline end, so the panel hangs from that edge;
+  // placement is physical, so the side is read from the direction at open time.
+  const el = trigger.value?.$el
+  if (!open.value && el) origin.value = getComputedStyle(el).direction === 'rtl' ? 'bottom left' : 'bottom right'
   open.value = !open.value
 }
 
 watch(open, (isOpen) => {
   emit(isOpen ? 'open' : 'close')
+  if (isOpen) return
+
+  // Closing returns focus to the swatch button that opened the picker — not to
+  // the wrapper the menu falls back to, and not to the page.
+  nextTick(() => {
+    const el = trigger.value?.$el
+    const active = document.activeElement
+    if (el && (!active || active === document.body || el.parentElement?.contains(active))) el.focus()
+  })
 })
 </script>
 
@@ -207,7 +259,7 @@ watch(open, (isOpen) => {
 @use '#kit/assets/stylesheet/components/color-input' as t;
 
 .ui-color-input {
-  $t: material-map(t.$tokens, 'md-color-input');
+  $t: material-map(t.$tokens, 'm-color-input');
 
   &__trigger-wrap {
     position: relative;
@@ -223,13 +275,15 @@ watch(open, (isOpen) => {
     width: g($t, 'swatch.size');
     height: g($t, 'swatch.size');
     border-radius: g($t, 'swatch.shape');
-    box-shadow: inset 0 0 0 g($t, 'swatch.outline-width') g($t, 'swatch.outline');
+    border: g($t, 'swatch.outline-width') solid g($t, 'swatch.outline');
     background:
       linear-gradient(var(--swatch-color), var(--swatch-color)),
       conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')};
 
     // The swatch is the value itself: forcing would paint every colour Canvas.
+    // Its edge takes the system text colour, so it stays visible.
     @include forced-colors {
+      border-color: CanvasText;
       forced-color-adjust: none;
     }
   }

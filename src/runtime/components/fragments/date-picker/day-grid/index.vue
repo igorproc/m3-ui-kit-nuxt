@@ -1,224 +1,61 @@
 <template>
-  <div class="ui-date-picker__calendar">
-    <div class="ui-date-picker__weekdays">
+  <div
+    v-bind="gridAttrs"
+    class="ui-date-picker__grid"
+  >
+    <div
+      class="ui-date-picker__row"
+      role="row"
+    >
       <span
-        v-for="(weekday, idx) in weekdays"
-        :key="`${weekday}-${idx}`"
+        v-for="(weekday, index) in weekdays"
+        :key="index"
         class="ui-date-picker__weekday"
-      >
-        {{ weekday }}
-      </span>
+        role="columnheader"
+        :aria-label="weekday.long"
+      >{{ weekday.narrow }}</span>
     </div>
 
     <div
-      ref="gridEl"
-      class="ui-date-picker__grid"
-      role="grid"
-      @keydown="onKeydown"
+      v-for="(week, row) in weeks"
+      :key="row"
+      class="ui-date-picker__row"
+      role="row"
     >
       <div
-        v-for="(week, wIdx) in weeks"
-        :key="`week-${wIdx}`"
-        class="ui-date-picker__week"
-        role="row"
+        v-for="cell in week"
+        :key="cell.key"
+        v-bind="getCellAttrs(cell)"
+        class="ui-date-picker__cell"
+        :class="cell.date && {
+          'ui-date-picker__day': true,
+          'ui-date-picker__day--today': cell.today,
+          'ui-date-picker__day--selected': cell.selected,
+          'ui-date-picker__day--unavailable': cell.unavailable,
+        }"
       >
-        <div
-          v-for="(day, dIdx) in week"
-          :key="day.key"
-          role="gridcell"
-          :aria-selected="day.isSelected"
+        <slot
+          v-if="cell.date"
+          name="day"
+          :day="cell"
         >
-          <button
-            type="button"
-            class="ui-date-picker__day"
-            :class="{
-              'ui-date-picker__day--outside': !day.inCurrentMonth,
-              'ui-date-picker__day--today': day.isToday,
-              'ui-date-picker__day--selected': day.isSelected,
-              'ui-date-picker__day--disabled': day.isDisabled,
-            }"
-            :disabled="day.isDisabled"
-            :aria-disabled="day.isDisabled"
-            :aria-label="day.ariaLabel"
-            :tabindex="isActiveCell(wIdx, dIdx) ? 0 : -1"
-            @click="onClick(day)"
-            @focus="setActive(wIdx, dIdx)"
-          >
-            <span class="ui-date-picker__day-state" />
-            <span class="ui-date-picker__day-label">
-              <slot
-                name="day"
-                :day="day"
-              >
-                {{ day.label }}
-              </slot>
-            </span>
-          </button>
-        </div>
+          {{ cell.label }}
+        </slot>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
-import type { Dayjs } from 'dayjs'
-import type { DayCell } from '#kit/composables/date'
+/**
+ * The day grid: a header row of weekdays and six weeks of cells. Cells
+ * outside the month are drawn empty — a neighbouring month's day is not a
+ * choice here. Behavior comes whole from the bags of `useDateGridControl`.
+ */
 import { mDatePickerDayGridProps } from './props'
+import type { DateGridCell } from '#kit/composables/date/useDateGridControl'
 
-const props = defineProps(mDatePickerDayGridProps)
+defineProps(mDatePickerDayGridProps)
 
-const emit = defineEmits<{
-  (e: 'select', date: Dayjs): void
-}>()
-
-const gridEl = ref<HTMLElement | null>(null)
-
-// Chunk the flat day list into calendar weeks so the grid exposes proper
-// role="row" structure and 2D arrow navigation can address cells by (row, col).
-const weeks = computed<DayCell[][]>(() => {
-  const out: DayCell[][] = []
-  for (let i = 0; i < props.days.length; i += 7) out.push(props.days.slice(i, i + 7))
-  return out
-})
-
-// Roving tabindex: only one day button is tabbable at a time. The active cell
-// defaults to the selected day, falling back to today, then the first day.
-function initialActive(): [number, number] {
-  for (let r = 0; r < weeks.value.length; r++) {
-    const row = weeks.value[r]
-    if (!row) continue
-    for (let c = 0; c < row.length; c++) {
-      const cell = row[c]
-      if (cell?.isSelected) return [r, c]
-    }
-  }
-  for (let r = 0; r < weeks.value.length; r++) {
-    const row = weeks.value[r]
-    if (!row) continue
-    for (let c = 0; c < row.length; c++) {
-      const cell = row[c]
-      if (cell?.isToday) return [r, c]
-    }
-  }
-  return [0, 0]
-}
-
-const activeCell = ref<[number, number]>(initialActive())
-
-watch(weeks, () => {
-  activeCell.value = initialActive()
-})
-
-const isActiveCell = (row: number, col: number) =>
-  activeCell.value[0] === row && activeCell.value[1] === col
-
-function setActive(row: number, col: number) {
-  activeCell.value = [row, col]
-}
-
-function focusCell(row: number, col: number) {
-  activeCell.value = [row, col]
-  nextTick(() => {
-    const buttons = gridEl.value?.querySelectorAll<HTMLButtonElement>('.ui-date-picker__day')
-    const idx = row * 7 + col
-    buttons?.[idx]?.focus()
-  })
-}
-
-function onKeydown(event: KeyboardEvent) {
-  const rows = weeks.value.length
-  if (rows === 0) return
-
-  let [r, c] = activeCell.value
-  const rowLen = (idx: number) => weeks.value[idx]?.length ?? 1
-  const lastColInRow = rowLen(r) - 1
-
-  switch (event.key) {
-    case 'ArrowRight':
-      if (c < lastColInRow) {
-        c++
-      } else if (r < rows - 1) {
-        r++
-        c = 0
-      }
-      break
-    case 'ArrowLeft':
-      if (c > 0) {
-        c--
-      } else if (r > 0) {
-        r--
-        c = rowLen(r) - 1
-      }
-      break
-    case 'ArrowDown':
-      if (r < rows - 1) {
-        r++
-        c = Math.min(c, rowLen(r) - 1)
-      }
-      break
-    case 'ArrowUp':
-      if (r > 0) {
-        r--
-        c = Math.min(c, rowLen(r) - 1)
-      }
-      break
-    case 'Home':
-      c = 0
-      break
-    case 'End':
-      c = lastColInRow
-      break
-    default:
-      return
-  }
-
-  event.preventDefault()
-  focusCell(r, c)
-}
-
-function onClick(day: DayCell) {
-  if (day.isDisabled) return
-  emit('select', day.date)
-}
+defineSlots<{ day?: (props: { day: DateGridCell }) => unknown }>()
 </script>
-
-<style lang="scss">
-// Row + gridcell wrappers carry ARIA structure only; `display: contents` keeps
-// the day buttons as the actual grid items so the existing 7-column layout and
-// per-day styling (in date-picker/index.vue) are unchanged.
-.ui-date-picker__week,
-.ui-date-picker__grid [role='gridcell'] {
-  display: contents;
-}
-
-// The selected circle is a background and today's ring a shadow; forced
-// colors drop both. The grid ancestor outranks the selected-day hover fill.
-.ui-date-picker {
-  @include forced-colors {
-    &__grid &__day--selected &__day-state {
-      forced-color-adjust: none;
-      background-color: Highlight;
-    }
-
-    @include can-hover {
-      &__grid &__day--selected:hover &__day-state {
-        background-color: Highlight;
-      }
-    }
-
-    &__grid &__day--selected &__day-label {
-      color: HighlightText;
-    }
-
-    &__grid &__day--today &__day-label {
-      outline: 1px solid CanvasText;
-      outline-offset: -1px;
-    }
-
-    &__grid &__day--today.ui-date-picker__day--selected &__day-label {
-      outline-color: HighlightText;
-    }
-  }
-}
-</style>

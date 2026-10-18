@@ -1,2 +1,107 @@
-@forward './keyboard/index';
-@forward './dial/index';
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TIME PICKER TOKENS
+// ==========================================
+// One map for the dial and the typed time, with the numbers of
+// `TimePickerTokens` / `TimeInputTokens` (Compose Material3). The period is
+// the Expressive pair of toggle buttons, its shape set by state without a
+// morph between them.
+
+$on-surface: map.get($theme-color-link, on-surface);
+$on-surface-variant: map.get($theme-color-link, on-surface-variant);
+$primary-container: map.get($theme-color-link, primary-container);
+$on-primary-container: map.get($theme-color-link, on-primary-container);
+$surface-highest: map.get($theme-color-link, surface-container-highest);
+$selector: (width: 96rem, height: 80rem);
+$separator: 24rem;
+$dial: 256rem;
+
+// Compose's 36, which is off the 4-step spacing scale.
+$display-gap: spacing(32) + spacing(4);
+$tokens: (
+  container: (
+    color: map.get($theme-color-link, surface-container-high),
+    shape: map.get($theme-shape-link, extra-large),
+    padding: spacing(24),
+  ),
+  headline: (
+    typography: 'label-medium',
+    color: $on-surface-variant,
+    gap: spacing(20),
+  ),
+  layout: (
+    // From the time display to the dial, below it or beside it.
+    gap: $display-gap,
+    // Horizontal needs both columns side by side; narrower, it folds.
+    fold: map.get($selector, width) * 2 + $separator + $dial + $display-gap,
+  ),
+  selector: (
+    width: map.get($selector, width),
+    height: map.get($selector, height),
+    shape: map.get($theme-shape-link, small),
+    typography: 'display-large',
+    color: (container: $surface-highest, label: $on-surface),
+    selected: (container: $primary-container, label: $on-primary-container),
+  ),
+  separator: (width: $separator, typography: 'display-large', color: $on-surface),
+  period: (
+    typography: 'title-medium',
+    gap: spacing(4),
+    // Beside the selectors (vertical) or under them (horizontal).
+    offset: (vertical: spacing(12), horizontal: spacing(16)),
+    vertical: (width: 52rem, height: map.get($selector, height)),
+    horizontal: (width: 216rem, height: 38rem),
+    input: (height: 72rem),
+    shape: map.get($theme-shape-link, full),
+    color: (container: map.get($theme-color-link, surface-container-lowest), label: $on-surface-variant),
+    selected: (
+      container: $primary-container,
+      label: $on-primary-container,
+      shape: map.get($theme-shape-link, medium),
+      weight: 700,
+    ),
+  ),
+  dial: (
+    size: $dial,
+    color: $surface-highest,
+    shape: map.get($theme-shape-link, full),
+    number: (size: 48rem, typography: 'body-large', color: $on-surface, selected: map.get($theme-color-link, on-primary)),
+    hand: (
+      color: map.get($theme-color-link, primary),
+      track: 2rem,
+      handle: 48rem,
+      center: 8rem,
+      // A minute between the five-minute marks.
+      dot: (size: 4rem, color: map.get($theme-color-link, on-primary)),
+    ),
+  ),
+  field: (
+    width: 96rem,
+    height: 72rem,
+    shape: map.get($theme-shape-link, small),
+    typography: 'display-medium',
+    outline: 2rem,
+    color: (container: $surface-highest, label: $on-surface),
+    focus: (container: $primary-container, label: $on-primary-container, outline: map.get($theme-color-link, primary)),
+    error: (
+      container: map.get($theme-color-link, error-container),
+      label: map.get($theme-color-link, on-error-container),
+      outline: map.get($theme-color-link, error),
+    ),
+  ),
+  support: (
+    typography: 'body-small',
+    color: $on-surface-variant,
+    error: map.get($theme-color-link, error),
+    // Compose's 7 above a field's label.
+    gap: spacing(8) - 1rem,
+  ),
+  layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
+  disabled: (opacity: state-opacity(disabled-content)),
+  motion: (
+    duration: var(--sys-motion-duration-short-4),
+    easing: var(--sys-motion-easing-standard),
+  ),
+);

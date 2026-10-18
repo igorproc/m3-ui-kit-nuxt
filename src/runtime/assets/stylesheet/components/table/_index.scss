@@ -2,77 +2,135 @@
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
-// TABLE M3 COMPONENT TOKENS
+// TABLE COMPONENT TOKENS
 // ==========================================
+// Authored component (data tables left M3 after M2): an outlined container,
+// row dividers, a checkbox column and sortable headers. Hover and focus are
+// state layers in the content colour (craft.md §1), never premixed fills.
 
+$-hairline: max(1px, 1rem);
+$-radius: map.get($theme-shape-link, 'medium');
+$-row-compact: spacing(40);
+$-row-default: calc(#{spacing(48)} + #{spacing(4)});
+$-row-comfortable: spacing(64);
 $tokens: (
   container: (
-    bg: map.get($theme-color-link, 'surface'),
-    border: (
-      radius: var(--sys-shape-corner-medium),
+    color: map.get($theme-color-link, 'surface'),
+    shape: $-radius,
+    outline: (
       color: map.get($theme-color-link, 'outline-variant'),
-      width: 1rem,
+      // The divider's hairline: with the root font size in vw, 1rem drops
+      // under a device pixel on a narrow screen and the edge would vanish.
+      width: $-hairline,
+    ),
+  ),
+  // Row height per step; the header stands 4 taller than its rows. Loading,
+  // empty and error stand in for the rows at three rows' height, so arriving
+  // data grows the table rather than conjuring it from nothing.
+  density: (
+    compact: (
+      row: $-row-compact,
+      header: calc(#{$-row-compact} + #{spacing(4)}),
+      message: calc(#{$-row-compact} * 3),
+      // The indicator over rows that stay while new ones load sits just below the header.
+      busy: calc(#{$-row-compact} + #{spacing(4)} + #{spacing(16)}),
+    ),
+    default: (
+      row: $-row-default,
+      header: calc(#{$-row-default} + #{spacing(4)}),
+      message: calc(#{$-row-default} * 3),
+      // The indicator over rows that stay while new ones load sits just below the header.
+      busy: calc(#{$-row-default} + #{spacing(4)} + #{spacing(16)}),
+    ),
+    comfortable: (
+      row: $-row-comfortable,
+      header: calc(#{$-row-comfortable} + #{spacing(4)}),
+      message: calc(#{$-row-comfortable} * 3),
+      // The indicator over rows that stay while new ones load sits just below the header.
+      busy: calc(#{$-row-comfortable} + #{spacing(4)} + #{spacing(16)}),
     ),
   ),
   row: (
-    border: (
+    divider: (
       color: map.get($theme-color-link, 'outline-variant'),
-      width: 1rem,
+      width: $-hairline,
     ),
-    hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} 4%, transparent),
-    ),
+    content: (color: map.get($theme-color-link, 'on-surface')),
+    // The selection tone of lists and menus.
     selected: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'primary')} 8%, transparent),
+      container: (color: map.get($theme-color-link, 'secondary-container')),
+      content: (color: map.get($theme-color-link, 'on-secondary-container')),
     ),
   ),
   cell: (
-    padding: 12rem 16rem,
-    color: map.get($theme-color-link, 'on-surface'),
-    text: (
-      type: 'body-medium',
+    padding: (
+      inline: spacing(16),
+      block: spacing(8),
     ),
+    typography: 'body-medium',
     checkbox: (
-      width: 48rem,
-      padding: (
-        inline: 12rem,
-      ),
+      // The 40 checkbox target with 4 on each side.
+      width: spacing(48),
+      padding: (inline: spacing(4)),
     ),
   ),
   header: (
-    bg: map.get($theme-color-link, 'surface-container-low'),
-    color: map.get($theme-color-link, 'on-surface-variant'),
-    text: (
-      type: 'label-large',
-    ),
-    hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(hover), transparent),
-    ),
-    content: (
-      gap: 4rem,
-    ),
+    container: (color: map.get($theme-color-link, 'surface-container-low')),
+    content: (color: map.get($theme-color-link, 'on-surface-variant')),
+    typography: 'label-large',
+    gap: spacing(4),
     sort: (
       icon: (
-        size: 16rem,
+        size: spacing(16),
         color: map.get($theme-color-link, 'on-surface'),
       ),
     ),
   ),
+  state: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+    pressed: state-opacity(pressed),
+    disabled: state-opacity(disabled-content),
+  ),
+  caption: (
+    padding: (block: spacing(12)),
+    color: map.get($theme-color-link, 'on-surface'),
+    typography: 'title-medium',
+  ),
+  message: (
+    padding: spacing(16),
+    gap: spacing(8),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: 'body-medium',
+    error: (color: map.get($theme-color-link, 'error')),
+    icon: (size: spacing(20)),
+  ),
+  // A fade at the inline end while more columns lie beyond it.
+  fade: (size: spacing(24)),
   pagination: (
-    padding: 8rem 16rem,
-    gap: 24rem,
-    border: (
-      color: map.get($theme-color-link, 'outline-variant'),
-      width: 1rem,
+    padding: (
+      inline: spacing(16),
+      block: spacing(8),
     ),
-    info: (
-      color: map.get($theme-color-link, 'on-surface-variant'),
-      text: (
-        type: 'body-small',
+    gap: spacing(24),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: 'body-small',
+    actions: (gap: spacing(8)),
+    select: (
+      height: spacing(32),
+      padding: (
+        start: spacing(8),
+        end: calc(#{spacing(24)} + #{spacing(4)}),
       ),
-    ),
-    actions: (
-      gap: 8rem,
+      shape: map.get($theme-shape-link, 'small'),
+      typography: 'label-large',
+      color: map.get($theme-color-link, 'on-surface'),
+      icon: (
+        size: spacing(24),
+        inset: spacing(4),
+      ),
     ),
   ),
 );

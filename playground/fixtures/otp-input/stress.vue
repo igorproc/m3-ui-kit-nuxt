@@ -31,6 +31,29 @@
       :length="1"
       label="One character"
     />
+
+    <div
+      class="fixture-otp-stress__grid"
+      data-test="grid-column"
+    >
+      <MOtpInput
+        v-model="grouped"
+        :groups="[3, 3]"
+        label="Code in a 200 grid column"
+      />
+    </div>
+
+    <div
+      class="fixture-otp-stress__flex"
+      data-test="flex-row"
+    >
+      <MOtpInput
+        v-model="eight"
+        :length="8"
+        :groups="[4, 4]"
+        label="Eight-digit code in a flex row"
+      />
+    </div>
   </section>
 </template>
 
@@ -41,6 +64,8 @@ import MOtpInput from '#kit/components/ui/otp-input/index.vue'
 const long = ref('1234')
 const narrow = ref('12')
 const single = ref('')
+const grouped = ref('123')
+const eight = ref('1234')
 </script>
 
 <style lang="scss">
@@ -50,6 +75,17 @@ const single = ref('')
   gap: 24rem;
 
   &__narrow {
+    width: 200rem;
+  }
+
+  // A grid or flex parent used to keep the code at its content width.
+  &__grid {
+    display: grid;
+    grid-template-columns: 200rem;
+  }
+
+  &__flex {
+    display: flex;
     width: 200rem;
   }
 }

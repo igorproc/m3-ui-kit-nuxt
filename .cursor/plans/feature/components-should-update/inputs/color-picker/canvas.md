@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Canvas.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: градиент из текущего оттенка, бегунок, перетаскивание указателем и клавиатурой, токены фокуса. Открыты: неполная ARIA, постоянные слушатели `window`, цель бегунка 14.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: две скрытые оси `role="slider"` (насыщенность, яркость) на `createRangeKeyboardController`, pointer capture на время драга, RTL.</implementation-status>
 
 ## Вердикт
 
@@ -48,3 +48,7 @@
    стрелками влево/вправо. Один Tab-стоп, но роль описывает одну ось.
 
 Рекомендация: 1. Паттерн из APG для двумерного выбора цвета.
+
+## Заметки реализации
+
+- Вопрос 1 → 1.

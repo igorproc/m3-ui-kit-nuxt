@@ -2,14 +2,15 @@
   <div
     ref="canvasRef"
     class="ui-color-canvas"
-    role="slider"
-    aria-label="Saturation and brightness"
-    :aria-valuetext="valueText"
-    :aria-disabled="ctx.disabled.value || undefined"
-    :tabindex="ctx.disabled.value ? -1 : 0"
+    :class="{
+      'ui-color-canvas--focused': focusedAxis !== null,
+      'ui-color-canvas--locked': ctx.locked.value,
+    }"
     :style="{ backgroundColor: hueCss }"
     @pointerdown="onPointerDown"
-    @keydown="onKeydown"
+    @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerUp"
   >
     <div class="ui-color-canvas__saturation" />
     <div class="ui-color-canvas__value" />
@@ -17,81 +18,131 @@
       class="ui-color-canvas__thumb"
       :style="thumbStyle"
     />
+
+    <!-- One slider per axis: a 2-D field cannot be one honest `slider`, and
+         two of them read each value out on its own (APG). Visually hidden;
+         the thumb above shows their focus. -->
+    <span
+      v-for="axis in axes"
+      :key="axis.name"
+      class="ui-color-canvas__axis"
+      role="slider"
+      :tabindex="ctx.disabled.value ? -1 : 0"
+      :aria-label="axis.label"
+      :aria-orientation="axis.orientation"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      :aria-valuenow="axis.value"
+      :aria-valuetext="`${axis.value}%`"
+      :aria-disabled="ctx.disabled.value || undefined"
+      :aria-readonly="ctx.readonly.value || undefined"
+      @focus="focusedAxis = axis.name"
+      @blur="focusedAxis = null"
+      @keydown="axis.onKeydown"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+/**
+ * Private saturation × brightness field of `MColorPicker`. Reads and writes
+ * only the shared context. The pointer drags absolutely from the press point,
+ * with the pointer captured for the drag alone; the keyboard drives the two
+ * axis sliders.
+ */
 import { useColorPickerContext } from '#kit/composables/color-picker/context'
-import { useGlobalListener } from '#kit/composables/useGlobalListener'
+import { createRangeKeyboardController } from '#kit/composables/slider/createRangeKeyboardController'
 import { hsvaToRgba, toCssColor } from '#kit/shared/utils/color'
 
-/** Private S/V leaf for MColorPicker. Reads/writes only the shared context. */
+type Axis = 'saturation' | 'brightness'
+
 const ctx = useColorPickerContext()
 const canvasRef = ref<HTMLElement | null>(null)
-let dragging = false
+const focusedAxis = ref<Axis | null>(null)
+const dragging = ref(false)
+// Measured once per drag, not on every move.
+let rect: DOMRect | null = null
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+const percent = (value: number) => Math.round(value * 100)
 
 const hueCss = computed(() => toCssColor(hsvaToRgba({ h: ctx.hsva.value.h, s: 1, v: 1, a: 1 })))
 
 const thumbStyle = computed(() => ({
-  left: `${ctx.hsva.value.s * 100}%`,
+  insetInlineStart: `${ctx.hsva.value.s * 100}%`,
   top: `${(1 - ctx.hsva.value.v) * 100}%`,
 }))
 
-const valueText = computed(() => ctx.value.value ?? 'none')
+const isRtl = () => canvasRef.value ? getComputedStyle(canvasRef.value).direction === 'rtl' : false
+
+function axisController(read: () => number, write: (value: number) => void) {
+  return createRangeKeyboardController({
+    min: () => 0,
+    max: () => 100,
+    step: () => 1,
+    getValue: () => percent(read()),
+    setValue: value => write(value / 100),
+    rtl: isRtl,
+  })
+}
+
+const saturation = axisController(() => ctx.hsva.value.s, value => ctx.setSaturation(value))
+const brightness = axisController(() => ctx.hsva.value.v, value => ctx.setValue(value))
+
+function keydownFor(controller: ReturnType<typeof axisController>) {
+  return (event: KeyboardEvent) => {
+    if (ctx.locked.value) return
+    if (controller.onKeydown(event)) ctx.commit('keyboard')
+  }
+}
+
+const axes = computed(() => [
+  {
+    name: 'saturation' as const,
+    label: ctx.messages.value.saturation,
+    orientation: 'horizontal' as const,
+    value: percent(ctx.hsva.value.s),
+    onKeydown: keydownFor(saturation),
+  },
+  {
+    name: 'brightness' as const,
+    label: ctx.messages.value.brightness,
+    orientation: 'vertical' as const,
+    value: percent(ctx.hsva.value.v),
+    onKeydown: keydownFor(brightness),
+  },
+])
 
 function setFromPoint(clientX: number, clientY: number) {
-  const el = canvasRef.value
-  if (!el) return
-  const rect = el.getBoundingClientRect()
-  const s = clamp((clientX - rect.left) / rect.width, 0, 1)
+  if (!rect) return
+  const x = clamp((clientX - rect.left) / rect.width, 0, 1)
+  const s = isRtl() ? 1 - x : x
   const v = clamp(1 - (clientY - rect.top) / rect.height, 0, 1)
   ctx.setHSVA({ ...ctx.hsva.value, s, v })
 }
 
 function onPointerDown(event: PointerEvent) {
-  if (ctx.disabled.value) return
-  dragging = true
-  canvasRef.value?.focus()
+  const el = canvasRef.value
+  if (ctx.locked.value || !el || event.button !== 0) return
+
+  dragging.value = true
+  rect = el.getBoundingClientRect()
+  // Captured to the field for the drag only: no listener on the window
+  // outlives it.
+  el.setPointerCapture?.(event.pointerId)
   setFromPoint(event.clientX, event.clientY)
 }
 
-useGlobalListener('window', 'pointermove', (event) => {
-  if (dragging) setFromPoint((event as PointerEvent).clientX, (event as PointerEvent).clientY)
-})
+function onPointerMove(event: PointerEvent) {
+  if (dragging.value) setFromPoint(event.clientX, event.clientY)
+}
 
-useGlobalListener('window', 'pointerup', () => {
-  if (!dragging) return
-  dragging = false
+function onPointerUp(event: PointerEvent) {
+  if (!dragging.value) return
+  dragging.value = false
+  rect = null
+  canvasRef.value?.releasePointerCapture?.(event.pointerId)
   ctx.commit('pointer')
-})
-
-function onKeydown(event: KeyboardEvent) {
-  if (ctx.disabled.value) return
-  const step = event.shiftKey ? 0.1 : 0.02
-  const { s, v } = ctx.hsva.value
-  let handled = true
-  switch (event.key) {
-    case 'ArrowLeft':
-      ctx.setSaturation(clamp(s - step, 0, 1))
-      break
-    case 'ArrowRight':
-      ctx.setSaturation(clamp(s + step, 0, 1))
-      break
-    case 'ArrowUp':
-      ctx.setValue(clamp(v + step, 0, 1))
-      break
-    case 'ArrowDown':
-      ctx.setValue(clamp(v - step, 0, 1))
-      break
-    default:
-      handled = false
-  }
-  if (handled) {
-    event.preventDefault()
-    ctx.commit('keyboard')
-  }
 }
 </script>
 
@@ -99,7 +150,7 @@ function onKeydown(event: KeyboardEvent) {
 @use '#kit/assets/stylesheet/components/color-picker/index' as t;
 
 .ui-color-canvas {
-  $t: material-map(t.$tokens, 'md-color-picker');
+  $t: material-map(t.$tokens, 'm-color-picker');
 
   position: relative;
   width: 100%;
@@ -107,11 +158,14 @@ function onKeydown(event: KeyboardEvent) {
   border-radius: g($t, 'canvas.radius');
   cursor: crosshair;
   touch-action: none;
-  outline: none;
-  overflow: hidden;
 
-  &:focus-visible {
+  // The axis sliders are hidden, so the field shows their focus.
+  &--focused {
     @include focus-ring;
+  }
+
+  &--locked {
+    cursor: default;
   }
 
   &__saturation,
@@ -121,8 +175,13 @@ function onKeydown(event: KeyboardEvent) {
     border-radius: inherit;
   }
 
+  // Saturation grows toward the inline end, so the white edge is the start.
   &__saturation {
     background: linear-gradient(to right, #{g($t, 'canvas.saturation-color')}, transparent);
+
+    &:dir(rtl) {
+      background: linear-gradient(to left, #{g($t, 'canvas.saturation-color')}, transparent);
+    }
   }
 
   &__value {
@@ -134,10 +193,23 @@ function onKeydown(event: KeyboardEvent) {
     width: g($t, 'canvas.thumb.size');
     height: g($t, 'canvas.thumb.size');
     border: g($t, 'canvas.thumb.border-width') solid g($t, 'canvas.thumb.border');
-    border-radius: 50%;
+    border-radius: g($t, 'canvas.thumb.shape');
     box-shadow: g($t, 'canvas.thumb.shadow');
     transform: translate(-50%, -50%);
     pointer-events: none;
+
+    &:dir(rtl) {
+      transform: translate(50%, -50%);
+    }
+
+    // Forcing drops the fill the thumb is told apart by; an edge stays.
+    @include forced-colors {
+      border-color: CanvasText;
+    }
+  }
+
+  &__axis {
+    @include sr-only;
   }
 }
 </style>

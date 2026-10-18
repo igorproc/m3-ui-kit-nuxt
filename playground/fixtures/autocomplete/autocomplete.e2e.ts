@@ -40,7 +40,8 @@ test.describe('MAutocomplete', () => {
     for (const theme of THEMES) {
       test(`an open ${id} panel has no axe violations of its own (${theme})`, async ({ page }) => {
         await openFixture(page, `autocomplete/${fixture}`, { theme })
-        await combobox(page, id).focus()
+        // Focus alone opens only from a pointer (`openOnFocus: 'pointer'`).
+        await combobox(page, id).click()
         await expect(combobox(page, id)).toHaveAttribute('aria-expanded', 'true')
         expect(await openPanelViolations(page)).toEqual(KNOWN_MENU_VIOLATION)
       })
@@ -133,6 +134,36 @@ test.describe('MAutocomplete', () => {
       expect(invalid.height, variant).toBeCloseTo(enabled.height, 0)
       await expect(combobox(page, `error-${variant}`)).toHaveAttribute('aria-invalid', 'true')
     }
+  })
+
+  test('a field with a value shows its title before anyone touches it', async ({ page }) => {
+    await openFixture(page, 'autocomplete/matrix')
+
+    await expect(combobox(page, 'selected-filled')).toHaveValue('Berlin')
+    await expect(combobox(page, 'readonly-filled')).toHaveValue('Copenhagen')
+    await expect(combobox(page, 'disabled-filled')).toHaveValue('Amsterdam')
+  })
+
+  test('Tab into the field does not unfold the list; a click does', async ({ page }) => {
+    await openFixture(page, 'autocomplete/matrix')
+    const field = combobox(page, 'enabled-outlined')
+
+    await combobox(page, 'enabled-filled').focus()
+    await page.keyboard.press('Tab')
+    await expect(field).toBeFocused()
+    await expect(field).toHaveAttribute('aria-expanded', 'false')
+
+    await page.keyboard.press('Shift+Tab')
+    await field.click()
+    await expect(field).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  test('the toggle takes the error role of an invalid field', async ({ page }) => {
+    await openFixture(page, 'autocomplete/matrix')
+    const ink = (part: string) => combobox(page, 'error-filled').evaluate((el, selector) =>
+      getComputedStyle(el.closest('.ui-text-field')!.querySelector(selector)!).color, part)
+
+    expect(await ink('.ui-autocomplete__toggle')).toBe(await ink('.ui-text-field__support'))
   })
 
   test('below the minimum length the panel stays closed', async ({ page }) => {

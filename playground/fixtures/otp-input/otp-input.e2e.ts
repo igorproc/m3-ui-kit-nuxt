@@ -46,6 +46,78 @@ test.describe('MOtpInput', () => {
     expect(last.x + last.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
   })
 
+  for (const id of ['grid-column', 'flex-row']) {
+    test(`a grouped code stays inside its ${id} parent`, async ({ page }) => {
+      await openFixture(page, 'otp-input/stress')
+      const box = (await field(page, id).boundingBox())!
+      const root = (await field(page, id).locator('.ui-otp-input').boundingBox())!
+      const last = (await cells(page, id).last().boundingBox())!
+
+      expect(root.x + root.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
+      expect(last.x + last.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
+    })
+  }
+
+  test('an empty cell is outline-variant, a cell with a character is outline', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+    const filled = await borderColor(cells(page, 'outlined-partial').first())
+    const empty = await borderColor(cells(page, 'outlined-partial').last())
+
+    expect(filled).not.toBe(empty)
+  })
+
+  test('outlined cells have no fill; filled cells are a tone', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+    const fill = (id: string) => cells(page, id).first().evaluate(el => getComputedStyle(el).backgroundColor)
+
+    expect(await fill('outlined-partial')).toBe('rgba(0, 0, 0, 0)')
+    expect(await fill('filled-partial')).not.toBe('rgba(0, 0, 0, 0)')
+  })
+
+  test('the pattern shows in empty cells and stays out of the value and the name', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+
+    await expect(cells(page, 'placeholder').first()).toHaveText('0')
+    await expect(input(page, 'placeholder')).toHaveValue('')
+    await expect(input(page, 'placeholder')).toHaveAccessibleName('Code, with a pattern')
+
+    await input(page, 'placeholder').focus()
+    await page.keyboard.type('4')
+    await expect(cells(page, 'placeholder').first()).toHaveText('4')
+  })
+
+  test('mask="last" shows the newest character for a moment, then hides it', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+
+    await input(page, 'mask-last').focus()
+    await page.keyboard.type('12')
+    await expect(cells(page, 'mask-last').nth(1)).toHaveText('2')
+    await expect(cells(page, 'mask-last').first()).toHaveText('•')
+
+    await expect(cells(page, 'mask-last').nth(1)).toHaveText('•', { timeout: 3000 })
+  })
+
+  test('a required code says so to assistive tech', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+
+    await expect(input(page, 'required')).toHaveAttribute('aria-required', 'true')
+  })
+
+  test('a full code draws no completed state', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+
+    await expect(field(page, 'filled').locator('.ui-otp-input')).not.toHaveClass(/--complete/)
+  })
+
+  test('a code that came back wrong is selected on focus, so typing starts over', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+
+    await input(page, 'error-message').focus()
+    await page.keyboard.type('2')
+
+    await expect(input(page, 'error-message')).toHaveValue('2')
+  })
+
   test('asks the platform for a one-time code and the matching keypad', async ({ page }) => {
     await openFixture(page, 'otp-input/matrix')
 

@@ -3,7 +3,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MSearch from './index.vue'
 
 describe('m-search', () => {
-  it('renders the root with a type="search" input and a leading icon slot', async () => {
+  it('renders the root with a type="search" input and a leading slot', async () => {
     const wrapper = await mountSuspended(MSearch)
 
     expect(wrapper.find('.ui-search').exists()).toBe(true)
@@ -12,10 +12,10 @@ describe('m-search', () => {
 
     expect(input.exists()).toBe(true)
     expect(input.attributes('type')).toBe('search')
-    expect(wrapper.find('.ui-search__icon--leading').exists()).toBe(true)
+    expect(wrapper.find('.ui-search__leading').exists()).toBe(true)
   })
 
-  it('starts empty and forwards placeholder + aria-label', async () => {
+  it('starts empty and forwards placeholder and aria-label', async () => {
     const wrapper = await mountSuspended(MSearch, {
       props: { placeholder: 'Find', ariaLabel: 'Find products' },
     })
@@ -27,12 +27,12 @@ describe('m-search', () => {
     expect(input.attributes('aria-label')).toBe('Find products')
   })
 
-  it('falls back to the placeholder for aria-label when none is given', async () => {
-    const wrapper = await mountSuspended(MSearch, {
-      props: { placeholder: 'Search items' },
-    })
+  it('ships no copy of its own: no placeholder, no name, no clear-button name', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'abc' } })
 
-    expect(wrapper.find('input.ui-search__input').attributes('aria-label')).toBe('Search items')
+    expect(wrapper.find('input').attributes('placeholder')).toBeUndefined()
+    expect(wrapper.find('input').attributes('aria-label')).toBeUndefined()
+    expect(wrapper.find('.ui-search__clear').attributes('aria-label')).toBeUndefined()
   })
 
   it('updates v-model on input and drops the empty class', async () => {
@@ -40,51 +40,91 @@ describe('m-search', () => {
 
     await wrapper.find('input.ui-search__input').setValue('query')
 
-    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual(['query'])
     expect(wrapper.classes()).not.toContain('ui-search--empty')
   })
 
-  it('shows the clear button when populated and clears the model on click', async () => {
+  it('submits the query on Enter', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'nuxt' } })
+
+    await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+
+    expect(wrapper.emitted('submit')!.at(-1)).toEqual(['nuxt'])
+  })
+
+  it('clears the model with a named clear button and says so', async () => {
     const wrapper = await mountSuspended(MSearch, {
-      props: { modelValue: 'abc' },
+      props: { modelValue: 'abc', clearLabel: 'Clear search' },
     })
 
-    const clear = wrapper.find('button.ui-search__icon--trailing')
+    const clear = wrapper.find('button.ui-search__clear')
 
-    expect(clear.exists()).toBe(true)
     expect(clear.attributes('aria-label')).toBe('Clear search')
+    expect(clear.classes()).not.toContain('ui-search__clear--hidden')
 
     await clear.trigger('click')
 
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual([''])
+    expect(wrapper.emitted('clear')).toHaveLength(1)
   })
 
-  it('hides the clear button when empty', async () => {
+  it('keeps the clear button in place but hidden and inert while there is nothing to clear', async () => {
     const wrapper = await mountSuspended(MSearch)
+    const clear = wrapper.find('.ui-search__clear')
 
-    expect(wrapper.find('button.ui-search__icon--trailing').exists()).toBe(false)
+    expect(clear.exists()).toBe(true)
+    expect(clear.classes()).toContain('ui-search__clear--hidden')
+    expect(clear.attributes('disabled')).toBeDefined()
   })
 
-  it('disables the input and hides the clear button when disabled', async () => {
+  it('disables the input and the clear button when disabled', async () => {
     const wrapper = await mountSuspended(MSearch, {
       props: { modelValue: 'abc', disabled: true },
     })
 
     expect(wrapper.find('input.ui-search__input').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('button.ui-search__icon--trailing').exists()).toBe(false)
+    expect(wrapper.find('.ui-search__clear').classes()).toContain('ui-search__clear--hidden')
+    expect(wrapper.classes()).toContain('ui-search--disabled')
   })
 
-  it('renders custom leading and clear slots', async () => {
+  it('renders the leading, clear, trailing and avatar slots', async () => {
     const wrapper = await mountSuspended(MSearch, {
       props: { modelValue: 'abc' },
       slots: {
         leading: () => 'L',
         clear: () => 'X',
+        trailing: () => 'T',
+        avatar: () => 'A',
       },
     })
 
-    expect(wrapper.find('.ui-search__icon--leading').text()).toBe('L')
-    expect(wrapper.find('button.ui-search__icon--trailing').text()).toBe('X')
+    expect(wrapper.find('.ui-search__leading').text()).toBe('L')
+    expect(wrapper.find('.ui-search__clear').text()).toBe('X')
+    expect(wrapper.find('.ui-search__trailing').text()).toBe('T')
+    expect(wrapper.find('.ui-search__avatar').text()).toBe('A')
+  })
+
+  it('renders no trailing or avatar box without their slots', async () => {
+    const wrapper = await mountSuspended(MSearch)
+
+    expect(wrapper.find('.ui-search__trailing').exists()).toBe(false)
+    expect(wrapper.find('.ui-search__avatar').exists()).toBe(false)
+  })
+
+  it('reflects focus on the root, for the focus ring', async () => {
+    const wrapper = await mountSuspended(MSearch)
+
+    await wrapper.find('input').trigger('focus')
+    expect(wrapper.classes()).toContain('ui-search--focused')
+
+    await wrapper.find('input').trigger('blur')
+    expect(wrapper.classes()).not.toContain('ui-search--focused')
+  })
+
+  it('passes attributes to the input and keeps class on the root', async () => {
+    const wrapper = await mountSuspended(MSearch, { attrs: { 'class': 'consumer', 'aria-labelledby': 'heading' } })
+
+    expect(wrapper.classes()).toContain('consumer')
+    expect(wrapper.find('input').attributes('aria-labelledby')).toBe('heading')
   })
 })

@@ -4,6 +4,8 @@ import { defineComponent, h, reactive, ref } from 'vue'
 import { useNumberInputControl } from './useNumberInputControl'
 import type { NumberInputControlProps } from './useNumberInputControl'
 import type { NumberValueHooks } from './useNumberValue'
+import { provideValidationAdapter } from '#kit/composables/validation/context'
+import type { ValidationAdapter } from '#kit/composables/validation/types'
 import type { Ref } from 'vue'
 
 type Control = ReturnType<typeof useNumberInputControl>
@@ -73,6 +75,7 @@ describe('useNumberInputControl', () => {
       getControl().inputAttrs.value,
       getControl().labelAttrs.value,
       getControl().supportAttrs.value,
+      getControl().alertAttrs.value,
       getControl().incrementAttrs.value,
       getControl().decrementAttrs.value,
     ]
@@ -83,6 +86,40 @@ describe('useNumberInputControl', () => {
         expect(key.startsWith('data-')).toBe(false)
       }
     }
+  })
+
+  it('reports the input busy while the validation adapter checks asynchronously', async () => {
+    const pending: ValidationAdapter = {
+      bindField: () => ({
+        value: ref(1),
+        errorMessage: ref<string | undefined>(undefined),
+        meta: { required: false, touched: true, dirty: true, valid: true, validated: false, pending: true },
+      }) as never,
+      createForm: () => { throw new Error('unused') },
+    }
+    // The adapter is injected, so it has to come from a parent.
+    const Field = defineComponent({
+      setup() {
+        const control = useNumberInputControl(ref<number | null>(1), ref(false), { path: 'width' } as NumberInputControlProps, {}, 'busy')
+        return () => h('input', control.inputAttrs.value)
+      },
+    })
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        provideValidationAdapter(pending)
+        return () => h(Field)
+      },
+    }))
+
+    expect(wrapper.find('input').attributes('aria-busy')).toBe('true')
+  })
+
+  it('leaves aria-busy off a field that is not validating', async () => {
+    const { component } = createHarness(ref<number | null>(1))
+
+    const wrapper = await mountSuspended(component)
+
+    expect(wrapper.find('input').attributes('aria-busy')).toBeUndefined()
   })
 
   it('tracks a reactive props object without any getter plumbing', async () => {
@@ -155,19 +192,20 @@ describe('useNumberInputControl', () => {
     expect(onInvalid).toHaveBeenCalledWith('55', 'out-of-range')
   })
 
-  it('keeps the live-region role constant, so only the arriving error is announced', async () => {
+  it('names the support line, and keeps a separate alert region for the error alone', async () => {
     const model = ref<number | null>(1)
     const props = reactive<Partial<NumberInputControlProps>>({ helperText: 'Pixels' })
-    const { component } = createHarness(model, props)
+    const { getControl, component } = createHarness(model, props)
 
     const wrapper = await mountSuspended(component)
-    expect(wrapper.find('p').attributes('role')).toBe('alert')
+    expect(getControl().supportAttrs.value).toEqual({ id: wrapper.find('input').attributes('aria-describedby') })
+    expect(getControl().alertAttrs.value).toEqual({ role: 'alert' })
     expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
 
     props.errorMessage = 'Out of range'
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('p').attributes('role')).toBe('alert')
+    expect(getControl().alertAttrs.value).toEqual({ role: 'alert' })
     expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
   })
 

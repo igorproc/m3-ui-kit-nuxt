@@ -24,6 +24,16 @@ would otherwise have to re-derive.
 | Animated shape change (S3) and M3 Expressive springs (S4) are not used in components | A morph mechanism costs bundle for an effect a web UI already carries with colour and the state layer. A state's shape is static (a selected toggle is square, with no transition), and transitions run on the `--sys-motion-*` tokens. **Exceptions** (owner's decisions, 2026-10-07): the `<MFabMenu>` FAB turns into the close button on `M3_SPRING` springs (size and corners spatial, colour effects); toggle buttons (`selected` on `<MButton>` / `<MButtonIcon>`, the buttons of `<MButtonGroup>`) reach their selected shape on a spring (shape fast spatial, colour effects), like Compose's `ToggleButton`. A plain button and a press never change shape. The springs are sampled into CSS `linear()` (`springToCss`), so no per-frame loop ships. The JS springs of `MShape` and the loading indicator stay as they were. | A second component needs a morph — through the same `springToCss` recipe, not a new mechanism. |
 | Segmented list style, row reorder, row swipe, expandable row (M3 Expressive) | No customer in the kit; section groups are built from `MListSubheader` and disclosure from `MExpansionPanel`. | A settings screen made of segmented groups, a sortable list or a row gesture appears. |
 | A button card (`MCard` as `<button>`) and a "stretched link" with actions on top | A clickable card is navigation: `tag="link"` makes the whole card the link. An action in place is an `MButton` in `#actions`. | A card that acts in place and still carries its own actions gets a customer. |
+| Status tones on `MTimelineItem` (`success | warning | info`) | They have no M3 role (`MColor`), so a tone → role mapping would be invented. A hidden `status` word and the `icon` carry the meaning; `color` carries the role. | The system gains success and warning roles. |
+| Single-row selection on `MTable` (a `selection` axis) | No customer. Opening a record is `row-click`, with a control in the cell as the keyboard path. | A list → detail screen is built on a table. |
+| `column.maxWidth` on `MTable` | Browsers ignore `max-width` on table cells. `width` plus wrapping (`overflow-wrap: anywhere`) caps a long value. | — |
+| A character counter on `MTextField` | Long input is `MTextarea`, with the counter in the support row. | A single-line field with a hard limit appears. |
+| A docked date picker (`MDateField`) | The recipe is field → `MDialogDate`. | Dense filters and tables need one. |
+| A date range picker | No customer; the docs promise is withdrawn. | A customer appears. |
+| `MDialogTime` | The recipe is `MDialog` + `MTimePicker` + `validate()`. | The first customer appears. |
+| Time picker rich colours and ScrollField | The Material3 API is still moving. | The API stabilises. |
+| `MConfirmEdit` as a component | Confirmed editing is the `useConfirmEditTransaction` composable plus a recipe. | Two products build the same markup. |
+| The English default `aria-label="Loading"` on `MLoading` | The kit ships no copy that cannot be in the app's language. A host (button, table, OTP) announces being busy itself through `aria-busy` and hides the indicator; a standalone indicator is named by the consumer, with a dev warning when it is not. | — |
 
 ## Architectural trades
 
@@ -49,6 +59,16 @@ would otherwise have to re-derive.
 | A section label inside `ul` is a plain `li` with no role | axe (rule `list`) rejects any direct child of `ul` with an explicit role other than `listitem`, so `li role="presentation"` is out. Cost: a screen reader counts the label as an item; the text reads in order and an `<h3>` in the slot keeps heading navigation. Nested groups (`MListGroup`) were rejected earlier. |
 | `MList` is a `ul` without `role="list"` | With the explicit role axe switches to `aria-required-children` and rejects a heading in a label. Cost: Safari VoiceOver may not announce a `list-style: none` list. |
 | Collapsed `MExpansionPanel` content is `inert` | Fields in a closed panel leave the tab order and the accessibility tree (A11-11). Cost: find-in-page does not find text in closed panels — the `hidden="until-found"` proposal covers that. |
+| `MTimeline` rail ends come from `:first-child`/`:last-child`, not the registry | A registry knows the last item only after all have registered, so the server rendered every item as last. A structural selector is right in SSR. |
+| `MTimeline`'s time column is decided by CSS `:has()`, not JS | It is a timeline-level decision the server must render right. Without `:has()` the three columns stay. |
+| `MTable` draws a row's state layer on every cell | A `tr` cannot reliably hold a `::before` layer. |
+| A dropdown panel row matches the field height (44 / 56 / 64), not M3's 48 | The panel continues the field. |
+| `MOtpInput` has no `density` axis | The 48 cell is the touch target for a code. |
+| The time model is always a 24-hour `HH:mm` string | `hourCycle` only changes the display, `h23` by default. |
+| `MTable` row selection lives in the model and survives page changes; "select all" covers the current page; rows that vanish from the data are not dropped from the selection by the table | With server pagination the table cannot tell a row on another page from a deleted one, and selecting across all pages needs all the data. The app removes deleted records from its `v-model`. Owner decision 2026-10-08. |
+| The system key `disabled-container-subtle: 4%` in `$theme-state-link` is the one exception to "derive new values with `calc()` from existing ones" | M3 fills a disabled filled field with `on-surface` at 4% (Compose `DisabledContainerOpacity = 0.04`), which no existing opacity yields. Owner decision 2026-10-08; any further exception needs the owner again. |
+| A disabled field's helper text is 38%, as in M3, although axe reports it as a contrast failure | WCAG 1.4.3 exempts inactive components, but axe knows that only for text inside `disabled` / `aria-disabled`. `expectNoAxeViolations` skips `color-contrast` inside a root with the `--disabled` modifier. Owner decision 2026-10-08. |
+| `spacing()` takes any step from a consumer (`spacing(96)` → `96rem`); the 4-unit scale binds only the kit's own code | The module injects the kit's abstracts into the app's styles, so the kit's internal discipline became a ban on any gap the user might need. Strictness is the `$spacing-strict` flag, set only by `lint:scss` for `src/runtime`. Owner decision 2026-10-08. |
 
 ## Settled, migration pending
 
@@ -58,9 +78,10 @@ the migration lands.
 
 | Decision | Reason | Migration |
 |---|---|---|
-| `density` is the kit's only word for scale | `size` (`sm \| md \| lg`), `MLoadingSize` (`small \| medium \| large`) and `MFieldDensity` (`compact \| default \| comfortable`) were three spellings of one idea. The word is settled; the step set is not — see [axes.md](axes.md#oq-1-the-step-set-for-density). | Rename `size` → `density` across `avatar`, `loading`, `progress`; retire `MSize`. Values wait on OQ-1. |
+| `density` is the kit's only word for scale | `size` (`sm \| md \| lg`), `MLoadingSize` (`small \| medium \| large`) and `MFieldDensity` (`compact \| default \| comfortable`) were three spellings of one idea. The word is settled; the step set is not — see [axes.md](axes.md#oq-1-the-step-set-for-density). | `avatar` moved (2026-10-07). Still to rename `size` → `density` in `loading`, `progress`; retire `MSize`. Values wait on OQ-1. |
 | `plain` joins the canonical `MVariant` | `MSurfaceVariant` already added it as a free-standing member. It is a legitimate fifth surface treatment, not a component quirk. | Add to `MVariant`; `MSurfaceVariant` becomes `Extract<MVariant, …>`. |
 | `MBannerVariant`'s `surface` member is a naming mistake | `surface` names a component, not a treatment. The value it means already exists in the canonical union. | Rename to the canonical member and narrow with `Extract<>`. |
+| A hairline is `max(1px, 1rem)` in every outlined component | The kit's root scales with the viewport width (`1rem` is a design pixel), so on a narrow screen `1rem` falls below one device pixel and the line fades or disappears. `max()` keeps at least one pixel; nothing changes on a wide screen. Owner decision 2026-10-08; expressed in component maps, no system token. | `divider`, `avatar`, `table` have moved. Sweep the remaining maps with a `1rem` stroke (fields, card, chips, buttons, …) as a task of its own. |
 
 ## Resolved
 

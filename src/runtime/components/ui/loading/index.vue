@@ -1,5 +1,6 @@
 <template>
   <span
+    ref="root"
     class="ui-loading"
     :class="[
       `ui-loading--${type}`,
@@ -35,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useTimer } from '#kit/composables/useTimer'
 import { resolveTransition } from '#kit/utils/motion'
 import { mLoadingProps } from './props'
@@ -46,6 +47,19 @@ import type { M3ShapeName } from '#kit/assets/icon/shapes'
 const MShape = defineAsyncComponent(() => import('#kit/components/ui/shape/index.vue'))
 
 const props = defineProps(mLoadingProps)
+
+// Checked in the DOM: a host usually hides the indicator through a wrapper
+// (`aria-hidden` on a button's spinner slot), which no prop or attr reveals.
+if (import.meta.dev) {
+  const root = useTemplateRef<HTMLElement>('root')
+
+  onMounted(() => {
+    const el = root.value
+    if (!el || props.ariaLabel || el.hasAttribute('aria-labelledby') || el.closest('[aria-hidden="true"]')) return
+
+    console.warn('[m-loading] has no accessible name: pass `aria-label`, or hide it with `aria-hidden="true"` when its host announces being busy itself.')
+  })
+}
 
 // Sequence of shapes for the Expressive Loading Indicator
 const expressiveSequence: M3ShapeName[] = [

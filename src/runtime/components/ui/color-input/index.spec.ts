@@ -87,6 +87,54 @@ describe('m-color-input', () => {
     expect(document.querySelector('.ui-color-picker')).not.toBeNull()
   })
 
+  it('says which forms it takes when a typed value cannot be read', async () => {
+    const { mount } = mountInput({ modelValue: '#111111', formatHint: 'Use #RRGGBB, rgb() or hsl()' })
+    const wrapper = await mount()
+
+    await typeInto(wrapper, 'nonsense')
+    await wrapper.find('.ui-text-field__input').trigger('keydown', { key: 'Enter' })
+    await nextTick()
+
+    expect(wrapper.find('[role="alert"]').text()).toBe('Use #RRGGBB, rgb() or hsl()')
+    expect(wrapper.find('.ui-text-field__input').attributes('aria-invalid')).toBe('true')
+  })
+
+  it('names the swatch button from its prop, with no copy of its own', async () => {
+    const named = mountInput({ pickerLabel: 'Pick a colour' })
+    expect((await named.mount()).find('.ui-color-input__trigger').attributes('aria-label')).toBe('Pick a colour')
+
+    const bare = mountInput()
+    expect((await bare.mount()).find('.ui-color-input__trigger').attributes('aria-label')).toBeUndefined()
+  })
+
+  it('forwards the field axes, required and name to the field', async () => {
+    const { mount } = mountInput({ label: 'Accent', required: true, name: 'accent', density: 'compact', shape: 'large', variant: 'outlined' })
+    const wrapper = await mount()
+    const input = wrapper.find('.ui-text-field__input')
+
+    expect(input.attributes('aria-required')).toBe('true')
+    expect(input.attributes('name')).toBe('accent')
+    expect(wrapper.find('.ui-text-field').classes()).toEqual(expect.arrayContaining([
+      'ui-text-field--density-compact',
+      'ui-text-field--shape-large',
+      'ui-text-field--outlined',
+    ]))
+  })
+
+  it('keeps the picker keys inside the picker, so the menu around it does not take them', async () => {
+    const { mount } = mountInput({ modelValue: '#ff0000', open: true })
+    await mount()
+    await nextTick()
+
+    const host = document.querySelector('.ui-color-input__picker')!
+    const reached: string[] = []
+    host.parentElement!.addEventListener('keydown', event => reached.push((event as KeyboardEvent).key))
+    host.querySelector('.ui-color-picker__hue')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    host.querySelector('.ui-color-picker__hue')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+
+    expect(reached).toEqual(['Escape'])
+  })
+
   it('does not open the picker when readonly', async () => {
     const { open, mount } = mountInput({ modelValue: '#6750a4', readonly: true })
     const wrapper = await mount()

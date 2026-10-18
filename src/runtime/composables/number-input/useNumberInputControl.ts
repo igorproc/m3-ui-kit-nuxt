@@ -4,9 +4,14 @@
  * @remarks
  * Behavior layer of the number input. Composes the value loop, the scrub
  * gesture and the validation binding into ready-to-spread attr bags —
- * `inputAttrs`, `labelAttrs`, `supportAttrs`, `incrementAttrs`,
+ * `inputAttrs`, `labelAttrs`, `supportAttrs`, `alertAttrs`, `incrementAttrs`,
  * `decrementAttrs` — carrying the whole non-visual surface and every ARIA
  * relationship between them. It renders nothing and assumes no markup.
+ *
+ * The support line is one slot shared by the helper and the error, as in the
+ * textarea: `supportAttrs` names it, and the error alone is written into the
+ * persistent `alertAttrs` region, so a helper in place at mount is never
+ * announced and an arriving error always is.
  *
  * The number input is layered the same way the textarea and the slider are:
  * - {@link useNumberValue} — draft ⇄ model, stepping, clamping
@@ -70,6 +75,8 @@ export interface NumberInputAttrs {
   'aria-valuenow': number | undefined
   'aria-valuetext': string | undefined
   'aria-invalid': 'true' | undefined
+  /** Set while the validation adapter checks the value asynchronously. */
+  'aria-busy': 'true' | undefined
   'aria-required': 'true' | undefined
   'aria-describedby': string | undefined
   'onFocus': () => void
@@ -87,11 +94,14 @@ export interface NumberLabelAttrs {
 
 export interface NumberSupportAttrs {
   id: string
-  /**
-   * Constant, never toggled with the text: a live region is only heard when it
-   * already exists before its content changes. Its helper text is in place at
-   * mount, so it stays silent; only a change — the error arriving — is spoken.
-   */
+}
+
+/**
+ * The persistent region the error is written into. Constant, never toggled
+ * with the text: a live region is only heard when it already exists before its
+ * content changes.
+ */
+export interface NumberAlertAttrs {
   role: 'alert'
 }
 
@@ -134,6 +144,7 @@ export interface UseNumberInputControlReturn {
   inputAttrs: ComputedRef<NumberInputAttrs>
   labelAttrs: ComputedRef<NumberLabelAttrs>
   supportAttrs: ComputedRef<NumberSupportAttrs>
+  alertAttrs: ComputedRef<NumberAlertAttrs>
   incrementAttrs: ComputedRef<NumberStepperAttrs>
   decrementAttrs: ComputedRef<NumberStepperAttrs>
   /** The underlying value layer, for consumers that need the raw controls. */
@@ -237,6 +248,7 @@ export function useNumberInputControl(
     'aria-valuenow': model.value ?? undefined,
     'aria-valuetext': model.value === null ? undefined : value.codec.value.format(model.value),
     'aria-invalid': isError.value ? 'true' : undefined,
+    'aria-busy': field.meta.pending ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,
     'onFocus': value.onFocus,
@@ -252,10 +264,8 @@ export function useNumberInputControl(
     for: fieldId,
   }))
 
-  const supportAttrs = computed<NumberSupportAttrs>(() => ({
-    id: messageId,
-    role: 'alert',
-  }))
+  const supportAttrs = computed<NumberSupportAttrs>(() => ({ id: messageId }))
+  const alertAttrs = computed<NumberAlertAttrs>(() => ({ role: 'alert' }))
 
   const stepperAttrs = (label: string, enabled: boolean, onClick: () => void): NumberStepperAttrs => ({
     'type': 'button',
@@ -289,6 +299,7 @@ export function useNumberInputControl(
     inputAttrs,
     labelAttrs,
     supportAttrs,
+    alertAttrs,
     incrementAttrs,
     decrementAttrs,
     value,

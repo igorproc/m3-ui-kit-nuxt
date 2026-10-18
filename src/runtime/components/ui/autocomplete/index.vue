@@ -13,14 +13,13 @@
       v-model:focused="control.focused.value"
       class="ui-autocomplete__field"
       :model-value="control.draft.value"
-      :populated="hasChips"
       :label="label"
       :placeholder="control.hasSelection.value ? undefined : placeholder"
       :helper-text="helperText"
       :error="isError"
       :error-message="displayError"
       :variant="variant"
-      :rounded="rounded"
+      :shape="fieldShape"
       :label-placement="labelPlacement"
       :density="density"
       :name="name ?? path"
@@ -148,6 +147,7 @@
           <MList
             v-bind="control.listboxAttrs.value"
             class="ui-autocomplete__list"
+            :class="`ui-autocomplete__list--${density}`"
             :density="density"
             :style="control.panelStyle.value"
           >
@@ -162,9 +162,13 @@
               :disabled="entry.disabled"
               :lines="1"
             >
-              <template #leading>
+              <!-- At the end, and only on the chosen row: the row text then
+                   starts where the query does in the field above it. -->
+              <template
+                v-if="entry.selected"
+                #trailing
+              >
                 <MIcon
-                  v-if="entry.selected"
                   :name="ICONS.check"
                   class="ui-autocomplete__check"
                 />
@@ -188,8 +192,18 @@
 
           <div ref="stateRef">
             <template v-if="!control.entries.value.length">
+              <!-- Below `minSearchLength` no search has run yet, so "no results"
+                   would be a claim about a query nobody made. No default text:
+                   the kit ships no copy it cannot translate. -->
               <slot
-                v-if="loading"
+                v-if="!control.queryReady.value"
+                name="hint"
+                :query="search"
+                :missing="minSearchLength - search.length"
+              />
+
+              <slot
+                v-else-if="loading"
                 name="loading"
               >
                 <div class="ui-autocomplete__state">
@@ -210,6 +224,7 @@
                 v-else
                 name="no-results"
                 :query="search"
+                :clear="control.resetQuery"
               >
                 <div class="ui-autocomplete__state">
                   {{ MESSAGES.dropdownNoResults }}
@@ -238,6 +253,7 @@ import { provideDropdownContext } from '#kit/components/ui/dropdown/context'
 import { usePanelStatus } from '#kit/composables/dropdown/usePanelStatus'
 import type { DropdownContext, DropdownEntry, DropdownItemBase } from '#kit/composables/dropdown/types'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
 import { useField } from '#kit/composables/useField'
 import { ICONS } from '#kit/shared/constants/icons'
 import { MESSAGES } from '#kit/shared/constants/messages'
@@ -290,9 +306,11 @@ const control = useAutocomplete<TItem, TValue>({
   search,
   open,
   emit,
+  pending: () => field.meta.pending,
 })
 
 const hasChips = computed(() => props.multiple && control.selectedEntries.value.length > 0)
+const fieldShape = useFieldShape('m-autocomplete', props)
 
 // Hovering a row also makes it active, so the ring that marks keyboard focus
 // is drawn only while the keyboard drives.
@@ -313,7 +331,7 @@ const status = usePanelStatus({
   hasRows: () => control.entries.value.length > 0,
   loadingText: MESSAGES.dropdownLoading,
   state: () => stateRef.value,
-  sources: () => [props.items.length],
+  sources: () => [props.items.length, control.queryReady.value],
 })
 
 // Opening from the toggle button leaves focus nowhere useful; the combobox
@@ -338,23 +356,9 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   width: 100%;
   min-width: 0;
 
-  // `.ui-button` is repeated to outweigh the button's own two-class colour rule
-  // (`.ui-button.ui-button--text`) without depending on stylesheet order.
-  @each $part in clear, toggle {
-    &__#{$part}.ui-button.ui-button {
-      color: g($t, '#{$part}.color');
-
-      @include can-hover {
-        &:hover:not(.ui-button--disabled) {
-          color: g($t, '#{$part}.active-color');
-        }
-      }
-
-      &:focus-visible {
-        color: g($t, '#{$part}.active-color');
-      }
-    }
-  }
+  // The clear and toggle buttons carry no colour of their own: an icon button
+  // without one takes its container's content colour, and the field's trailing
+  // zone gives it every role — rest, error, error + hover, disabled.
 
   @include panel.selection-panel($t);
 }

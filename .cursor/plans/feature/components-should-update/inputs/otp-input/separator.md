@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 — часть авторского [MOtpInput](index.md) · Токены Compose: нет · Код: `span.ui-otp-input__separator` в `src/runtime/components/ui/otp-input/index.vue:48-57` (рендерится между группами, только если задан `separator` или слот `#separator`), токен `separator.color` в `src/runtime/assets/stylesheet/components/otp-input/_index.scss:40-42` · Аудит: `data/otp-input.json` (общий) · Тип: часть компонента, не компонент</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонента `OtpSeparator` нет с 2026-09-05: разделитель — `span` в разметке родителя, `aria-hidden`, пуст по умолчанию (группы разделяет ритм 12 / 8). Изменений по плану нет; ручная проверка выравнивания (LY-03).</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Шагов не было; разделитель проверен в фикстуре matrix (варианты и disabled).</implementation-status>
 
 ## Вердикт
 

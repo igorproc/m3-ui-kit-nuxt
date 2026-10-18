@@ -15,7 +15,12 @@ export const mLoadingProps = {
   type: { type: String as PropType<MLoadingType>, default: 'circular' },
   size: { type: String as PropType<MLoadingSize>, default: 'medium' },
   inline: { type: Boolean, default: false },
-  ariaLabel: { type: String, default: 'Loading' },
+  /**
+   * Accessible name of the status. No default: copy the kit would invent
+   * cannot be in the app's language. A host that announces being busy itself
+   * (`aria-busy` on a button or a table) hides the indicator instead.
+   */
+  ariaLabel: { type: String },
   /**
    * Motion of the `expressive` indicator's shape morph. The cycle interval is
    * derived from it — the transition's own duration plus its rest — so the

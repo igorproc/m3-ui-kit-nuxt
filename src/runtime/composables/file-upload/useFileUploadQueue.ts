@@ -31,6 +31,10 @@ export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOp
   // Annotated rather than inferred: ref() would unwrap the generic TResult.
   const entries = ref([]) as Ref<FileUploadEntry<TResult>[]>
   const controllers = new Map<string, AbortController>()
+  // `queued` covers two states: added, and asked to upload but waiting for a
+  // slot. Only the asked ones are ever scheduled — a file nobody started is
+  // never sent because a slot happened to free up.
+  const requested = new Set<string>()
   let sequence = 0
 
   const keyOf = (file: File) => `${file.name}:${file.size}:${file.type}:${file.lastModified}`
@@ -93,15 +97,25 @@ export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOp
     if (!options.upload) return
     const running = entries.value.filter(entry => entry.status === 'uploading').length
     const available = Math.max(0, Math.max(1, Math.floor(options.concurrency())) - running)
-    entries.value.filter(entry => entry.status === 'queued').slice(0, available).forEach(entry => void run(entry))
+    entries.value
+      .filter(entry => entry.status === 'queued' && requested.has(entry.id))
+      .slice(0, available)
+      .forEach((entry) => {
+        requested.delete(entry.id)
+        void run(entry)
+      })
   }
 
+  /** Starts one row, or — without an id — every row still waiting to be started. */
   function start(id?: string) {
     if (id) {
       const entry = find(id)
       if (entry && (entry.status === 'queued' || entry.status === 'error' || entry.status === 'cancelled')) {
         entry.status = 'queued'
+        requested.add(entry.id)
       }
+    } else {
+      entries.value.filter(entry => entry.status === 'queued').forEach(entry => requested.add(entry.id))
     }
     schedule()
   }
@@ -109,11 +123,14 @@ export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOp
   function cancel(id: string) {
     const entry = find(id)
     if (!entry || !['queued', 'uploading'].includes(entry.status)) return
+    const stoppedUpload = entry.status === 'uploading'
     controllers.get(id)?.abort()
     controllers.delete(id)
+    requested.delete(id)
     entry.status = 'cancelled'
     options.onCancel?.(entry)
-    schedule()
+    // Only a stopped upload frees a slot for the next row asked to go.
+    if (stoppedUpload) schedule()
     announceComplete()
   }
 
@@ -123,11 +140,13 @@ export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOp
     entry.status = 'queued'
     entry.error = undefined
     entry.progress = null
+    requested.add(entry.id)
     schedule()
   }
 
   function remove(id: string) {
     cancel(id)
+    requested.delete(id)
     entries.value = entries.value.filter(entry => entry.id !== id)
   }
 

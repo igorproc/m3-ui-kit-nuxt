@@ -106,6 +106,7 @@
         <span
           v-bind="counterAttrs"
           class="ui-textarea__counter"
+          :class="{ 'ui-textarea__counter--over': counter.over }"
         >
           <slot
             name="counter"
@@ -130,6 +131,7 @@ import { ICONS } from '#kit/shared/constants/icons'
 import { textareaFieldStateKey, useTextareaControl } from '#kit/composables/textarea/useTextareaControl'
 import { mTextareaProps } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
 
 // The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
 defineOptions({ inheritAttrs: false })
@@ -167,10 +169,12 @@ const notchText = computed(() => props.required ? `${props.label} *` : props.lab
 // inert with the field instead of staying live inside a dead box.
 provide(textareaFieldStateKey, fieldState)
 
+const shape = useFieldShape('m-textarea', props)
+
 const rootClasses = computed(() => [
   'ui-textarea',
   `ui-textarea--${props.variant}`,
-  `ui-textarea--${props.rounded}`,
+  `ui-textarea--shape-${shape.value}`,
   `ui-textarea--label-${props.labelPlacement}`,
   {
     'ui-textarea--interactive': !props.disabled && !props.readonly,
@@ -201,6 +205,9 @@ function focusFromBox(event: PointerEvent) {
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/textarea' as t;
+@use '#kit/assets/stylesheet/components/textarea/label' as label;
+@use '#kit/assets/stylesheet/components/textarea/states' as states;
+@use '#kit/assets/stylesheet/components/textarea/parts' as parts;
 
 .ui-textarea {
   $t: material-map(t.$tokens, 'm-textarea');
@@ -219,16 +226,16 @@ function focusFromBox(event: PointerEvent) {
   min-width: 0;
 
   // ── axes · a modifier only picks values; every rule below reads them once ──
-  @each $r in sharp, small, medium, large, pill {
-    &--#{$r} {
-      --ui-textarea-radius: #{g($t, 'rounded.#{$r}')};
+  @each $shape in none, extra-small, medium, large, full {
+    &--shape-#{$shape} {
+      --ui-textarea-radius: #{g($t, 'shape.#{$shape}')};
     }
   }
 
-  // A filled box has a flat bottom, so a full radius would dome it — cap `pill`
+  // A filled box has a flat bottom, so a full radius would dome it — cap `full`
   // at the large tier for filled only.
-  &--filled.ui-textarea--pill {
-    --ui-textarea-radius: #{g($t, 'rounded.large')};
+  &--filled#{&}--shape-full {
+    --ui-textarea-radius: #{g($t, 'shape.large')};
   }
 
   &--outlined {
@@ -239,60 +246,7 @@ function focusFromBox(event: PointerEvent) {
     --ui-textarea-start: right;
   }
 
-  // ── label · base is `top`, a block above the box ──
-  // Above the box a long label wraps, as in the text field: nothing there
-  // bounds its height. Only an overlaid label has one line to live on.
-  &__label {
-    min-width: 0;
-    color: g($t, 'label.color');
-    overflow-wrap: anywhere;
-
-    @include typescale(g($t, 'typography.label'));
-  }
-
-  // ── label placement · an axis of its own, independent of the shape ──
-  // A multi-line box has no free first line, so an overlaid label never rests
-  // over the value the way it does in a text field: it is raised from the
-  // start. `float` and `inset` therefore differ only on `outlined`, where one
-  // notches the top border and the other sits inside it.
-  &--label-float,
-  &--label-inset {
-    .ui-textarea__label {
-      position: absolute;
-      inset-inline-start: var(--ui-textarea-inset);
-      top: g($t, 'label.inset.top');
-      z-index: 1;
-      max-width: g($t, 'label.max-width');
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      pointer-events: none;
-      transform: scale(g($t, 'label.active.scale'));
-      transform-origin: var(--ui-textarea-start) top;
-    }
-  }
-
-  // Notch: on `outlined` the raised label lands on the top border, into the gap
-  // the outline's legend opens for it.
-  &--label-float.ui-textarea--outlined {
-    .ui-textarea__label {
-      top: 0;
-      transform: translateY(-50%) scale(g($t, 'label.active.scale'));
-      transform-origin: var(--ui-textarea-start) center;
-    }
-
-    .ui-textarea__notch {
-      max-width: 100%;
-    }
-  }
-
-  &--label-hidden .ui-textarea__label {
-    @include sr-only;
-  }
-
-  &__required {
-    color: g($t, 'label.required.color');
-  }
+  @include label.label($t);
 
   // ── container · owns the border and the surface ──
   &__control {
@@ -313,9 +267,8 @@ function focusFromBox(event: PointerEvent) {
       background-color g($t, 'state.duration') g($t, 'state.easing');
 
     // MD3 state layer: the element's own ink at a fixed opacity, painted over
-    // the surface and under the value. One layer replaces the pre-mixed hover
-    // colours the shapes used to carry one each — and unlike a mixed colour it
-    // also works over a transparent container.
+    // the surface and under the value. Only `filled` raises it: `outlined` has
+    // no surface in any other state, so its hover is the edge alone.
     &::before {
       position: absolute;
       inset: 0;
@@ -368,6 +321,7 @@ function focusFromBox(event: PointerEvent) {
     outline: none;
     background-color: transparent;
     color: g($t, 'input.color');
+    caret-color: g($t, 'input.caret.color');
     line-height: g($t, 'input.line-height');
     resize: none;
 
@@ -386,7 +340,6 @@ function focusFromBox(event: PointerEvent) {
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: g($t, 'input.color');
-      caret-color: g($t, 'input.color');
     }
   }
 
@@ -403,337 +356,7 @@ function focusFromBox(event: PointerEvent) {
     }
   }
 
-  // ── outline · rendered by the outlined shape only ─────────────
-  // A `<fieldset>` over the control's frame, so the browser cuts the notch: the
-  // hidden `<legend>` holds the label text at the raised size, and the border
-  // breaks exactly where it sits. No patch is painted behind the label, so the
-  // field reads right on any surface, and the gap is correct in the
-  // server-rendered HTML — nothing is measured. Its colour is the control's own
-  // border colour, so every state below writes one property for both shapes.
-  &__outline {
-    position: absolute;
-    inset: 0;
-    min-width: 0;
-    padding-block: 0;
-    padding-inline: g($t, 'outlined.outline.padding.start') 0;
-    margin: 0;
-    border-width: g($t, 'container.border.width');
-    border-style: solid;
-    border-color: inherit;
-    border-radius: inherit;
-    pointer-events: none;
-    transition: border-color g($t, 'state.duration') g($t, 'state.easing');
-  }
-
-  // As tall as the border it sits on, so the fieldset never shifts its top edge
-  // to centre a taller legend. Its width is the only thing that matters.
-  &__notch {
-    display: block;
-    width: auto;
-    max-width: 0.01rem;
-    height: g($t, 'container.border.width');
-    padding: 0;
-    overflow: hidden;
-    visibility: hidden;
-    white-space: nowrap;
-
-    @include typescale(g($t, 'typography.label'));
-  }
-
-  &__notch-text {
-    display: inline-block;
-    padding-inline: g($t, 'outlined.notch.padding.inline');
-    font-size: g($t, 'outlined.notch.font-size');
-  }
-
-  // ── drag handle · centred on the bottom edge, keyboard-operable ──
-  // A bar, not the native corner glyph: Material has no resize corner, and at
-  // 10rem the old mark was too small to find or to focus visibly.
-  &__grip {
-    position: absolute;
-    left: 50%;
-    bottom: g($t, 'grip.inset');
-    width: g($t, 'grip.width');
-    height: g($t, 'grip.height');
-    border-radius: g($t, 'rounded.pill');
-    background-color: g($t, 'grip.color');
-    cursor: ns-resize;
-    touch-action: none;
-    transform: translateX(-50%);
-    transition: background-color g($t, 'state.duration') g($t, 'state.easing');
-
-    // The bar is the mark; the target is the band around it. Pointer and touch
-    // both aim at the hit box, not at the 5rem the eye sees. It stands on the
-    // container's bottom edge — centred on the bar, its lower part would be
-    // clipped by the container — and stays under the value's bottom padding.
-    &::before {
-      position: absolute;
-      left: 50%;
-      bottom: calc(-1 * #{g($t, 'grip.inset')});
-      width: g($t, 'grip.hit.width');
-      height: g($t, 'grip.hit.height');
-      border-radius: g($t, 'rounded.pill');
-      background-color: currentcolor;
-      content: '';
-      opacity: 0;
-      transform: translateX(-50%);
-      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
-    }
-
-    @include can-hover {
-      &:hover {
-        background-color: g($t, 'grip.hover.color');
-
-        &::before {
-          opacity: g($t, 'layer.hover');
-        }
-      }
-    }
-
-    // Focus is colour here, as everywhere else in this family. On a bar that
-    // wide the hue carries on its own, so the ring the corner mark needed is
-    // gone with it.
-    &:focus-visible {
-      outline: none;
-      background-color: g($t, 'grip.focus.color');
-    }
-  }
-
-  // ── support row · message at the start, counter at the end, height reserved ──
-  &__support {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: g($t, 'support.gap');
-    min-height: g($t, 'support.min-height');
-    padding-inline: g($t, 'support.padding.inline');
-    margin-top: g($t, 'support.margin.top');
-    color: g($t, 'support.color');
-
-    @include typescale(g($t, 'typography.support'));
-  }
-
-  &__message {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    margin: 0;
-
-    // A URL or an address in a message has no break opportunity of its own.
-    overflow-wrap: anywhere;
-  }
-
-  // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
-  // message has nothing but this glyph to say it. A margin, not a flex gap: the
-  // alert region beside it is empty whenever the helper is shown.
-  &__message-icon {
-    flex: 0 0 auto;
-    margin-inline-end: g($t, 'support.icon.gap');
-    font-size: g($t, 'support.icon.size');
-  }
-
-  &__alert {
-    min-width: 0;
-  }
-
-  &__counter-live {
-    @include sr-only;
-  }
-
-  &__counter {
-    flex: 0 0 auto;
-    color: g($t, 'counter.color');
-    font-variant-numeric: tabular-nums;
-  }
-
-  // ── growth · one mechanism per browser, never two ──
-  &--auto-grow &__input {
-    field-sizing: content;
-    min-height: g($t, 'growth.min-height');
-    transition: height g($t, 'state.grow.duration') g($t, 'state.grow.easing');
-  }
-
-  &--capped &__input {
-    max-height: g($t, 'growth.max-height');
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-  }
-
-  &--resizing &__input {
-    transition: none;
-  }
-
-  // ── shapes · base → hover → focused → error → disabled ──
-  // Hover and focus answer an editable field only. `:where()` gates them on
-  // `--interactive` without adding weight, so every state rule in a shape
-  // carries the same weight and the later one wins.
-  &--filled {
-    .ui-textarea__control {
-      border-color: transparent;
-      border-bottom-color: g($t, 'filled.border.color');
-      border-bottom-right-radius: 0;
-      border-bottom-left-radius: 0;
-      background-color: g($t, 'filled.surface');
-    }
-
-    // `filled` sits on the highest surface already — there is no tone above
-    // it, so the footer's step is a state layer over the container instead.
-    .ui-textarea__footer {
-      background-color: g($t, 'footer.filled.surface');
-    }
-
-    @include can-hover {
-      &:where(.ui-textarea--interactive) .ui-textarea__control:hover {
-        border-bottom-color: g($t, 'filled.hover.border.color');
-      }
-    }
-
-    &.ui-textarea--error .ui-textarea__control {
-      border-bottom-color: g($t, 'error.border.color');
-    }
-
-    // After error: focus stays visible in an invalid field (and in read-only);
-    // the label and the message keep saying "error".
-    &.ui-textarea--focused .ui-textarea__control {
-      border-bottom-color: g($t, 'focused.border.color');
-    }
-
-    &.ui-textarea--disabled .ui-textarea__control {
-      border-bottom-color: g($t, 'disabled.border.color');
-      background-color: g($t, 'filled.disabled.surface');
-    }
-  }
-
-  &--outlined {
-    .ui-textarea__control {
-      padding: g($t, 'outlined.frame');
-      border-width: 0;
-    }
-
-    @include can-hover {
-      &:where(.ui-textarea--interactive) .ui-textarea__control:hover {
-        border-color: g($t, 'outlined.hover.border.color');
-      }
-    }
-
-    &.ui-textarea--error .ui-textarea__control {
-      border-color: g($t, 'error.border.color');
-    }
-
-    // After error: focus stays visible in an invalid field (and in read-only);
-    // the label and the message keep saying "error".
-    &.ui-textarea--focused .ui-textarea__control {
-      border-color: g($t, 'focused.border.color');
-    }
-
-    &.ui-textarea--disabled .ui-textarea__control {
-      border-color: g($t, 'disabled.border.color');
-      background-color: g($t, 'disabled.surface');
-    }
-  }
-
-  // The state layer comes up on hover in every shape.
-  @include can-hover {
-    &--interactive .ui-textarea__control:hover::before {
-      opacity: g($t, 'layer.hover');
-    }
-  }
-
-  // ── content · the same ink in every shape, states ascending ──
-  &--focused .ui-textarea__label {
-    color: g($t, 'focused.label.color');
-  }
-
-  &--error {
-    .ui-textarea__label,
-    .ui-textarea__support {
-      color: g($t, 'error.color');
-    }
-  }
-
-  // ── disabled · the surface recedes and nothing responds ──
-  &--disabled {
-    .ui-textarea__body,
-    .ui-textarea__grip {
-      cursor: default;
-    }
-
-    .ui-textarea__label,
-    .ui-textarea__support,
-    .ui-textarea__adornment,
-    .ui-textarea__input,
-    .ui-textarea__counter {
-      color: g($t, 'disabled.color');
-    }
-
-    .ui-textarea__grip {
-      background-color: g($t, 'disabled.color');
-    }
-  }
-
-  // ── read-only · the container stays, the interaction does not ──
-  &--readonly {
-    .ui-textarea__body,
-    .ui-textarea__grip {
-      cursor: default;
-    }
-  }
-
-  // ── forced colours · every edge turns CanvasText, so the states that were a
-  // colour change alone are restated in system colours. The outline is named
-  // directly, not reached through its `inherit`, which forcing may override. ──
-  @include forced-colors {
-    // The grip is drawn by its fill alone, which forced colours drop.
-    .ui-textarea__grip {
-      background-color: CanvasText;
-
-      &:focus-visible {
-        background-color: Highlight;
-      }
-    }
-
-    // Error is a dashed edge: a system colour for it (Mark) can vanish on a
-    // light contrast theme, a line style cannot.
-    &--error {
-      &.ui-textarea--filled .ui-textarea__control {
-        border-bottom-style: dashed;
-        border-bottom-color: CanvasText;
-      }
-
-      .ui-textarea__outline {
-        border-style: dashed;
-        border-color: CanvasText;
-      }
-    }
-
-    &--focused {
-      &.ui-textarea--filled .ui-textarea__control {
-        border-bottom-color: Highlight;
-      }
-
-      .ui-textarea__outline {
-        border-color: Highlight;
-      }
-    }
-
-    &--disabled {
-      &.ui-textarea--filled .ui-textarea__control {
-        border-bottom-color: GrayText;
-      }
-
-      .ui-textarea__outline {
-        border-color: GrayText;
-      }
-
-      .ui-textarea__grip {
-        background-color: GrayText;
-      }
-
-      .ui-textarea__label,
-      .ui-textarea__input {
-        color: GrayText;
-      }
-    }
-  }
+  @include parts.parts($t);
+  @include states.states($t);
 }
 </style>

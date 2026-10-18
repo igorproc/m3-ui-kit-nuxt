@@ -1,17 +1,24 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+// ==========================================
+// COLOR INPUT TOKENS
+// ==========================================
+// The field is `<MTextField>` with its own tokens; what is owned here is the
+// swatch button in its trailing zone.
+
 $tokens: (
-  trigger: (padding: 2rem),
+  trigger: (padding: spacing(2)),
   swatch: (
     size: 22rem,
-    shape: var(--sys-shape-corner-small),
+    shape: map.get($theme-shape-link, small),
+    // The kit's hairline: a light colour on a light field needs an edge.
     outline: map.get($theme-color-link, outline-variant),
     outline-width: 1rem,
   ),
   checker: (
     a: map.get($theme-color-link, surface-container-highest),
     b: map.get($theme-color-link, surface-container-low),
-    size: 8rem,
+    size: spacing(8),
   ),
 );

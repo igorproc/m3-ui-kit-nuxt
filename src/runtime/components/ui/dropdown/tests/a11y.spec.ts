@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import MDropdown from '../index.vue'
 import { base, createHost, destroyHost, input, mount, open, options } from './helpers'
 import type { Wrapper } from './helpers'
+import { provideValidationAdapter } from '#kit/composables/validation/context'
+import type { ValidationAdapter } from '#kit/composables/validation/types'
 
 beforeEach(createHost)
 afterEach(destroyHost)
@@ -115,6 +117,37 @@ describe('m-dropdown · a11y', () => {
     await nextTick()
 
     expect(wrapper.find('[role="status"]').text()).toBe('Нет вариантов')
+    wrapper.unmount()
+  })
+
+  it('marks the chosen row with a check at its end, and only that row', async () => {
+    const wrapper = await mount({ ...base, modelValue: 3 })
+    await open(wrapper)
+
+    const checks = document.querySelectorAll('.ui-dropdown__check')
+    expect(checks).toHaveLength(1)
+    expect(checks[0]!.closest('.ui-list-item__trailing')).not.toBeNull()
+    expect(checks[0]!.closest('.ui-dropdown__option')!.classList).toContain('ui-list-item--selected')
+    expect(document.querySelectorAll('.ui-dropdown__option .ui-list-item__leading')).toHaveLength(0)
+  })
+
+  it('reports the combobox busy while the adapter validates the choice', async () => {
+    const pending: ValidationAdapter = {
+      bindField: () => ({
+        value: ref(undefined),
+        errorMessage: ref<string | undefined>(undefined),
+        meta: { required: false, touched: true, dirty: true, valid: true, validated: false, pending: true },
+      }) as never,
+      createForm: () => { throw new Error('unused') },
+    }
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        provideValidationAdapter(pending)
+        return () => h(MDropdown, { ...base, path: 'city', label: 'City' })
+      },
+    }))
+
+    expect(wrapper.find('input').attributes('aria-busy')).toBe('true')
     wrapper.unmount()
   })
 

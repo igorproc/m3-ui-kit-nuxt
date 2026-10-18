@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 (авторский компонент кита; хром поля выводится из Text fields) · Токены Compose: `FilledTextFieldTokens.kt`, `OutlinedTextFieldTokens.kt` (контейнер, лейбл, роли состояний); системно — непрозрачности слоя состояний, `StandardMenuTokens.kt` (меню единиц) · Код: `src/runtime/components/ui/number-input/` (`index.vue`, `unit.vue`, `props.ts`) + `composables/number-input/{useNumberInputControl,useNumberValue,useNumberScrub}.ts`, `shared/utils/number`, токены `assets/stylesheet/components/number-input/_index.scss` · Аудит: `data/number-input.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент собран по спеке полей (2026-09-03) и прошёл QA фазы D. План доводит его по системе: роли состояний семейства, состояния зон, геометрия filled, доступность строки поддержки. Вид и оси сохраняются.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–8, 10 (шаг 9 не нужен: вопрос 1 → 1). Геометрия filled 56 со смещением зон, inset на outlined, строка поддержки семейства с отдельным `role="alert"`, `aria-busy` по `meta.pending`, выбранная единица с галочкой и контейнером.</implementation-status>
 
 ## Вердикт
 
@@ -228,3 +228,8 @@ Q13), `aria-disabled` (IN-08), момент показа ошибки (FM-04), �
    заметнее долгое нажатие (если примут автоповтор из «Предложений по UX»).
 
 Рекомендация: 1.
+
+## Заметки реализации
+
+- Вопрос 1 → 1: формы нажатия у зон нет.
+- Ломающее (headless): `supportAttrs` больше не несёт `role`, добавлен `alertAttrs`; класс `--populated` убран.

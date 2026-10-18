@@ -8,6 +8,12 @@
       class="ui-otp-input__label"
     >
       <slot name="label">{{ label }}</slot>
+
+      <span
+        v-if="required"
+        class="ui-otp-input__required"
+        aria-hidden="true"
+      >*</span>
     </label>
 
     <div class="ui-otp-input__visual">
@@ -39,6 +45,10 @@
                   name="mask"
                   v-bind="cell"
                 >{{ cell.maskCharacter }}</slot>
+                <span
+                  v-else-if="cell.hint"
+                  class="ui-otp-input__hint"
+                >{{ cell.hint }}</span>
                 <template v-else>{{ cell.character }}</template>
               </slot>
             </span>
@@ -75,6 +85,14 @@
         class="ui-otp-input__message-icon"
         aria-hidden="true"
       />
+      <!-- The check in progress is announced by `aria-busy` on the input; the
+           indicator only shows it, in the line an error would take. -->
+      <MLoading
+        v-else-if="loading"
+        inline
+        class="ui-otp-input__loading"
+        aria-hidden="true"
+      />
       {{ message }}
     </p>
 
@@ -90,6 +108,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useSlots, watchEffect } from 'vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
+import MLoading from '#kit/components/ui/loading/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { useOtpControl } from '#kit/composables/otp-input/useOtpControl'
 import type { OtpCell } from '#kit/composables/otp-input/useOtpControl'
@@ -120,6 +139,8 @@ const {
   isComplete,
   isError,
   message,
+  focusAt,
+  selectAll,
   inputAttrs,
   labelAttrs,
   supportAttrs,
@@ -132,12 +153,12 @@ const {
 
 const rootClasses = computed(() => [
   'ui-otp-input',
+  `ui-otp-input--${props.variant}`,
   `ui-otp-input--label-${props.labelPlacement}`,
   {
     'ui-otp-input--focused': focusedModel.value,
     'ui-otp-input--disabled': props.disabled,
     'ui-otp-input--error': isError.value,
-    'ui-otp-input--complete': isComplete.value,
   },
 ])
 
@@ -152,8 +173,28 @@ if (import.meta.dev) {
   })
 }
 
+if (import.meta.dev) {
+  watchEffect(() => {
+    if (props.mask === true) {
+      console.warn('[m-otp-input] `mask` as `true` is retired: use `mask="always"`.')
+    } else if (typeof props.mask === 'string' && props.mask !== 'last' && props.mask !== 'always') {
+      console.warn('[m-otp-input] a glyph in `mask` is retired: use `mask="always"` and draw the glyph in the `#mask` slot.')
+    }
+  })
+}
+
 // The field's own attributes win on a clash; listeners from both sides run.
 const nativeAttrs = () => mergeProps(controlAttrs(), inputAttrs.value as unknown as Record<string, unknown>)
+
+/**
+ * `focus()` puts the caret after the last character; `select()` focuses the
+ * field with the whole code selected, so the next keystroke starts a new code —
+ * what a form wants after the server rejected one.
+ */
+defineExpose({
+  focus: () => focusAt(model.value.length),
+  select: selectAll,
+})
 
 const cellClasses = (cell: OtpCell) => [
   'ui-otp-input__field',
@@ -168,17 +209,18 @@ const cellClasses = (cell: OtpCell) => [
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/otp-input' as t;
+@use '#kit/assets/stylesheet/components/otp-input/cells' as cells;
 
 .ui-otp-input {
   $t: material-map(t.$tokens, 'm-otp-input');
-  $transition:
-    border-color g($t, 'state.duration') g($t, 'state.easing'),
-    background-color g($t, 'state.duration') g($t, 'state.easing'),
-    color g($t, 'state.duration') g($t, 'state.easing');
 
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
+
+  // As a grid or flex item the root would otherwise keep its content width as
+  // a minimum, and a code in a narrow column would run out of it (LY-07).
+  min-width: 0;
   max-width: 100%;
 
   &__label {
@@ -188,6 +230,10 @@ const cellClasses = (cell: OtpCell) => [
     overflow-wrap: anywhere;
 
     @include typescale(g($t, 'label.typography'));
+  }
+
+  &__required {
+    color: g($t, 'label.required.color');
   }
 
   &--disabled &__label {
@@ -220,70 +266,7 @@ const cellClasses = (cell: OtpCell) => [
     gap: g($t, 'group.gap');
   }
 
-  &__field {
-    display: inline-flex;
-    flex: 0 1 auto;
-    align-items: center;
-    justify-content: center;
-    width: g($t, 'field.size');
-    min-width: 0;
-    aspect-ratio: 1;
-    border: g($t, 'field.border.width') solid g($t, 'field.outline');
-    border-radius: g($t, 'field.shape');
-    color: g($t, 'field.color');
-    cursor: text;
-    transition: $transition;
-
-    @include typescale(g($t, 'field.typography'));
-
-    &--filled {
-      background: g($t, 'field.filled.container');
-    }
-
-    &--error {
-      border-color: g($t, 'field.error.outline');
-    }
-
-    // After error: the active cell shows focus even in an invalid code; the
-    // error stays in the message and the other cells.
-    &--active {
-      border-width: g($t, 'field.active.width');
-      border-color: g($t, 'field.active.outline');
-    }
-
-    &--disabled {
-      border-color: g($t, 'field.disabled.outline');
-      color: g($t, 'field.disabled.color');
-      cursor: default;
-    }
-
-    &--disabled#{&}--filled {
-      background: g($t, 'field.disabled.container');
-    }
-
-    // Every cell edge turns CanvasText, so the cell states are restated in
-    // system colours — the active cell after the error so focus stays visible.
-    @include forced-colors {
-      &--error {
-        border-style: dashed;
-        border-color: CanvasText;
-      }
-
-      &--active {
-        border-color: Highlight;
-      }
-
-      &--disabled {
-        border-color: GrayText;
-      }
-    }
-  }
-
-  @include can-hover {
-    &:not(.ui-otp-input--disabled) &__visual:hover &__field:not(.ui-otp-input__field--active, .ui-otp-input__field--error) {
-      border-color: g($t, 'field.hover.outline');
-    }
-  }
+  @include cells.cells($t);
 
   &__separator {
     height: fit-content;
@@ -299,6 +282,10 @@ const cellClasses = (cell: OtpCell) => [
     height: 100%;
     opacity: 0;
     cursor: text;
+
+    // iOS zooms the page into an input whose text is under 16 CSS px. The
+    // keyword is the UA's 16px default, so the page stays put on focus.
+    font-size: medium;
   }
 
   // Whatever stands beside the field: a resend action, a countdown, a paste
@@ -329,6 +316,13 @@ const cellClasses = (cell: OtpCell) => [
   // message has nothing but this glyph to say it.
   &__message-icon {
     flex: 0 0 auto;
+    font-size: g($t, 'message.icon.size');
+  }
+
+  // Sized by the line it stands in, like the glyph an error would put there.
+  &__loading {
+    flex: 0 0 auto;
+    color: g($t, 'message.loading.color');
     font-size: g($t, 'message.icon.size');
   }
 }

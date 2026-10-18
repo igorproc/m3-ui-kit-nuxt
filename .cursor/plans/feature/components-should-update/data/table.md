@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет (data tables были в Material 2); авторский компонент кита на системе M3 · Токены Compose: нет · Код: `src/runtime/components/ui/table/`, части `src/runtime/components/fragments/table/{header,pagination}/`, `src/runtime/composables/table/` · Аудит: `data/table.json` (42 FAIL) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Есть колонки с сортировкой (`v-model:sort`), выбор строк через `MCheckbox`, простая пагинация «назад/вперёд». Нет состояний данных (загрузка, пусто, ошибка), смешанного выбора, плотности, числовых колонок, доступного имени и прокрутки с клавиатуры.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано (агентом группы data, 2026-10-07, доработки 2026-10-08), с отложенными пунктами ниже. Шаги 1–10, кроме документации. Вопрос 1 → вариант 2: только множественный выбор + событие `row-click` (клики по контролам строки не считаются; клавиатурный путь — ссылка или кнопка в ячейке). Слой hover/focus/pressed — `::before` в цвете содержимого на каждой ячейке поверх `secondary-container` выбора. Состояния данных: `loading` (строка-сообщение с `MLoading` без строк, индикатор поверх оставшихся строк), `error` (строка или `true`, после загруженных строк — частичный сбой), `#loading`/`#empty`/`#error({ error, retry })`, `aria-busy`, постоянный `role="status"` со `statusText`. Колонки: `numeric`, `align`, `format`, `minWidth`; длинные значения переносятся (`overflow-wrap: anywhere`). Сортировка: кнопка на всю ячейку, слой 8/10/12, `focus-ring(inset)`, резерв иконки. `density` 40/52/64 (+4 у шапки). Вьюпорт фокусируем и назван, только пока таблица шире его; затухание у края — scroll-driven animation. Подвал: слот `#pagination-info` с числами, `pageSizeOptions` + нативный `select`, кламп страницы, `loading` блокирует навигацию, подписи — пропы без английских дефолтов. `caption` и атрибуты на `<table>`. Поведение — `composables/table/{useTableControl,useTableSelection}.ts`, чистые правила — `utils/table/{model,warnings}.ts`.</implementation-status>
 
 ## Вердикт
 
@@ -171,3 +171,19 @@
 
 Рекомендация: 2, пока нет заказчика одиночного выбора (принцип В4). Событие `row-click` с
 доступной альтернативой с клавиатуры — шаг 2.
+
+## Заметки реализации (2026-10-07)
+
+Отложено:
+- **Mixed у «выбрать все».** `MCheckbox` не умеет indeterminate (план [checkbox](../form/checkbox.md), шаг 2) и сам ставит `aria-checked`. Передача нативного `indeterminate` давала скринридеру «mixed», но axe ловил `aria-conditional-attr` (aria-checked="false" против mixed), поэтому 2026-10-08 она снята. Состояние уже считается (`useTableSelection().isMixed`) и подключится, когда у `MCheckbox` появится проп.
+- **Первая и последняя страница в подвале.** В `ICONS` нет `firstPage`/`lastPage`, а `shared/constants/icons.ts` вне файлов группы.
+- **`stickyHeader`.** У `overflow-x: auto` вьюпорт становится контейнером прокрутки и по вертикали, поэтому шапка не прилипает к прокрутке страницы. Нужна собственная высота вьюпорта (новый проп), заказчика нет.
+- **`maxWidth` колонки.** Браузеры не применяют `max-width` к ячейкам таблицы. Вместо него `width` вместе с `overflow-wrap: anywhere` ограничивает длинное значение.
+- **DT-10** (устаревшие данные), **DT-11** (задержка показа индикатора — решать системно для `MLoading`/`MLazy`), **CT-08** (виртуализация — предложение по UX).
+
+Ломающие изменения: подписи подвала стали пропами без английских дефолтов (`previousPageLabel`, `nextPageLabel`, `pageSizeLabel`), подпись «Items per page: N» по умолчанию снята; классы `.ui-table__header-sort` → `.ui-table__sort`, `.ui-table__cell--header` → `.ui-table__head-cell`, `.ui-table__row--header` → `.ui-table__head-row`; `aria-*` с `MTable` уходят на `<table>`; длинные значения переносятся, а не растягивают колонку; удалён внутренний `useTableContext`, `useTableSelection` больше не отдаёт `group`.
+
+Доработки 2026-10-08 (решения владельца):
+- **Выбор переживает страницу** («выбор остаётся, но рендерится они не должны»). `useTableSelection` идёт от модели: строки других страниц остаются в `selectedRows`, на экране только текущая страница. «Выбрать все» действует на текущую страницу: добавляет её невыбранные строки или, когда выбрана вся страница, убирает её строки; другие страницы не трогает. Таблица сама строки из выбора не убирает, в том числе исчезнувшие из данных (отличить строку другой страницы от удалённой она не может) — чистка за приложением. Без `v-model` выбор держится локально.
+- **Чистые помощники — в `src/runtime/utils/table/`** (`model.ts`: `resolveTableBody`, `getTablePageRange`, `nextTableSort`, `tableAriaSort`, `tableColumnAlign`; `warnings.ts`: `useTableWarnings`), явные импорты, без автоимпорта потребителю.
+- Навигация подвала не менялась: встраивать ли публичный `MPagination` (с первой и последней страницей) — открытый вопрос владельцу.

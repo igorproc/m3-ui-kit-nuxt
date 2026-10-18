@@ -1,5 +1,5 @@
 /**
- * Compiles every SFC `<style lang="scss">` block in the runtime.
+ * Compiles every SFC `<style lang="scss">` block in the runtime and the playground app.
  *
  * Nothing else in the kit's own pipeline does: `nuxt-module-build` copies the
  * runtime verbatim, and Vitest renders in jsdom without a preprocessor. A Sass
@@ -22,6 +22,8 @@ const runtime = join(root, 'src/runtime')
 // The module injects this by absolute path through Vite's resolver; here the
 // stylesheet root is on `loadPaths`, which reaches the same file.
 const prelude = '@use "additional" as *;\n'
+// The kit's own stylesheets stay on the spacing scale; a consumer may use any gap.
+const kitPrelude = '@use "additional" as * with ($spacing-strict: true);\n'
 
 /** Breakpoints normally come from the consumer's `materialKit.breakpoints`. */
 const STUBS = {
@@ -157,7 +159,8 @@ function compileEntry(css, file) {
   currentFile = file.slice(root.length + 1)
 
   try {
-    const { css: output } = sass.compileString(prelude + css, {
+    const entryPrelude = file.startsWith(runtime) ? kitPrelude : prelude
+    const { css: output } = sass.compileString(entryPrelude + css, {
       loadPaths: [join(runtime, 'assets/stylesheet'), runtime],
       importers: [aliasImporter],
       url: pathToFileURL(file),
@@ -187,15 +190,19 @@ function compileEntry(css, file) {
   }
 }
 
-for await (const file of walk(join(runtime, 'components'))) {
-  const source = await readFile(file, 'utf8')
+// The playground app is a consumer and gets the same prelude from the module;
+// its demo pages are not opened by any test, so this is their only Sass check.
+for (const dir of [join(runtime, 'components'), join(root, 'playground/app')]) {
+  for await (const file of walk(dir)) {
+    const source = await readFile(file, 'utf8')
 
-  for (const [, attrs, css] of source.matchAll(STYLE)) {
-    if (!/\bscoped\b/.test(attrs) && VUE_SCOPED_PSEUDO.test(css)) {
-      failures.push({ file: file.slice(root.length + 1), message: ':deep()/:slotted()/:global() only work in <style scoped>; the browser drops this rule.' })
+    for (const [, attrs, css] of source.matchAll(STYLE)) {
+      if (!/\bscoped\b/.test(attrs) && VUE_SCOPED_PSEUDO.test(css)) {
+        failures.push({ file: file.slice(root.length + 1), message: ':deep()/:slotted()/:global() only work in <style scoped>; the browser drops this rule.' })
+      }
+
+      compileEntry(css, file)
     }
-
-    compileEntry(css, file)
   }
 }
 

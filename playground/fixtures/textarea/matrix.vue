@@ -76,7 +76,10 @@ const states: { name: string, props: Record<string, unknown>, value?: string }[]
   { name: 'readonly', props: { readonly: true }, value: 'Read only' },
   { name: 'error', props: { errorMessage: 'Write at least a sentence' } },
   { name: 'flagged', props: { error: true } },
-  { name: 'disabled', props: { disabled: true, resizable: true, resizeLabel: 'Resize notes' }, value: 'Disabled' },
+  { name: 'disabled', props: { disabled: true, resizable: true, resizeLabel: 'Resize notes', helperText: 'Locked by an administrator' }, value: 'Disabled' },
+  { name: 'grow-empty', props: { autoGrow: true, rows: 1, maxRows: 3 } },
+  { name: 'grow-full', props: { autoGrow: true, rows: 1, maxRows: 3 }, value: ['One', 'Two', 'Three', 'Four', 'Five'].join('\n') },
+  { name: 'over-limit', props: { counter: 10 }, value: 'Longer than ten characters' },
 ]
 
 const values = reactive<Record<string, string>>({})

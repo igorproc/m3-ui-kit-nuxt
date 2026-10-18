@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 — часть авторского [MOtpInput](index.md) · Токены Compose: нет · Код: `span.ui-otp-input__group` в `src/runtime/components/ui/otp-input/index.vue:14-58` (вложенный `v-for` по `groups: OtpCell[][]`), диапазоны — `useOtpValue.ranges` (`src/runtime/composables/otp-input/useOtpValue.ts:91-109`), токены `root.gap` / `group.gap` в `src/runtime/assets/stylesheet/components/otp-input/_index.scss:7-12` · Аудит: `data/otp-input.json` (общий) · Тип: часть компонента, не компонент</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонента `OtpGroup` нет с 2026-09-05: группа — обёртка в разметке родителя, а диапазоны отдаёт композабл уже в форме, удобной шаблону (`craft.md` §5). План группы — один шаг раскладки (шаг 1 [index.md](index.md#план-работ)).</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано в шаге 1 семейства (`min-width: 0`, раскладка группы).</implementation-status>
 
 ## Вердикт
 

@@ -55,9 +55,9 @@ describe('m-loading', () => {
     expect(wrapper.find('div').exists()).toBe(false)
   })
 
-  it('uses the default and custom accessible label', async () => {
+  it('ships no accessible name of its own and takes the consumer’s', async () => {
     const def = await mountSuspended(MLoading)
-    expect(def.find('.ui-loading').attributes('aria-label')).toBe('Loading')
+    expect(def.find('.ui-loading').attributes('aria-label')).toBeUndefined()
 
     const custom = await mountSuspended(MLoading, {
       props: { ariaLabel: 'Fetching results' },

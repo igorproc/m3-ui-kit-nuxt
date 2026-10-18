@@ -2,7 +2,7 @@
 
 <identity>M3: Search (search bar; search view — docked и full-screen; Expressive: search app bar) · Токены Compose: `SearchBarTokens`, `SearchViewTokens` + `SearchBar.kt` · Код: `src/runtime/components/ui/search/` · Аудит: `data/search.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Есть только строка: поле `type="search"` полной формы с иконкой и кнопкой очистки, `inheritAttrs: false` + `useControlAttrs`. Нет вида результатов (search view), слотов для trailing-действий и аватара, слоя состояний. Английские строки по умолчанию.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1, 2, 5, 6 (без документации). Строка по токенам M3, слоты `#leading`/`#trailing`/`#avatar`/`#clear`, `clearLabel` и `placeholder` без английских дефолтов, `submit`/`clear`, кольцо фокуса на корне. Search view (шаг 3) не сделан: ждёт примитива поповера из плана меню.</implementation-status>
 
 ## Вердикт
 
@@ -145,3 +145,8 @@ compact. У кита вида нет вообще, и каждый продук�
 
 Рекомендация: 2. Строка поиска в M3 — отдельный контрол полной формы, а не поле формы с
 лейблом. Правило полей касается коробки с лейблом и строкой поддержки, которых у поиска нет.
+
+## Заметки реализации
+
+- Вопрос 1 → 2: фокус строки — кольцо кита на корне.
+- Ломающее: дефолт `placeholder` снят, «Clear search» → `clearLabel`, очистка — `MButtonIcon` (всегда в разметке, скрыта `visibility`), классы `__icon--leading` → `__leading`, `__icon--trailing` → `__clear`.

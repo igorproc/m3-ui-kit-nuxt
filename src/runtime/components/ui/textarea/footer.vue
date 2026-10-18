@@ -1,19 +1,25 @@
 <template>
   <div
     class="ui-textarea__footer"
-    :class="{ 'ui-textarea__footer--inactive': isInactive }"
+    :class="{ 'ui-textarea__footer--disabled': state.disabled }"
     :inert="isInactive || undefined"
   >
     <div
       v-if="$slots.start"
       class="ui-textarea__footer-group"
     >
-      <slot name="start" />
+      <slot
+        name="start"
+        v-bind="state"
+      />
     </div>
 
     <div class="ui-textarea__footer-group ui-textarea__footer-group--end">
-      <slot name="end">
-        <slot />
+      <slot
+        name="end"
+        v-bind="state"
+      >
+        <slot v-bind="state" />
       </slot>
     </div>
   </div>
@@ -31,17 +37,30 @@
  */
 import { textareaFieldStateKey } from '#kit/composables/textarea/useTextareaControl'
 
+/**
+ * The field's state, for the actions inside: a button bound to `disabled`
+ * takes its own disabled roles, the way the rest of the field recedes.
+ */
+interface FooterSlotProps {
+  disabled: boolean
+  readonly: boolean
+}
+
 defineSlots<{
   /** Leading group — formatting controls, hints. */
-  start?: () => unknown
+  start?: (props: FooterSlotProps) => unknown
   /** Trailing group — the submit action. Falls back to the default slot. */
-  end?: () => unknown
-  default?: () => unknown
+  end?: (props: FooterSlotProps) => unknown
+  default?: (props: FooterSlotProps) => unknown
 }>()
 
 const fieldState = inject(textareaFieldStateKey, null)
 
-const isInactive = computed(() => Boolean(fieldState?.value.disabled || fieldState?.value.readonly))
+const state = computed<FooterSlotProps>(() => ({
+  disabled: Boolean(fieldState?.value.disabled),
+  readonly: Boolean(fieldState?.value.readonly),
+}))
+const isInactive = computed(() => state.value.disabled || state.value.readonly)
 </script>
 
 <style lang="scss">
@@ -61,9 +80,11 @@ $t: material-map(t.$tokens, 'm-textarea');
   // its layer from `<MTextarea>`, which is the only place that knows the shape.
   background-color: g($t, 'footer.surface');
 
-  &--inactive {
+  // Disabled recedes by roles, as the rest of the field: content at 38% (the
+  // surface goes with the container's, in `<MTextarea>`). Read-only keeps its
+  // look; `inert` takes the actions out of reach in both.
+  &--disabled {
     color: g($t, 'disabled.color');
-    opacity: 0.6;
   }
 
   &-group {

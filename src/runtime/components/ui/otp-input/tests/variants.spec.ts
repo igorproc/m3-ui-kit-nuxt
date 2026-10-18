@@ -112,6 +112,77 @@ describe('m-otp-input · variants', () => {
     })
   })
 
+  describe('variant', () => {
+    it('defaults to outlined', async () => {
+      const wrapper = await mount()
+
+      expect(wrapper.classes()).toContain('ui-otp-input--outlined')
+    })
+
+    it.each(['filled', 'underline'] as const)('maps %s onto its own modifier', async (variant) => {
+      const wrapper = await mount({ variant })
+
+      expect(wrapper.classes()).toContain(`ui-otp-input--${variant}`)
+    })
+  })
+
+  describe('placeholder', () => {
+    it('draws the pattern in empty cells only', async () => {
+      const wrapper = await mount({ length: 4, modelValue: '12', placeholder: 'abcd' })
+
+      expect(cells(wrapper).map(cell => cell.text())).toEqual(['1', '2', 'c', 'd'])
+      expect(wrapper.findAll('.ui-otp-input__hint')).toHaveLength(2)
+    })
+
+    it('repeats a one-character pattern in every empty cell', async () => {
+      const wrapper = await mount({ length: 3, placeholder: '0' })
+
+      expect(cells(wrapper).map(cell => cell.text())).toEqual(['0', '0', '0'])
+    })
+
+    it('never puts the pattern into the value or onto the input', async () => {
+      const wrapper = await mount({ length: 3, placeholder: '0' })
+      const input = wrapper.find('input')
+
+      expect((input.element as HTMLInputElement).value).toBe('')
+      expect(input.attributes('placeholder')).toBeUndefined()
+    })
+  })
+
+  describe('required', () => {
+    it('marks the input required and the label with a decorative asterisk', async () => {
+      const wrapper = await mount({ label: 'Code', required: true })
+
+      expect(wrapper.find('input').attributes('required')).toBeDefined()
+      expect(wrapper.find('input').attributes('aria-required')).toBe('true')
+      expect(wrapper.find('.ui-otp-input__required').attributes('aria-hidden')).toBe('true')
+    })
+
+    it('leaves an optional code unmarked', async () => {
+      const wrapper = await mount({ label: 'Code' })
+
+      expect(wrapper.find('input').attributes('aria-required')).toBeUndefined()
+      expect(wrapper.find('.ui-otp-input__required').exists()).toBe(false)
+    })
+  })
+
+  describe('loading', () => {
+    it('shows an indicator in the message line, hidden from assistive tech', async () => {
+      const wrapper = await mount({ loading: true })
+      const indicator = wrapper.find('.ui-otp-input__message .ui-otp-input__loading')
+
+      expect(indicator.exists()).toBe(true)
+      expect(indicator.attributes('aria-hidden')).toBe('true')
+      expect(wrapper.find('input').attributes('aria-busy')).toBe('true')
+    })
+
+    it('draws no indicator at rest', async () => {
+      const wrapper = await mount()
+
+      expect(wrapper.find('.ui-otp-input__loading').exists()).toBe(false)
+    })
+  })
+
   describe('mask', () => {
     it('shows the value as typed by default', async () => {
       const wrapper = await mount({ length: 4, modelValue: '1234' })
@@ -119,20 +190,34 @@ describe('m-otp-input · variants', () => {
       expect(cells(wrapper).map(cell => cell.text())).toEqual(['1', '2', '3', '4'])
     })
 
-    it('replaces filled cells with a bullet when masked', async () => {
+    it('replaces filled cells with a bullet with mask="always"', async () => {
+      const wrapper = await mount({ length: 4, modelValue: '12', mask: 'always' })
+
+      expect(cells(wrapper).map(cell => cell.text())).toEqual(['•', '•', '', ''])
+    })
+
+    it('masks a code that was there before any typing with mask="last"', async () => {
+      const wrapper = await mount({ length: 3, modelValue: '12', mask: 'last' })
+
+      expect(cells(wrapper).map(cell => cell.text())).toEqual(['•', '•', ''])
+    })
+
+    // The dev warnings are not observable under Vitest (`import.meta.dev` is
+    // false); the retired values still have to render for their grace release.
+    it('still masks with a retired mask="true" for one release', async () => {
       const wrapper = await mount({ length: 4, modelValue: '12', mask: true })
 
       expect(cells(wrapper).map(cell => cell.text())).toEqual(['•', '•', '', ''])
     })
 
-    it('takes the mask character from the prop', async () => {
+    it('still draws a retired glyph string for one release', async () => {
       const wrapper = await mount({ length: 2, modelValue: '12', mask: '*' })
 
       expect(cells(wrapper).map(cell => cell.text())).toEqual(['*', '*'])
     })
 
     it('never masks an empty cell — there is nothing to hide', async () => {
-      const wrapper = await mount({ length: 3, modelValue: '1', mask: true })
+      const wrapper = await mount({ length: 3, modelValue: '1', mask: 'always' })
 
       expect(cells(wrapper).map(cell => cell.text())).toEqual(['•', '', ''])
     })
@@ -237,19 +322,20 @@ describe('m-otp-input · variants', () => {
   })
 
   describe('root state', () => {
-    it('reflects focus, validity and completion on the root', async () => {
+    it('reflects focus and validity on the root', async () => {
       const wrapper = await mount({ length: 2, modelValue: '12', error: true })
 
       expect(wrapper.classes()).toContain('ui-otp-input--error')
-      expect(wrapper.classes()).toContain('ui-otp-input--complete')
       expect(wrapper.classes()).not.toContain('ui-otp-input--focused')
 
       await wrapper.find('input').trigger('focus')
       expect(wrapper.classes()).toContain('ui-otp-input--focused')
     })
 
-    it('is not complete while a position is still empty', async () => {
-      const wrapper = await mount({ length: 3, modelValue: '12' })
+    // `primary` means activity, and a finished code has no active cell
+    // (decisions.md): completion is an event for the app, never a look.
+    it('draws no completed state, even when the code is full', async () => {
+      const wrapper = await mount({ length: 2, modelValue: '12' })
 
       expect(wrapper.classes()).not.toContain('ui-otp-input--complete')
     })

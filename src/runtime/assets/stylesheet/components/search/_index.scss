@@ -4,52 +4,44 @@
 // ==========================================
 // SEARCH M3 COMPONENT TOKENS
 // ==========================================
+// The search bar of `SearchBarTokens`: a full-shape container on
+// `surface-container-high` with no edge, 56 tall, 24 icons in 48 targets.
+// It is a control, not a form field — no label, no support line — so focus is
+// the kit's focus ring, as on a button, not the fields' colour change.
 
+$on-surface: map.get($theme-color-link, on-surface);
+$target: 48rem;
 $tokens: (
-  gap: 8rem,
-  max: (
-    width: 720rem,
-  ),
-  padding: (
-    inline: 16rem,
-  ),
-  min: (
+  container: (
+    color: map.get($theme-color-link, surface-container-high),
+    shape: map.get($theme-shape-link, full),
     height: 56rem,
+    // A kit axis rather than M3's: a bar across a wide page stops growing here.
+    max-width: 720rem,
+    // The edge parts are 48 targets; the bar leaves 4 between them and its end.
+    padding: (inline: spacing(4)),
+    gap: spacing(4),
   ),
-  bg: (
-    color: map.get($theme-color-link, 'surface-container-highest'),
-  ),
-  text: (
-    color: map.get($theme-color-link, 'on-surface'),
-  ),
-  border: (
-    width: 1rem,
-    color: map.get($theme-color-link, 'outline-variant'),
+  // An icon slot is a 48 target holding a 24 icon.
+  icon: (
+    color: map.get($theme-color-link, on-surface-variant),
+    leading: (color: $on-surface),
+    size: 24rem,
+    target: $target,
   ),
   input: (
-    padding: (
-      block: 8rem,
-    ),
-    text: (
-      type: 'body-large',
-    ),
+    color: $on-surface,
+    caret: (color: map.get($theme-color-link, primary)),
+    typography: 'body-large',
+    placeholder: (color: map.get($theme-color-link, on-surface-variant)),
   ),
-  placeholder: (
-    color: map.get($theme-color-link, 'on-surface-variant'),
-  ),
-  icon: (
-    color: map.get($theme-color-link, 'on-surface-variant'),
-    trailing: (
-      size: 40rem,
-    ),
-  ),
-  focused: (
-    border: (
-      width: 2rem,
-      color: map.get($theme-color-link, 'primary'),
-    ),
-  ),
+  // MD3 state layer: the content's ink over the container on hover.
+  layer: (color: $on-surface, hover: state-opacity(hover)),
   disabled: (
-    opacity: state-opacity(disabled-content),
+    content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent),
+  ),
+  state: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
   ),
 );

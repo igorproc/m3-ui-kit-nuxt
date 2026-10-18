@@ -30,7 +30,8 @@
 Любой интерактивный компонент обрабатывает пять: **обычное, hover, pressed, focused,
 disabled**. Hover и pressed — это `color-mix` на непрозрачностях MD3, разрешаемый на этапе
 сборки. Непрозрачности живут в одной карте (`$theme-state-link`: hover 8%, focus 10%,
-pressed 12%, dragged 16%, disabled — контейнер 12% / контент 38%) и читаются через
+pressed 12%, dragged 16%, disabled — контейнер 12% / контент 38%, а у заливки отключённого
+filled-поля `disabled-container-subtle` 4%) и читаются через
 `state-opacity()`, никогда не литералом:
 
 ```scss

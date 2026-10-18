@@ -1,24 +1,86 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+// ==========================================
+// FILE UPLOAD TOKENS
+// ==========================================
+// An authored component: a dashed dropzone, a refusal line beside it and a
+// queue of rows. Its look stays; the roles, the type and the states follow
+// the system.
+
+$on-surface: map.get($theme-color-link, on-surface);
+$disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
 $tokens: (
-  root: (gap: 16rem),
+  root: (gap: spacing(16)),
+  label: (
+    color: map.get($theme-color-link, on-surface-variant),
+    typography: 'body-medium',
+    required: (color: map.get($theme-color-link, error)),
+  ),
   dropzone: (
     min-height: 160rem,
-    padding: 24rem,
-    gap: 12rem,
-    shape: var(--sys-shape-corner-large),
+    padding: spacing(24),
+    gap: spacing(12),
+    shape: map.get($theme-shape-link, large),
+    // The kit's hairline (an open system question, see surface): a dashed edge
+    // is what says "drop here" without a fill.
+    border: (width: 1rem, style: dashed),
     outline: map.get($theme-color-link, outline),
-    dragging-outline: map.get($theme-color-link, primary),
-    dragging-container: map.get($theme-color-link, primary-container),
+    color: map.get($theme-color-link, on-surface-variant),
+    icon: (size: 32rem),
+    typography: 'body-large',
+    hint: (typography: 'body-small'),
+    // Dragging something it takes: the container role pair and an active edge.
+    accepting: (
+      container: map.get($theme-color-link, primary-container),
+      color: map.get($theme-color-link, on-primary-container),
+      outline: map.get($theme-color-link, primary),
+    ),
+    // Dragging a type it refuses: the error pair, with the reason in text.
+    refusing: (
+      container: map.get($theme-color-link, error-container),
+      color: map.get($theme-color-link, on-error-container),
+      outline: map.get($theme-color-link, error),
+    ),
+    disabled: (outline: $disabled-container, color: $disabled-content),
   ),
-  list: (gap: 8rem),
+  rejection: (
+    color: map.get($theme-color-link, error),
+    typography: 'body-small',
+    // One line, reserved even while empty.
+    min-height: var(--md-sys-typescale-body-small-line-height),
+    gap: spacing(4),
+    icon: (size: 16rem),
+  ),
+  list: (
+    gap: spacing(8),
+    // A long queue scrolls inside itself (CT-08): about four and a half rows,
+    // so the cut row says the list goes on, and the page keeps its length.
+    max-height: calc(#{spacing(64)} * 5),
+    // A focused row is scrolled clear of the edge, not flush against it.
+    scroll-padding: spacing(8),
+  ),
   item: (
-    gap: 12rem,
-    padding: 12rem,
-    shape: var(--sys-shape-corner-medium),
+    gap: spacing(12),
+    padding: spacing(12),
+    shape: map.get($theme-shape-link, medium),
     container: map.get($theme-color-link, surface-container),
-    color: map.get($theme-color-link, on-surface),
-    meta-color: map.get($theme-color-link, on-surface-variant),
+    color: $on-surface,
+    icon: (size: 24rem),
+    name: (typography: 'body-large'),
+    meta: (color: map.get($theme-color-link, on-surface-variant), typography: 'body-small'),
+    error: (color: map.get($theme-color-link, error)),
+    success: (color: map.get($theme-color-link, primary)),
+    // Room between two 48 targets, so a press on one never lands on the other.
+    actions: (gap: spacing(8)),
+  ),
+  empty: (
+    color: map.get($theme-color-link, on-surface-variant),
+    typography: 'body-medium',
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-short-4),
+    easing: var(--sys-motion-easing-standard),
   ),
 );

@@ -2,7 +2,7 @@
 
 <identity>M3: Time pickers — dial (vertical / horizontal), input, 12h / 24h, AM/PM selector; Expressive: rich colours (`TimePickerShapes`), `ScrollField` (experimental) · Токены Compose: `TimePickerTokens.kt`, `TimeInputTokens.kt`; поведение — `TimePicker.kt`, `TimePickerDialog.kt`, `ScrollField.kt` · Код: `src/runtime/components/ui/time-picker/`, фрагменты `src/runtime/components/fragments/time-picker/{dial,keyboard}/`, `src/runtime/composables/time/useTimePicker.ts`, токены `src/runtime/assets/stylesheet/components/time-picker/{dial,keyboard}/_index.scss` · Аудит: `data/time-picker.json` · Тип: public (`MTimePicker`), sub (фрагменты `dial`, `keyboard`)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Шаги 1–2 не ломают API и могут идти сразу. Шаги 3–5 ждут ответов на вопросы 3–5, 8 и 9, шаг 6 — на вопросы 1–2.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–5 и 7 (без уменьшения циферблата до 200 по высоте; документация — шаг 8, в docs). Одна карта токенов, `createClock` + `useTimePickerControl` / `useTimeDialControl` / `useTimeFieldsControl`, селекторы 96 × 80 (`radio`), период — пара toggle-кнопок, циферблат — один `role="slider"`, поля `type="text"` с ошибкой вместо клампа, `hourCycle`, `locale`, disabled / readonly / required / error, horizontal складывается по container query. `MDialogTime` (шаг 6) не делается по ответу на вопрос 2.</implementation-status>
 
 ## Вердикт
 
@@ -283,3 +283,10 @@
 2. Оставить как есть. Цена: два набора слов для одной оси в соседних компонентах (axes.md «одно слово — один смысл»).
 
 Рекомендация: 1. Переключатель режима и диалоговая оболочка у двух пикеров станут общими.
+
+## Заметки реализации
+
+- Вопросы: 1 → 2 (карточка остаётся; контекст хоста не нужен, пока нет диалога); 2 → 2 (без `MDialogTime`, запись в decisions.md; рецепт: `MDialog` + `MTimePicker` + `validate()`); 3 → 3 (`hourCycle: auto | h12 | h23`, по умолчанию `h23`, `is24h` — алиас); 4 → 2 (слайдер на общем `createRangeKeyboardController` без правки контроллера: значение в середине трёх кругов, шаг за край переходит через ноль; PageUp/PageDown — ±10, как у контроллера, а не ±5); 5 → 1 (Expressive-пара, форма статична); 6 → 1 (явная ось, horizontal складывается при ширине содержимого < 508); 7 → 1 (rich и ScrollField не вводятся, запись в decisions.md); 8 → 1 (селекторы-кнопки); 9 → 1 (`picker | input`, `dial`/`keyboard` — алиасы).
+- Радиусы колец — доли M3 (101/256, 69/256) в `createClock`, не CSS-свойство: правило сессии запрещает компонентные custom properties для статичных значений.
+- Из предложений UX: вставка «14:30», «9:30 pm» в поле часов сделана; `minuteStep` и границы времени — нет.
+- Ломающее: `is24h` → `hourCycle`; `mode: dial | keyboard` → `picker | input` (`v-model:mode`); в dial нет полей ввода; композабл `useTimePicker` удалён (был в авто-импорте) → `useTimePickerControl` и соседи; экспорты `makeMTimePickerProps`, `mTimePickerDialProps`, `MTimePickerDialProps` удалены; фрагмент `keyboard` удалён; классы `.ui-time-picker-dial*` / `.ui-time-picker-keyboard*` → `.ui-time-picker__*`; режим ввода тоже в карточке.

@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MTimeline](index.md)) · Код: `src/runtime/components/ui/timeline/item/` · Аудит: в составе `data/timeline.json` · Тип: public, часть семейства</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-18: `title`, `text`, `time` + `datetime` (`<time>`), `icon`, `color`, `variant` содержимого (`MSurfaceVariant`), переопределение `side`, `hideOpposite`, `hideDot`, `contentTag`. Добавляется `status` и колонка времени по условию.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано (агентом группы data, 2026-10-07). Вопрос 1 → вариант 2: обещание «акцента outlined» убрано из docstring `color`. `status` — **строка** (визуально скрытое слово перед заголовком), а не `{ tone, label }` из плана: у тонов `success`/`warning`/`info` нет ролей M3 (`MColor`) и значков в `ICONS`, а выдумывать соответствие тон → роль — бизнес-правило. Роль даёт `color`, значок — `icon`. Колонка времени — только при `time` или `#opposite`; `hideOpposite` теперь «у этого элемента нет времени», колонка остаётся, пока она нужна другим. `time` без `datetime` — dev-предупреждение. Содержимое и время переносят длинные значения.</implementation-status>
 
 ## Вердикт
 

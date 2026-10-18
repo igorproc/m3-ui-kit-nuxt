@@ -34,8 +34,16 @@
       <MTextField
         v-model="count"
         label="Quantity"
-        type="number"
         data-test="zero"
+      />
+    </div>
+
+    <div class="fixture-stress__narrow">
+      <MTextField
+        v-model="empty"
+        label="Search the archive"
+        placeholder="Title, author or year"
+        data-test="placeholder"
       />
     </div>
 
@@ -80,8 +88,9 @@ import MTextField from '#kit/components/ui/text-field/index.vue'
 
 const longLabel = ref('')
 const longWord = ref('')
-// v-model casts a type="number" value; 0 must still read as a value.
+// A numeric 0 handed to the string model must still show as a value.
 const count = ref(0 as unknown as string)
+const empty = ref('')
 const mixed = ref('Сохранить 保存 حفظ 🙂')
 const toggled = ref('')
 const showError = ref(false)

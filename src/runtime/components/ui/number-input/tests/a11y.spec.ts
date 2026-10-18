@@ -158,7 +158,15 @@ describe('m-number-input · a11y', () => {
       const wrapper = await mount({ errorMessage: 'Out of range' })
 
       expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
-      expect(wrapper.find('.ui-number-input__support').attributes('role')).toBe('alert')
+      expect(wrapper.find('[role="alert"]').text()).toBe('Out of range')
+    })
+
+    it('keeps the helper outside the alert region — it is not announced', async () => {
+      const wrapper = await mount({ helperText: 'Pixels' })
+
+      expect(wrapper.find('.ui-number-input__support').text()).toBe('Pixels')
+      expect(wrapper.find('.ui-number-input__support').attributes('role')).toBeUndefined()
+      expect(wrapper.find('[role="alert"]').text()).toBe('')
     })
 
     it('treats the error prop as invalid even without a message', async () => {
@@ -173,18 +181,16 @@ describe('m-number-input · a11y', () => {
       expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
     })
 
-    it('has the live region in place before the error arrives, and never re-roles it', async () => {
+    it('has the alert region in place before the error arrives, and writes the error into it', async () => {
       const wrapper = await mount()
-      const region = wrapper.find('.ui-number-input__support')
+      const region = wrapper.find('[role="alert"]')
 
       expect(region.exists()).toBe(true)
-      expect(region.attributes('role')).toBe('alert')
       expect(region.text()).toBe('')
 
       await wrapper.setProps({ errorMessage: 'Out of range' })
 
-      expect(wrapper.find('.ui-number-input__support').element).toBe(region.element)
-      expect(region.attributes('role')).toBe('alert')
+      expect(wrapper.find('[role="alert"]').element).toBe(region.element)
       expect(region.text()).toBe('Out of range')
     })
 

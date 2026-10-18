@@ -1,0 +1,183 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// OTP INPUT · CELLS
+// ==========================================
+// Included inside `.ui-otp-input`. Every variant walks the same states in the
+// same order — empty → with a character → hover → error → active → disabled —
+// with one property per variant: `outlined` its edge, `filled` its tone,
+// `underline` its rule. The active cell comes after the error: focus stays
+// visible in an invalid code, and the message and the other cells keep
+// saying "error".
+
+// The grid answers the pointer as one field: every resting cell darkens its
+// edge, never the one that already shows focus or an error.
+$hovered: ':not(.ui-otp-input--disabled) .ui-otp-input__visual:hover .ui-otp-input__field:not(.ui-otp-input__field--active, .ui-otp-input__field--error)';
+
+@mixin cells($t) {
+  $transition:
+    border-color g($t, 'state.duration') g($t, 'state.easing'),
+    background-color g($t, 'state.duration') g($t, 'state.easing'),
+    color g($t, 'state.duration') g($t, 'state.easing');
+
+  &__field {
+    position: relative;
+
+    // Contains the filled state layer, so its negative z-index stays under
+    // the character and above the cell's own tone.
+    isolation: isolate;
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: center;
+    width: g($t, 'field.size');
+    min-width: 0;
+    aspect-ratio: 1;
+    border: g($t, 'field.border.width') solid transparent;
+    border-radius: g($t, 'field.shape');
+    color: g($t, 'field.color');
+    cursor: text;
+    transition: $transition;
+
+    @include typescale(g($t, 'field.typography'));
+  }
+
+  &__hint {
+    color: g($t, 'field.placeholder.color');
+  }
+
+  // ── outlined · the edge carries every state ──
+  &--outlined {
+    .ui-otp-input__field {
+      border-color: g($t, 'outlined.outline.empty');
+    }
+
+    .ui-otp-input__field--filled {
+      border-color: g($t, 'outlined.outline.filled');
+    }
+
+    @include can-hover {
+      &#{$hovered} {
+        border-color: g($t, 'outlined.outline.hover');
+      }
+    }
+
+    .ui-otp-input__field--error {
+      border-color: g($t, 'field.error.color');
+    }
+
+    .ui-otp-input__field--active {
+      border-width: g($t, 'field.active.width');
+      border-color: g($t, 'field.active.color');
+    }
+
+    .ui-otp-input__field--disabled {
+      border-color: g($t, 'outlined.outline.disabled');
+    }
+  }
+
+  // ── filled · the tone carries every state; focus is the ring all fields
+  // share for the active cell ──
+  &--filled {
+    .ui-otp-input__field {
+      background-color: g($t, 'filled.container.empty');
+
+      // State layer in the content's ink over the tone, under the character.
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        background-color: g($t, 'filled.layer.color');
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+      }
+    }
+
+    .ui-otp-input__field--filled {
+      background-color: g($t, 'filled.container.filled');
+    }
+
+    @include can-hover {
+      &#{$hovered}::before {
+        opacity: g($t, 'filled.layer.hover');
+      }
+    }
+
+    .ui-otp-input__field--error {
+      background-color: g($t, 'filled.container.error');
+      color: g($t, 'filled.error.color');
+    }
+
+    .ui-otp-input__field--active {
+      border-width: g($t, 'field.active.width');
+      border-color: g($t, 'field.active.color');
+    }
+
+    .ui-otp-input__field--disabled {
+      background-color: g($t, 'filled.container.disabled');
+    }
+  }
+
+  // ── underline · a rule under each cell, no box ──
+  &--underline {
+    .ui-otp-input__field {
+      border-bottom-color: g($t, 'underline.rule.empty');
+      border-radius: g($t, 'underline.shape');
+    }
+
+    .ui-otp-input__field--filled {
+      border-bottom-color: g($t, 'underline.rule.filled');
+    }
+
+    @include can-hover {
+      &#{$hovered} {
+        border-bottom-color: g($t, 'underline.rule.hover');
+      }
+    }
+
+    .ui-otp-input__field--error {
+      border-bottom-color: g($t, 'field.error.color');
+    }
+
+    .ui-otp-input__field--active {
+      border-bottom-width: g($t, 'field.active.width');
+      border-bottom-color: g($t, 'field.active.color');
+    }
+
+    .ui-otp-input__field--disabled {
+      border-bottom-color: g($t, 'underline.rule.disabled');
+    }
+  }
+
+  // Disabled content is the same in every variant, and outranks the error ink.
+  .ui-otp-input__field--disabled {
+    color: g($t, 'field.disabled.color');
+    cursor: default;
+  }
+
+  // Every cell edge turns CanvasText, so the cell states are restated in system
+  // colours — the active cell after the error so focus stays visible. A filled
+  // cell has no edge of its own, so forcing gives it one. Nested under the
+  // block, these weigh as much as the variant rules: source order decides.
+  @include forced-colors {
+    &--filled .ui-otp-input__field {
+      border-color: CanvasText;
+    }
+
+    .ui-otp-input__field--error {
+      border-style: dashed;
+      border-color: CanvasText;
+    }
+
+    .ui-otp-input__field--active {
+      border-color: Highlight;
+    }
+
+    .ui-otp-input__field--disabled {
+      border-color: GrayText;
+    }
+  }
+}

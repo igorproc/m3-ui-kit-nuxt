@@ -30,17 +30,25 @@ describe('m-textarea · variants', () => {
       expect(wrapper.find('.ui-textarea__control').exists()).toBe(true)
     })
 
-    it('defaults to filled and to the small radius tier', async () => {
+    it('defaults to filled and to the extra-small corner', async () => {
       const wrapper = await mount()
 
       expect(wrapper.classes()).toContain('ui-textarea--filled')
-      expect(wrapper.classes()).toContain('ui-textarea--small')
+      expect(wrapper.classes()).toContain('ui-textarea--shape-extra-small')
     })
 
-    it('maps the rounded prop onto its own modifier', async () => {
-      const wrapper = await mount({ rounded: 'large' })
+    it('maps the shape prop onto its own modifier', async () => {
+      const wrapper = await mount({ shape: 'large' })
 
-      expect(wrapper.classes()).toContain('ui-textarea--large')
+      expect(wrapper.classes()).toContain('ui-textarea--shape-large')
+    })
+
+    // The dev warning is not observable under Vitest (`import.meta.dev` is
+    // false); the retired value still has to render for its grace release.
+    it('still applies a retired rounded value as its shape for one release', async () => {
+      const wrapper = await mount({ rounded: 'pill' })
+
+      expect(wrapper.classes()).toContain('ui-textarea--shape-full')
     })
 
     it('drops the shapes a multi-line box has no use for', async () => {
@@ -82,6 +90,21 @@ describe('m-textarea · variants', () => {
   })
 
   describe('counter', () => {
+    it('takes the error role past a display-only limit without cutting the value', async () => {
+      const wrapper = await mount({ counter: 3, modelValue: 'hello' })
+      const counter = wrapper.find('.ui-textarea__counter')
+
+      expect(counter.text()).toBe('5 / 3')
+      expect(counter.classes()).toContain('ui-textarea__counter--over')
+      expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe('hello')
+    })
+
+    it('stays in its resting role within the limit', async () => {
+      const wrapper = await mount({ counter: 10, modelValue: 'hello' })
+
+      expect(wrapper.find('.ui-textarea__counter').classes()).not.toContain('ui-textarea__counter--over')
+    })
+
     it('sits under the box, on the support row opposite the message', async () => {
       const wrapper = await mount({ label: 'Notes', counter: true, maxlength: 500, modelValue: 'abc' })
       const counter = wrapper.find('.ui-textarea__counter')
@@ -171,13 +194,24 @@ describe('m-textarea · variants', () => {
       const footer = wrapper.find('.ui-textarea__footer')
 
       expect(footer.attributes('inert')).toBeDefined()
-      expect(footer.classes()).toContain('ui-textarea__footer--inactive')
+      expect(footer.classes()).toContain('ui-textarea__footer--disabled')
     })
 
-    it('goes inert with a read-only field too', async () => {
+    it('goes inert with a read-only field too, without receding', async () => {
       const wrapper = await mount({ readonly: true }, { footer: footerSlot })
+      const footer = wrapper.find('.ui-textarea__footer')
 
-      expect(wrapper.find('.ui-textarea__footer').attributes('inert')).toBeDefined()
+      expect(footer.attributes('inert')).toBeDefined()
+      expect(footer.classes()).not.toContain('ui-textarea__footer--disabled')
+    })
+
+    it('hands the field state to its actions, so a button can take its own disabled roles', async () => {
+      const slot = () => h(MTextareaFooter, null, {
+        end: ({ disabled }: { disabled: boolean }) => h('button', { type: 'button', disabled }, 'Submit'),
+      })
+      const wrapper = await mount({ disabled: true }, { footer: slot })
+
+      expect(wrapper.find('.ui-textarea__footer button').attributes('disabled')).toBeDefined()
     })
 
     it('stays live while the field is editable', async () => {
@@ -185,7 +219,7 @@ describe('m-textarea · variants', () => {
       const footer = wrapper.find('.ui-textarea__footer')
 
       expect(footer.attributes('inert')).toBeUndefined()
-      expect(footer.classes()).not.toContain('ui-textarea__footer--inactive')
+      expect(footer.classes()).not.toContain('ui-textarea__footer--disabled')
     })
 
     it('splits the footer into leading and trailing groups', async () => {

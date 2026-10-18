@@ -29,7 +29,8 @@ complete there is no active cell. Confirmation is the application's job, not the
 Every interactive component handles five: **initial, hover, pressed, focused, disabled**.
 Hover and pressed are `color-mix` at the MD3 opacities, resolved at build time. The
 opacities live in one map (`$theme-state-link`: hover 8%, focus 10%, pressed 12%,
-dragged 16%, disabled container 12% / content 38%) and are read with `state-opacity()` —
+dragged 16%, disabled container 12% / content 38%, and `disabled-container-subtle` 4% for a
+disabled filled field's fill) and are read with `state-opacity()` —
 never a literal:
 
 ```scss

@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита · Код: компонент снят 2026-10-06, в `src/runtime/components/ui/confirm-edit/` лежит только `README.md`; последняя реализация — `git show f5287e1 -- src/runtime/components/ui/confirm-edit src/runtime/composables/confirm-edit` · Аудит: `data/confirm-edit.json` (по снятой реализации) · Тип: public (снят)</identity>
 
-<implementation-status state="pending" updated="2026-10-07">Компонент снят с публикации на переработку по решению владельца: `presentation: 'auto'` проверял несуществующий брейкпоинт `medium` и никогда не переключался в диалог, API слотов не был объявлен, тексты зашиты по-английски. План — предложение для обсуждения, а не утверждённая спецификация.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализован ответ на вопрос 1 (вариант 2): компонента нет, поставляется `useConfirmEditTransaction` (`composables/confirm-edit/`) — черновик, `commit()` → `saved | cancelled | conflict | error`, `cancel()` с `AbortSignal`, конфликт с `keepDraft()` / `takeExternal()`. Рецепт (поле + `MButtonIcon` + `MLoading` + live-регион) — в docs, шаги 2–3 не нужны.</implementation-status>
 
 ## Вердикт
 
@@ -81,3 +81,8 @@
    `MDialog`. Меньше API, больше гибкости, но каждый продукт собирает разметку сам.
 
 Рекомендация: 2 до появления двух заказчиков с одинаковой разметкой (принцип В4).
+
+## Заметки реализации
+
+- README в `components/ui/confirm-edit/` описывает решение и рецепт.
+- Папка `composables/confirm-edit/` не была в списке файлов группы, но других владельцев у неё нет.

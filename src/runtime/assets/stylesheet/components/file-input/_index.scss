@@ -1,16 +1,19 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// FILE INPUT TOKENS
+// ==========================================
+// The field itself is `<MTextField>` with its own tokens; what is owned here
+// is the action row in its trailing zone and the summary under it.
 
 $tokens: (
   actions: (
-    gap: 4rem,
+    gap: spacing(4),
   ),
   selection: (
-    margin: (
-      top: 8rem,
-    ),
-    color: map.get($theme-color-link, 'on-surface-variant'),
+    margin: (top: spacing(8)),
+    color: map.get($theme-color-link, on-surface-variant),
     typography: 'body-small',
   ),
 );
-

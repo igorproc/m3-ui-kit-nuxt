@@ -17,6 +17,7 @@
       v-ripple="!inactive"
       type="button"
       class="ui-number-input__unit-trigger"
+      :class="{ 'ui-number-input__unit-trigger--open': isOpen }"
       :disabled="inactive"
       :aria-labelledby="`${id}-label ${id}-value`"
       aria-haspopup="menu"
@@ -55,9 +56,17 @@
         role="menuitemradio"
         :aria-checked="option.value === modelValue"
         class="ui-menu__item ui-number-input__unit-option"
+        :class="{ 'ui-number-input__unit-option--selected': option.value === modelValue }"
         @click="select(option.value)"
       >
-        {{ option.label }}
+        <span class="ui-number-input__unit-option-text">{{ option.label }}</span>
+
+        <MIcon
+          v-if="option.value === modelValue"
+          :name="ICONS.check"
+          class="ui-number-input__unit-check"
+          aria-hidden="true"
+        />
       </button>
     </MMenu>
   </span>
@@ -183,7 +192,7 @@ $t: material-map(t.$tokens, 'm-number-input');
     padding: g($t, 'unit.padding.block') g($t, 'unit.padding.inline');
     border: none;
 
-    // Set by `<MNumberInput>` from its `rounded` axis, one tier rounder.
+    // Set by `<MNumberInput>` from its `shape` axis, one tier rounder.
     border-radius: var(--ui-number-input-zone-radius);
     background-color: transparent;
     color: inherit;
@@ -206,7 +215,7 @@ $t: material-map(t.$tokens, 'm-number-input');
       }
     }
 
-    &[aria-expanded='true']::after {
+    &--open::after {
       opacity: g($t, 'layer.hover');
     }
 
@@ -231,22 +240,32 @@ $t: material-map(t.$tokens, 'm-number-input');
     transition: transform g($t, 'state.duration') g($t, 'state.easing');
   }
 
-  &-trigger[aria-expanded='true'] &-caret {
+  &-trigger--open &-caret {
     transform: rotate(180deg);
   }
 
-  &-option[aria-checked='true'] {
+  // The chosen unit carries the list's selection role and a check, so it is
+  // never marked by colour alone. `.ui-menu__item` is repeated to outweigh the
+  // menu's own hover fill without depending on stylesheet order.
+  &-option--selected.ui-menu__item.ui-menu__item {
+    background-color: g($t, 'unit.selected.container');
     color: g($t, 'unit.selected.color');
 
-    // The checked unit is marked by its ink alone, which forced colours flatten.
-    // `.ui-menu__item` outweighs the menu's own hover fill, which would otherwise
-    // force to Canvas under HighlightText.
     @include forced-colors {
-      &.ui-menu__item {
-        background-color: Highlight;
-        color: HighlightText;
-      }
+      background-color: Highlight;
+      color: HighlightText;
     }
+  }
+
+  &-option-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &-check {
+    flex: 0 0 auto;
+    margin-inline-start: g($t, 'unit.gap');
+    font-size: g($t, 'unit.selected.check.size');
   }
 
   &-menu {

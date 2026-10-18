@@ -3,13 +3,17 @@
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
-// TEXT FIELD M3 COMPONENT TOKENS (NESTED M3 COMPLIANT)
+// TEXT FIELD M3 COMPONENT TOKENS
 // ==========================================
+// Roles follow `FilledTextFieldTokens` / `OutlinedTextFieldTokens` (Compose
+// Material3 1.5.0-alpha22), with the kit's recorded deviations: focus is a hue
+// change at the resting width (no 2dp indicator), focus outranks error on the
+// edge, and the label never moves (`float` sits on the top edge from the start).
 
 // Spacing reads the 4-unit scale through `spacing()`. Values off it stay
 // literal on purpose — sizes (heights, icon boxes, the input's minimum width),
-// the 18rem support line, the 6rem glyph gap — and the density steps' 14/18/28/10
-// paddings, which centre a 24rem value line in 44/56/64 boxes.
+// the 6rem glyph gap — and the density steps' raise and value offsets (14/18
+// and 18/28), which place the label and a 24rem value line in 44/64 boxes.
 
 // The default height, named once for the `default` density step.
 $field-height: 56rem;
@@ -22,70 +26,98 @@ $label-left: spacing(16);
 $label-raised-scale: 0.75;
 $notch-padding-inline: spacing(4);
 
-// A resting label beside a prepend starts where the value does: past the
-// container's prepend padding, the icon box and the icon's margin.
+// A label beside a prepend starts where the value does: past the container's
+// prepend padding, the icon box and the icon's margin.
 $padding-prepend: spacing(12);
 $icon-width: 24rem;
 $icon-prepend-margin: spacing(16);
 $label-prepend-left: $padding-prepend + $icon-width + $icon-prepend-margin;
+$on-surface: map.get($theme-color-link, on-surface);
+$disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
 
-// One density step. The label rests centred on the control (`top` is half the
-// height) and is raised by transform only: `inside` lifts it by `$raise` for the
-// shapes that keep it in the box, `notch` lifts its centre by half the height so
-// it lands on the top border. Scaling is around the vertical centre, so the lift
-// is pure height math.
-@function density-step($height, $raise, $padding-top, $padding-bottom) {
+// The value line: one line of the input's type scale.
+$value-line: var(--md-sys-typescale-body-large-line-height);
+
+// One density step. The label is centred on `top` (half the height) and raised
+// by a static transform: `inside` lifts it by `$raise` for the placements that
+// keep it in the box, `notch` lifts its centre by half the height so it lands
+// on the top border. Scaling is around the vertical centre, so the lift is pure
+// height math.
+
+// With a label inside the box the value starts `$value-top` below the outer
+// top edge. The control is border-box and its border is part of that
+// distance, so the row's own padding is what is left after the border, and
+// the bottom padding is what remains of the height: the row fills the box
+// exactly and the border never adds height to it (LY-02).
+@function density-step($height, $raise, $value-top) {
   $top: math.div($height, 2);
 
-  @return (height: $height,
-    label: (top: $top,
-      raise: $raise,
-      transform: (inside: translateY(calc(-50% - #{$raise})) scale($label-raised-scale),
+  @return (
+    height: $height,
+    label: (
+      top: $top,
+      transform: (
+        inside: translateY(calc(-50% - #{$raise})) scale($label-raised-scale),
         notch: translateY(calc(-50% - #{$top})) scale($label-raised-scale),
-      )),
-    input: (padding: (top: $padding-top, bottom: $padding-bottom)),
+      ),
+    ),
+    input: (padding: (
+      top: $value-top - $border-width,
+      bottom: calc(#{$height - $value-top - $border-width} - #{$value-line}),
+    )),
   );
 }
 
 $tokens: (
-  container: (gap: spacing(4),
-    padding: (inline: spacing(16),
-      prepend: $padding-prepend,
-      append: spacing(12),
-    ),
-    border: (width: $border-width,
-    ),
-    field: (gap: spacing(8),
-      input-min-width: 60rem,
-    )),
-  typography: (label: $label-typescale,
-    input: 'body-large',
-    helper: 'body-small',
+  container: (
+    gap: spacing(4),
+    padding: (inline: spacing(16), prepend: $padding-prepend, append: spacing(12)),
+    border: (width: $border-width),
+    field: (gap: spacing(8), input-min-width: 60rem),
   ),
-  label: (left: $label-left,
+  typography: (
+    // Above the box the label is a heading for the value; over the box it is
+    // body-large raised to three quarters, the size the notch reproduces.
+    label: (top: 'body-medium', overlay: $label-typescale),
+    input: 'body-large',
+    affix: 'body-large',
+    support: 'body-small',
+  ),
+  label: (
     max-width: calc(100% - #{2 * $label-left}),
     color: map.get($theme-color-link, on-surface-variant),
     required: (color: map.get($theme-color-link, error)),
-    // The resting label follows a prepend; the raised one returns to the start
-    // edge, because nothing bounds what a prepend holds and the notch must not
-    // depend on it.
-    prepend: (left: $label-prepend-left,
-      notch: (shift: calc(var(--ui-text-field-inset) - #{$label-prepend-left}),
-      ))),
-  input: (color: map.get($theme-color-link, on-surface),
+    // Beside a prepend the overlaid label starts where the value does; on the
+    // notch it returns to the start edge, because nothing bounds what a
+    // prepend holds and the gap in the border must not depend on it.
+    prepend: (
+      left: $label-prepend-left,
+      notch: (shift: calc(var(--ui-text-field-inset) - #{$label-prepend-left})),
+    ),
   ),
-  icon: (color: map.get($theme-color-link, on-surface-variant),
+  input: (
+    color: $on-surface,
+    caret: (color: map.get($theme-color-link, primary)),
+    placeholder: (color: map.get($theme-color-link, on-surface-variant)),
+  ),
+  // Text fixed beside the value (`$`, `@gmail.com`): `prefix` / `suffix` in M3.
+  affix: (
+    color: map.get($theme-color-link, on-surface-variant),
+    gap: spacing(2),
+  ),
+  icon: (
+    color: map.get($theme-color-link, on-surface-variant),
     width: $icon-width,
     size: 24rem,
-    prepend: (margin: $icon-prepend-margin,
-    ),
-    append: (margin: spacing(16),
-    )),
-  helper: (padding: (inline: spacing(16),
-    ),
-    margin: (top: spacing(4),
-    ),
-    min-height: 18rem,
+    prepend: (margin: $icon-prepend-margin),
+    append: (margin: spacing(16)),
+  ),
+  support: (
+    padding: (inline: spacing(16)),
+    margin: (top: spacing(4)),
+    // One line of body-small: the reserved height is the line itself.
+    min-height: var(--md-sys-typescale-body-small-line-height),
     color: map.get($theme-color-link, on-surface-variant),
     // The error glyph — the same size and spacing as the textarea's.
     icon: (size: 16rem, gap: 6rem),
@@ -93,99 +125,87 @@ $tokens: (
   // Vertical scale. Height and padding only — type size never changes, so a
   // compact field and a comfortable one still align their values.
   density: (
-    compact: density-step(44rem, 14rem, 18rem, spacing(4)),
-    default: density-step($field-height, 18rem, spacing(24), spacing(8)),
-    comfortable: density-step(64rem, spacing(20), 28rem, 10rem),
+    compact: density-step(44rem, 14rem, 18rem),
+    default: density-step($field-height, 18rem, spacing(24)),
+    comfortable: density-step(64rem, spacing(20), 28rem),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
   ),
+  // MD3 state layer on the filled container: on-surface at hover opacity,
+  // painted over the container and under the value.
+  layer: (
+    color: $on-surface,
+    hover: state-opacity(hover),
+  ),
+  // Roles shared by every shape: the label, the trailing icon, the caret and
+  // the support line. A shape's own edge lives in its branch below.
+  hover: (label: (color: map.get($theme-color-link, on-surface-variant))),
+  focused: (label: (color: map.get($theme-color-link, primary))),
+  error: (
+    color: map.get($theme-color-link, error),
+    caret: (color: map.get($theme-color-link, error)),
+    hover: (color: map.get($theme-color-link, on-error-container)),
+  ),
+  disabled: (
+    content: $disabled-content,
+    support: (color: $disabled-content),
+  ),
   filled: (
-    bg: map.get($theme-color-link, surface-container-highest),
-    border: (
-      bottom: (color: map.get($theme-color-link, on-surface-variant))
+    container: (color: map.get($theme-color-link, surface-container-highest)),
+    indicator: (
+      color: map.get($theme-color-link, on-surface-variant),
+      hover: (color: $on-surface),
+      focused: (color: map.get($theme-color-link, primary)),
+      error: (color: map.get($theme-color-link, error)),
+      // `DisabledActiveIndicatorOpacity`: the indicator is content, 38%.
+      disabled: (color: $disabled-content),
     ),
-    hover: (bg: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(hover), map.get($theme-color-link, surface-container-highest)),
-      border: (bottom: (color: map.get($theme-color-link, on-surface),
-        ))),
-    focused: (bg: map.get($theme-color-link, surface-container-highest),
-      border: (bottom: (color: map.get($theme-color-link, primary),
-        )),
-      label: (color: map.get($theme-color-link, primary),
-      )),
-    disabled: (bg: color-mix(in srgb, map.get($theme-color-link, on-surface) 4%, transparent),
-      border: (bottom: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-container), transparent),
-        )),
-      label: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
-      ),
-      input: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
-      ),
-      icon: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
-      )),
-    error: (border: (bottom: (color: map.get($theme-color-link, error),
-        )),
-      label: (color: map.get($theme-color-link, error),
-      ),
-      helper: (color: map.get($theme-color-link, error),
-      ),
-      hover: (border: (bottom: (color: map.get($theme-color-link, error),
-          ))),
-      focused: (border: (bottom: (color: map.get($theme-color-link, primary),
-          )),
-        label: (color: map.get($theme-color-link, error),
-        )))),
-  outlined: (bg: transparent,
-    border: (color: map.get($theme-color-link, outline),
-    ),
-    // Where content starts. A large or pill corner curves past the default
+    // `DisabledContainerOpacity`: on-surface at 4%.
+    disabled: (container: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container-subtle), transparent))),
+  ),
+  outlined: (
+    // Where content starts. A large or full corner curves past the default
     // start, and a notch cut into that curve reads as a broken corner — so the
     // content (and with it the notch) starts past the effective radius. A `full`
     // radius is capped by the box to half its height.
     inset: max(#{$label-left}, min(var(--ui-text-field-radius), var(--ui-text-field-height) / 2) + #{$notch-padding-inline}),
     // The `<fieldset>` that draws the border, laid over the control's own. Its
     // start padding puts the legend where the raised label's padding box begins.
-    outline: (inset: -1 * $border-width,
-      padding: (start: calc(var(--ui-text-field-inset) - #{$notch-padding-inline + $border-width}),
-      )),
+    outline: (
+      inset: -1 * $border-width,
+      padding: (start: calc(var(--ui-text-field-inset) - #{$notch-padding-inline + $border-width})),
+      color: map.get($theme-color-link, outline),
+      hover: (color: $on-surface),
+      focused: (color: map.get($theme-color-link, primary)),
+      error: (color: map.get($theme-color-link, error)),
+      disabled: (color: $disabled-container),
+    ),
     // The gap cut into the top border behind a raised label: the label text at
     // its raised size (a real font size — only layout size widens the gap),
     // plus breathing room on either side.
-    notch: (padding: (inline: $notch-padding-inline,
-      ),
+    notch: (
+      padding: (inline: $notch-padding-inline),
       font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
     ),
-    hover: (border: (color: map.get($theme-color-link, on-surface),
-      )),
-    focused: (border: (color: map.get($theme-color-link, primary),
-      ),
-      label: (color: map.get($theme-color-link, primary),
-      )),
-    disabled: (border: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-container), transparent),
-      ),
-      label: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
-      ),
-      input: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
-      ),
-      icon: (color: color-mix(in srgb, map.get($theme-color-link, on-surface) state-opacity(disabled-content), transparent),
-      )),
-    error: (border: (color: map.get($theme-color-link, error),
-      ),
-      label: (color: map.get($theme-color-link, error),
-      ),
-      helper: (color: map.get($theme-color-link, error),
-      ),
-      hover: (border: (color: map.get($theme-color-link, error),
-        )),
-      focused: (border: (color: map.get($theme-color-link, primary),
-        ),
-        label: (color: map.get($theme-color-link, error),
-        )))),
-  // Corner radius tiers for the `rounded` prop, pulled from the shape scale.
-  rounded: (sharp: map.get($theme-shape-link, 'none'),
-    small: map.get($theme-shape-link, 'extra-small'),
+    // `HoverLabelColor`: outlined lifts its label with its edge on hover.
+    hover: (label: (color: $on-surface)),
+  ),
+  // `underline` is the kit's own: no container, so the support line starts at
+  // the value's edge rather than at a container inset.
+  // Its rule rests at `outline`, the lowest ink of the family; every other
+  // state is the filled indicator's.
+  underline: (
+    indicator: (color: map.get($theme-color-link, outline)),
+    support: (padding: (inline: spacing(0))),
+  ),
+  // Corner tiers for the `shape` axis, straight from the shape scale.
+  shape: (
+    none: map.get($theme-shape-link, 'none'),
+    extra-small: map.get($theme-shape-link, 'extra-small'),
     medium: map.get($theme-shape-link, 'medium'),
     large: map.get($theme-shape-link, 'large'),
-    pill: map.get($theme-shape-link, 'full'),
-  )
+    full: map.get($theme-shape-link, 'full'),
+  ),
 );

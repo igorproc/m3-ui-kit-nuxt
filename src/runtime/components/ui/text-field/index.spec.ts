@@ -19,7 +19,7 @@ describe('m-text-field', () => {
       props: { label: 'Email', placeholder: 'you@mail.com' },
     })
 
-    // Any of these at rest would float the label or reveal the placeholder.
+    // Any of these at rest would recolour the field or reserve an icon box.
     for (const state of ['focused', 'populated', 'error', 'disabled', 'prepend', 'append']) {
       expect(wrapper.classes()).not.toContain(`ui-text-field--${state}`)
     }
@@ -68,12 +68,11 @@ describe('m-text-field', () => {
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual(['hello'])
   })
 
-  it('reflects a populated model via the populated modifier', async () => {
-    const wrapper = await mountSuspended(MTextField, {
-      props: { modelValue: 'preset' },
-    })
+  it('keeps the label where it is whether or not there is a value — float is a position', async () => {
+    const empty = await mountSuspended(MTextField, { props: { label: 'Email' } })
+    const filled = await mountSuspended(MTextField, { props: { label: 'Email', modelValue: 'preset' } })
 
-    expect(wrapper.classes()).toContain('ui-text-field--populated')
+    expect(filled.classes()).toEqual(empty.classes())
   })
 
   it('applies disabled to the native input and the disabled modifier', async () => {
@@ -250,12 +249,12 @@ describe('m-text-field', () => {
     expect(wrapper.find('input').attributes('aria-busy')).toBeUndefined()
   })
 
-  it('counts a numeric 0 as a value, so a floating label does not sit on it', async () => {
+  it('shows a numeric 0 as a value', async () => {
     const wrapper = await mountSuspended(MTextField, {
-      props: { type: 'number', label: 'Count', modelValue: 0 as never },
+      props: { label: 'Count', modelValue: 0 as never },
     })
 
-    expect(wrapper.classes()).toContain('ui-text-field--populated')
+    expect((wrapper.find('input').element as HTMLInputElement).value).toBe('0')
   })
 
   it('marks a required field with a decorative asterisk, mirrored in the notch', async () => {
@@ -274,17 +273,65 @@ describe('m-text-field', () => {
     expect(wrapper.find('input').attributes('type')).toBe(type)
   })
 
-  it('exposes a single root-owned label and applies the rounded tier', async () => {
+  it('exposes a single root-owned label and applies the shape step', async () => {
     const wrapper = await mountSuspended(MTextField, {
-      props: { variant: 'outlined', rounded: 'pill', label: 'Email' },
+      props: { variant: 'outlined', shape: 'full', label: 'Email' },
     })
 
-    expect(wrapper.classes()).toContain('ui-text-field--pill')
+    expect(wrapper.classes()).toContain('ui-text-field--shape-full')
 
     // One label, owned by the root — never nested inside the control.
     const control = wrapper.find('.ui-text-field__control')
     expect(control.find('label.ui-text-field__label').exists()).toBe(false)
     expect(wrapper.find('label.ui-text-field__label').text()).toBe('Email')
+  })
+
+  it('defaults to the extra-small corner', async () => {
+    const wrapper = await mountSuspended(MTextField)
+
+    expect(wrapper.classes()).toContain('ui-text-field--shape-extra-small')
+  })
+
+  // `import.meta.dev` is false under Vitest, so the retirement warning itself
+  // is not observable here — only that the old value still renders.
+  it.each([
+    ['sharp', 'none'],
+    ['small', 'extra-small'],
+    ['medium', 'medium'],
+    ['large', 'large'],
+    ['pill', 'full'],
+  ] as const)('still applies a retired rounded="%s" as shape %s for one release', async (rounded, shape) => {
+    const wrapper = await mountSuspended(MTextField, { props: { rounded } })
+
+    expect(wrapper.classes()).toContain(`ui-text-field--shape-${shape}`)
+  })
+
+  it('renders a prefix and a suffix around the value and describes the input with them', async () => {
+    const wrapper = await mountSuspended(MTextField, {
+      props: { label: 'Price', prefix: '$', suffix: 'USD' },
+    })
+    const input = wrapper.find('input')
+    const prefix = wrapper.find('.ui-text-field__affix--prefix')
+    const suffix = wrapper.find('.ui-text-field__affix--suffix')
+
+    expect(prefix.text()).toBe('$')
+    expect(suffix.text()).toBe('USD')
+    expect(input.attributes('aria-describedby')!.split(' ')).toEqual([prefix.attributes('id'), suffix.attributes('id')])
+    expect(wrapper.find('.ui-text-field__row').element.contains(input.element)).toBe(true)
+  })
+
+  it('keeps the affixes out of the model', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { prefix: '$' } })
+
+    await wrapper.find('input').setValue('12')
+
+    expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual(['12'])
+  })
+
+  it('leaves a consumer aria-describedby in place while the field has nothing to describe', async () => {
+    const wrapper = await mountSuspended(MTextField, { attrs: { 'aria-describedby': 'hint' } })
+
+    expect(wrapper.find('input').attributes('aria-describedby')).toBe('hint')
   })
 
   it('renders prepend and append slots and flags them via modifiers', async () => {

@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MFileUpload](index.md)) · Код: `src/runtime/components/fragments/file-upload/List.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: список элементов очереди и «No files selected» при пустой очереди. Открыты: семантика списка, английская строка пустого состояния, нет переходов, 100+ элементов рендерятся целиком.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: `ul` с именем очереди, пустое состояние без английского дефолта, `TransitionGroup` на токенах. Длинная очередь (CT-08) по решению владельца: `max-height` из карты (`calc(spacing(64) * 5)`) с прокруткой и `scroll-padding`, фокус прокручивает строку в вид.</implementation-status>
 
 ## Вердикт
 

@@ -1,106 +1,72 @@
 <template>
   <thead>
-    <tr class="ui-table__row ui-table__row--header">
+    <tr class="ui-table__head-row">
       <th
-        v-if="resolvedSelectable"
-        class="ui-table__cell ui-table__cell--header ui-table__cell--checkbox"
+        v-if="selectable"
+        class="ui-table__head-cell ui-table__head-cell--checkbox"
       >
-        <m-checkbox
-          :model-value="resolvedIsAllSelected"
-          @update:model-value="$emit('toggle-all', $event)"
+        <!-- A partial selection is not shown as mixed yet: MCheckbox has no indeterminate state. -->
+        <MCheckbox
+          :model-value="isAllSelected"
+          :aria-label="selectAllLabel"
+          @update:model-value="emit('toggle-all', $event)"
         />
       </th>
       <th
         v-for="column in columns"
         :key="String(column.key)"
         scope="col"
-        class="ui-table__cell ui-table__cell--header"
-        :class="{ 'ui-table__cell--sortable': column.sortable }"
-        :style="{ width: column.width }"
-        :aria-sort="column.sortable ? ariaSortFor(column) : undefined"
+        class="ui-table__head-cell"
+        :class="[`ui-table__head-cell--${tableColumnAlign(column)}`, { 'ui-table__head-cell--sortable': column.sortable }]"
+        :style="{ width: column.width, minWidth: column.minWidth }"
+        :aria-sort="column.sortable ? tableAriaSort(sort ?? null, column.key) : undefined"
       >
         <button
           v-if="column.sortable"
           type="button"
-          class="ui-table__header-content ui-table__header-sort"
-          @click="toggleSort(column)"
+          class="ui-table__sort"
+          @click="emit('update:sort', nextTableSort(sort ?? null, column.key))"
         >
-          <slot
-            :name="`header-${String(column.key)}`"
-            :column="column"
-          >
-            {{ column.label }}
-          </slot>
-          <m-icon
-            v-if="resolvedSort?.key === column.key"
-            :name="resolvedSort.direction === 'asc' ? ICONS.arrowUpward : ICONS.arrowDownward"
+          <span class="ui-table__head-label">
+            <slot
+              :name="`header-${String(column.key)}`"
+              :column="column"
+            >{{ column.label }}</slot>
+          </span>
+          <!-- Every sortable column keeps the icon's room, so sorting never re-flows the table. -->
+          <MIcon
             class="ui-table__sort-icon"
+            :class="{ 'ui-table__sort-icon--idle': sort?.key !== column.key }"
+            :name="sort?.key === column.key && sort.direction === 'desc' ? ICONS.arrowDownward : ICONS.arrowUpward"
           />
         </button>
-        <div
+        <span
           v-else
-          class="ui-table__header-content"
+          class="ui-table__head-label"
         >
           <slot
             :name="`header-${String(column.key)}`"
             :column="column"
-          >
-            {{ column.label }}
-          </slot>
-        </div>
+          >{{ column.label }}</slot>
+        </span>
       </th>
     </tr>
   </thead>
 </template>
 
 <script setup lang="ts" generic="T extends TableData">
-import { computed } from 'vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import MCheckbox from '#kit/components/ui/checkbox/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
-import type { MTableHeaderProps, TableColumn, TableData, SortState } from '#kit/components/ui/table/types'
-import { useTableContext } from '#kit/composables/table/useTableContext'
+import type { MTableHeaderProps, SortState, TableData } from '#kit/components/ui/table/types'
+import { nextTableSort, tableAriaSort, tableColumnAlign } from '#kit/utils/table/model'
 
-const props = defineProps<MTableHeaderProps<T>>()
+defineProps<MTableHeaderProps<T>>()
 
 const emit = defineEmits<{
   'toggle-all': [value: boolean]
   'update:sort': [value: SortState<T> | null]
 }>()
-
-// Optional parent context (present when rendered inside `<MTable>`); props win
-// for explicit/standalone usage so the public API stays backward-compatible.
-const ctx = useTableContext()
-
-const resolvedSelectable = computed(() => props.selectable ?? ctx?.selectable.value ?? false)
-const resolvedIsAllSelected = computed(() => props.isAllSelected ?? ctx?.isAllSelected.value ?? false)
-const resolvedSort = computed(() => props.sort ?? (ctx?.sort.value as SortState<T> | null | undefined) ?? null)
-
-function ariaSortFor(column: TableColumn<T>): 'ascending' | 'descending' | 'none' {
-  const currentSort = resolvedSort.value
-  if (currentSort?.key !== column.key) return 'none'
-
-  return currentSort.direction === 'asc' ? 'ascending' : 'descending'
-}
-
-function toggleSort(column: TableColumn<T>) {
-  if (!column.sortable) return
-
-  const currentSort = resolvedSort.value
-  const isCurrentColumn = currentSort?.key === column.key
-
-  let newSort: SortState<T> | null = null
-
-  if (!isCurrentColumn) {
-    newSort = { key: column.key, direction: 'asc' }
-  } else if (currentSort?.direction === 'asc') {
-    newSort = { key: column.key, direction: 'desc' }
-  } else {
-    newSort = null
-  }
-
-  emit('update:sort', newSort)
-}
 </script>
 
 <style lang="scss">
@@ -109,56 +75,108 @@ function toggleSort(column: TableColumn<T>) {
 .ui-table {
   $t: material-map(t.$tokens, 'md-table');
 
-  &__row--header {
-    background-color: g($t, 'header-bg');
+  &__head-row {
+    border-block-end: g($t, 'row.divider.width') solid g($t, 'row.divider.color');
+    background-color: g($t, 'header.container.color');
   }
 
-  &__cell--header {
-    color: g($t, 'header-color');
+  &__head-cell {
+    padding-inline: g($t, 'cell.padding.inline');
+    color: g($t, 'header.content.color');
+    text-align: start;
     white-space: nowrap;
 
-    @include typescale(g($t, 'header-text-type'));
+    @include typescale(g($t, 'header.typography'));
 
-    &.ui-table__cell--sortable {
-      user-select: none;
+    &--center {
+      text-align: center;
 
-      @include can-hover {
-        &:hover {
-          background-color: g($t, 'header-hover-bg');
-        }
-      }
+      .ui-table__sort { justify-content: center; }
+    }
+
+    // In an end-aligned column the icon leads, so the label lines up with the
+    // figures below it.
+    &--end {
+      text-align: end;
+
+      .ui-table__sort { flex-direction: row-reverse; }
+    }
+
+    &--checkbox {
+      width: g($t, 'cell.checkbox.width');
+      padding-inline: g($t, 'cell.checkbox.padding.inline');
+    }
+
+    // The sort button is the whole cell, so the target is as tall as the row.
+    &--sortable {
+      padding: 0;
     }
   }
 
-  &__header-content {
+  &__sort {
+    position: relative;
+    isolation: isolate;
     display: flex;
     align-items: center;
-    gap: g($t, 'header-content-gap');
-  }
-
-  &__header-sort {
+    gap: g($t, 'header.gap');
     width: 100%;
     margin: 0;
-    padding: 0;
-    background: transparent;
+    padding-inline: g($t, 'cell.padding.inline');
     border: none;
-    cursor: pointer;
+    background: transparent;
     color: inherit;
-    text-align: inherit;
     font: inherit;
     letter-spacing: inherit;
+    text-align: inherit;
+    cursor: pointer;
+
+    // State layer in the header's own content colour (craft.md §1).
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-color: currentcolor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+    }
+
+    @include can-hover {
+      &:hover::before { opacity: g($t, 'state.hover'); }
+    }
+
+    // Header cells sit edge to edge: the ring goes inside.
+    &:focus-visible {
+      @include focus-ring(inset);
+
+      &::before { opacity: g($t, 'state.focus'); }
+    }
+
+    &:active::before { opacity: g($t, 'state.pressed'); }
+
+    @include forced-colors {
+      &:focus-visible { outline-color: Highlight; }
+    }
+  }
+
+  &__head-label {
+    min-width: 0;
   }
 
   &__sort-icon {
-    font-size: g($t, 'header-sort-icon-size');
-    color: g($t, 'header-sort-icon-color');
-  }
-}
+    flex-shrink: 0;
+    font-size: g($t, 'header.sort.icon.size');
+    color: g($t, 'header.sort.icon.color');
 
-// Header cells sit edge to edge: the ring goes inside.
-.ui-table {
-  &__header-sort:focus-visible {
-    @include focus-ring(inset);
+    &--idle { visibility: hidden; }
+  }
+
+  @each $step in ('compact', 'default', 'comfortable') {
+    .ui-table-container--density-#{$step} & {
+      &__head-row { height: g($t, 'density.#{$step}.header'); }
+      &__sort { min-height: g($t, 'density.#{$step}.header'); }
+    }
   }
 }
 </style>

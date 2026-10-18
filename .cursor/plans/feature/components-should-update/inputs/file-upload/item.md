@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MFileUpload](index.md)) · Код: `src/runtime/components/fragments/file-upload/Item.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: иконка, имя (`strong`), размер и статус, кнопки start / cancel / retry / remove по статусу. Открыты: длинное имя налезает на действия (рендер), кнопки игнорируют disabled/readonly, одинаковые имена кнопок, удаление сфокусированной кнопки, ошибка без причины, нет прогресса.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: среднее многоточие имени с видимым расширением, статус текстом и иконкой, действия с именем файла, фокус передаётся соседу.</implementation-status>
 
 ## Вердикт
 

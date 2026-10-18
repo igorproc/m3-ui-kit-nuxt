@@ -1,3 +1,81 @@
-@forward 'docked';
-@forward 'modal-picker';
-@forward 'modal-input';
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// DATE PICKER TOKENS
+// ==========================================
+// One map for the picker and the dialog that hosts it, with the numbers of
+// `DatePickerModalTokens` / `DateInputModalTokens` (Compose Material3
+// 1.5.0-alpha22). The embedded picker is a flat card (large corner, no
+// shadow): a shadow says "floating", and it lies in the page.
+
+$on-surface: map.get($theme-color-link, on-surface);
+$on-surface-variant: map.get($theme-color-link, on-surface-variant);
+$primary: map.get($theme-color-link, primary);
+$on-primary: map.get($theme-color-link, on-primary);
+$cell: 48rem;
+$day: 40rem;
+$tokens: (
+  container: (
+    color: map.get($theme-color-link, surface-container-high),
+    // 7 cells of 48 and 12 on each side.
+    width: 360rem,
+    shape: map.get($theme-shape-link, large),
+    padding: (inline: spacing(12)),
+  ),
+  // The dialog that hosts the picker gives the surface its corner and shadow.
+  dialog: (
+    shape: map.get($theme-shape-link, extra-large),
+    elevation: elevation(3),
+    actions: (
+      padding: (inline-end: calc(#{spacing(4)} + #{spacing(2)}), block-end: spacing(8)),
+      gap: spacing(8),
+    ),
+  ),
+  header: (
+    min-height: 120rem,
+    padding: (top: spacing(16), inline-start: spacing(24), inline-end: spacing(12), bottom: spacing(12)),
+  ),
+  title: (typography: 'label-large', color: $on-surface-variant),
+  headline: (typography: 'headline-large', color: $on-surface-variant),
+  divider: (color: map.get($theme-color-link, outline-variant), width: 1rem),
+  nav: (
+    height: 56rem,
+    padding: (inline: spacing(12)),
+    color: $on-surface-variant,
+    typography: 'label-large',
+  ),
+  weekday: (typography: 'body-large', color: $on-surface, height: $cell),
+  grid: (cell: $cell, rows: 6),
+  day: (
+    size: $day,
+    shape: map.get($theme-shape-link, full),
+    typography: 'body-large',
+    color: $on-surface,
+    today: (color: $primary, outline: (color: $primary, width: 1rem)),
+    selected: (container: $primary, color: $on-primary),
+    disabled: (opacity: state-opacity(disabled-content)),
+  ),
+  year: (
+    width: 72rem,
+    height: 36rem,
+    columns: 3,
+    row-gap: spacing(16),
+    shape: map.get($theme-shape-link, full),
+    typography: 'body-large',
+    color: $on-surface-variant,
+    current: (color: $primary, outline: (color: $primary, width: 1rem)),
+    selected: (container: $primary, color: $on-primary),
+    // The list is as tall as the day grid, so switching views keeps the height.
+    height-total: calc(#{$cell * 7} - 1rem),
+  ),
+  input: (
+    padding: (inline: spacing(24), top: calc(#{spacing(8)} + #{spacing(2)}), bottom: spacing(16)),
+  ),
+  // MD3 state layer: the content's own ink over the day, the year or a button.
+  layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
+  motion: (
+    duration: var(--sys-motion-duration-short-4),
+    easing: var(--sys-motion-easing-standard),
+  ),
+);

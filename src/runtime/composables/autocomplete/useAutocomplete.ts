@@ -11,6 +11,10 @@
  * - **the draft** — what the input shows while the user types, which is not the
  *   committed value and is put back on blur, Escape or Tab;
  * - **composition** — an IME's Enter belongs to the IME, not to the listbox.
+ *
+ * The built-in filter compares without case and without diacritics: "Zurich"
+ * finds "Zürich", "Sao" finds "São". Missing a match is worse than showing one
+ * row too many.
  */
 import { computed, ref, watch } from 'vue'
 import type { InputHTMLAttributes, Ref } from 'vue'
@@ -22,6 +26,13 @@ import type {
   UseDropdownControlReturn,
 } from '#kit/composables/dropdown/types'
 
+/**
+ * When focus alone opens the panel: `true` for any focus, `'pointer'` only for
+ * a press on the field — moving through a form with Tab does not unfold every
+ * list on the way — and `false` never (typing, ArrowDown and the toggle do).
+ */
+export type AutocompleteOpenOnFocus = boolean | 'pointer'
+
 /** Resolved configuration: the family's props plus the query-only ones. */
 export interface AutocompleteControlConfig extends DropdownControlConfig {
   filter: false | ((item: never, query: string, title: string) => boolean) | undefined
@@ -29,7 +40,12 @@ export interface AutocompleteControlConfig extends DropdownControlConfig {
   minSearchLength: number
   hideSelected: boolean
   autoSelectFirst: boolean
-  openOnFocus: boolean
+  openOnFocus: AutocompleteOpenOnFocus
+}
+
+/** Lower case without combining marks: the form both sides of a match are compared in. */
+function foldForMatch(text: string): string {
+  return text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase()
 }
 
 export interface UseAutocompleteOptions<TItem extends DropdownItemBase, TValue> {
@@ -41,6 +57,8 @@ export interface UseAutocompleteOptions<TItem extends DropdownItemBase, TValue> 
     (event: 'select' | 'remove', item: TItem): void
     (event: 'clear' | 'open' | 'close'): void
   }
+  /** The validation adapter is checking the value: the combobox reports itself busy. */
+  pending?: () => boolean
 }
 
 export interface UseAutocompleteReturn<TItem extends DropdownItemBase, TValue>
@@ -51,7 +69,10 @@ export interface UseAutocompleteReturn<TItem extends DropdownItemBase, TValue>
   queryReady: Ref<boolean>
   inputAttrs: Ref<InputHTMLAttributes>
   onInput: (value: string) => void
+  /** Empties the selection and the query. */
   clearQuery: () => void
+  /** Empties the query alone and keeps the panel open on the full list. */
+  resetQuery: () => void
   closeAndRestore: () => void
 }
 
@@ -73,7 +94,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
   ) {
     if (!queryReady.value) return []
 
-    const query = search.value.trim().toLocaleLowerCase()
+    const query = foldForMatch(search.value.trim())
     return rows.filter((row) => {
       if (props.hideSelected && api.isSelected(row.value)) return false
       if (props.filter === false || !query) return true
@@ -82,7 +103,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
         return (props.filter as (item: TItem, query: string, title: string) => boolean)(row.item, search.value, row.title)
       }
 
-      const title = row.title.toLocaleLowerCase()
+      const title = foldForMatch(row.title)
       return props.filterMode === 'starts-with' ? title.startsWith(query) : title.includes(query)
     })
   }
@@ -94,6 +115,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     editable: () => true,
     draft: () => draft.value,
     autoSelectFirst: () => props.autoSelectFirst,
+    pending: options.pending,
     visible: filterRows,
     onSelect: (entry) => {
       // Multiple keeps collecting, so the query is spent; single commits the
@@ -127,8 +149,17 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     else control.closePanel()
   }
 
+  // A field that arrives with a value shows its title from the first render,
+  // the server's included — the draft alone, so no query is reported for a
+  // search nobody typed.
+  if (!props.multiple && !draft.value) draft.value = control.displayTitle.value
+
   function clearQuery() {
     control.clear()
+    setQuery('')
+  }
+
+  function resetQuery() {
     setQuery('')
   }
 
@@ -137,8 +168,13 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     restore()
   }
 
+  // A press on the input comes before the focus it causes, so it is the one
+  // signal that tells a pointer focus from a keyboard one.
+  let pressed = false
+
   const inputAttrs = computed<InputHTMLAttributes>(() => ({
     ...control.inputAttrs.value,
+    onPointerdown: () => { pressed = true },
     onCompositionstart: () => { composing.value = true },
     // An IME commits with Enter; the listbox must not read that keystroke.
     onCompositionend: () => { composing.value = false },
@@ -148,9 +184,14 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     },
   }))
 
+  const opensOnFocus = (byPointer: boolean) => props.openOnFocus === true || (props.openOnFocus === 'pointer' && byPointer)
+
   watch(focused, (value) => {
+    const byPointer = pressed
+    pressed = false
+
     if (value) {
-      if (props.openOnFocus && queryReady.value && !props.disabled && !props.readonly) open.value = true
+      if (opensOnFocus(byPointer) && queryReady.value && !props.disabled && !props.readonly) open.value = true
       return
     }
 
@@ -177,6 +218,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     inputAttrs,
     onInput,
     clearQuery,
+    resetQuery,
     closeAndRestore,
   }
 }

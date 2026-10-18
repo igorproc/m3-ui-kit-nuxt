@@ -1,21 +1,23 @@
-/**
- * Public prop surface for the date-picker header/navigation leaf.
- *
- * Presentational props (no shared color/variant/state surface); resolved in a
- * co-located `props.ts` so `defineProps` consumes a plain imported object.
- */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { DatePickerView } from '#kit/composables/date'
 
-export type MDatePickerView = 'calendar' | 'year'
+export type MDatePickerView = DatePickerView
 
+/** Props of the month row: the month/year toggle and the month arrows. */
 export const mDatePickerHeaderNavProps = {
-  headlineLabel: { type: String, default: '' },
-  selectedLabel: { type: String, default: '' },
-  monthYearLabel: { type: String, default: '' },
+  monthLabel: { type: String, required: true as const },
+  /** Id of the month label, which also names the grid. */
+  monthLabelId: { type: String, required: true as const },
+  /** Id of the year list the toggle opens. */
+  yearsId: { type: String, required: true as const },
   view: { type: String as PropType<MDatePickerView>, default: 'calendar' },
-  placeholder: { type: Boolean, default: false },
   canGoPrev: { type: Boolean, default: true },
   canGoNext: { type: Boolean, default: true },
+  disabled: { type: Boolean, default: false },
+  prevLabel: { type: String, required: true as const },
+  nextLabel: { type: String, required: true as const },
+  switchToYearLabel: { type: String, required: true as const },
+  switchToDayLabel: { type: String, required: true as const },
 }
 
 export type MDatePickerHeaderNavProps = ExtractPublicPropTypes<typeof mDatePickerHeaderNavProps>

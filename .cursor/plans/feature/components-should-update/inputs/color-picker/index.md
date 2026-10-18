@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита на системе M3 (слайдер, поля, выбор) · Токены Compose: нет · Код: `src/runtime/components/ui/color-picker/`, части `src/runtime/components/fragments/color-picker/{Canvas,Edit,Preview,Swatches}.vue` ([canvas.md](canvas.md), [edit.md](edit.md), [preview.md](preview.md), [swatches.md](swatches.md)), контекст `context.ts` · Аудит: `data/color-picker.json` (28 FAIL) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован в фазе 2 vuetify-run: один реактивный HSVA-контекст, строковая модель в выбранном формате, приватные части читают и меняют только контекст, `formats` и `swatches`, флаги `hide*`. Открыты: выбранный образец сравнивается строкой, нет видимого фокуса у ползунков, образцы — не listbox с клавиатуры, переключатель форматов сжимается до вертикальных букв, английские строки, нет readonly.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–9 и тесты (документация — в docs). Сравнение образцов по цвету, группа с подписью, readonly, ошибка формата с объяснением, disabled по ролям, RTL-градиенты, слушатели только на время драга.</implementation-status>
 
 ## Вердикт
 
@@ -154,3 +154,8 @@
    неудобны.
 
 Рекомендация: 1. Модель форматов не меняется, вид — минимальное изменение.
+
+## Заметки реализации
+
+- Вопрос 1 → 1: формат — компактный `MDropdown` вместо сегментов.
+- Ломающее: английские подписи → `messages` (`MColorPickerMessages`), переключатель формата — dropdown, образцы — listbox с activedescendant.

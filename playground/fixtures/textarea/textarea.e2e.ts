@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Locator } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx, waitForMotion } from '../../e2e/support'
 
 const VARIANTS = ['filled', 'outlined'] as const
 
@@ -149,6 +149,85 @@ test.describe('MTextarea', () => {
       const message = root(page.getByTestId(id)).locator('.ui-textarea__message')
       expect(await message.evaluate(el => el.scrollWidth - el.clientWidth), id).toBeLessThanOrEqual(0)
     }
+  })
+
+  for (const variant of VARIANTS) {
+    test(`auto-grow spans exactly rows to maxRows lines (${variant})`, async ({ page }) => {
+      await openFixture(page, 'textarea/matrix')
+      const lineHeight = await page.getByTestId(`grow-empty-${variant}`)
+        .evaluate(el => Number.parseFloat(getComputedStyle(el).lineHeight))
+
+      const empty = (await page.getByTestId(`grow-empty-${variant}`).boundingBox())!.height
+      const full = (await page.getByTestId(`grow-full-${variant}`).boundingBox())!.height
+
+      expect(empty).toBeCloseTo(lineHeight, 0)
+      expect(full).toBeCloseTo(3 * lineHeight, 0)
+    })
+  }
+
+  test('outlined has no surface when disabled', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const surface = await root(page.getByTestId('disabled-outlined')).locator('.ui-textarea__control')
+      .evaluate(el => getComputedStyle(el).backgroundColor)
+
+    expect(surface).toBe('rgba(0, 0, 0, 0)')
+  })
+
+  test('hover on outlined moves the edge only — no state layer', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const control = root(page.getByTestId('enabled-outlined')).locator('.ui-textarea__control')
+
+    await control.hover()
+    await waitForMotion(page)
+
+    expect(await control.evaluate(el => getComputedStyle(el, '::before').opacity)).toBe('0')
+  })
+
+  test('the caret is primary, and error in an invalid field', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const caret = (id: string) => page.getByTestId(id).evaluate(el => getComputedStyle(el).caretColor)
+    const errorInk = await root(page.getByTestId('error-filled')).locator('.ui-textarea__support')
+      .evaluate(el => getComputedStyle(el).color)
+
+    expect(await caret('enabled-filled')).not.toBe(await caret('error-filled'))
+    expect(await caret('error-filled')).toBe(errorInk)
+  })
+
+  test('the support line is one body-small line high', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const rem = await remInPx(page)
+
+    for (const variant of VARIANTS) {
+      const support = await root(page.getByTestId(`enabled-${variant}`)).locator('.ui-textarea__support').boundingBox()
+      expect(support!.height / rem, variant).toBeCloseTo(16, 0)
+    }
+  })
+
+  test('a counter past a display-only limit takes the error role, the value stays whole', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const textarea = page.getByTestId('over-limit-filled')
+    const counter = root(textarea).locator('.ui-textarea__counter')
+    const helperInk = await root(page.getByTestId('counter-filled')).locator('.ui-textarea__counter')
+      .evaluate(el => getComputedStyle(el).color)
+
+    await expect(textarea).toHaveValue('Longer than ten characters')
+    expect(await counter.evaluate(el => getComputedStyle(el).color)).not.toBe(helperInk)
+  })
+
+  test('a disabled composer footer recedes by roles and is out of reach', async ({ page }) => {
+    await openFixture(page, 'textarea/stress')
+    const field = root(page.getByTestId('disabled-composer'))
+    const footer = field.locator('.ui-textarea__footer')
+    const style = await footer.evaluate((el) => {
+      const own = getComputedStyle(el)
+      const support = getComputedStyle(el.closest('.ui-textarea')!.querySelector('.ui-textarea__support')!)
+      return { opacity: own.opacity, color: own.color, supportColor: support.color, inert: el.hasAttribute('inert') }
+    })
+
+    expect(style.opacity).toBe('1')
+    expect(style.color).toBe(style.supportColor)
+    expect(style.inert).toBe(true)
+    await expect(page.getByTestId('disabled-send')).toBeDisabled()
   })
 
   test('a disabled grip takes the disabled ink', async ({ page }) => {

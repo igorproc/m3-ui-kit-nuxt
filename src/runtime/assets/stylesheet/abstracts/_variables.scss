@@ -21,6 +21,9 @@ $theme-state-link: (
   'pressed': 12%,
   'dragged': 16%,
   'disabled-container': 12%,
+  // A filled field's disabled container: on-surface at 4%
+  // (Compose `FilledTextFieldTokens.DisabledContainerOpacity`).
+  'disabled-container-subtle': 4%,
   'disabled-content': 38%,
 );
 
@@ -33,7 +36,7 @@ $theme-focus-link: (
 );
 
 /// Spacing on the MD3 4-unit grid, keyed by design pixels: `spacing(16)` → 16rem.
-/// Read through `spacing($step)`; a step off the scale fails the build.
+/// Read through `spacing($step)`.
 $theme-spacing-link: (
   0: 0,
   2: 2rem,
@@ -48,6 +51,11 @@ $theme-spacing-link: (
   48: 48rem,
   64: 64rem,
 );
+
+/// An app's layout may need any gap, so `spacing()` accepts off-scale steps by
+/// default. The kit's own components stay on the scale: `lint:scss` compiles
+/// them with this set to true.
+$spacing-strict: false !default;
 
 /// The one scale for in-page layers, read through `z($key)`. Overlays live in the
 /// native top layer and need no entry; `overlay-host` only stacks the fallback host

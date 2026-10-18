@@ -1,0 +1,136 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// TEXT FIELD · LABEL PLACEMENT AND NOTCH
+// ==========================================
+// Included inside `.ui-text-field`. Placement is an axis of its own,
+// independent of the shape: base is `top`, every other placement overrides it,
+// so a placement can never be half-applied by a missing branch.
+
+// The label never moves (color-and-state.md, «Лейблы не двигаются»): `float`
+// and `inset` are positions held from the first frame, not transitions. Only
+// its colour follows the state.
+
+@mixin label($t) {
+  &__label {
+    color: g($t, 'label.color');
+    transition: color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include typescale(g($t, 'typography.label.top'));
+  }
+
+  &__required {
+    color: g($t, 'label.required.color');
+  }
+
+  // Overlay placements: out of flow and onto the container, raised by a static
+  // transform. Scaled around the vertical centre, so the raise is pure height
+  // math and the label's centre never drifts with its size.
+  &--label-float,
+  &--label-inset {
+    .ui-text-field__label {
+      position: absolute;
+      top: var(--ui-text-field-label-top);
+      inset-inline-start: var(--ui-text-field-inset);
+      z-index: 1;
+      max-width: g($t, 'label.max-width');
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: var(--ui-text-field-label-raised-inside);
+      transform-origin: var(--ui-text-field-start) center;
+
+      @include typescale(g($t, 'typography.label.overlay'));
+    }
+  }
+
+  // Present for assistive tech, absent for the eye.
+  &--label-hidden .ui-text-field__label {
+    @include sr-only;
+  }
+
+  // A resting overlaid label beside a prepend starts where the value does.
+  &--prepend {
+    --ui-text-field-label-notch-shift: #{g($t, 'label.prepend.notch.shift')};
+
+    .ui-text-field__label {
+      inset-inline-start: g($t, 'label.prepend.left');
+    }
+  }
+
+  // translateX is physical: the shift back to the start edge flips with it.
+  &--prepend:dir(rtl) {
+    --ui-text-field-label-notch-shift: calc(-1 * #{g($t, 'label.prepend.notch.shift')});
+  }
+
+  &--underline .ui-text-field__label {
+    inset-inline-start: 0;
+  }
+
+  // `float` on outlined lands on the top border, in the gap the legend opens.
+  // `inset` stays inside the box on every shape, the notch closed.
+  &--label-float.ui-text-field--outlined {
+    .ui-text-field__label {
+      transform: translateX(var(--ui-text-field-label-notch-shift, 0)) var(--ui-text-field-label-raised-notch);
+    }
+
+    .ui-text-field__notch {
+      max-width: 100%;
+    }
+  }
+
+  // The value gives a label sitting inside the box room above it. Applied to
+  // the row the label sits over (`__row`): the bare input, or — when a
+  // composite fills `leading-content` — the row that holds the chips *and*
+  // the input, so the chips do not stay centred under the label. `underline`
+  // has no box to centre in, and a label on the notch takes no room.
+  &--label-float.ui-text-field--filled,
+  &--label-inset.ui-text-field--filled,
+  &--label-inset.ui-text-field--outlined {
+    .ui-text-field__row {
+      padding-top: var(--ui-text-field-input-padding-top);
+      padding-bottom: var(--ui-text-field-input-padding-bottom);
+    }
+  }
+
+  // ── outline · rendered by the outlined shape only ──
+  // A `<fieldset>` laid over the control's own (transparent) border, so the
+  // browser cuts the notch: the hidden `<legend>` holds the label text at the
+  // raised size, and the border breaks exactly where it sits. No patch is
+  // painted behind the label, so the field reads right on any surface, and the
+  // gap is correct in the server-rendered HTML — nothing is measured.
+  &__outline {
+    position: absolute;
+    inset: g($t, 'outlined.outline.inset');
+    min-width: 0;
+    padding-block: 0;
+    padding-inline: g($t, 'outlined.outline.padding.start') 0;
+    margin: 0;
+    border: g($t, 'container.border.width') solid g($t, 'outlined.outline.color');
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color g($t, 'state.duration') g($t, 'state.easing');
+  }
+
+  // As tall as the border it sits on, so the fieldset never shifts its top edge
+  // to centre a taller legend. Its width is the only thing that matters.
+  &__notch {
+    display: block;
+    width: auto;
+    max-width: 0.01rem;
+    height: g($t, 'container.border.width');
+    padding: 0;
+    overflow: hidden;
+    visibility: hidden;
+    white-space: nowrap;
+
+    @include typescale(g($t, 'typography.label.overlay'));
+  }
+
+  &__notch-text {
+    display: inline-block;
+    padding-inline: g($t, 'outlined.notch.padding.inline');
+    font-size: g($t, 'outlined.notch.font-size');
+  }
+}

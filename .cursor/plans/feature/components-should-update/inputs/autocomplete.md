@@ -2,7 +2,7 @@
 
 <identity>M3: Menus → exposed dropdown menu, редактируемый якорь (`ExposedDropdownMenuAnchorType.PrimaryEditable` — поле, `SecondaryEditable` — trailing-иконка с ролью кнопки и состоянием раскрытия) · Токены Compose: `FilledAutocompleteTokens.kt`, `OutlinedAutocompleteTokens.kt`, `MenuTokens.kt`, `ListTokens.kt`; поведение — `ExposedDropdownMenu.kt` · Код: `src/runtime/components/ui/autocomplete/` (`index.vue`, `props.ts`), `src/runtime/composables/autocomplete/useAutocomplete.ts` поверх `composables/dropdown/useDropdownControl.ts`, токены `src/runtime/assets/stylesheet/components/autocomplete/_index.scss` (= токены дропдауна + `toggle`) и общий `dropdown/_panel.scss` · Аудит: `data/autocomplete.json` · Тип: public; член семейства выбора — [MDropdown](dropdown.md) плюс запрос</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент — витрина фазы D (строки не исчезают при загрузке, панель не открывается до `minSearchLength`, постоянный live-регион, Home / End отданы каретке, toggle вне таб-порядка с `aria-expanded` / `aria-controls`, IME). Найден дефект: начальное значение не показывается в поле (шаг 1). Панель, строки, чипы и долги меню — общие с дропдауном и идут его шагами; свои шаги — черновик, подсказка «мало символов», сброс в «нет результатов», открытие по фокусу.</implementation-status>
+<implementation-status state="planned" updated="2026-10-08">Частично (2026-10-08): шаги 1–5 и 8 сделаны — начальное значение в поле без события поиска, `#hint({ query, missing })`, `clear` в `#no-results`, `openOnFocus: 'pointer'` по умолчанию, поиск без учёта диакритики, `aria-busy` по `pending`. Не сделаны: шаг 6 (чипы — план чипа), шаг 7 (данные, как шаг 5 dropdown).</implementation-status>
 
 ## Вердикт
 
@@ -250,3 +250,8 @@ End и стрелки влево-вправо — каретка, ↑/↓ отк
    показывает варианты.
 
 Рекомендация: 2.
+
+## Заметки реализации
+
+- Вопросы: 1 → 1 (только черновик, без `search`); 2 → 1 (`#hint` без дефолта); 3 → 1 (`clear` в `#no-results`); 4 → 2 (`'pointer'`).
+- Ломающее: `openOnFocus` теперь `boolean | 'pointer'` с дефолтом `'pointer'`.

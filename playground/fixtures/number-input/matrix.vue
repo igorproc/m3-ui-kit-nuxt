@@ -54,6 +54,32 @@
       />
     </div>
 
+    <h2>Beside a text field (filled, every density)</h2>
+    <div
+      v-for="density in densities"
+      :key="`family-${density}`"
+      class="fixture-row"
+    >
+      <MTextField
+        :density="density"
+        :label="`Text ${density}`"
+        :data-test="`family-text-${density}`"
+      />
+      <MNumberInput
+        :model-value="4"
+        :density="density"
+        :label="`Number ${density}`"
+        :data-test="`family-number-${density}`"
+      />
+      <MNumberInput
+        :model-value="4"
+        :density="density"
+        controls="stacked"
+        :label="`Stacked ${density}`"
+        :data-test="`family-stacked-${density}`"
+      />
+    </div>
+
     <h2>Units</h2>
     <div class="fixture-row">
       <MNumberInput
@@ -105,6 +131,7 @@
 import { ref } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MNumberInput from '#kit/components/ui/number-input/index.vue'
+import MTextField from '#kit/components/ui/text-field/index.vue'
 import type { MNumberInputControls, MNumberInputVariant } from '#kit/components/ui/number-input/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
 
@@ -122,7 +149,7 @@ const states = [
   { name: 'error', value: 120, props: { errorMessage: 'Too large', max: 100 } },
   { name: 'bare-error', value: 7, props: { error: true } },
   { name: 'readonly', value: 42, props: { readonly: true } },
-  { name: 'disabled', value: 42, props: { disabled: true } },
+  { name: 'disabled', value: 42, props: { disabled: true, helperText: 'Locked by an administrator' } },
 ]
 
 const densities: MFieldDensity[] = ['compact', 'default', 'comfortable']

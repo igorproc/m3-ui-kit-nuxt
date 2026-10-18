@@ -71,6 +71,28 @@
 
     <div class="fixture-stress__narrow">
       <MTextarea
+        v-model="mixed"
+        variant="filled"
+        label="Disabled composer"
+        disabled
+        data-test="disabled-composer"
+      >
+        <template #footer>
+          <MTextareaFooter v-slot="{ disabled }">
+            <MButton
+              variant="text"
+              :disabled="disabled"
+              data-test="disabled-send"
+            >
+              Send
+            </MButton>
+          </MTextareaFooter>
+        </template>
+      </MTextarea>
+    </div>
+
+    <div class="fixture-stress__narrow">
+      <MTextarea
         v-model="toggled"
         label="Summary"
         :error-message="showError ? 'Write at least a sentence' : undefined"

@@ -1,5 +1,6 @@
 import type { ComputedRef, Ref } from 'vue'
 import type { FileRejection } from '#kit/shared/utils/file'
+import type { MFileUploadMessages } from '#kit/components/ui/file-upload/props'
 import type { FileUploadEntry } from './useFileUploadQueue'
 import { createContext } from '#kit/shared/utils/context/createContext'
 
@@ -8,6 +9,12 @@ export interface FileUploadContext<TResult = unknown> {
   disabled: ComputedRef<boolean>
   readonly: ComputedRef<boolean>
   accept: ComputedRef<string | undefined>
+  /** The group's name, the fallback name of an icon-only dropzone button. */
+  label: ComputedRef<string | undefined>
+  /** Id of the element holding `hint`, when there is one. */
+  hintId: ComputedRef<string | undefined>
+  hint: ComputedRef<string | undefined>
+  messages: ComputedRef<MFileUploadMessages>
   addFiles: (files: readonly File[], source: 'picker' | 'drop') => void
   openPicker: () => void
   start: (id?: string) => void

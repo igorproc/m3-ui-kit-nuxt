@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Preview.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: квадрат текущего цвета на шахматке для прозрачности. Изменения минимальны: forced colors и токены.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: образец `aria-hidden` с кромкой, виден на любом фоне и в forced colors.</implementation-status>
 
 ## Вердикт
 

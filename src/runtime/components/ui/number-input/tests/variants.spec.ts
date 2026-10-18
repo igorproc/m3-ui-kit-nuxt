@@ -27,17 +27,25 @@ describe('m-number-input · variants', () => {
       expect(wrapper.find('.ui-number-input__control').exists()).toBe(true)
     })
 
-    it('defaults to filled and to the small radius tier', async () => {
+    it('defaults to filled and to the extra-small corner', async () => {
       const wrapper = await mount()
 
       expect(wrapper.classes()).toContain('ui-number-input--filled')
-      expect(wrapper.classes()).toContain('ui-number-input--small')
+      expect(wrapper.classes()).toContain('ui-number-input--shape-extra-small')
     })
 
-    it('maps the rounded prop onto its own modifier', async () => {
+    it('maps the shape prop onto its own modifier', async () => {
+      const wrapper = await mount({ shape: 'full' })
+
+      expect(wrapper.classes()).toContain('ui-number-input--shape-full')
+    })
+
+    // The dev warning is not observable under Vitest (`import.meta.dev` is
+    // false); the retired value still has to render for its grace release.
+    it('still applies a retired rounded value as its shape for one release', async () => {
       const wrapper = await mount({ rounded: 'pill' })
 
-      expect(wrapper.classes()).toContain('ui-number-input--pill')
+      expect(wrapper.classes()).toContain('ui-number-input--shape-full')
     })
 
     it('drops the shape a value flanked by stepper zones cannot carry', async () => {
@@ -69,12 +77,11 @@ describe('m-number-input · variants', () => {
       expect(wrapper.find('label.ui-number-input__label').exists()).toBe(false)
     })
 
-    it('raises the label once a value is present', async () => {
+    it('keeps the label where it is whether or not there is a value — float is a position', async () => {
       const empty = await mount({ label: 'Width' })
-      expect(empty.classes()).not.toContain('ui-number-input--populated')
-
       const filled = await mount({ label: 'Width', modelValue: 12 })
-      expect(filled.classes()).toContain('ui-number-input--populated')
+
+      expect(filled.classes()).toEqual(empty.classes())
     })
   })
 

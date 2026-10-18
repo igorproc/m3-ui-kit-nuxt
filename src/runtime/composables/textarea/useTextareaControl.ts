@@ -74,6 +74,8 @@ export interface TextareaCounterState {
   remaining: number | undefined
   /** `true` once the value is close enough to the limit to be worth announcing. */
   nearLimit: boolean
+  /** `true` past a display-only limit: the length is not cut, so the overrun is shown. */
+  over: boolean
   text: string
 }
 
@@ -221,6 +223,7 @@ export function useTextareaControl(
       limit,
       remaining,
       nearLimit: remaining !== undefined && remaining <= threshold,
+      over: remaining !== undefined && remaining < 0,
       text: limit === undefined ? String(length) : `${length} / ${limit}`,
     }
   })

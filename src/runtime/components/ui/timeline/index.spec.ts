@@ -23,16 +23,18 @@ describe('MTimeline', () => {
   it('renders a semantic ordered list of items', async () => {
     const wrapper = await mountSuspended(timeline({}, [{ title: 'A' }, { title: 'B' }, { title: 'C' }]))
     expect(wrapper.find('ol.ui-timeline').exists()).toBe(true)
-    expect(wrapper.findAll('li.ui-timeline-item')).toHaveLength(3)
+    expect(wrapper.findAll('ol.ui-timeline > li.ui-timeline-item')).toHaveLength(3)
   })
 
-  it('applies side, density and line modifiers', async () => {
+  it('expresses side, density and line as modifiers, never data attributes', async () => {
     const wrapper = await mountSuspended(timeline({ side: 'alternate', density: 'compact', line: 'dashed' }, [{ title: 'A' }]))
     const root = wrapper.find('.ui-timeline')
-    expect(root.classes()).toContain('ui-timeline--density-compact')
-    expect(root.attributes('data-side')).toBe('alternate')
-    expect(root.attributes('data-line')).toBe('dashed')
-    expect(wrapper.find('.ui-timeline-divider--line-dashed').exists()).toBe(true)
+    expect(root.classes()).toEqual(expect.arrayContaining([
+      'ui-timeline--side-alternate',
+      'ui-timeline--density-compact',
+      'ui-timeline--line-dashed',
+    ]))
+    expect(Object.keys(root.attributes()).filter(key => key.startsWith('data-'))).toEqual([])
   })
 
   it('resolves all items to the end side by default', async () => {
@@ -41,7 +43,7 @@ describe('MTimeline', () => {
     expect(wrapper.findAll('.ui-timeline-item--start')).toHaveLength(0)
   })
 
-  it('alternates sides by registration order', async () => {
+  it('alternates sides by order', async () => {
     const wrapper = await mountSuspended(timeline({ side: 'alternate' }, [{ title: 'A' }, { title: 'B' }, { title: 'C' }]))
     const items = wrapper.findAll('.ui-timeline-item')
     expect(items[0]!.classes()).toContain('ui-timeline-item--start')
@@ -56,45 +58,50 @@ describe('MTimeline', () => {
     expect(items[1]!.classes()).toContain('ui-timeline-item--start')
   })
 
-  it('hides the leading connector on the first item and the trailing on the last', async () => {
-    const wrapper = await mountSuspended(timeline({}, [{ title: 'A' }, { title: 'B' }, { title: 'C' }]))
-    const dividers = wrapper.findAll('.ui-timeline-item__divider')
-
-    expect(dividers[0]!.find('.ui-timeline-divider__line--before').classes()).toContain('is-hidden')
-    expect(dividers[0]!.find('.ui-timeline-divider__line--after').classes()).not.toContain('is-hidden')
-
-    expect(dividers[2]!.find('.ui-timeline-divider__line--before').classes()).not.toContain('is-hidden')
-    expect(dividers[2]!.find('.ui-timeline-divider__line--after').classes()).toContain('is-hidden')
-  })
-
-  it('recomputes first/last as items are added and removed', async () => {
-    const count = ref(2)
+  it('keeps alternate sides in document order when an item is inserted in the middle', async () => {
+    const keys = ref(['a', 'c'])
     const host = defineComponent({
       setup() {
         return () =>
-          h(MTimeline, {}, {
-            default: () => Array.from({ length: count.value }, (_, index) =>
-              h(MTimelineItem, { key: index, title: `E${index}` }, { default: () => `E${index}` })),
+          h(MTimeline, { side: 'alternate' }, {
+            default: () => keys.value.map(key =>
+              h(MTimelineItem, { key, title: key }, { default: () => key })),
           })
       },
     })
     const wrapper = await mountSuspended(host)
-    const lastAfter = () => wrapper.findAll('.ui-timeline-item__divider .ui-timeline-divider__line--after')
+    const sides = () => wrapper.findAll('.ui-timeline-item').map(item =>
+      item.classes().includes('ui-timeline-item--start') ? 'start' : 'end')
 
-    expect(lastAfter()[1]!.classes()).toContain('is-hidden')
+    expect(sides()).toEqual(['start', 'end'])
 
-    count.value = 3
+    keys.value = ['a', 'b', 'c']
     await nextTick()
-    // The old last item is no longer last; the new one is.
-    expect(lastAfter()[1]!.classes()).not.toContain('is-hidden')
-    expect(lastAfter()[2]!.classes()).toContain('is-hidden')
+    await nextTick()
+    // The new item is registered last but stands second in the DOM.
+    expect(sides()).toEqual(['start', 'end', 'start'])
   })
 
-  it('marks the divider decorative and keeps content readable', async () => {
+  it('marks the rail decorative and keeps content readable', async () => {
     const wrapper = await mountSuspended(timeline({}, [{ title: 'Order placed', body: 'Order 1248 created.' }]))
     expect(wrapper.find('.ui-timeline-divider').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('.ui-timeline-item__title').text()).toBe('Order placed')
     expect(wrapper.find('.ui-timeline-item__body').text()).toBe('Order 1248 created.')
+  })
+
+  it('states the outcome in a visually hidden word read before the title', async () => {
+    const wrapper = await mountSuspended(timeline({}, [{ title: 'Delivery', status: 'Failed', color: 'error', icon: 'ic:outline-close' }]))
+    const content = wrapper.find('.ui-timeline-item__content')
+    const status = content.find('.ui-timeline-item__status')
+
+    expect(status.text()).toBe('Failed')
+    expect(content.element.firstElementChild).toBe(status.element)
+    expect(wrapper.find('.ui-timeline-divider__dot--error').exists()).toBe(true)
+  })
+
+  it('renders no status word without a status', async () => {
+    const wrapper = await mountSuspended(timeline({}, [{ title: 'A' }]))
+    expect(wrapper.find('.ui-timeline-item__status').exists()).toBe(false)
   })
 
   it('renders machine-readable time through the time element', async () => {
@@ -103,6 +110,13 @@ describe('MTimeline', () => {
     expect(time.element.tagName).toBe('TIME')
     expect(time.attributes('datetime')).toBe('2026-07-12T09:00:00+04:00')
     expect(time.text()).toBe('09:00')
+  })
+
+  it('renders the time column only for an item that has a time', async () => {
+    const wrapper = await mountSuspended(timeline({}, [{ title: 'A', time: '09:00', datetime: '2026-07-12T09:00' }, { title: 'B' }]))
+    const items = wrapper.findAll('.ui-timeline-item')
+    expect(items[0]!.find('.ui-timeline-item__opposite').exists()).toBe(true)
+    expect(items[1]!.find('.ui-timeline-item__opposite').exists()).toBe(false)
   })
 
   it('prefers slots over the title/text/opposite props', async () => {
@@ -122,20 +136,31 @@ describe('MTimeline', () => {
     expect(wrapper.find('.ui-timeline-item__time').exists()).toBe(false)
   })
 
-  it('drops the opposite column when hideOpposite is set', async () => {
+  it('renders an opposite slot without a time', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      setup: () => () =>
+        h(MTimeline, {}, {
+          default: () => h(MTimelineItem, { title: 'A' }, { opposite: () => h('span', { class: 'op' }, 'Now') }),
+        }),
+    }))
+    expect(wrapper.find('.ui-timeline-item__opposite .op').text()).toBe('Now')
+  })
+
+  it('renders no time for an item with hideOpposite', async () => {
     const wrapper = await mountSuspended(timeline({}, [{ title: 'A', time: '09:00', hideOpposite: true }]))
-    expect(wrapper.find('.ui-timeline-item--no-opposite').exists()).toBe(true)
     expect(wrapper.find('.ui-timeline-item__opposite').exists()).toBe(false)
   })
 
-  it('keeps the dot space but no marker when hideDot is set', async () => {
+  it('drops the dot but keeps the rail cell when hideDot is set', async () => {
     const wrapper = await mountSuspended(timeline({}, [{ title: 'A', hideDot: true }]))
-    expect(wrapper.find('.ui-timeline-divider__dot--empty').exists()).toBe(true)
+    expect(wrapper.find('.ui-timeline-item').classes()).toContain('ui-timeline-item--no-dot')
+    expect(wrapper.find('.ui-timeline-item__divider').exists()).toBe(true)
+    expect(wrapper.find('.ui-timeline-divider__dot').exists()).toBe(false)
   })
 
   it('applies the color role to the marker', async () => {
     const wrapper = await mountSuspended(timeline({}, [{ title: 'A', color: 'tertiary', icon: 'round-check' }]))
-    expect(wrapper.find('.ui-timeline-divider').classes()).toContain('ui-timeline-divider--tertiary')
+    expect(wrapper.find('.ui-timeline-divider__dot').classes()).toContain('ui-timeline-divider__dot--tertiary')
     expect(wrapper.html()).toContain('round-check')
   })
 

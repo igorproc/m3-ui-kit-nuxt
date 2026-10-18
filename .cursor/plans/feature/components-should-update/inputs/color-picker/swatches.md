@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Swatches.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: `role="listbox"` с `option`, выбор пишет в контекст, увеличение на hover. Открыты: выбранный ищется по строке, каждый образец — Tab-стоп, нет стрелок, ключ по значению ломается на дублях, увеличение без reduced motion, выбор в forced colors пропадает.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: listbox на `useListbox` (activedescendant, стрелки, Home/End), сравнение по цвету, галочка и кольцо выбранного.</implementation-status>
 
 ## Вердикт
 

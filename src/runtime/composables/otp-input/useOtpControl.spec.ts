@@ -4,6 +4,8 @@ import { defineComponent, h, reactive, ref } from 'vue'
 import { useOtpControl } from './useOtpControl'
 import type { OtpControlProps } from './useOtpControl'
 import type { OtpValueHooks } from './useOtpValue'
+import { provideValidationAdapter } from '#kit/composables/validation/context'
+import type { ValidationAdapter } from '#kit/composables/validation/types'
 import type { Ref } from 'vue'
 
 type Control = ReturnType<typeof useOtpControl>
@@ -45,6 +47,90 @@ function createHarness(
 }
 
 describe('useOtpControl', () => {
+  it('leaves the newest character readable for a moment with mask="last", then hides it', async () => {
+    vi.useFakeTimers()
+    try {
+      const model = ref('1')
+      const { component, getControl } = createHarness(model, { length: 4, mode: 'numeric', mask: 'last' })
+
+      const wrapper = await mountSuspended(component)
+      const input = wrapper.find('input')
+      ;(input.element as HTMLInputElement).value = '12'
+      ;(input.element as HTMLInputElement).setSelectionRange(2, 2)
+      await input.trigger('input')
+
+      const masked = () => getControl().groups.value.flat().map(cell => cell.masked)
+      expect(masked()).toEqual([true, false, false, false])
+
+      vi.advanceTimersByTime(1000)
+      expect(masked()).toEqual([true, true, false, false])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('selects the whole code on focus once it came back wrong, so typing starts over', async () => {
+    const model = ref('1234')
+    const { component } = createHarness(model, { length: 4, mode: 'numeric', errorMessage: 'Wrong code' })
+
+    const wrapper = await mountSuspended(component, { attachTo: document.body })
+    const input = wrapper.find('input').element as HTMLInputElement
+    input.focus()
+
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 4])
+    wrapper.unmount()
+  })
+
+  it('leaves the caret alone on focus of a valid code', async () => {
+    const model = ref('1234')
+    const { component } = createHarness(model, { length: 4, mode: 'numeric' })
+
+    const wrapper = await mountSuspended(component, { attachTo: document.body })
+    const input = wrapper.find('input').element as HTMLInputElement
+    input.setSelectionRange(2, 2)
+    input.focus()
+
+    expect([input.selectionStart, input.selectionEnd]).toEqual([2, 2])
+    wrapper.unmount()
+  })
+
+  it('hands every empty cell its placeholder character as a hint', async () => {
+    const { component, getControl } = createHarness(ref('1'), { length: 3, mode: 'numeric', placeholder: '000' })
+
+    await mountSuspended(component)
+
+    expect(getControl().groups.value.flat().map(cell => cell.hint)).toEqual(['', '0', '0'])
+  })
+
+  it('binds the code to the validation adapter by path', async () => {
+    const adapter: ValidationAdapter = {
+      bindField: () => ({
+        value: ref('12'),
+        errorMessage: ref<string | undefined>('Expired code'),
+        meta: { required: true, touched: true, dirty: true, valid: false, validated: true, pending: false },
+      }) as never,
+      createForm: () => { throw new Error('unused') },
+    }
+    let control: Control | null = null
+    const model = ref('')
+    const Field = defineComponent({
+      setup() {
+        control = useOtpControl(model, ref(false), { length: 4, mode: 'numeric', path: 'code' }, {}, 'bound')
+        return () => h('input', control!.inputAttrs.value)
+      },
+    })
+    const wrapper = await mountSuspended(defineComponent({
+      setup() {
+        provideValidationAdapter(adapter)
+        return () => h(Field)
+      },
+    }))
+
+    expect(model.value).toBe('12')
+    expect(control!.message.value).toBe('Expired code')
+    expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
+  })
+
   it('wires one named input to a grid it knows nothing about', async () => {
     const model = ref('12')
     const { component } = createHarness(model, { length: 4, mode: 'numeric' })

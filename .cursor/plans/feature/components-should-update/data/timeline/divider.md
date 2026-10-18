@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MTimeline](index.md)) · Код: `src/runtime/components/fragments/timeline/divider/index.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-18: точка (или значок) и сегменты линии до и после неё по first/last, режимы solid / dashed / none. Меняется способ рисования линии (разрывы на рендере) и forced colors.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Реализовано (агентом группы data, 2026-10-07). Фрагмент рисует только ячейку рейки и точку; линию рисует элемент на всю свою высоту (зазор включён), поэтому соседние элементы смыкаются без шва и при любой плотности. Точка не обводится кольцом цвета `surface`: линия обрывается в `spacing(2)` от неё, так что точка читается на любом фоне. `hideDot` — линия проходит через место точки. Forced colors: линия — рамка (цвет подставляет система), точка — `CanvasText`.</implementation-status>
 
 ## Вердикт
 

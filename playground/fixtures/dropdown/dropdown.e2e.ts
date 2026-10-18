@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, waitForMotion } from '../../e2e/support'
 
 /**
  * MMenu draws its surface as role="menu", so the listbox sits inside a menu
@@ -35,6 +35,8 @@ async function openWithKeyboard(page: Page, id: string) {
   await combobox(page, id).focus()
   await page.keyboard.press('ArrowDown')
   await expect(combobox(page, id)).toHaveAttribute('aria-expanded', 'true')
+  // The panel opens with a scale: anything measured mid-motion is off.
+  await waitForMotion(page)
 }
 
 test.describe('MDropdown', () => {
@@ -195,6 +197,55 @@ test.describe('MDropdown', () => {
     await page.keyboard.press('ArrowDown')
     const resting = await banana.evaluate(el => getComputedStyle(el).backgroundColor)
     expect(active).not.toBe(resting)
+  })
+
+  test('the arrow takes the field roles: error in an invalid field, receded when disabled', async ({ page }) => {
+    await openFixture(page, 'dropdown/matrix')
+    const ink = (id: string, part: string) => combobox(page, id).evaluate((el, selector) =>
+      getComputedStyle(el.closest('.ui-text-field')!.querySelector(selector)!).color, part)
+
+    expect(await ink('error-filled', '.ui-dropdown__arrow')).toBe(await ink('error-filled', '.ui-text-field__support'))
+    expect(await ink('disabled-filled', '.ui-dropdown__arrow')).not.toBe(await ink('enabled-filled', '.ui-dropdown__arrow'))
+  })
+
+  test('row text starts where the value starts in the field', async ({ page }) => {
+    await openFixture(page, 'dropdown/matrix')
+    await openWithKeyboard(page, 'selected-filled')
+
+    const value = await combobox(page, 'selected-filled').evaluate(el => el.getBoundingClientRect().left)
+    for (const name of ['Apple', 'Banana']) {
+      const title = await page.getByRole('option', { name }).locator('.ui-dropdown__option-title')
+        .evaluate(el => el.getBoundingClientRect().left)
+      // Within the field's 1rem edge: the panel hangs from the outer edge.
+      expect(Math.abs(title - value), name).toBeLessThanOrEqual(2)
+    }
+  })
+
+  test('a row under the pointer is lighter than a row under the keyboard', async ({ page }) => {
+    await openFixture(page, 'dropdown/matrix')
+    await openWithKeyboard(page, 'enabled-filled')
+    const apple = page.getByRole('option', { name: 'Apple' })
+    const keyboard = await apple.evaluate(el => getComputedStyle(el).backgroundColor)
+
+    await page.getByRole('option', { name: 'Cherry' }).hover()
+    await apple.hover()
+    await expect(apple).toHaveClass(/ui-dropdown__option--active/)
+    const pointer = await apple.evaluate(el => getComputedStyle(el).backgroundColor)
+
+    expect(pointer).not.toBe(keyboard)
+  })
+
+  test('a long panel stops halfway through a row, so the list visibly goes on', async ({ page }) => {
+    await openFixture(page, 'dropdown/stress')
+    await openWithKeyboard(page, 'huge')
+
+    const [visible, row, padding] = await listbox(page).evaluate((el) => {
+      const option = el.querySelector('[role="option"]')!
+      return [el.clientHeight, option.getBoundingClientRect().height, Number.parseFloat(getComputedStyle(el).paddingTop)]
+    })
+    const rows = (visible - 2 * padding) / row
+
+    expect(rows - Math.floor(rows)).toBeCloseTo(0.5, 1)
   })
 
   test('forced colors: the keyboard cursor is a Highlight ring', async ({ page }) => {

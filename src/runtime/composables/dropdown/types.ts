@@ -152,6 +152,8 @@ export interface UseDropdownControlOptions<TItem extends DropdownItemBase, TValu
   ) => DropdownResolvedItem<TItem, TValue>[]
   /** Land the virtual focus on the first row whenever the rows change. */
   autoSelectFirst?: () => boolean
+  /** The validation adapter is checking the value: the combobox reports itself busy. */
+  pending?: () => boolean
   onSelect?: (entry: DropdownResolvedItem<TItem, TValue>) => void
   onRemove?: (entry: DropdownResolvedItem<TItem, TValue>) => void
   onClear?: () => void

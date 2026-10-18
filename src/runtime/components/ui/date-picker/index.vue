@@ -1,406 +1,339 @@
 <template>
-  <div class="ui-date-picker">
-    <DatePickerHeaderNav
-      :headline-label="headlineLabel"
-      :selected-label="selectedLabel"
-      :month-year-label="currentMonthYearLabel"
-      :view="view"
-      :placeholder="!modelValue"
-      :can-go-prev="canGoPrev"
-      :can-go-next="canGoNext"
-      @toggle="toggleView"
-      @prev="goToPreviousMonth"
-      @next="goToNextMonth"
+  <div
+    class="ui-date-picker"
+    :class="{
+      'ui-date-picker--hosted': hosted,
+      'ui-date-picker--disabled': disabled,
+      'ui-date-picker--readonly': readonly,
+    }"
+    role="group"
+    :aria-labelledby="titleId"
+  >
+    <header class="ui-date-picker__header">
+      <p
+        :id="titleId"
+        class="ui-date-picker__title"
+      >
+        <slot name="label">
+          {{ title }}
+        </slot>
+      </p>
+
+      <div class="ui-date-picker__headline-row">
+        <p class="ui-date-picker__headline">
+          <slot
+            name="headline"
+            :date="selected"
+          >
+            {{ headlineText }}
+          </slot>
+        </p>
+
+        <MButtonIcon
+          v-if="modeToggle"
+          type="button"
+          class="ui-date-picker__mode"
+          :aria-label="mode === 'picker' ? switchToInputLabel : switchToCalendarLabel"
+          :disabled="disabled"
+          @click="toggleMode"
+        >
+          <MIcon :name="mode === 'picker' ? ICONS.edit : ICONS.calendarToday" />
+        </MButtonIcon>
+      </div>
+    </header>
+
+    <div
+      class="ui-date-picker__divider"
+      aria-hidden="true"
     />
 
-    <div class="ui-date-picker__content">
-      <transition
-        name="ui-date-picker-fade"
-        mode="out-in"
-      >
-        <DatePickerDayGrid
-          v-if="view === 'calendar'"
-          key="calendar"
-          :weekdays="weekdayLabels"
-          :days="days"
-          @select="onSelect"
-        />
+    <template v-if="mode === 'picker'">
+      <DatePickerHeaderNav
+        :month-label="calendar.monthYear(month)"
+        :month-label-id="monthLabelId"
+        :years-id="yearsId"
+        :view="view"
+        :can-go-prev="canGoPrev"
+        :can-go-next="canGoNext"
+        :disabled="disabled"
+        :prev-label="prevMonthLabel"
+        :next-label="nextMonthLabel"
+        :switch-to-year-label="switchToYearLabel"
+        :switch-to-day-label="switchToDayLabel"
+        @toggle="toggleView"
+        @prev="prevMonth"
+        @next="nextMonth"
+      />
 
-        <DatePickerYearGrid
-          v-else
-          key="year"
-          ref="yearGridRef"
-          :years="years"
-          :selected-year="displayDate.year()"
-          :current-year="today.year()"
-          @select="onSelectYear"
-        />
-      </transition>
+      <div class="ui-date-picker__content">
+        <Transition
+          name="ui-date-picker-view"
+          mode="out-in"
+          @after-enter="onViewEntered"
+        >
+          <DatePickerDayGrid
+            v-if="view === 'calendar'"
+            key="calendar"
+            :weekdays="calendar.weekdays()"
+            :weeks="grid.weeks.value"
+            :grid-attrs="grid.gridAttrs.value"
+            :get-cell-attrs="grid.getCellAttrs"
+          >
+            <template
+              v-if="$slots.day"
+              #day="{ day }"
+            >
+              <slot
+                name="day"
+                :day="day"
+              />
+            </template>
+          </DatePickerDayGrid>
+
+          <DatePickerYearGrid
+            v-else
+            :id="yearsId"
+            key="year"
+            ref="yearGrid"
+            :years="years"
+            :shown-year="month.getFullYear()"
+            :selected-year="selected?.getFullYear()"
+            :current-year="today?.getFullYear()"
+            :calendar="calendar"
+            :disabled="disabled"
+            :labelled-by="monthLabelId"
+            @select="onSelectYear"
+          >
+            <template
+              v-if="$slots.year"
+              #year="{ year }"
+            >
+              <slot
+                name="year"
+                :year="year"
+              />
+            </template>
+          </DatePickerYearGrid>
+        </Transition>
+      </div>
+    </template>
+
+    <DatePickerInput
+      v-else
+      ref="typed"
+      :calendar="calendar"
+      :value="selected"
+      :bounds="bounds"
+      :label="inputLabel"
+      :placeholder="placeholder ?? pattern"
+      :error-pattern="errorPattern"
+      :error-range="errorRange"
+      :disabled="disabled"
+      :readonly="readonly"
+      @commit="onTyped"
+    />
+
+    <div
+      v-if="$slots.actions"
+      class="ui-date-picker__actions"
+    >
+      <slot name="actions" />
     </div>
-
-    <footer class="ui-date-picker__footer">
-      <MButton
-        variant="text"
-        @click="$emit('cancel')"
-      >
-        Cancel
-      </MButton>
-      <MButton
-        variant="text"
-        @click="confirm"
-      >
-        OK
-      </MButton>
-    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useDatePicker } from '#kit/composables/date'
+import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
+import MIcon from '#kit/components/ui/icon/index.vue'
 import DatePickerHeaderNav from '#kit/components/fragments/date-picker/header-nav/index.vue'
 import DatePickerDayGrid from '#kit/components/fragments/date-picker/day-grid/index.vue'
 import DatePickerYearGrid from '#kit/components/fragments/date-picker/year-grid/index.vue'
-import MButton from '#kit/components/ui/button/index.vue'
+import DatePickerInput from '#kit/components/fragments/date-picker/input/index.vue'
+import { useRetiredPropWarning } from '#kit/composables/button/useRetiredValueWarning'
+import { useDatePicker } from '#kit/composables/date'
+import type { DatePickerValue } from '#kit/composables/date'
+import { useDateGridControl } from '#kit/composables/date/useDateGridControl'
+import type { DateGridCell } from '#kit/composables/date/useDateGridControl'
+import { ICONS } from '#kit/shared/constants/icons'
+import { MESSAGES } from '#kit/shared/constants/messages'
+import { useDatePickerHosted } from './context'
 import { mDatePickerProps } from './props'
+import type { MDatePickerMode } from './props'
 
 const props = defineProps(mDatePickerProps)
 
-const emit = defineEmits(['update:modelValue', 'cancel', 'confirm'])
-const modelValue = defineModel<Date | string | number | null>({ default: null })
+const modelValue = defineModel<DatePickerValue | null>({ default: null })
+const mode = defineModel<MDatePickerMode>('mode', { default: 'picker' })
+
+defineSlots<{
+  /** The title — "Select date" by default. Content only: the element names the group. */
+  label?: () => unknown
+  /** The chosen date as the headline. */
+  headline?: (props: { date: Date | null }) => unknown
+  /** The content of one day cell (a dot under a busy day, for one). */
+  day?: (props: { day: DateGridCell }) => unknown
+  year?: (props: { year: number }) => unknown
+  /** Actions under the picker. Choosing a day commits at once; confirming belongs to a dialog. */
+  actions?: () => unknown
+}>()
+
+useRetiredPropWarning('m-date-picker', 'headline', () => props.headline, '`label` — the headline is the chosen date')
+
+const hosted = useDatePickerHosted()
+const titleId = useId()
+const monthLabelId = useId()
+const yearsId = useId()
 
 const {
+  calendar,
+  selected,
+  month,
   view,
   today,
-  displayDate,
-  yearGrid,
-  selectedLabel,
-  currentMonthYearLabel,
-  weekdayLabels,
-  days,
+  bounds,
   years,
   canGoPrev,
   canGoNext,
+  prevMonth,
+  nextMonth,
   toggleView,
-  goToPreviousMonth,
-  goToNextMonth,
-  onSelect,
-  onSelectYear,
-} = useDatePicker(modelValue, {
-  minDate: props.minDate,
-  maxDate: props.maxDate,
+  selectYear,
+  select,
+} = useDatePicker({
+  model: modelValue,
+  locale: () => props.locale,
+  min: () => props.minDate,
+  max: () => props.maxDate,
 })
 
-// Bridge the year-grid leaf's root element into the composable's `yearGrid`
-// ref so its scroll-into-view on view toggle keeps working.
-const yearGridRef = ref<{ element: HTMLElement | null } | null>(null)
-watch(yearGridRef, (comp) => {
-  yearGrid.value = comp?.element ?? null
+const grid = useDateGridControl({
+  calendar,
+  month,
+  selected: () => selected.value,
+  today: () => today.value,
+  bounds: () => bounds.value,
+  disabled: () => props.disabled,
+  readonly: () => props.readonly,
+  labelledBy: () => monthLabelId,
+  onSelect: select,
 })
 
-const headlineLabel = computed(() => props.headline)
+const title = computed(() => props.headline ?? (mode.value === 'input' ? props.inputTitle : props.label))
+const headlineText = computed(() => selected.value ? calendar.value.headline(selected.value) : '—')
 
-function confirm() {
-  emit('confirm', modelValue.value)
+const pattern = computed(() => {
+  const letters = { day: MESSAGES.datePatternDay, month: MESSAGES.datePatternMonth, year: MESSAGES.datePatternYear }
+  const { order, separator } = calendar.value.numericLayout()
+  return order.map(part => letters[part]).join(separator)
+})
+
+function toggleMode() {
+  mode.value = mode.value === 'picker' ? 'input' : 'picker'
+}
+
+function onTyped(date: Date | null) {
+  if (props.disabled || props.readonly) return
+  if (date) select(date)
+  else modelValue.value = null
+}
+
+const typed = ref<{ commit: () => boolean } | null>(null)
+
+/**
+ * Reads a typed date that has not been committed yet. `false` when it is
+ * refused — a dialog's OK stays open on it, the error showing.
+ */
+function validate(): boolean {
+  return mode.value === 'input' && typed.value ? typed.value.commit() : true
+}
+
+defineExpose({ validate })
+
+// Focus follows a view change the user made: into the year list when it
+// opens, back onto the day after a year is picked. Done once the new view has
+// entered — before that its cells do not exist yet.
+const yearGrid = ref<{ focusYear: (year?: number) => void } | null>(null)
+let focusOnEnter: 'year' | 'day' | null = null
+
+function onSelectYear(year: number) {
+  focusOnEnter = 'day'
+  selectYear(year)
+}
+
+watch(view, (next) => {
+  focusOnEnter ??= next === 'year' ? 'year' : null
+})
+
+function onViewEntered() {
+  const target = focusOnEnter
+  focusOnEnter = null
+  if (target === 'year') yearGrid.value?.focusYear(month.value.getFullYear())
+  if (target === 'day') grid.focusDate(grid.focused.value)
 }
 </script>
 
 <style lang="scss">
-@use 'sass:map';
-@use '#kit/assets/stylesheet/components/date-picker/docked' as t;
+@use '#kit/assets/stylesheet/components/date-picker' as t;
+@use '#kit/assets/stylesheet/components/date-picker/parts' as parts;
 
 .ui-date-picker {
-  $prefix: 'md-date-picker';
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'm-date-picker');
 
   display: flex;
   flex-direction: column;
-  width: g($t, 'container-width');
-  background-color: g($t, 'container-bg');
-  border-radius: g($t, 'container-radius');
-  isolation: isolate;
-  overflow: hidden;
-  box-shadow: g($t, 'container-shadow');
+  width: g($t, 'container.width');
+  max-width: 100%;
+  border-radius: g($t, 'container.shape');
+  background-color: g($t, 'container.color');
+  color: g($t, 'day.color');
 
-  &__header {
-    padding: g($t, 'header-padding');
+  // In a dialog the dialog is the surface.
+  &--hosted {
+    border-radius: 0;
     background-color: transparent;
   }
 
-  &__headline {
-    margin-bottom: 20rem;
-  }
-
-  &__headline-label {
-    margin: 0;
-
-    @include apply-typography(g($t, 'header-headline-label-typography'));
-
-    color: g($t, 'header-headline-label-color');
-  }
-
-  &__headline-date {
-    margin: 0;
-
-    @include apply-typography(g($t, 'header-headline-date-typography'));
-
-    color: g($t, 'header-headline-date-color');
-
-    &--placeholder {
-      color: g($t, 'header-headline-date-placeholder-color');
-      opacity: 0.7;
-    }
-  }
-
-  &__controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__month-selector {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  &__view-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8rem;
-    padding: 8rem 4rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: g($t, 'controls-view-toggle-color');
-
-    @include apply-typography(g($t, 'controls-view-toggle-typography'));
-
-    border-radius: 999rem;
-    transition: background-color 0.2s;
-
-    @include can-hover {
-      &:hover {
-        background-color: g($t, 'controls-view-toggle-hover-bg');
-      }
-    }
-  }
-
-  &__month-arrows {
-    display: flex;
-    gap: 4rem;
-  }
-
-  &__icon-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: g($t, 'controls-icon-button-size');
-    height: g($t, 'controls-icon-button-size');
-    border-radius: 50%;
-    border: none;
-    background: none;
-    color: g($t, 'controls-icon-button-color');
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    @include can-hover {
-      &:hover {
-        background-color: g($t, 'controls-icon-button-hover-bg');
-      }
-    }
-  }
+  @include parts.header($t);
+  @include parts.grid($t);
+  @include parts.years($t);
 
   &__content {
-    padding: 0 12rem;
-    min-height: 280rem;
+    padding-inline: g($t, 'container.padding.inline');
   }
 
-  &__calendar {
-    display: flex;
-    flex-direction: column;
+  &__input {
+    padding: g($t, 'input.padding.top') g($t, 'input.padding.inline') g($t, 'input.padding.bottom');
   }
 
-  &__weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 8rem;
-  }
-
-  &__weekday {
-    text-align: center;
-    height: g($t, 'weekday-height');
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    @include apply-typography(g($t, 'weekday-typography'));
-
-    color: g($t, 'weekday-color');
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    row-gap: 4rem;
-  }
-
-  &__day {
-    position: relative;
-    height: g($t, 'day-size');
-    border: none;
-    background: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-
-    &-state {
-      position: absolute;
-      width: g($t, 'day-size');
-      height: g($t, 'day-size');
-      border-radius: 50%;
-      background-color: transparent;
-      transition: background-color 0.2s, transform 0.2s;
-    }
-
-    &-label {
-      position: relative;
-
-      @include apply-typography(g($t, 'day-typography'));
-
-      color: g($t, 'day-color');
-      z-index: 1;
-    }
-
-    @include can-hover {
-      &:hover &-state {
-        background-color: g($t, 'day-hover-bg');
-      }
-    }
-  }
-
-  &__day--outside {
-    opacity: g($t, 'day-disabled-opacity');
-  }
-
-  &__day--disabled {
-    opacity: g($t, 'day-disabled-opacity');
-    cursor: default;
-
-    // `pointer-events: none` suppresses the hover state entirely, so no
-    // hover-background reset is needed.
-    pointer-events: none;
-  }
-
-  &__day--today &__day-label {
-    color: g($t, 'day-today-color');
-    font-weight: bold;
-    box-shadow: inset 0 0 0 g($t, 'day-today-outline-width') g($t, 'day-today-color');
-    border-radius: 50%;
-    width: 32rem;
-    height: 32rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__day--selected &__day-state {
-    background-color: g($t, 'day-selected-bg');
-    transform: scale(1);
-  }
-
-  @include can-hover {
-    &__day--selected:hover &__day-state {
-      background-color: g($t, 'day-selected-hover-bg');
-    }
-  }
-
-  &__day--selected &__day-label {
-    color: g($t, 'day-selected-color');
-  }
-
-  &__year-grid {
-    height: 280rem;
-    overflow-y: auto;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    padding: 8rem;
-    gap: 8rem;
-
-    &::-webkit-scrollbar {
-      width: 4rem;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: map.get($theme-color-link, 'outline-variant');
-      border-radius: 4rem;
-    }
-  }
-
-  &__year {
-    height: g($t, 'year-height');
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: 999rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    @include apply-typography(g($t, 'year-typography'));
-
-    color: g($t, 'year-color');
-    transition: background-color 0.2s;
-
-    @include can-hover {
-      &:hover {
-        background-color: g($t, 'year-hover-bg');
-      }
-    }
-
-    &--selected {
-      background-color: g($t, 'year-selected-bg') !important;
-      color: g($t, 'year-selected-color') !important;
-    }
-
-    &--current {
-      color: g($t, 'year-current-color');
-      font-weight: bold;
-    }
-  }
-
-  &__footer {
-    padding: g($t, 'footer-padding');
+  &__actions {
     display: flex;
     justify-content: flex-end;
-    gap: g($t, 'footer-gap');
+    gap: g($t, 'dialog.actions.gap');
+    padding-inline-end: g($t, 'dialog.actions.padding.inline-end');
+    padding-block-end: g($t, 'dialog.actions.padding.block-end');
+  }
+
+  &__sr {
+    @include sr-only;
+  }
+
+  // Forcing drops the fill a card is told apart by.
+  @include forced-colors {
+    &:not(.ui-date-picker--hosted) {
+      border: 1px solid CanvasText;
+    }
   }
 }
 
-.ui-date-picker-fade-enter-active,
-.ui-date-picker-fade-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+// Views swap by fading, on the motion tokens; reduced motion is shortened
+// globally.
+.ui-date-picker-view-enter-active,
+.ui-date-picker-view-leave-active {
+  transition: opacity var(--sys-motion-duration-short-4) var(--sys-motion-easing-standard);
 }
 
-.ui-date-picker-fade-enter-from,
-.ui-date-picker-fade-leave-to {
+.ui-date-picker-view-enter-from,
+.ui-date-picker-view-leave-to {
   opacity: 0;
-  transform: translateY(4rem);
-}
-
-.ui-date-picker {
-  &__view-toggle:focus-visible,
-  &__icon-button:focus-visible {
-    @include focus-ring;
-  }
-
-  // Cells sit edge to edge: the ring goes inside.
-  &__day:focus-visible,
-  &__year:focus-visible {
-    @include focus-ring(inset);
-  }
 }
 </style>

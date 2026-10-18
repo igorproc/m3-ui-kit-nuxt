@@ -2,7 +2,7 @@
 
 <identity>M3: Menus → exposed dropdown menu (`ExposedDropdownMenuBox` + `ExposedDropdownMenu`, якорь `PrimaryNotEditable`) · Токены Compose: `FilledAutocompleteTokens.kt`, `OutlinedAutocompleteTokens.kt` (поле + `MenuContainer*`), `MenuTokens.kt` (выбранный пункт), `ListTokens.kt` (строка); поведение — `ExposedDropdownMenu.kt` (`ItemContentPadding` 16, `calculateMaxHeight`, `TrailingIcon`), `Menu.kt` (`MenuVerticalMargin` 48, `DropdownMenuVerticalPadding` 8, `MenuListItemContainerHeight` 48) · Код: `src/runtime/components/ui/dropdown/` (`index.vue`, `props.ts`, `context.ts`), движок `src/runtime/composables/dropdown/*` (`useDropdownControl`, `useDropdownSelection`, `useDropdownEntries`, `useDropdownKeyboard`, `useDropdownChips`, `useTypeahead`, `usePanelStatus`) + `composables/listbox/useListbox.ts`, токены `src/runtime/assets/stylesheet/components/dropdown/{_index,_panel}.scss` · Аудит: `data/dropdown.json` · Тип: public; родитель семейства выбора (`MAutocomplete` спредит `mDropdownProps` и рисует ту же панель)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент — витрина фазы D (клавиатура APG select-only, listbox владеет только опциями, постоянный `role=status`, кольцо клавиатурного курсора, `inheritAttrs: false`, общий `_panel.scss`). План доводит роли и геометрию панели до M3 и подключает межкомпонентные долги (`MMenu`, `MListItem`, input-чип). Шаги 1–2 без смены API; шаги 3–5 ждут решений в планах меню, списка и чипа; вопросы 1–3 — свои.</implementation-status>
+<implementation-status state="planned" updated="2026-10-08">Частично (2026-10-08): шаги 1, 2, 6, 7 сделаны — роли строк (hover 8%, клавиатура 10%), галочка в `#trailing` выбранной строки, класс плотности списка, потолок панели на половине строки, `pending` → `aria-busy`. Не сделаны: шаг 3 (поверхность MMenu — ждёт плана меню), шаг 4 (input-чип — план чипа), шаг 5 (ошибка загрузки, `retry`, задержка индикатора).</implementation-status>
 
 ## Вердикт
 
@@ -266,3 +266,8 @@ hatch с `listboxAttrs`, `getOptionAttrs`, `panelStyle`…); `expose` — `open`
 3. Ничего. Цена: CT-11 остаётся FAIL.
 
 Рекомендация: 2 — без нового элемента, тот же приём используют системные списки.
+
+## Заметки реализации
+
+- Вопросы: 1 → 1 (запись в decisions.md предложена); 2 → 1 (галочка в trailing); 3 → 2 (половина строки).
+- Ломающее: галочка переехала в trailing; цвета стрелки/очистки — от поля.

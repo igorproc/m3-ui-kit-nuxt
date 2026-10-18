@@ -8,20 +8,23 @@
 // layers exist here. Interactive state belongs to the wrapping control.
 
 $tokens: (
-  sm: (
-    size: 24rem,
-    icon: (size: 16rem),
-    initials: (typography: map.get($theme-typography-link, 'label', 'small')),
-  ),
-  md: (
-    size: 40rem,
-    icon: (size: 24rem),
-    initials: (typography: map.get($theme-typography-link, 'label', 'large')),
-  ),
-  lg: (
-    size: 56rem,
-    icon: (size: 32rem),
-    initials: (typography: map.get($theme-typography-link, 'title', 'medium')),
+  // M3 places avatars at 24 (chips), 40 (list rows) and 56 (large list media).
+  density: (
+    compact: (
+      size: spacing(24),
+      icon: (size: spacing(16)),
+      initials: (typography: map.get($theme-typography-link, 'label', 'small')),
+    ),
+    default: (
+      size: spacing(40),
+      icon: (size: spacing(24)),
+      initials: (typography: map.get($theme-typography-link, 'label', 'large')),
+    ),
+    comfortable: (
+      size: calc(#{spacing(48)} + #{spacing(8)}),
+      icon: (size: spacing(32)),
+      initials: (typography: map.get($theme-typography-link, 'title', 'medium')),
+    ),
   ),
   shape: (
     full: map.get($theme-shape-link, 'full'),
@@ -43,7 +46,9 @@ $tokens: (
     content: (color: map.get($theme-color-link, 'on-surface-variant')),
     outline: (
       color: map.get($theme-color-link, 'outline-variant'),
-      width: 1rem,
+      // The divider's hairline: with the root font size in vw, 1rem drops
+      // under a device pixel on a narrow screen and the edge would vanish.
+      width: max(1px, 1rem),
     ),
   ),
 );

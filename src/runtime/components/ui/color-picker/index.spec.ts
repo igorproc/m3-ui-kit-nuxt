@@ -81,11 +81,129 @@ describe('m-color-picker', () => {
     expect(model.value).toBe('#00ff00')
   })
 
-  it('reflects disabled state', async () => {
-    const { mount } = mountPicker({ modelValue: '#6750a4', disabled: true })
+  it('reflects disabled state and takes the parts out of the tab order', async () => {
+    const { mount } = mountPicker({ modelValue: '#6750a4', disabled: true, swatches: ['#ff0000'] })
     const wrapper = await mount()
 
     expect(wrapper.find('.ui-color-picker--disabled').exists()).toBe(true)
+    expect(wrapper.find('.ui-color-canvas [role="slider"]').attributes('tabindex')).toBe('-1')
+    expect(wrapper.find('[role="listbox"]').attributes('tabindex')).toBe('-1')
+  })
+
+  it('marks a swatch chosen whenever it is the same colour, however either is spelled', async () => {
+    const { mount } = mountPicker({ modelValue: 'rgb(103, 80, 164)', format: 'rgb', swatches: ['#6750A4', '#ff0000'] })
+    const wrapper = await mount()
+    const [first, second] = wrapper.findAll('.ui-color-swatches__item')
+
+    expect(first!.attributes('aria-selected')).toBe('true')
+    expect(first!.find('.ui-color-swatches__check').exists()).toBe(true)
+    expect(second!.attributes('aria-selected')).toBe('false')
+  })
+
+  it('walks the swatches with the arrows from one tab stop and chooses with Enter', async () => {
+    const { model, mount } = mountPicker({ modelValue: '#000000', swatches: ['#ff0000', '#00ff00', '#0000ff'] })
+    const wrapper = await mount()
+    const list = wrapper.find('[role="listbox"]')
+
+    expect(list.attributes('tabindex')).toBe('0')
+    expect(wrapper.findAll('[role="option"]').every(option => option.attributes('tabindex') === undefined)).toBe(true)
+
+    await list.trigger('focus')
+    await list.trigger('keydown', { key: 'ArrowRight' })
+    await list.trigger('keydown', { key: 'Enter' })
+    await nextTick()
+
+    expect(list.attributes('aria-activedescendant')).toBe(wrapper.findAll('[role="option"]')[1]!.attributes('id'))
+    expect(model.value).toBe('#00ff00')
+  })
+
+  it('keeps two equal swatches as two options', async () => {
+    const { mount } = mountPicker({ swatches: ['#ff0000', '#ff0000'] })
+    const wrapper = await mount()
+
+    expect(wrapper.findAll('[role="option"]')).toHaveLength(2)
+  })
+
+  it('reads the 2-D field as two sliders with values in percent', async () => {
+    const { mount } = mountPicker({
+      modelValue: '#ff0000',
+      messages: { saturation: 'Saturation', brightness: 'Brightness' },
+    })
+    const wrapper = await mount()
+    const [saturation, brightness] = wrapper.findAll('.ui-color-canvas [role="slider"]')
+
+    expect(saturation!.attributes()).toMatchObject({ 'aria-label': 'Saturation', 'aria-valuenow': '100', 'aria-valuetext': '100%', 'tabindex': '0' })
+    expect(brightness!.attributes()).toMatchObject({ 'aria-label': 'Brightness', 'aria-orientation': 'vertical' })
+  })
+
+  it('moves an axis of the 2-D field with the keyboard', async () => {
+    const { model, mount } = mountPicker({ modelValue: '#ff0000' })
+    const wrapper = await mount()
+    const brightness = wrapper.findAll('.ui-color-canvas [role="slider"]')[1]!
+
+    await brightness.trigger('keydown', { key: 'End' })
+    await brightness.trigger('keydown', { key: 'PageDown' })
+    await nextTick()
+
+    expect(brightness.attributes('aria-valuenow')).toBe('90')
+    expect(model.value).not.toBe('#ff0000')
+  })
+
+  it('says the hue and alpha values in degrees and percent', async () => {
+    const { mount } = mountPicker({ modelValue: '#00ff0080', format: 'hexa' })
+    const wrapper = await mount()
+
+    expect(wrapper.find('.ui-color-picker__hue').attributes('aria-valuetext')).toBe('120°')
+    expect(wrapper.find('.ui-color-picker__alpha').attributes('aria-valuetext')).toBe('50%')
+  })
+
+  it('keeps an unreadable value in the field with the format hint, and Escape puts the last good one back', async () => {
+    const { model, mount } = mountPicker({ modelValue: '#ff0000', messages: { formatHint: 'Use #RRGGBB' } })
+    const wrapper = await mount()
+    const field = wrapper.find('.ui-color-edit input')
+
+    await field.setValue('#zz')
+    await field.trigger('keydown', { key: 'Enter' })
+    await nextTick()
+
+    expect((field.element as HTMLInputElement).value).toBe('#zz')
+    expect(wrapper.find('.ui-color-edit [role="alert"]').text()).toBe('Use #RRGGBB')
+    expect(model.value).toBe('#ff0000')
+
+    await field.trigger('keydown', { key: 'Escape' })
+    await nextTick()
+
+    expect((field.element as HTMLInputElement).value).toBe('#ff0000')
+    expect(wrapper.find('.ui-color-edit [role="alert"]').text()).toBe('')
+  })
+
+  it('takes no change while read-only', async () => {
+    const { model, mount } = mountPicker({ modelValue: '#ff0000', readonly: true, swatches: ['#00ff00'] })
+    const wrapper = await mount()
+
+    await wrapper.find('.ui-color-swatches__item').trigger('click')
+    const hue = wrapper.find('.ui-color-picker__hue')
+    ;(hue.element as HTMLInputElement).value = '200'
+    await hue.trigger('input')
+    await nextTick()
+
+    expect(model.value).toBe('#ff0000')
+    expect(wrapper.find('.ui-color-canvas [role="slider"]').attributes('aria-readonly')).toBe('true')
+  })
+
+  it('is a named group, and offers the formats as a compact list', async () => {
+    const { mount } = mountPicker({ label: 'Brand colour', messages: { format: 'Format' } })
+    const wrapper = await mount()
+
+    expect(wrapper.find('.ui-color-picker').attributes()).toMatchObject({ 'role': 'group', 'aria-label': 'Brand colour' })
+    expect(wrapper.find('.ui-color-picker__format [role="combobox"]').exists()).toBe(true)
+  })
+
+  it('names the channel fields as a group', async () => {
+    const { mount } = mountPicker({ modelValue: 'rgb(1, 2, 3)', format: 'rgb', messages: { channels: 'Channels' } })
+    const wrapper = await mount()
+
+    expect(wrapper.find('.ui-color-edit__channels').attributes()).toMatchObject({ 'role': 'group', 'aria-label': 'Channels' })
   })
 
   it('renders precise number channels for rgb formats', async () => {

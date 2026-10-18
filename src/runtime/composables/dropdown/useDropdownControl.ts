@@ -248,6 +248,7 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
     'aria-expanded': String(open.value),
     'aria-controls': listboxId,
     'aria-activedescendant': activeTarget.value,
+    ...(options.pending?.() ? { 'aria-busy': 'true' } : {}),
     'onKeydown': onKeydown,
   }))
 

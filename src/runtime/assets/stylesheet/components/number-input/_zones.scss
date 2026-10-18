@@ -1,0 +1,144 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NUMBER INPUT · STEPPER ZONES AND SCRUB HANDLE
+// ==========================================
+// Included inside `.ui-number-input`. A zone is an object sitting inside the
+// box: its own surface tone, its own corner radius, inset from the container
+// edge. Material has no hairline inside a control — that is what made the
+// field read as a form toolkit (craft.md §1).
+
+@mixin zones($t) {
+  &__stepper {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    border-radius: var(--ui-number-input-zone-radius);
+    background-color: g($t, 'stepper.surface');
+    color: g($t, 'stepper.color');
+    cursor: pointer;
+
+    // MD3 state layer: an overlay in the element's own ink, so the tone below
+    // keeps showing through. A background swap would replace it instead.
+    &::after {
+      position: absolute;
+      inset: 0;
+      background-color: currentcolor;
+      content: '';
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+    }
+
+    @include can-hover {
+      &:enabled:hover::after {
+        opacity: g($t, 'layer.hover');
+      }
+    }
+
+    &:enabled:active::after {
+      opacity: g($t, 'layer.pressed');
+    }
+
+    // At a bound or disabled the whole zone recedes, its tone with its glyph.
+    &:disabled {
+      background-color: g($t, 'stepper.disabled.surface');
+      color: g($t, 'stepper.disabled.color');
+      cursor: default;
+    }
+  }
+
+  &--split .ui-number-input__stepper {
+    width: var(--ui-number-input-stepper-size);
+    height: var(--ui-number-input-stepper-size);
+    margin-inline: g($t, 'stepper.inset');
+    font-size: g($t, 'stepper.split.size');
+  }
+
+  // One column of arrows at the trailing edge, halved by a gap rather than by a
+  // rule — the container tone shows through the seam.
+  &__stacked {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-self: center;
+    gap: g($t, 'container.border.width');
+    width: g($t, 'stepper.stacked.width');
+    height: var(--ui-number-input-stacked-height);
+    margin-inline: g($t, 'stepper.inset');
+    border-radius: var(--ui-number-input-zone-radius);
+
+    .ui-number-input__stepper {
+      flex: 1;
+      align-self: stretch;
+      width: 100%;
+      margin: 0;
+      font-size: g($t, 'stepper.stacked.size');
+    }
+
+    .ui-number-input__stepper--increment {
+      border-radius: var(--ui-number-input-zone-radius) var(--ui-number-input-zone-radius) 0 0;
+    }
+
+    .ui-number-input__stepper--decrement {
+      border-radius: 0 0 var(--ui-number-input-zone-radius) var(--ui-number-input-zone-radius);
+    }
+  }
+
+  // On the highest surface a step up has nowhere to go, so the zone is drawn
+  // as a state layer over the container instead of as the next tone.
+  &--filled .ui-number-input__stepper {
+    background-color: g($t, 'stepper.filled.surface');
+
+    &:disabled {
+      background-color: g($t, 'stepper.disabled.filled.surface');
+    }
+  }
+
+  // ── scrub · the label itself is the drag target, on the value's own line ──
+  &__scrub {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: g($t, 'scrub.max-width');
+    overflow: hidden;
+    margin-inline-end: g($t, 'scrub.padding.inline');
+    border-bottom: g($t, 'scrub.border.width') g($t, 'scrub.border.style') g($t, 'scrub.color');
+    color: g($t, 'scrub.color');
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: ew-resize;
+    user-select: none;
+
+    // The gesture owns horizontal pointer movement; without this a touch drag
+    // scrolls the page instead of changing the value.
+    touch-action: none;
+
+    @include typescale(g($t, 'typography.scrub'));
+  }
+
+  &--scrub &__input {
+    padding-block: 0;
+  }
+
+  &--readonly &__scrub {
+    cursor: default;
+  }
+
+  // A drag must not leave text selected in its wake, and the pointer keeps the
+  // resize cursor even once it has left the handle.
+  &--scrubbing {
+    cursor: ew-resize;
+    user-select: none;
+  }
+
+  &--scrubbing &__scrub {
+    border-bottom-style: g($t, 'scrub.active.border.style');
+    color: g($t, 'scrub.active.color');
+  }
+}

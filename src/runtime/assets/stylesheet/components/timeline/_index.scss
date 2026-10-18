@@ -7,43 +7,69 @@
 // The item content surface delegates its container styling to `MSurface`;
 // timeline tokens own only the grid geometry, connector and marker.
 
+$-rail: spacing(40);
+$-line: spacing(2);
+$-dot: spacing(16);
+$-content-padding: spacing(4);
+$-title: map.get($theme-typography-link, 'title', 'medium');
+$-time: map.get($theme-typography-link, 'label', 'large');
+
+// The dot centres on the first line of the title: the content's top padding
+// plus half of what the title line has over the dot.
+$-dot-offset: calc(#{$-content-padding} + (#{map.get($-title, 'line-height')} - #{$-dot}) / 2);
 $tokens: (
-  // Column that holds the marker + connector between the two content columns.
-  rail: (width: 40rem),
+  // Column that holds the marker between the two content columns.
+  rail: (width: $-rail),
   dot: (
-    size: 16rem,
-    icon: (size: 14rem),
-    ring: (width: 2rem),
-    color: map.get($theme-color-link, 'primary'),
-    on-color: map.get($theme-color-link, 'on-primary'),
-    surface: map.get($theme-color-link, 'surface'),
+    size: $-dot,
+    shape: map.get($theme-shape-link, 'full'),
+    offset: $-dot-offset,
+    icon: (size: calc(#{spacing(12)} + #{spacing(2)})),
+    color: (
+      primary: (container: map.get($theme-color-link, 'primary'), content: map.get($theme-color-link, 'on-primary')),
+      secondary: (container: map.get($theme-color-link, 'secondary'), content: map.get($theme-color-link, 'on-secondary')),
+      tertiary: (container: map.get($theme-color-link, 'tertiary'), content: map.get($theme-color-link, 'on-tertiary')),
+      error: (container: map.get($theme-color-link, 'error'), content: map.get($theme-color-link, 'on-error')),
+    ),
   ),
+  // One line per item, drawn over the item's whole height so consecutive
+  // items meet without a seam. It stops short of the dot by `gap`.
   line: (
-    width: 2rem,
+    width: $-line,
     color: map.get($theme-color-link, 'outline-variant'),
+    // The line is centred in the rail: at the middle of a three-column item,
+    // or this far from the edge the rail stands at in a two-column one.
+    middle: calc(50% - #{$-line} / 2),
+    inset: calc((#{$-rail} - #{$-line}) / 2),
+    gap: spacing(2),
+    // Where the line meets an item's dot, or that dot's centre without one.
+    before: calc(#{$-dot-offset} - #{spacing(2)}),
+    after: calc(#{$-dot-offset} + #{$-dot} + #{spacing(2)}),
+    center: calc(#{$-dot-offset} + #{$-dot} / 2),
   ),
+  // Space after each item; it belongs to the item, so the line runs through it.
   density: (
-    compact: (gap: 12rem),
-    default: (gap: 20rem),
-    comfortable: (gap: 32rem),
+    compact: (gap: spacing(12)),
+    default: (gap: spacing(20)),
+    comfortable: (gap: spacing(32)),
   ),
   content: (
-    gap: 12rem,
-    padding: (block: 4rem),
+    gap: spacing(12),
+    padding: (block: $-content-padding),
+  ),
+  // The time sits on the same centre line as the title and the dot.
+  opposite: (
+    padding: (
+      start: calc(#{$-content-padding} + (#{map.get($-title, 'line-height')} - #{map.get($-time, 'line-height')}) / 2),
+    ),
   ),
   time: (
     color: map.get($theme-color-link, 'on-surface-variant'),
-    typography: map.get($theme-typography-link, 'label', 'large'),
+    typography: $-time,
   ),
-  title: (typography: map.get($theme-typography-link, 'title', 'medium')),
+  title: (typography: $-title),
   body: (typography: map.get($theme-typography-link, 'body', 'medium')),
-  // Collapse alternate to end-side below this width (px: media resolves rem
-  // against the initial 16px).
+  // Alternate collapses to one side when the timeline itself is narrower than
+  // this (a container query, so it follows the timeline's column, not the window).
   collapse: (threshold: map.get($breakpoints, 'tablet-xs')),
-  dot-color: (
-    primary: (color: map.get($theme-color-link, 'primary'), on: map.get($theme-color-link, 'on-primary')),
-    secondary: (color: map.get($theme-color-link, 'secondary'), on: map.get($theme-color-link, 'on-secondary')),
-    tertiary: (color: map.get($theme-color-link, 'tertiary'), on: map.get($theme-color-link, 'on-tertiary')),
-    error: (color: map.get($theme-color-link, 'error'), on: map.get($theme-color-link, 'on-error')),
-  ),
 );

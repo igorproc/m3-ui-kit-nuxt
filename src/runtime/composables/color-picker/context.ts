@@ -19,6 +19,7 @@ import {
   toCssColor,
 } from '#kit/shared/utils/color'
 import type { ColorFormat, ColorParseError, HSVA, RGBA } from '#kit/shared/utils/color'
+import type { MColorPickerMessages } from '#kit/components/ui/color-picker/props'
 
 export type ColorCommitReason = 'pointer' | 'keyboard' | 'edit' | 'swatch'
 
@@ -31,6 +32,11 @@ export interface MColorPickerContext {
   formats: Readonly<ComputedRef<readonly ColorFormat[]>>
   supportsAlpha: Readonly<ComputedRef<boolean>>
   disabled: Readonly<ComputedRef<boolean>>
+  /** Shown and announced, never changed: every part stays focusable. */
+  readonly: Readonly<ComputedRef<boolean>>
+  /** `disabled || readonly` — the parts take no change. */
+  locked: Readonly<ComputedRef<boolean>>
+  messages: Readonly<ComputedRef<MColorPickerMessages>>
   valid: Readonly<ComputedRef<boolean>>
   parseError: Readonly<Ref<ColorParseError | null>>
   setHue: (value: number) => void
@@ -43,6 +49,8 @@ export interface MColorPickerContext {
   selectColor: (value: string) => boolean
   commit: (reason: ColorCommitReason) => void
   reportInvalid: (draft: string, reason: ColorParseError) => void
+  /** Drops a reported parse error — the draft that caused it was put back. */
+  clearError: () => void
 }
 
 export const [useColorPickerContext, provideColorPickerContext]
@@ -55,6 +63,8 @@ export interface ColorPickerStateOptions {
   format: Ref<ColorFormat>
   formats: () => readonly ColorFormat[]
   disabled: () => boolean
+  readonly: () => boolean
+  messages: () => MColorPickerMessages
   onChange: (value: string | null) => void
   onInvalid: (draft: string, reason: ColorParseError) => void
 }
@@ -64,7 +74,7 @@ export interface ColorPickerStateOptions {
  * `defineModel` refs; the state keeps them in sync with the internal HSVA.
  */
 export function createColorPickerState(options: ColorPickerStateOptions): MColorPickerContext {
-  const { model, format, formats, disabled, onChange, onInvalid } = options
+  const { model, format, formats, disabled, readonly, messages, onChange, onInvalid } = options
 
   const hsva = ref<HSVA>({ h: 0, s: 0, v: 0, a: 1 })
   const parseError = ref<ColorParseError | null>(null)
@@ -95,6 +105,9 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
   const supportsAlpha = computed(() => formatSupportsAlpha(format.value))
   const formatsRef = computed(() => formats())
   const disabledRef = computed(() => disabled())
+  const readonlyRef = computed(() => readonly())
+  const locked = computed(() => disabledRef.value || readonlyRef.value)
+  const messagesRef = computed(() => messages())
 
   function syncModel() {
     const formatted = formatColor(rgba.value, format.value)
@@ -109,7 +122,7 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
   }
 
   function setHSVA(next: HSVA) {
-    if (disabledRef.value) return
+    if (locked.value) return
     hsva.value = {
       h: ((next.h % 360) + 360) % 360,
       s: clamp(next.s, 0, 1),
@@ -131,7 +144,7 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
   })
 
   function setFormat(next: ColorFormat) {
-    if (disabledRef.value || next === format.value) return
+    if (locked.value || next === format.value) return
     const losingAlpha = formatSupportsAlpha(format.value) && !formatSupportsAlpha(next) && hsva.value.a < 1
     format.value = next
     if (losingAlpha) {
@@ -144,7 +157,7 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
   }
 
   function selectColor(input: string): boolean {
-    if (disabledRef.value) return false
+    if (locked.value) return false
     const parsed = parseColor(input)
     if (!parsed.ok) {
       reportInvalid(input, parsed.error)
@@ -163,6 +176,10 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
     onInvalid(draft, reason)
   }
 
+  function clearError() {
+    parseError.value = null
+  }
+
   return {
     hsva,
     rgba,
@@ -172,6 +189,9 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
     formats: formatsRef,
     supportsAlpha,
     disabled: disabledRef,
+    readonly: readonlyRef,
+    locked,
+    messages: messagesRef,
     valid,
     parseError,
     setHue,
@@ -184,5 +204,6 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
     selectColor,
     commit,
     reportInvalid,
+    clearError,
   }
 }

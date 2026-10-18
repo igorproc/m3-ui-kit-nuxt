@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Locator } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx, waitForMotion } from '../../e2e/support'
 
 const VARIANTS = ['filled', 'outlined', 'underline'] as const
 
@@ -116,10 +116,122 @@ test.describe('MTextField', () => {
     expect((await field.boundingBox())!.height).toBeCloseTo(fieldHeight, 0)
   })
 
-  test('a numeric 0 raises the floating label off the value', async ({ page }) => {
+  test('a numeric 0 shows as a value', async ({ page }) => {
     await openFixture(page, 'text-field/stress')
 
-    await expect(root(page.getByTestId('zero'))).toHaveClass(/ui-text-field--populated/)
+    await expect(page.getByTestId('zero')).toHaveValue('0')
+  })
+
+  for (const placement of ['float', 'inset']) {
+    test(`the ${placement} label does not move or animate on focus`, async ({ page }) => {
+      await openFixture(page, 'text-field/matrix')
+      const input = page.getByTestId(`placement-${placement}`)
+      const label = root(input).locator('.ui-text-field__label')
+
+      const transitions = await label.evaluate(el => getComputedStyle(el).transitionProperty)
+      expect(transitions).not.toContain('transform')
+
+      // Measured against the field: focusing may scroll the page under it.
+      const offset = () => label.evaluate((el) => {
+        const own = el.getBoundingClientRect()
+        const field = el.closest('.ui-text-field')!.getBoundingClientRect()
+        return { x: own.left - field.left, y: own.top - field.top }
+      })
+      const resting = await offset()
+      await input.focus()
+      await waitForMotion(page)
+      const focused = await offset()
+
+      expect(focused.x).toBeCloseTo(resting.x, 0)
+      expect(focused.y).toBeCloseTo(resting.y, 0)
+    })
+  }
+
+  test('an inset label on outlined stays inside the box: the notch stays closed', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const field = root(page.getByTestId('placement-inset'))
+
+    const notch = await field.locator('.ui-text-field__notch').evaluate(el => el.getBoundingClientRect().width)
+    const control = (await field.locator('.ui-text-field__control').boundingBox())!
+    const label = (await field.locator('.ui-text-field__label').boundingBox())!
+
+    expect(notch).toBeLessThanOrEqual(1)
+    expect(label.y).toBeGreaterThanOrEqual(control.y)
+  })
+
+  test('a float label on outlined sits in an open notch from the first frame', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const field = root(page.getByTestId('placement-float'))
+
+    const notch = await field.locator('.ui-text-field__notch').evaluate(el => el.getBoundingClientRect().width)
+    expect(notch).toBeGreaterThan(1)
+  })
+
+  test('the placeholder is visible at rest under a float label', async ({ page }) => {
+    await openFixture(page, 'text-field/stress')
+    const opacity = await page.getByTestId('placeholder').evaluate(el => getComputedStyle(el, '::placeholder').opacity)
+
+    expect(opacity).toBe('1')
+  })
+
+  test('the caret is primary, and error in an invalid field', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+
+    const caret = (id: string) => page.getByTestId(id).evaluate(el => getComputedStyle(el).caretColor)
+    const errorInk = await root(page.getByTestId('error-filled')).locator('.ui-text-field__support')
+      .evaluate(el => getComputedStyle(el).color)
+
+    expect(await caret('enabled-filled')).not.toBe(await caret('error-filled'))
+    expect(await caret('error-filled')).toBe(errorInk)
+  })
+
+  test('a disabled field recedes its support line too', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const ink = (id: string) => root(page.getByTestId(id)).locator('.ui-text-field__support').evaluate(el => getComputedStyle(el).color)
+
+    expect(await ink('disabled-filled')).not.toBe(await ink('enabled-filled'))
+  })
+
+  test('the trailing icon takes the error role', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const field = root(page.getByTestId('error-append-filled'))
+
+    const icon = await field.locator('.ui-text-field__icon--append').evaluate(el => getComputedStyle(el).color)
+    const errorInk = await field.locator('.ui-text-field__support').evaluate(el => getComputedStyle(el).color)
+    expect(icon).toBe(errorInk)
+  })
+
+  test('the underline support line starts at the value edge', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const input = page.getByTestId('helper-underline')
+    const support = await root(input).locator('.ui-text-field__support').boundingBox()
+    const value = await input.boundingBox()
+
+    expect(support!.x).toBeCloseTo(value!.x, 0)
+  })
+
+  test('the support line is one body-small line high', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const rem = await remInPx(page)
+
+    for (const variant of VARIANTS) {
+      const support = await root(page.getByTestId(`enabled-${variant}`)).locator('.ui-text-field__support').boundingBox()
+      expect(support!.height / rem, variant).toBeCloseTo(16, 0)
+    }
+  })
+
+  test('prefix and suffix sit around the value and describe the input', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const input = page.getByTestId('affixes')
+    const field = root(input)
+
+    const prefix = (await field.locator('.ui-text-field__affix--prefix').boundingBox())!
+    const suffix = (await field.locator('.ui-text-field__affix--suffix').boundingBox())!
+    const value = (await input.boundingBox())!
+
+    expect(prefix.x + prefix.width).toBeLessThanOrEqual(value.x + 1)
+    expect(suffix.x).toBeGreaterThanOrEqual(value.x + value.width - 1)
+    await expect(input).toHaveAttribute('aria-describedby', /prefix.*suffix/)
   })
 
   test('a long word in the support line wraps inside the field', async ({ page }) => {

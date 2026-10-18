@@ -10,10 +10,35 @@
  */
 import type { ExtractPublicPropTypes, InputHTMLAttributes, PropType } from 'vue'
 import { makeReadonlyProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
+import type { MShape } from '#kit/shared/types/props'
 
+/**
+ * Native input type. `number` is retired: the model is a string, and the
+ * browser's wheel and arrows change it behind the field's back — a number
+ * belongs to `<MNumberInput>`. It keeps working, with a dev warning.
+ */
 export type MTextFieldType = 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search'
 export type MTextFieldVariant = 'filled' | 'outlined' | 'underline'
+
+/**
+ * Corner of the field's container, a step of the kit's shape scale — the
+ * canonical `shape` axis, narrowed to the steps a field box can carry.
+ * `full` on a filled field is capped at `large`: a flat bottom under a full
+ * top would dome a short box.
+ */
+export type MFieldShape = Extract<MShape, 'none' | 'extra-small' | 'medium' | 'large' | 'full'>
+
+/** @deprecated Retired name of {@link MFieldShape}; use `shape`. */
 export type MTextFieldRounded = 'sharp' | 'small' | 'medium' | 'large' | 'pill'
+
+/** How a retired `rounded` value maps onto the `shape` axis during its grace release. */
+export const RETIRED_ROUNDED_TO_SHAPE: Record<MTextFieldRounded, MFieldShape> = {
+  sharp: 'none',
+  small: 'extra-small',
+  medium: 'medium',
+  large: 'large',
+  pill: 'full',
+}
 
 /**
  * Where the label sits. Independent of `variant`: the shape draws the boundary,
@@ -21,11 +46,13 @@ export type MTextFieldRounded = 'sharp' | 'small' | 'medium' | 'large' | 'pill'
  *
  * - `top` — above the container, permanently readable, never fights an icon.
  *   Costs a line of height, and is the safest default for a long form.
- * - `float` — inside the container, resting on its top edge. Saves that line.
- *   It does not animate on focus: a label that moves makes the resting state
- *   ambiguous and breaks autofill.
- * - `inset` — inside the container above the value, always raised. Label and
- *   value travel as one block, which reads well in a grid of many fields.
+ * - `float` — on the container's top edge (in the outline's notch on
+ *   `outlined`), from the first frame. Saves that line. It is a position, not a
+ *   transition: a label that moves makes the resting state ambiguous and breaks
+ *   autofill, so the placeholder stays visible beneath it.
+ * - `inset` — inside the container above the value, always raised, on every
+ *   shape. Label and value travel as one block, which reads well in a grid of
+ *   many fields.
  * - `hidden` — present for assistive tech only. For a control whose purpose is
  *   obvious and singular (a search box), never inside a form.
  *
@@ -64,8 +91,13 @@ export const mFieldProps = {
   // Field variant is its own axis (filled | outlined | underline), narrower
   // than the shared MVariant used by buttons — override the generic prop type.
   variant: { type: String as PropType<MTextFieldVariant>, default: 'filled' },
-  // Corner radius tier, pulled from the shape scale. Independent of `variant`.
-  rounded: { type: String as PropType<MTextFieldRounded>, default: 'small' },
+  /** Corner of the container on the shape scale. Independent of `variant`. */
+  shape: { type: String as PropType<MFieldShape>, default: 'extra-small' },
+  /**
+   * @deprecated Retired: use `shape` (`sharp` → `none`, `small` → `extra-small`,
+   * `pill` → `full`). Still applied for one release, with a dev warning.
+   */
+  rounded: { type: String as PropType<MTextFieldRounded>, default: undefined },
   // Label placement, independent of `variant`. `float` keeps the shipped look.
   labelPlacement: { type: String as PropType<MFieldLabelPlacement>, default: 'float' },
   path: { type: String, default: undefined },
@@ -98,13 +130,15 @@ export const mTextFieldProps = {
   type: { type: String as PropType<MTextFieldType>, default: 'text' },
   /** Native input attributes/listeners used by composite fields such as comboboxes. */
   inputAttrs: { type: Object as PropType<InputHTMLAttributes>, default: undefined },
+  /** Text fixed before the value (`$`, `https://`). Shown and announced with the field, never part of the model. */
+  prefix: { type: String, default: undefined },
+  /** Text fixed after the value (`@gmail.com`, `kg`). Shown and announced with the field, never part of the model. */
+  suffix: { type: String, default: undefined },
   /**
-   * Force the floating label into its raised position regardless of the text
-   * value. Composite fields (e.g. a multiple combobox) set this while chips
-   * occupy the field but the text draft is empty, so the label does not drop
-   * back onto them on blur.
+   * @deprecated Retired: the label no longer moves, so nothing has to hold it
+   * up. Ignored, with a dev warning, for one release.
    */
-  populated: { type: Boolean, default: false },
+  populated: { type: Boolean, default: undefined },
 }
 
 export type MTextFieldProps = ExtractPublicPropTypes<typeof mTextFieldProps>

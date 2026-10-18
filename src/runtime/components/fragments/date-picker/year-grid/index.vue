@@ -1,173 +1,106 @@
 <template>
   <div
-    ref="rootEl"
-    class="ui-date-picker__year-grid"
+    :id="id"
+    ref="list"
+    class="ui-date-picker__years"
     role="grid"
+    :aria-labelledby="labelledBy"
+    :aria-disabled="disabled || undefined"
     @keydown="onKeydown"
   >
     <div
-      v-for="(row, rIdx) in rows"
-      :key="`year-row-${rIdx}`"
-      class="ui-date-picker__year-row"
+      v-for="(row, rowIndex) in rows"
+      :key="rowIndex"
+      class="ui-date-picker__row"
       role="row"
     >
       <div
-        v-for="(year, cIdx) in row"
+        v-for="year in row"
+        :id="`${id}-${year}`"
         :key="year"
+        class="ui-date-picker__year"
+        :class="{
+          'ui-date-picker__year--selected': year === selectedYear,
+          'ui-date-picker__year--current': year === currentYear,
+        }"
         role="gridcell"
+        :tabindex="year === focusedYear && !disabled ? 0 : -1"
         :aria-selected="year === selectedYear"
+        :aria-current="year === currentYear ? 'date' : undefined"
+        :aria-disabled="disabled || undefined"
+        @click="choose(year)"
+        @focus="focusedYear = year"
       >
-        <button
-          type="button"
-          class="ui-date-picker__year"
-          :class="{
-            'ui-date-picker__year--selected': year === selectedYear,
-            'ui-date-picker__year--current': year === currentYear,
-          }"
-          :tabindex="isActiveCell(rIdx, cIdx) ? 0 : -1"
-          @click="emit('select', year)"
-          @focus="setActive(rIdx, cIdx)"
+        <slot
+          name="year"
+          :year="year"
         >
-          <span class="ui-date-picker__year-label">
-            <slot :year="year">
-              {{ year }}
-            </slot>
-          </span>
-        </button>
+          {{ calendar.year(year) }}
+        </slot>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
+/**
+ * The year list. It opens on the year on screen, scrolled into view inside
+ * itself (never scrolling the page), and holds one tab stop that the arrows
+ * move by one and by a row of three.
+ */
 import { mDatePickerYearGridProps } from './props'
 
 const props = defineProps(mDatePickerYearGridProps)
+const emit = defineEmits<{ (e: 'select', year: number): void }>()
 
-const emit = defineEmits<{
-  (e: 'select', year: number): void
-}>()
+defineSlots<{ year?: (props: { year: number }) => unknown }>()
 
-const rootEl = ref<HTMLElement | null>(null)
+const COLUMNS = 3
+const list = ref<HTMLElement | null>(null)
+const focusedYear = ref(props.shownYear)
 
-const COLS = 3
+const rows = computed(() => Array.from(
+  { length: Math.ceil(props.years.length / COLUMNS) },
+  (_, row) => props.years.slice(row * COLUMNS, row * COLUMNS + COLUMNS),
+))
 
-// Chunk the flat year list into rows so the grid exposes role="row" structure
-// and 2D arrow navigation can address cells by (row, col).
-const rows = computed<number[][]>(() => {
-  const out: number[][] = []
-  for (let i = 0; i < props.years.length; i += COLS) out.push(props.years.slice(i, i + COLS))
-  return out
-})
-
-// Roving tabindex: active cell defaults to the selected year, else first cell.
-function initialActive(): [number, number] {
-  for (let r = 0; r < rows.value.length; r++) {
-    const row = rows.value[r]
-    if (!row) continue
-    const c = row.indexOf(props.selectedYear)
-    if (c >= 0) return [r, c]
-  }
-  return [0, 0]
+function cellOf(year: number) {
+  return list.value?.querySelector<HTMLElement>(`[id="${props.id}-${year}"]`) ?? null
 }
 
-const activeCell = ref<[number, number]>(initialActive())
+/** Scrolls the list (only the list) so a year sits in its middle, and focuses it. */
+function focusYear(year = focusedYear.value) {
+  const host = list.value
+  const cell = cellOf(year)
+  if (!host || !cell) return
 
-watch(rows, () => {
-  activeCell.value = initialActive()
-})
-
-const isActiveCell = (row: number, col: number) =>
-  activeCell.value[0] === row && activeCell.value[1] === col
-
-function setActive(row: number, col: number) {
-  activeCell.value = [row, col]
+  focusedYear.value = year
+  host.scrollTop = cell.offsetTop - (host.clientHeight - cell.offsetHeight) / 2
+  cell.focus({ preventScroll: true })
 }
 
-function focusCell(row: number, col: number) {
-  activeCell.value = [row, col]
-  nextTick(() => {
-    const buttons = rootEl.value?.querySelectorAll<HTMLButtonElement>('.ui-date-picker__year')
-    const idx = row * COLS + col
-    buttons?.[idx]?.focus()
-  })
+function choose(year: number) {
+  if (props.disabled) return
+  emit('select', year)
 }
 
 function onKeydown(event: KeyboardEvent) {
-  const rowCount = rows.value.length
-  if (rowCount === 0) return
+  if (props.disabled) return
 
-  let [r, c] = activeCell.value
-  const rowLen = (idx: number) => rows.value[idx]?.length ?? 1
-  const lastColInRow = rowLen(r) - 1
-
-  switch (event.key) {
-    case 'ArrowRight':
-      if (c < lastColInRow) {
-        c++
-      } else if (r < rowCount - 1) {
-        r++
-        c = 0
-      }
-      break
-    case 'ArrowLeft':
-      if (c > 0) {
-        c--
-      } else if (r > 0) {
-        r--
-        c = rowLen(r) - 1
-      }
-      break
-    case 'ArrowDown':
-      if (r < rowCount - 1) {
-        r++
-        c = Math.min(c, rowLen(r) - 1)
-      }
-      break
-    case 'ArrowUp':
-      if (r > 0) {
-        r--
-        c = Math.min(c, rowLen(r) - 1)
-      }
-      break
-    case 'Home':
-      c = 0
-      break
-    case 'End':
-      c = lastColInRow
-      break
-    default:
-      return
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    choose(focusedYear.value)
+    return
   }
+
+  const index = props.years.indexOf(focusedYear.value)
+  const rtl = getComputedStyle(event.currentTarget as Element).direction === 'rtl'
+  const next = props.calendar.gridStep(index, event.key, props.years.length, COLUMNS, rtl)
+  if (next === null) return
 
   event.preventDefault()
-  focusCell(r, c)
+  focusYear(props.years[next])
 }
 
-defineExpose({ element: rootEl })
+defineExpose({ focusYear })
 </script>
-
-<style lang="scss">
-// Row + gridcell wrappers carry ARIA structure only; `display: contents` keeps
-// the year buttons as the actual grid items so the existing 3-column layout
-// (in date-picker/index.vue) is unchanged.
-/* stylelint-disable selector-class-pattern -- `__year-row`/`__year-grid` read as block__element-with-hyphen; gridcell wrapper is an intentional attr selector */
-.ui-date-picker__year-row,
-.ui-date-picker__year-grid [role='gridcell'] {
-  display: contents;
-}
-/* stylelint-enable selector-class-pattern */
-
-// The selected year is only a fill, and the owner sets it `!important`, so the
-// forced restatement has to be too. System colours survive forcing on their
-// own, which leaves the button's focus ring to the user's colours.
-.ui-date-picker {
-  @include forced-colors {
-    &__year-grid &__year--selected {
-      background-color: Highlight !important;
-      color: HighlightText !important;
-    }
-  }
-}
-</style>

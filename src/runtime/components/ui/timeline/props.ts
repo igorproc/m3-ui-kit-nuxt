@@ -33,21 +33,33 @@ export const mTimelineItemProps = {
   title: { type: String, default: undefined },
   /** Plain-text body; the default slot takes precedence. */
   text: { type: String, default: undefined },
-  /** Human-readable time; the `opposite` slot takes precedence. */
+  /**
+   * Human-readable time; the `opposite` slot takes precedence. The time column
+   * appears only while some item of the timeline has a time.
+   */
   time: { type: String, default: undefined },
-  /** Machine-readable timestamp rendered through `<time datetime>`. */
+  /** Machine-readable timestamp of `time`, rendered as `<time datetime>`. */
   datetime: { type: String, default: undefined },
   /** Decorative marker icon. */
   icon: { type: String, default: undefined },
-  /** Semantic color of the marker (and outlined content accent). */
+  /**
+   * Colour role of the marker. Colour alone carries no meaning to everyone:
+   * pair a meaningful role with `icon` and `status`.
+   */
   color: { type: String as PropType<MColor>, default: 'primary' },
+  /**
+   * Visually hidden word that states the event's outcome to assistive
+   * technology (`'Failed'`, `'Done'`), read before the title. The kit ships no
+   * wording of its own.
+   */
+  status: { type: String, default: undefined },
   /** MD3 surface preset for the content container. */
   variant: { type: String as PropType<MSurfaceVariant>, default: 'plain' },
   /** Side override; wins over the parent's alternate resolution. */
   side: { type: String as PropType<MTimelineResolvedSide>, default: undefined },
-  /** Hides the opposite (time) column while keeping the rail. */
+  /** Renders no time for this item; the column stays while other items use it. */
   hideOpposite: { type: Boolean, default: false },
-  /** Hides the marker dot while preserving connector geometry. */
+  /** Hides the marker dot; the line runs on through its place. */
   hideDot: { type: Boolean, default: false },
   /** Content element tag. */
   contentTag: { type: String as PropType<'div' | 'article'>, default: 'div' },

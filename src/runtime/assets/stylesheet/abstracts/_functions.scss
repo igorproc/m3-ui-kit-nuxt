@@ -31,12 +31,22 @@
   @return map.get($z-indexes, $key);
 }
 
+/// A step of the 4-unit scale, or any other gap in design pixels (`spacing(96)` → 96rem).
+/// Off-scale steps fail only under `$spacing-strict`, which `lint:scss` sets for the kit's own code.
 @function spacing($step) {
-  @if not map.has-key($theme-spacing-link, $step) {
+  @if map.has-key($theme-spacing-link, $step) {
+    @return map.get($theme-spacing-link, $step);
+  }
+
+  @if meta.type-of($step) != 'number' or not math.is-unitless($step) {
+    @error 'Spacing takes design pixels as a unitless number, got `#{$step}`.';
+  }
+
+  @if $spacing-strict {
     @error 'Spacing `#{$step}` is off the 4-unit scale. Available: #{map.keys($theme-spacing-link)}.';
   }
 
-  @return map.get($theme-spacing-link, $step);
+  @return $step * 1rem;
 }
 
 @function strip-unit($value) {

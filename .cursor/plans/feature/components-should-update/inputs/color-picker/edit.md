@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Edit.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован: переключатель форматов (`MButtonSegmented`), поле hex через `MTextField`, каналы через `MNumberInput`, черновик правки локален. Открыты: переключатель ломается по ширине, ошибка только цветом и тихий откат, английские подписи каналов.</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано: ошибка с подсказкой формата, Escape откатывает и снимает ошибку, каналы — группа, компактная плотность.</implementation-status>
 
 ## Вердикт
 

@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 — часть авторского [MOtpInput](index.md) · Токены Compose: прямых нет; роли — `color-and-state.md` · Код: элемент `span.ui-otp-input__field` в `src/runtime/components/ui/otp-input/index.vue:27-44`, атрибуты — `cellAttrs(index)` и описание `OtpCell` в `src/runtime/composables/otp-input/useOtpControl.ts:47-61, 155-176, 318-326`, токены `field.*` в `src/runtime/assets/stylesheet/components/otp-input/_index.scss:18-39` · Аудит: `data/otp-input.json` (общий) · Тип: часть компонента, не компонент</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонента `OtpField` нет с 2026-09-05: фрагменты `fragments/otp-input/{Field,Group,Separator}.vue` схлопнуты в родителя, а ячейка стала описанием `OtpCell` из композабла + `cellAttrs(i)` и слотом `#field`. План ячейки — шаги 2–5 [index.md](index.md).</implementation-status>
+<implementation-status state="done" updated="2026-10-08">Реализовано в шагах семейства 2–5 (роли, `variant`, `OtpCell.hint`, `mask`).</implementation-status>
 
 ## Вердикт
 
