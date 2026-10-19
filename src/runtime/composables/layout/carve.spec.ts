@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
-  buildLayoutCss,
+  SAFE_AREA_INSET,
   carve,
   cssSum,
   filterByRange,
-  itemInsetVar,
   sanitizeAreaName,
   sizeVar,
 } from './carve'
-import type { CarveItem, LayoutKind, RangeSpec } from './carve'
+import type { CarveItem, LayoutKind } from './carve'
 
 const item = (id: string, kind: LayoutKind, size?: string, sticky?: boolean): CarveItem =>
   ({ id, kind, size, sticky })
+
+const sizeRef = (id: string) => `var(${sizeVar(id)}, 0px)`
 
 describe('carve — grid templates', () => {
   it('empty registry → single main cell', () => {
@@ -177,6 +178,141 @@ describe('carve — insets', () => {
     expect(totals.right).toBe(`var(${sizeVar('side')}, 0px)`)
     expect(totals.bottom).toBe(`var(${sizeVar('foot')}, 0px)`)
   })
+
+  it('fixed top reach counts an in-flow top zone carved before the pinned one, not one after it', () => {
+    const { fixed } = carve([
+      item('before', 'top', 'var(--b)'),
+      item('ab', 'top', 'var(--ab)', true),
+      item('after', 'top', 'var(--a)'),
+      item('content', 'main'),
+    ])
+
+    expect(fixed.top).toBe(`calc(${sizeRef('before')} + ${sizeRef('ab')})`)
+  })
+})
+
+describe('carve — safe area', () => {
+  const TOP = SAFE_AREA_INSET.top
+  const BOTTOM = SAFE_AREA_INSET.bottom
+
+  it('without the option no zone takes the cutouts', () => {
+    const { grid, safeArea } = carve([
+      item('ab', 'top', 'var(--ab)', true),
+      item('content', 'main'),
+    ])
+
+    expect(safeArea.size).toBe(0)
+    expect(grid.rows).toBe(`var(${sizeVar('ab')}, auto) minmax(0, 1fr)`)
+  })
+
+  it('the pinned top zone on the window edge reserves the cutout in its row', () => {
+    const { grid, safeArea } = carve([
+      item('sb', 'top', 'var(--sb)', true),
+      item('ab', 'top', 'var(--ab)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(grid.rows).toBe(`calc(${sizeRef('sb')} + ${TOP}) var(${sizeVar('ab')}, auto) minmax(0, 1fr)`)
+    expect(safeArea.get('sb')).toEqual({ block: 'top', inline: true })
+    expect(safeArea.get('ab')).toEqual({ block: undefined, inline: true })
+  })
+
+  it('the top cutout reaches the next pinned zone, the totals and the fixed reach', () => {
+    const { insets, totals, fixed } = carve([
+      item('sb', 'top', 'var(--sb)', true),
+      item('ab', 'top', 'var(--ab)', true),
+      item('rail', 'start', 'var(--r)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    const reach = `calc(${sizeRef('sb')} + ${TOP} + ${sizeRef('ab')})`
+
+    expect(insets.get('sb')?.top).toBe('0px')
+    expect(insets.get('ab')?.top).toBe(`calc(${sizeRef('sb')} + ${TOP})`)
+    expect(insets.get('rail')?.top).toBe(reach)
+    expect(totals.top).toBe(reach)
+    expect(fixed.top).toBe(reach)
+  })
+
+  it('a sized in-flow top zone before the pinned one keeps the pinned zone off the window edge', () => {
+    const { grid, safeArea } = carve([
+      item('before', 'top', 'var(--b)'),
+      item('ab', 'top', 'var(--ab)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(safeArea.get('before')?.block).toBeUndefined()
+    expect(safeArea.get('ab')?.block).toBeUndefined()
+    expect(grid.rows).toBe(`var(${sizeVar('before')}, auto) var(${sizeVar('ab')}, auto) minmax(0, 1fr)`)
+  })
+
+  it('a sizeless sticky top zone stays in flow and takes no block cutout', () => {
+    const { grid, safeArea } = carve([
+      item('header', 'top', undefined, true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(safeArea.get('header')).toEqual({ block: undefined, inline: true })
+    expect(grid.rows).toBe('auto minmax(0, 1fr)')
+  })
+
+  it('the first pinned bottom zone takes the bottom cutout even behind an in-flow footer', () => {
+    const { grid, insets, totals, fixed, safeArea } = carve([
+      item('foot', 'bottom', 'var(--f)'),
+      item('nav', 'bottom', 'var(--n)', true),
+      item('rail', 'start', 'var(--r)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    const pinned = `calc(${sizeRef('nav')} + ${BOTTOM})`
+
+    expect(safeArea.get('foot')?.block).toBeUndefined()
+    expect(safeArea.get('nav')?.block).toBe('bottom')
+    expect(grid.rows).toBe(`minmax(0, 1fr) calc(${sizeRef('nav')} + ${BOTTOM}) var(${sizeVar('foot')}, auto)`)
+    expect(insets.get('rail')?.bottomSticky).toBe(pinned)
+    expect(fixed.bottom).toBe(pinned)
+    expect(totals.bottom).toBe(`calc(${sizeRef('foot')} + ${sizeRef('nav')} + ${BOTTOM})`)
+  })
+
+  it('only one pinned bottom zone takes the cutout', () => {
+    const { safeArea } = carve([
+      item('nav', 'bottom', 'var(--n)', true),
+      item('bar', 'bottom', 'var(--b)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(safeArea.get('nav')?.block).toBe('bottom')
+    expect(safeArea.get('bar')?.block).toBeUndefined()
+  })
+
+  it('side cutouts go to bars that span the full width, never to side zones', () => {
+    const railFirst = carve([
+      item('rail', 'start', 'var(--r)', true),
+      item('header', 'top', 'var(--h)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(railFirst.safeArea.get('rail')).toBeUndefined()
+    expect(railFirst.safeArea.get('header')).toEqual({ block: 'top', inline: false })
+
+    const headerFirst = carve([
+      item('header', 'top', 'var(--h)', true),
+      item('rail', 'start', 'var(--r)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(headerFirst.safeArea.get('header')).toEqual({ block: 'top', inline: true })
+  })
+
+  it('side zones keep their column tracks', () => {
+    const { grid } = carve([
+      item('header', 'top', 'var(--h)', true),
+      item('rail', 'start', 'var(--r)', true),
+      item('content', 'main'),
+    ], { safeArea: true })
+
+    expect(grid.columns).toBe(`var(${sizeVar('rail')}, auto) minmax(0, 1fr)`)
+  })
 })
 
 describe('filterByRange', () => {
@@ -225,180 +361,5 @@ describe('sanitizeAreaName', () => {
 
   it('never returns an empty ident', () => {
     expect(sanitizeAreaName(':::')).toBe('zone')
-  })
-})
-
-describe('buildLayoutCss', () => {
-  const RANGES: RangeSpec[] = [
-    { range: 'mobile', itemsMedia: 'only screen and (max-width: 767px)' },
-    { range: 'tablet', media: 'only screen and (min-width: 768px) and (max-width: 1199px)' },
-    { range: 'desktop', media: 'only screen and (min-width: 1200px)' },
-  ]
-
-  it('emits the base block with size vars and media blocks per range', () => {
-    const css = buildLayoutCss(
-      'm-layout-test',
-      [item('header', 'top', 'var(--h)'), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).toContain('#m-layout-test {')
-    expect(css).toContain(`${sizeVar('header')}: var(--h);`)
-    expect(css).toContain('@media only screen and (min-width: 768px) and (max-width: 1199px)')
-    expect(css).toContain('@media only screen and (min-width: 1200px)')
-    expect(css).toContain('grid-template-areas: "header" "content";')
-    expect(css).toContain('--m3-layout-inset-top: var(--m3-layout-header-size, 0px);')
-    expect(css).toContain('--m3-layout-content-top: var(--m3-layout-header-size, 0px);')
-  })
-
-  it('pins a sized sticky top zone with fixed + per-item insets (no inline, no JS)', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('sb', 'top', 'var(--sb)', true), item('ab', 'top', 'var(--ab)', true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).toContain('#lid > [data-m3-zone="ab"] {')
-    expect(css).toContain('position: fixed;')
-    expect(css).toContain(`inset-block-start: var(${itemInsetVar('ab', 'top')}, 0px);`)
-    expect(css).toContain(`inset-inline-start: var(${itemInsetVar('ab', 'start')}, 0px);`)
-  })
-
-  it('pins a sized sticky bottom zone via inset-block-end', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('nav', 'bottom', 'var(--n)', true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).toContain('#lid > [data-m3-zone="nav"] {')
-    expect(css).toContain(`inset-block-end: var(${itemInsetVar('nav', 'bottom-sticky')}, 0px);`)
-  })
-
-  it('sizeless sticky top zone emits no position rule (degrades in-flow)', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('header', 'top', undefined, true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).not.toContain('position: fixed')
-  })
-
-  it('sticky side zone gets real sticky with viewport-clamped height', () => {
-    const top = `var(${itemInsetVar('nav', 'top')}, 0px)`
-    const bottom = `var(${itemInsetVar('nav', 'bottom-sticky')}, 0px)`
-
-    const css = buildLayoutCss(
-      'lid',
-      [item('nav', 'start', 'var(--n)', true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).toContain('#lid > [data-m3-zone="nav"] {')
-    expect(css).toContain('position: sticky;')
-    expect(css).toContain('align-self: start;')
-    expect(css).toContain(`height: calc(100dvh - ${top} - ${bottom});`)
-  })
-
-  it('zones filtered out of a range are hidden inside the BOUNDED range media', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('nav', 'start'), item('content', 'main')],
-      RANGES,
-    )
-
-    // моб. диапазон ограничен с обеих сторон — display: none не протекает выше
-    expect(css).toContain(
-      '@media only screen and (max-width: 767px) {\n#lid > [data-m3-zone="nav"] {\n  display: none;\n}\n}',
-    )
-
-    const desktopBlock = css.slice(css.indexOf('min-width: 1200px'))
-    expect(desktopBlock).not.toContain('display: none')
-  })
-})
-
-describe('buildLayoutCss — scroll padding for pinned zones', () => {
-  const RANGES: RangeSpec[] = [{ range: 'desktop' }]
-  const sizeRef = (id: string) => `var(${sizeVar(id)}, 0px)`
-
-  it('pinned top zones → html scroll-padding-top reaching the last pinned zone', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('sb', 'top', 'var(--sb)', true), item('ab', 'top', 'var(--ab)', true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).toContain('html {')
-    expect(css).toContain(`scroll-padding-top: calc(${sizeRef('sb')} + ${sizeRef('ab')});`)
-    expect(css).toContain(`${sizeVar('ab')}: var(--ab);`)
-    expect(css).not.toContain('scroll-padding-bottom')
-  })
-
-  it('counts an in-flow top zone carved before the pinned one, not one after it', () => {
-    const { fixed } = carve([
-      item('before', 'top', 'var(--b)'),
-      item('ab', 'top', 'var(--ab)', true),
-      item('after', 'top', 'var(--a)'),
-      item('content', 'main'),
-    ])
-
-    expect(fixed.top).toBe(`calc(${sizeRef('before')} + ${sizeRef('ab')})`)
-  })
-
-  it('pinned bottom zone → html scroll-padding-bottom', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('nav', 'bottom', 'var(--n)', true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).toContain(`scroll-padding-bottom: ${sizeRef('nav')};`)
-    expect(css).not.toContain('scroll-padding-top')
-  })
-
-  it('no pinned zones → no scroll padding', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('header', 'top', 'var(--h)'), item('nav', 'start', 'var(--n)', true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).not.toContain('scroll-padding')
-  })
-
-  it('sizeless sticky zone stays in flow → no scroll padding', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('header', 'top', undefined, true), item('content', 'main')],
-      RANGES,
-    )
-
-    expect(css).not.toContain('scroll-padding')
-  })
-
-  it('full-height: main scrolls itself → no scroll padding', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('ab', 'top', 'var(--ab)', true), item('nav', 'bottom', 'var(--n)', true), item('content', 'main')],
-      RANGES,
-      { fullHeight: true },
-    )
-
-    expect(css).toContain('position: fixed;')
-    expect(css).not.toContain('scroll-padding')
-    expect(css).not.toContain('html {')
-  })
-
-  it('nested layout: the outer layout owns the document scroll padding', () => {
-    const css = buildLayoutCss(
-      'lid',
-      [item('ab', 'top', 'var(--ab)', true), item('content', 'main')],
-      RANGES,
-      { nested: true },
-    )
-
-    expect(css).not.toContain('scroll-padding')
-    expect(css).not.toContain('html {')
   })
 })

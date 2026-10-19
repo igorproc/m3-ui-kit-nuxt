@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита (клавиши в духе подписи сочетаний в меню M3) · Токены Compose: нет · Код: `src/runtime/components/ui/hotkey/`, форматирование `src/runtime/composables/hotkey/format.ts` · Аудит: `data/hotkey.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован в фазе 1: `kbd` на клавишу, разделители, `role="img"` с озвучиваемым именем, платформа `auto | mac | windows`, состояние нажатия из реестра `useHotkey`, слоты `#key` и `#separator`. Открыты: `arrowup` отрисован как «ARROWUP» (рендер), disabled не объявляется, английские озвучиваемые имена клавиш, сдвиг вёрстки после гидрации на mac, литералы.</implementation-status>
+<implementation-status state="done" updated="2026-10-07">Шаги 1–5 сделаны: одна нормализация имён в `format.ts`, `aria-disabled` и переводимый суффикс, имена клавиш из `MESSAGES.hotkeyKeys` + `provideHotkeyLabels`, платформа с сервера (`Sec-CH-UA-Platform` / UA) и резерв широкой формы, реактивный `platform`, нажатие слоем `::before`, forced colors, токены через `spacing()`; шаг 6 перенесён.</implementation-status>
 
 ## Вердикт
 
@@ -88,7 +88,7 @@
 3. **S — карта озвучиваемых имён** (CT-13).
 4. **S — платформа на сервере и реактивный проп** (MO-04, EN-05).
 5. **S — нажатие без движения, forced colors, токены** (TH-04, TK-02, TK-04, TK-06, ST-05, LY-04).
-6. **S — документация** (DC-*).
+6. **S — документация** (DC-*). **перенесено**: docs_v2 вне репозитория.
 
 ## Тесты
 

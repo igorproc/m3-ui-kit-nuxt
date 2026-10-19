@@ -10,11 +10,12 @@ import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps } from '#kit/shared/utils/props'
 import { ICONS } from '#kit/shared/constants/icons'
 import type { MButtonDensity } from '#kit/components/ui/button/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface MFabMenuItem {
   /** Visible label, also the action's accessible name. */
   label: string
-  icon?: string
+  icon?: MIconName
   value?: string | number
   action?: () => void
   disabled?: boolean

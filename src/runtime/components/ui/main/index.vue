@@ -4,8 +4,15 @@
   </main>
 </template>
 
+<script lang="ts">
+/** @deprecated Use `<m-layout-main>` inside `<m-layout>`; `<m-main>` is removed in the next major. */
+export default {}
+</script>
+
 <script setup lang="ts">
-// @deprecated — Use <m-layout-main> instead for CSS Grid layout
+if (import.meta.dev) {
+  console.warn('[m-main] is deprecated and will be removed in the next major: use <m-layout-main> inside <m-layout>.')
+}
 </script>
 
 <style lang="scss">

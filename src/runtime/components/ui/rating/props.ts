@@ -1,5 +1,6 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MColor } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import { makeReadonlyProps, makeStateProps } from '#kit/shared/utils/props'
 
 export const mRatingProps = {
@@ -8,8 +9,8 @@ export const mRatingProps = {
   length: { type: Number, default: 5 },
   step: { type: Number, default: 1 },
   clearable: { type: Boolean, default: false },
-  icon: { type: String, default: 'round-star' },
-  emptyIcon: { type: String, default: 'round-star-outline' },
+  icon: { type: String as PropType<MIconName>, default: 'round-star' },
+  emptyIcon: { type: String as PropType<MIconName>, default: 'round-star-outline' },
   color: { type: String as PropType<MColor>, default: 'primary' },
   name: { type: String, default: undefined },
   ariaLabel: { type: String, default: 'Rating' },

@@ -2,7 +2,7 @@
 
 <identity>M3: Styles → Icons (Material Symbols: размер 24 по умолчанию, оси FILL / weight / grade / optical size) · Токены Compose: нет отдельного файла; размеры иконок задаются в токенах каждого компонента (`IconSize`) · Код: `src/runtime/components/ui/icon/`, `src/runtime/shared/constants/icons.ts` · Аудит: `data/icon.json` · Тип: public, примитив</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Рендерит Iconify-глиф через `@nuxt/icon`. Набор кита — `ic:outline-*` (Material Icons, без оси FILL). Иконка всегда декоративна. Под неизвестное имя место не резервируется.</implementation-status>
+<implementation-status state="planned" updated="2026-10-07">Сделано: квадрат `1em` всегда, `label` → `role="img"`, проп `filled` (outline → baseline), типизированное `name` с ключами `ICONS`, dev-warning на пустое и некорректное имя, слой `composables/icon`. Перенесены: `filled` в компонентах с выбором и документация.</implementation-status>
 
 ## Вердикт
 
@@ -81,8 +81,9 @@
 3. **M — ось заливки** (после вопроса 1 и СВ-3).
    - `filled` переводит `ic:outline-x` → `ic:baseline-x`.
    - Компоненты с выбором (navigation bar/rail/drawer, chip filter, segmented, toggle-кнопки)
-     ставят `filled` на выбранном.
-4. **S — документация** (DC-03, DC-04).
+     ставят `filled` на выбранном. **Перенесено**: это правка чужих компонентов, решение за
+     владельцем.
+4. **S — документация** (DC-03, DC-04). **Перенесено**: документация (docs_v2) живёт вне репозитория.
    - `name` обязателен.
    - Размер берётся от `font-size` родителя.
    - Наборы и константа `ICONS`.

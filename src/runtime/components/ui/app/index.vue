@@ -4,6 +4,14 @@
     ref="root"
     class="ui-app"
   >
+    <a
+      v-if="skipLinkLabel"
+      class="ui-app__skip-link"
+      :href="`#${skipLinkTarget}`"
+    >
+      {{ skipLinkLabel }}
+    </a>
+
     <slot />
 
     <slot
@@ -18,23 +26,10 @@
 
 <script setup lang="ts">
 import { useMaterialTheme } from '#kit/composables/useMaterialTheme'
+import { mAppProps } from './props'
+import type { MAppExposed, MAppSlots } from './props'
 
-interface MAppProps {
-  tag?: string
-}
-
-interface MAppSlots {
-  default(): unknown
-  loading?(scope: {
-    progress: number
-    isLoading: boolean
-  }): unknown
-}
-
-withDefaults(
-  defineProps<MAppProps>(),
-  { tag: 'div' },
-)
+defineProps(mAppProps)
 
 defineSlots<MAppSlots>()
 
@@ -65,7 +60,7 @@ onBeforeUnmount(() => {
 const { progress, isLoading } = useLoadingIndicator({ throttle: 0 })
 const rootElement = useTemplateRef<HTMLElement>('root')
 
-defineExpose({ rootElement: rootElement?.value })
+defineExpose<MAppExposed>({ rootElement })
 </script>
 
 <style lang="scss">
@@ -77,6 +72,35 @@ defineExpose({ rootElement: rootElement?.value })
   min-height: g($t, 'root.min-height');
   background-color: g($t, 'root.background');
   color: g($t, 'root.color');
+
+  &__skip-link {
+    position: fixed;
+    inset-block-start: g($t, 'skip-link.inset');
+    inset-inline-start: g($t, 'skip-link.inset');
+    z-index: g($t, 'skip-link.z-index');
+    display: inline-flex;
+    align-items: center;
+    min-height: g($t, 'skip-link.min-height');
+    padding-inline: g($t, 'skip-link.padding.inline');
+    border-radius: g($t, 'skip-link.shape');
+    background-color: g($t, 'skip-link.container.color');
+    color: g($t, 'skip-link.color');
+    box-shadow: g($t, 'skip-link.elevation');
+
+    @include typescale(g($t, 'skip-link.typography'));
+
+    &:not(:focus) {
+      @include sr-only;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    @include forced-colors {
+      border: 1px solid CanvasText;
+    }
+  }
 
   &__overlay-host {
     position: fixed;

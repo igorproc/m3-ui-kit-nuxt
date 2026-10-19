@@ -11,6 +11,14 @@ import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps } from '#kit/shared/utils/props'
 import type { SegmentedItem, SegmentedValue } from '#kit/composables/button/useSegmentedButton'
 
+export interface MSegmentedItem {
+  label?: string
+  /** Accessible name for a segment that shows an icon and no label. */
+  ariaLabel?: string
+  icon?: MIconName
+  value: string | number
+  disabled?: boolean
+}
 /** One segment: the choice shared with `MButtonGroupItem`. */
 export type MSegmentedItem = SegmentedItem
 

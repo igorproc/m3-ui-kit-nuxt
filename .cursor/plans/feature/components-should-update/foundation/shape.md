@@ -2,7 +2,7 @@
 
 <identity>M3: Styles → Shape → Shape library (M3 Expressive, 35 фигур) · Исходник: Compose `MaterialShapes.kt`, пружины `ExpressiveMotionTokens` · Код: `src/runtime/components/ui/shape/index.vue`, `src/runtime/assets/icon/shapes.ts`, `src/runtime/composables/useShapeMorph.ts`, `src/runtime/utils/motion/` · Аудит: `data/shape.json` · Тип: public, декоративный примитив</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Библиотека фигур, морф и пружины M3 работают (их потребитель — loading indicator). Не хватает ClamShell, имена расходятся с Compose, нет доступной семантики и общего кэша интерполяторов.</implementation-status>
+<implementation-status state="planned" updated="2026-10-07">Сделано: фигура по умолчанию скрыта от AT, проп `label` даёт `role="img"` и имя; общий кэш интерполяторов (только на клиенте, ограничен 64 парами); reduced motion укорачивает морф до `short2` без крена вместо мгновенного скачка; viewBox — константа `M3_SHAPE_SIZE`; таблица сверки `M3_SPRING` в спеке (не сверена с Compose). Перенесены ClamShell (нет кэша Gradle) и документация (docs_v2 вне репо).</implementation-status>
 
 ## Вердикт
 
@@ -53,8 +53,8 @@ ClamShell, плюс собственный `hexagon`. Есть морф межд
 
 | Часть | M3 | Кит сейчас | Действие |
 |---|---|---|---|
-| Пружина expressive default spatial | damping 0.8, stiffness 380 | `M3_SPRING` в `utils/motion` | совпадает (сверено спекой `utils/motion/index.spec.ts`) |
-| Пружина standard | damping 0.9, stiffness 700 / 1400 / 300 | `M3_SPRING` | сверить три пары со `StandardMotionTokens` при шаге 4 |
+| Пружина expressive default spatial | damping 0.8, stiffness 380 (по плану, не сверено с исходником) | В `M3_SPRING` схемы Expressive нет; переход `expressive` намеренно настроен сверх спецификации (0.6 / 380) | Сверить с `ExpressiveMotionTokens`, когда будет кэш Gradle (`it.todo` в спеке `utils/motion`) |
+| Пружина standard | damping 0.9, stiffness 700 / 1400 / 300 | `M3_SPRING.spatial` + `effects` 1 / 3800 / 1600 / 800 | Таблица в спеке `utils/motion` по константам кита, помечена «not verified against Compose» |
 | CSS-токены пружин | — | нет | Появятся по S4. `MShape` их не потребляет (морф в JS), но значения должны совпасть |
 
 ## Поведение и доступность
@@ -75,16 +75,21 @@ ClamShell, плюс собственный `hexagon`. Есть морф межд
 
 ## План работ
 
-1. **S — ClamShell.** Добавить путь в `assets/icon/shapes.ts`, сгенерировав его из
-   `MaterialShapes.kt` тем же способом, что и остальные.
-2. **S — доступность.** `aria-hidden`/`focusable` по умолчанию и проп `label`. Спека на оба
-   режима.
-3. **M — общий кэш интерполяторов.** Ключ — пара канонических фигур. Модульный `Map`
-   переживает экземпляры, а на SSR не создаётся (морф только на клиенте).
-4. **S — сверка пружин.** Таблица в спеке `utils/motion` против `ExpressiveMotionTokens` и
-   `StandardMotionTokens`.
-5. **S — документация.** Список фигур с превью, `currentColor`, морф, `sequence`, reduced
-   motion, когда фигура декоративная.
+1. **S — ClamShell.** **Перенесено:** в окружении нет кэша Gradle с исходниками
+   `material3-android-1.5.0-alpha22`, а геометрию не выдумываем. Существующие фигуры — экспорт
+   SVG из Figma (`assets/icon/shapes/Shape=*.svg`, сетка 380) → `shell/extract-shapes.js` →
+   `shapes.ts`; ClamShell нужно довести до такого же SVG и прогнать генератор (у генератора
+   устаревшие пути `app/assets/...`).
+2. **S — доступность.** Сделано: `aria-hidden="true"` и `focusable="false"` по умолчанию, проп
+   `label` → `role="img"` + `aria-label`.
+3. **M — общий кэш интерполяторов.** Сделано: модульный `Map` в `useShapeMorph.ts` создаётся
+   только при `IN_BROWSER`, ключ — `samples`, флаги геометрии и пара канонических путей;
+   пара из середины прерванного морфа не кэшируется; не больше 64 пар, старые вытесняются.
+4. **S — сверка пружин.** Сделано частично: таблица `M3_SPRING` ↔ `StandardMotionTokens` по
+   константам кита («not verified against Compose»); `ExpressiveMotionTokens` — `it.todo`.
+5. **S — документация.** **Перенесено** решением владельца: docs_v2 живёт вне репозитория.
+6. **S — reduced motion.** Сделано: морф не пропускается, а укорачивается по правилу кита
+   (длительность больше `short4` → `short2`) и идёт без крена.
 
 ## Тесты
 
@@ -121,8 +126,52 @@ ClamShell, плюс собственный `hexagon`. Есть морф межд
 
 Рекомендация: 3. Имена — внутренняя деталь, а M3 публикует фигуры картинками, а не ключами.
 
+**Решено владельцем 2026-10-07: вариант 3.** Ключи кита остаются, сопоставление — ниже. Имена
+Compose взяты из плана и по памяти, с `MaterialShapes.kt` не сверены (кэша Gradle нет).
+
+| Ключ кита | `MaterialShapes` в Compose |
+|---|---|
+| `circle` | `Circle` |
+| `square` | `Square` |
+| `slanted` | `Slanted` |
+| `arch` | `Arch` |
+| `fan` | `Fan` |
+| `arrow` | `Arrow` |
+| `semicircle` | `SemiCircle` |
+| `oval` | `Oval` |
+| `pill` | `Pill` |
+| `triangle` | `Triangle` |
+| `diamond` | `Diamond` |
+| — | `ClamShell` (в ките нет, шаг 1) |
+| `pentagon` | `Pentagon` |
+| `gem` | `Gem` |
+| `verySunny` | `VerySunny` |
+| `sunny` | `Sunny` |
+| `4SidedCookie` | `Cookie4Sided` |
+| `6SidedCookie` | `Cookie6Sided` |
+| `7SidedCookie` | `Cookie7Sided` |
+| `9SidedCookie` | `Cookie9Sided` |
+| `12SidedCookie` | `Cookie12Sided` |
+| `ghostIsh` | `Ghostish` |
+| `4LeafClover` | `Clover4Leaf` |
+| `8LeafClover` | `Clover8Leaf` |
+| `burst` | `Burst` |
+| `softBurst` | `SoftBurst` |
+| `boom` | `Boom` |
+| `softBoom` | `SoftBoom` |
+| `flower` | `Flower` |
+| `puffy` | `Puffy` |
+| `puffyDiamond` | `PuffyDiamond` |
+| `pixelCircle` | `PixelCircle` |
+| `pixelTriangle` | `PixelTriangle` |
+| `bun` | `Bun` |
+| `heart` | `Heart` |
+| `hexagon` | — (своя фигура кита) |
+
 **2. Нужен ли `label` (значимая фигура)?**
 1. Да: аватар-заглушка или статус-фигура без имени — это дефект доступности.
 2. Нет: фигура всегда декор, смысл передаёт обёртка.
 
 Рекомендация: 1, это дёшево и закрывает A11-05 полностью.
+
+**Решено 2026-10-07: вариант 1** (рекомендация плана, поправка владельца к шагу 2).

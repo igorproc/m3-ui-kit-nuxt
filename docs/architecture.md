@@ -171,6 +171,24 @@ in the client bundle and a scheme is built during hydration. It buys arbitrary
 runtime palettes (including a seed picked from an image); an app that only ever uses a fixed
 set of configured themes pays for a flexibility it does not use.
 
+### `<MApp>` and apps without it
+
+`<MApp>` is optional. Besides the head payload above, it mounts `<core-scope />` — the single
+`#ui-overlay-host` that overlays teleport into, plus the container for `useModal()` dialogs —
+and passes the route's loading state to its `#loading` slot as `{ progress, isLoading }`. It
+adds no layout, landmark or route announcer, and a second `<MApp>` warns in development.
+
+- **Loading.** Without the `#loading` slot nothing is drawn. Whatever the slot renders owns its
+  accessibility: a named progress indicator, and `aria-busy` on the region being replaced
+  while `isLoading` is true.
+- **Skip link.** `skip-link-label` renders a "skip to content" link as the first Tab stop; it
+  points at the element whose id is `skip-link-target` (default `main`). The kit ships no
+  default text, so without the label there is no link.
+- **Without `<MApp>`.** Mount `<core-scope />` once and push the same head payload yourself —
+  `useHead` with `useMaterialTheme().htmlAttrs` as `htmlAttrs` and `themeCss` as a `<style>`.
+  Without the attributes no palette selector matches and the page has no color tokens; without
+  the host, overlays have nowhere to teleport.
+
 ### The theme controller
 
 `useMaterialTheme()` returns one instance per Nuxt app — cached on `nuxtApp`, which means

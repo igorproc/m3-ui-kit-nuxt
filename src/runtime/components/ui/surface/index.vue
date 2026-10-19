@@ -9,9 +9,12 @@
 </template>
 
 <script setup lang="ts">
+import { useSurfaceClickWarning } from '#kit/composables/surface/useSurfaceClickWarning'
 import { mSurfaceProps } from './props'
 
-defineProps(mSurfaceProps)
+const props = defineProps(mSurfaceProps)
+
+useSurfaceClickWarning(() => props.tag)
 </script>
 
 <style lang="scss">
@@ -24,24 +27,28 @@ $prefix: 'md-surface';
   $t: material-map(t.$tokens, $prefix);
 
   display: block;
-  color: map.get($theme-color-link, 'on-surface');
+  color: g($t, 'content.color');
+  overflow-wrap: break-word;
   border-style: solid;
   border-width: 0;
   border-color: transparent;
-  border-radius: map.get($theme-shape-link, 'none');
-  background-color: g($t, 'plain-container-color');
+  border-radius: g($t, 'container.shape');
 
-  &--plain {
-    background-color: g($t, 'plain-container-color');
-  }
+  @each $variant, $preset in g($t, 'variant') {
+    $base: 'variant.#{$variant}';
 
-  &--filled {
-    background-color: g($t, 'filled-container-color');
-  }
+    &--#{$variant} {
+      background-color: g($t, '#{$base}.container.color');
 
-  &--elevated {
-    background-color: g($t, 'elevated-container-color');
-    box-shadow: g($t, 'elevated-elevation');
+      @if map.has-key($preset, 'outline') {
+        border-width: g($t, '#{$base}.outline.width');
+        border-color: g($t, '#{$base}.outline.color');
+      }
+
+      @if map.has-key($preset, 'elevation') {
+        box-shadow: g($t, '#{$base}.elevation');
+      }
+    }
   }
 
   // `plain` matches the page in any mode and `outlined` already has an edge;
@@ -51,12 +58,6 @@ $prefix: 'md-surface';
     @include forced-colors {
       border: 1px solid CanvasText;
     }
-  }
-
-  &--outlined {
-    border-width: g($t, 'outlined-outline-width');
-    border-color: g($t, 'outlined-outline-color');
-    background-color: g($t, 'outlined-container-color');
   }
 
   // Corner shape presets from the canonical M3 scale.

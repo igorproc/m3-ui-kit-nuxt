@@ -54,12 +54,15 @@ const classes = computed(() => {
 @use '#kit/assets/stylesheet/components/grid/index' as grid;
 
 .m-container {
+  $t: material-map(grid.$tokens, 'md-grid');
+
   display: grid;
   grid-template-columns: repeat(var(--m-container-cols), minmax(0, 1fr));
   gap: var(--m-container-gutter);
   width: 100%;
   margin-inline: auto;
-  padding-inline: var(--m-container-margin);
+  padding-left: max(var(--m-container-margin), #{g($t, 'safe-area.left')});
+  padding-right: max(var(--m-container-margin), #{g($t, 'safe-area.right')});
 
   // Дефолты колонок/гаттеров/маржинов по брейкпоинтам (mobile-first)
   @each $key in grid.$bp-order {

@@ -1,28 +1,23 @@
 <template>
-  <span class="ui-icon">
+  <span
+    class="ui-icon"
+    v-bind="rootAttrs"
+  >
     <icon
-      :name="resolvedName"
-      aria-hidden="true"
+      v-if="glyph"
+      :name="glyph"
+      v-bind="glyphAttrs"
     />
   </span>
 </template>
 
 <script setup lang="ts">
+import { useIconControl } from '#kit/composables/icon/useIconControl'
 import { mIconProps } from './props'
 
 const props = defineProps(mIconProps)
 
-const resolvedName = computed(() => {
-  if (!props.name) {
-    return ''
-  }
-
-  if (props.name.includes(':')) {
-    return props.name
-  }
-
-  return `ic:${props.name}`
-})
+const { glyph, rootAttrs, glyphAttrs } = useIconControl(props)
 </script>
 
 <style lang="scss">
@@ -34,8 +29,11 @@ $prefix: 'md-icon';
   $t: material-map(t.$tokens, $prefix);
 
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  width: g($t, 'size');
+  height: g($t, 'size');
   line-height: 0;
 
   .iconify {
@@ -49,8 +47,8 @@ $prefix: 'md-icon';
   }
 
   svg {
-    width: 1em;
-    height: 1em;
+    width: g($t, 'size');
+    height: g($t, 'size');
     fill: g($t, 'fill');
   }
 }

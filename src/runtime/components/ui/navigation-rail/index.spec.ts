@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MNavigationRail from './index.vue'
+import type { MNavigationRailItem } from './props'
 
-const items = [
+const items: MNavigationRailItem[] = [
   { id: 'home', icon: 'home', label: 'Home' },
   { id: 'search', icon: 'search', label: 'Search' },
   { id: 'profile', icon: 'person', label: 'Profile', badge: 2 },

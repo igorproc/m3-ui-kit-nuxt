@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
 import type { InferResolvedType, InferType, MVariant } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export type MAlertType = 'info' | 'success' | 'warning' | 'error'
 export type MAlertVariant = Extract<MVariant, 'tonal' | 'outlined'>
@@ -15,7 +16,7 @@ export const mAlertProps = {
   /** Plain-text message; the default slot takes precedence. */
   text: { type: String, default: '' },
   /** Explicit leading icon name; false leaves the icon area empty. */
-  icon: { type: [String, Boolean] as PropType<string | false>, default: false },
+  icon: { type: [String, Boolean] as PropType<MIconName | false>, default: false },
   /** Renders the dismiss control. */
   closable: { type: Boolean, default: false },
   /** Accessible name of the dismiss control. */
@@ -29,7 +30,7 @@ export interface MAlertResolvedProps extends InferResolvedType<typeof mAlertProp
 
 export interface MAlertIconSlot {
   type: MAlertType
-  icon: string | false
+  icon: MIconName | false
 }
 
 export interface MAlertActionsSlot {

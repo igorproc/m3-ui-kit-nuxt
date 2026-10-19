@@ -58,6 +58,17 @@ export interface CarveInsets {
 
 export type InsetEdge = 'top' | 'bottom-sticky' | 'start' | 'end'
 
+export type SafeAreaBlockEdge = 'top' | 'bottom'
+
+export interface CarveSafeArea {
+  block?: SafeAreaBlockEdge
+  inline: boolean
+}
+
+export interface CarveOptions {
+  safeArea?: boolean
+}
+
 export interface CarveResult {
   grid: CarveGrid
   /** Per-item viewport offsets, keyed by item id. */
@@ -70,33 +81,18 @@ export interface CarveResult {
    * in-flow top zones carved before it count too: the pinned zone sits below them.
    */
   fixed: { top: string, bottom: string }
-}
-
-export interface LayoutCssOptions {
-  /** `main` scrolls itself (`<m-layout full-height>`) instead of the document. */
-  fullHeight?: boolean
-  /**
-   * Inside another `<m-layout>`: the document's scroll padding belongs to the
-   * outermost layout, which owns the page's fixed bands.
-   */
-  nested?: boolean
-}
-
-export interface RangeSpec {
-  range: DeviceRange
-  /** Media query without the `@media` prefix; absent → base (mobile-first) block. */
-  media?: string
-  /**
-   * Media for per-item rules (sticky positioning, out-of-range hiding). MUST be
-   * bounded on both sides for the base range — `display: none` from an
-   * unbounded block would leak onto desktop (unlike the grid templates, it is
-   * not overridden by the later @media blocks).
-   */
-  itemsMedia?: string
+  safeArea: Map<string, CarveSafeArea>
 }
 
 /** Attribute selecting a registered zone element (set by `useLayoutItem`). */
 export const ZONE_ATTR = 'data-m3-zone'
+
+export const SAFE_AREA_INSET = {
+  top: 'env(safe-area-inset-top, 0px)',
+  right: 'env(safe-area-inset-right, 0px)',
+  bottom: 'env(safe-area-inset-bottom, 0px)',
+  left: 'env(safe-area-inset-left, 0px)',
+} as const
 
 const MAIN_TRACK = 'minmax(0, 1fr)'
 
@@ -127,13 +123,26 @@ export function filterByRange(items: CarveItem[], range: DeviceRange): CarveItem
   return items
 }
 
+function windowEdgeOf(band: CarveItem, topBefore: string[], pinnedBottomBefore: string[]): SafeAreaBlockEdge | undefined {
+  if (!band.sticky || !band.size) return undefined
+  if (band.kind === 'top' && topBefore.length === 0) return 'top'
+  if (band.kind === 'bottom' && pinnedBottomBefore.length === 0) return 'bottom'
+  return undefined
+}
+
+function bandTrack(band: CarveItem, safeInset: string | undefined): string {
+  if (!band.size) return 'auto'
+  if (!safeInset) return `var(${sizeVar(band.id)}, auto)`
+  return `calc(var(${sizeVar(band.id)}, 0px) + ${safeInset})`
+}
+
 /**
  * Carves the grid by explicit order, preserving input order for equal values.
  *
  * Each band spans the cross-axis cells that were still unclaimed when it was
  * processed, so earlier items own the corners — Vuetify layout semantics.
  */
-export function carve(items: CarveItem[]): CarveResult {
+export function carve(items: CarveItem[], options: CarveOptions = {}): CarveResult {
   const orderedItems = items
     .map((item, index) => ({ item, index }))
     .sort((a, b) => (a.item.order ?? 0) - (b.item.order ?? 0) || a.index - b.index)
@@ -157,6 +166,7 @@ export function carve(items: CarveItem[]): CarveResult {
   const colSizes: string[] = Array.from({ length: colsCount }, () => MAIN_TRACK)
 
   const insets = new Map<string, CarveInsets>()
+  const safeArea = new Map<string, CarveSafeArea>()
   const seen = { top: 0, bottom: 0, start: 0, end: 0 }
   const sized = { top: [] as string[], right: [] as string[], bottom: [] as string[], left: [] as string[] }
   const bottomStickyAcc: string[] = []
@@ -172,9 +182,16 @@ export function carve(items: CarveItem[]): CarveResult {
   for (const band of bands) {
     insets.set(band.id, insetsSnapshot())
 
-    const track = band.size ? `var(${sizeVar(band.id)}, auto)` : 'auto'
+    const isRow = band.kind === 'top' || band.kind === 'bottom'
+    const windowEdge = options.safeArea ? windowEdgeOf(band, sized.top, bottomStickyAcc) : undefined
+    const safeInset = windowEdge ? SAFE_AREA_INSET[windowEdge] : undefined
+    const spansInline = Boolean(options.safeArea) && isRow && seen.start === 0 && seen.end === 0
 
-    if (band.kind === 'top' || band.kind === 'bottom') {
+    if (windowEdge || spansInline) safeArea.set(band.id, { block: windowEdge, inline: spansInline })
+
+    const track = bandTrack(band, safeInset)
+
+    if (isRow) {
       const row = band.kind === 'top' ? seen.top : rowsCount - 1 - seen.bottom
       const colFrom = seen.start
       const colTo = colsCount - 1 - seen.end
@@ -198,13 +215,14 @@ export function carve(items: CarveItem[]): CarveResult {
 
     if (band.size) {
       const expr = `var(${sizeVar(band.id)}, 0px)`
+      const reach = safeInset ? [expr, safeInset] : [expr]
 
       if (band.kind === 'top') {
-        sized.top.push(expr)
+        sized.top.push(...reach)
         if (band.sticky) fixedTop = cssSum(sized.top)
       } else if (band.kind === 'bottom') {
-        if (band.sticky) bottomStickyAcc.push(expr)
-        sized.bottom.push(expr)
+        if (band.sticky) bottomStickyAcc.push(...reach)
+        sized.bottom.push(...reach)
       } else if (band.kind === 'start') {
         sized.left.push(expr)
       } else {
@@ -238,140 +256,6 @@ export function carve(items: CarveItem[]): CarveResult {
       top: fixedTop,
       bottom: cssSum(bottomStickyAcc),
     },
+    safeArea,
   }
-}
-
-/**
- * Sticky declarations for a zone (план §2.6). Emitted into the generated CSS —
- * NOT inline: a zone sized by children contributions resolves its size only
- * after the whole tree has rendered (head payload), while the parent's inline
- * style is computed before the children's setup, so SSR/no-JS would miss it.
- *
- * - top/bottom: containing block грид-итема = его grid area, и в строке точной
- *   высоты sticky двигаться некуда → прибиваем `position: fixed`, а строка
- *   грида резервирует место size-переменной (ноль CLS). Без размера строке
- *   нечего резервировать — правило не эмитится, зона остаётся в потоке.
- * - start/end: колонка тянется на высоту контента → обычный sticky со
- *   смещением и высотой из per-item insets.
- */
-function stickyDecls(item: CarveItem): string[] | null {
-  if (!item.sticky) return null
-
-  const top = `var(${itemInsetVar(item.id, 'top')}, 0px)`
-  const bottomSticky = `var(${itemInsetVar(item.id, 'bottom-sticky')}, 0px)`
-
-  if (item.kind === 'top' || item.kind === 'bottom') {
-    if (!item.size) return null
-
-    return [
-      'position: fixed;',
-      item.kind === 'top' ? `inset-block-start: ${top};` : `inset-block-end: ${bottomSticky};`,
-      `inset-inline-start: var(${itemInsetVar(item.id, 'start')}, 0px);`,
-      `inset-inline-end: var(${itemInsetVar(item.id, 'end')}, 0px);`,
-    ]
-  }
-
-  if (item.kind === 'start' || item.kind === 'end') {
-    return [
-      'position: sticky;',
-      'align-self: start;',
-      `inset-block-start: ${top};`,
-      `height: calc(100dvh - ${top} - ${bottomSticky});`,
-    ]
-  }
-
-  return null
-}
-
-/**
- * Page-scroll mode: the document scrolls under the pinned zones, so a focused
- * control or an `#anchor` target would come to rest beneath them. Scroll padding
- * on the root keeps it clear. The size vars are declared on the layout element,
- * out of the root's reach, so the rule carries its own copies.
- */
-function scrollPaddingRule(items: CarveItem[], fixed: CarveResult['fixed']): string | null {
-  if (fixed.top === '0px' && fixed.bottom === '0px') return null
-
-  const lines = items
-    .filter(item => item.size && (item.kind === 'top' || item.kind === 'bottom'))
-    .map(item => `${sizeVar(item.id)}: ${item.size};`)
-
-  if (fixed.top !== '0px') lines.push(`scroll-padding-top: ${fixed.top};`)
-  if (fixed.bottom !== '0px') lines.push(`scroll-padding-bottom: ${fixed.bottom};`)
-
-  return `html {\n  ${lines.join('\n  ')}\n}`
-}
-
-/**
- * Assembles the per-layout `<style>` payload. Per device range:
- * - `#<layoutId>` rule — size vars (base block), insets, grid templates;
- * - per-item rules (`#<layoutId> > [data-m3-zone="<id>"]`) — sticky
- *   positioning and `display: none` for zones filtered out of the range
- *   (otherwise they would become implicit tracks and break the grid);
- * - `html` scroll padding for the pinned zones, unless `main` scrolls itself.
- */
-export function buildLayoutCss(
-  layoutId: string,
-  items: CarveItem[],
-  ranges: RangeSpec[],
-  options: LayoutCssOptions = {},
-): string {
-  const blocks: string[] = []
-
-  ranges.forEach((spec, index) => {
-    const visible = filterByRange(items, spec.range)
-    const { grid, insets, totals, fixed } = carve(visible)
-    const lines: string[] = []
-
-    if (index === 0) {
-      for (const item of items) {
-        if (item.size) lines.push(`${sizeVar(item.id)}: ${item.size};`)
-      }
-    }
-
-    lines.push(`--m3-layout-inset-top: ${totals.top};`)
-    lines.push(`--m3-layout-inset-right: ${totals.right};`)
-    lines.push(`--m3-layout-inset-bottom: ${totals.bottom};`)
-    lines.push(`--m3-layout-inset-left: ${totals.left};`)
-
-    for (const [id, inset] of insets) {
-      if (inset.top !== '0px') lines.push(`${itemInsetVar(id, 'top')}: ${inset.top};`)
-      if (inset.bottomSticky !== '0px') lines.push(`${itemInsetVar(id, 'bottom-sticky')}: ${inset.bottomSticky};`)
-      if (inset.start !== '0px') lines.push(`${itemInsetVar(id, 'start')}: ${inset.start};`)
-      if (inset.end !== '0px') lines.push(`${itemInsetVar(id, 'end')}: ${inset.end};`)
-    }
-
-    lines.push(`grid-template-areas: ${grid.areas};`)
-    lines.push(`grid-template-columns: ${grid.columns};`)
-    lines.push(`grid-template-rows: ${grid.rows};`)
-
-    const rootRule = `#${layoutId} {\n  ${lines.join('\n  ')}\n}`
-    blocks.push(spec.media ? `@media ${spec.media} {\n${rootRule}\n}` : rootRule)
-
-    const scrollRule = options.fullHeight || options.nested ? null : scrollPaddingRule(visible, fixed)
-    if (scrollRule) blocks.push(spec.media ? `@media ${spec.media} {\n${scrollRule}\n}` : scrollRule)
-
-    const itemRules: string[] = []
-    const visibleIds = new Set(visible.map(item => item.id))
-
-    for (const item of items) {
-      const selector = `#${layoutId} > [${ZONE_ATTR}="${item.id}"]`
-
-      if (!visibleIds.has(item.id)) {
-        itemRules.push(`${selector} {\n  display: none;\n}`)
-        continue
-      }
-
-      const decls = stickyDecls(item)
-      if (decls) itemRules.push(`${selector} {\n  ${decls.join('\n  ')}\n}`)
-    }
-
-    if (itemRules.length) {
-      const media = spec.itemsMedia ?? spec.media
-      const payload = itemRules.join('\n')
-      blocks.push(media ? `@media ${media} {\n${payload}\n}` : payload)
-    }
-  })
-
-  return blocks.join('\n\n')
 }

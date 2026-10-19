@@ -1,14 +1,15 @@
 @use 'sass:map';
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/forward.scss' as *;
 
 $tokens: (
-  motion: (
-    duration: map.get($theme-animation-link, 'duration', 'medium', '2'),
-    exit: (
-      duration: map.get($theme-animation-link, 'duration', 'short', '4'),
+  reveal: (
+    duration: var(--sys-motion-duration-medium-2),
+    easing: var(--sys-motion-easing-emphasized-decelerate),
+  ),
+  alert: (
+    gap: spacing(12),
+    message: (
+      color: map.get($theme-color-link, 'error'),
     ),
-    easing: map.get($theme-animation-link, 'easing', 'emphasized-decelerate'),
-    offset: 8rem,
   ),
 );
-

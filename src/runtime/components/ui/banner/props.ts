@@ -7,6 +7,7 @@
  * document flow and owns no placement, sticky behavior, timer or queue.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 /** Presentation of content and actions. `auto` switches on a CSS threshold. */
 export type MBannerLayout = 'auto' | 'inline' | 'stacked'
@@ -26,7 +27,7 @@ export const mBannerProps = {
    * Leading icon. There is no default: the banner has no severity to infer one
    * from. `false` suppresses an icon supplied by a wrapper preset.
    */
-  icon: { type: [String, Boolean] as PropType<string | false>, default: undefined },
+  icon: { type: [String, Boolean] as PropType<MIconName | false>, default: undefined },
   /** Presentation of the actions row. */
   layout: { type: String as PropType<MBannerLayout>, default: 'auto' },
   /** Neutral surface preset. */

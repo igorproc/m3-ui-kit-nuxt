@@ -6,24 +6,29 @@
 // an outline-variant hairline. Corner shape is resolved from the canonical
 // `$theme-shape-link` scale in the SFC, so it is not duplicated here.
 $tokens: (
-  plain: (
-    container: (color: map.get($theme-color-link, 'surface')),
-    elevation: none,
+  content: (
+    color: map.get($theme-color-link, 'on-surface'),
   ),
-  filled: (
-    container: (color: map.get($theme-color-link, 'surface-container')),
-    elevation: none,
+  container: (
+    shape: map.get($theme-shape-link, 'none'),
   ),
-  elevated: (
-    container: (color: map.get($theme-color-link, 'surface-container-low')),
-    elevation: elevation(1),
-  ),
-  outlined: (
-    container: (color: map.get($theme-color-link, 'surface')),
-    outline: (
-      color: map.get($theme-color-link, 'outline-variant'),
-      width: 1rem,
+  variant: (
+    plain: (
+      container: (color: map.get($theme-color-link, 'surface')),
     ),
-    elevation: none,
+    filled: (
+      container: (color: map.get($theme-color-link, 'surface-container')),
+    ),
+    elevated: (
+      container: (color: map.get($theme-color-link, 'surface-container-low')),
+      elevation: elevation(1),
+    ),
+    outlined: (
+      container: (color: map.get($theme-color-link, 'surface')),
+      outline: (
+        color: map.get($theme-color-link, 'outline-variant'),
+        width: 1rem,
+      ),
+    ),
   ),
 );

@@ -10,7 +10,14 @@ import { makeColorProps, makeStateProps } from '#kit/shared/utils/props'
 import type { MVariant } from '#kit/shared/types/props'
 import { makeMButtonProps } from '../props'
 import type { MButtonDensity } from '../props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
+export interface UiSplitMenuItem {
+  label: string
+  icon?: MIconName
+  value?: string | number
+  action?: () => void
+}
 /** M3 split buttons come in every button variant but `text`. */
 export type MSplitButtonVariant = Extract<MVariant, 'filled' | 'tonal' | 'elevated' | 'outlined'>
 

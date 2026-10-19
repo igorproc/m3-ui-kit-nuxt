@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет (системная статусная строка Android — часть ОС, а не приложения) · Токены Compose: нет · Код: `src/runtime/components/ui/system-bar/` · Аудит: `data/system-bar.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Полоса высотой 24 на `surface-container-highest`. Регистрируется в `m-layout` как верхняя зона или складывает высоту внутри `m-layout-header`. Дефекты переполнения, литералы в токенах, легаси-пути `g()`.</implementation-status>
+<implementation-status state="planned" updated="2026-10-07">Шаги 1–3 и 5 сделаны: точечные пути и `spacing()`, `min-height`, слоты `prepend`/`append` с `font-size` иконок и текст в `__text` с многоточием, спеки регистрации, фикстуры и e2e; safe-area и документация перенесены.</implementation-status>
 
 ## Вердикт
 
@@ -67,17 +67,23 @@
 
 ## API
 
-Без изменений.
+Проп `sticky` без изменений. Слоты: `prepend` и `append` — кластеры иконок (`font-size` 16 на
+обёртке), `default` — текст в одну строку с многоточием (`ui-system-bar__text`). Иконки в
+`default` теперь получают размер текста, их место — `prepend`/`append`.
 
 ## План работ
 
 1. **S — точечные пути и `spacing()`** (TK-02).
 2. **S — переполнение и `min-height`** (CT-01, CT-03, CT-05, CT-06).
 3. **S — размер иконки через наследование** (EN-09).
-4. **S — safe-area** (RS-09), вместе с шагом 2 плана [layout](layout.md).
+4. **S — safe-area** (RS-09), вместе с шагом 2 плана [layout](layout.md). **перенесено**:
+   размер зоны и смещение следующей прибитой зоны считаются от зарегистрированного
+   `--ui-system-bar-height`, поэтому `padding-top` без правки `carve.ts` наезжает на app bar;
+   делается в шаге 2 плана layout.
 5. **S — тесты регистрации** (TS-07): anchored, `sticky=false`, вклад высоты в
    `m-layout-header`.
-6. **S — документация** (DC-01…05).
+6. **S — документация** (DC-01…05). **перенесено**: страницы компонента в `docs/` нет, а
+   `docs/layout.md` вне файлов компонента; в коде есть JSDoc пропа и тип слотов.
 
 ## Тесты
 

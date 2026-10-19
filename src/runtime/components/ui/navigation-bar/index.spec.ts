@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MNavigationBar from './index.vue'
+import type { MNavigationBarItem } from './props'
 
-const items = [
+const items: MNavigationBarItem[] = [
   { id: 'home', icon: 'home', label: 'Home' },
   { id: 'search', icon: 'search', label: 'Search' },
   { id: 'profile', icon: 'person', label: 'Profile', badge: 3 },

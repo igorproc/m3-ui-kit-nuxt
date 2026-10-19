@@ -39,3 +39,5 @@ export const M3_SHAPES = {
 } as const
 
 export type M3ShapeName = keyof typeof M3_SHAPES
+
+export const M3_SHAPE_SIZE = 380
