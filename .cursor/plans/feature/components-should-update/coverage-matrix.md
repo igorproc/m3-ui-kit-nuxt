@@ -35,7 +35,7 @@
 | Прочие | Lists | `MList`, `MListItem`, `MListSubheader` | переработка | [list](containment/list.md) |
 | Прочие | Menus | `MMenu` | переработка | [menu](overlays/menu.md) |
 | Прочие | Radio button | `MRadio`, `MRadioGroup` | дрейф | [radio](form/radio.md) |
-| Прочие | Search | `MSearch` (только строка) | переработка | [search](inputs/search.md) |
+| Прочие | Search | `MSearch` (строка; вид результатов — план v2 на движке MDropdown) | переработка | [search](inputs/search.md) |
 | Прочие | Sliders | `MSlider` | переработка | [slider](form/slider.md) |
 | Прочие | Snackbar | `MSnackbar` | переработка | [snackbar](feedback/snackbar.md) |
 | Прочие | Switch | `MSwitch` | дрейф | [switch](form/switch.md) |

@@ -10,8 +10,8 @@
  * consumer's own markup is another.
  *
  * Layered the way the textarea is:
- * - {@link useTextField} — validation binding and focus
- * - `useTextFieldControl` — that plus ids and ARIA, markup-agnostic
+ * - `useFieldValidation` (`utils/text-field`) — the family's validity rule
+ * - `useTextFieldControl` — that plus focus, ids and ARIA, markup-agnostic
  * - `<MTextField>` — one possible markup on top of this composable
  *
  * No classes and no `data-*` leave this composable. Unset attributes are left
@@ -30,7 +30,7 @@
  */
 import { computed, useId } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
-import { useTextField } from '#kit/composables/text-field/useTextField'
+import { useFieldValidation } from '#kit/utils/text-field/useFieldValidation'
 import type { FieldMeta } from '#kit/composables/validation/types'
 
 /**
@@ -121,15 +121,16 @@ export function useTextFieldControl(
   const prefixId = `${fieldId}-prefix`
   const suffixId = `${fieldId}-suffix`
 
-  const field = useTextField({
-    path: props.path,
-    model,
-    focused,
-    error: () => Boolean(props.error),
-    externalError: () => props.errorMessage,
+  // The input contract is a string: a value synced back from the adapter as
+  // `null` or `undefined` reaches the model as `''`.
+  const stringModel = computed({
+    get: () => model.value,
+    set: (next) => {
+      model.value = next ?? ''
+    },
   })
 
-  const message = computed(() => field.errorMessage.value || props.helperText)
+  const { isError, message, meta } = useFieldValidation(stringModel, props)
 
   // The affixes are read out after the value, as part of what the field says
   // about it; the message comes first because it is what changes.
@@ -150,21 +151,25 @@ export function useTextFieldControl(
       'required': props.required || undefined,
       'autofocus': props.autofocus || undefined,
       'autocomplete': props.autocomplete,
-      'aria-invalid': field.isError.value ? 'true' : undefined,
-      'aria-busy': field.meta.pending ? 'true' : undefined,
+      'aria-invalid': isError.value ? 'true' : undefined,
+      'aria-busy': meta.pending ? 'true' : undefined,
       'aria-required': props.required ? 'true' : undefined,
       'aria-describedby': describedBy.value,
     }),
-    onFocus: field.onFocus,
-    onBlur: field.onBlur,
+    onFocus: () => {
+      focused.value = true
+    },
+    onBlur: () => {
+      focused.value = false
+    },
   }) as TextFieldInputAttrs)
 
   return {
     fieldId,
     isFocused: computed(() => focused.value),
-    isError: field.isError,
+    isError,
     message,
-    meta: field.meta,
+    meta,
     inputAttrs,
     labelAttrs: computed(() => ({ id: labelId, for: fieldId })),
     // Only the error is announced: a description the user did not ask for

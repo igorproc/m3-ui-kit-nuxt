@@ -40,14 +40,6 @@ describe('m-number-input · variants', () => {
       expect(wrapper.classes()).toContain('ui-number-input--shape-full')
     })
 
-    // The dev warning is not observable under Vitest (`import.meta.dev` is
-    // false); the retired value still has to render for its grace release.
-    it('still applies a retired rounded value as its shape for one release', async () => {
-      const wrapper = await mount({ rounded: 'pill' })
-
-      expect(wrapper.classes()).toContain('ui-number-input--shape-full')
-    })
-
     it('drops the shape a value flanked by stepper zones cannot carry', async () => {
       const wrapper = await mount()
 
@@ -226,10 +218,13 @@ describe('m-number-input · variants', () => {
       expect(invalid.find('.ui-number-input__support').text()).toBe('Out of range')
     })
 
-    it('keeps an empty line when there is nothing to say, so an error never reflows', async () => {
-      const wrapper = await mount()
-      const support = wrapper.find('.ui-number-input__support')
+    // Decision 2026-10-19: reserved only when something can appear in it.
+    it('renders no line when nothing can appear in it, an empty one when an error is bound', async () => {
+      const bare = await mount()
+      expect(bare.find('.ui-number-input__support').exists()).toBe(false)
 
+      const bound = await mount({ errorMessage: undefined })
+      const support = bound.find('.ui-number-input__support')
       expect(support.exists()).toBe(true)
       expect(support.text()).toBe('')
     })
@@ -258,17 +253,6 @@ describe('m-number-input · variants', () => {
 
       expect(wrapper.classes()).toContain('ui-number-input--disabled')
       expect(wrapper.classes()).toContain('ui-number-input--readonly')
-    })
-
-    it('marks an editable field interactive, so hover chrome applies to it alone', async () => {
-      const editable = await mount()
-      expect(editable.classes()).toContain('ui-number-input--interactive')
-
-      const disabled = await mount({ disabled: true })
-      expect(disabled.classes()).not.toContain('ui-number-input--interactive')
-
-      const readonly = await mount({ readonly: true })
-      expect(readonly.classes()).not.toContain('ui-number-input--interactive')
     })
 
     it('exposes no data-state attributes — state is carried by BEM classes', async () => {

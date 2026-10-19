@@ -18,15 +18,6 @@ describe('m-card', () => {
     }
   })
 
-  it.each([['tonal', 'filled'], ['text', 'outlined']] as const)(
-    'still draws the retired %s variant as %s',
-    async (retired, replacement) => {
-      const wrapper = await mountSuspended(MCard, { props: { variant: retired as never } })
-
-      expect(wrapper.classes()).toContain(`ui-card--${replacement}`)
-    },
-  )
-
   it('is neither a link nor a Tab stop without tag="link"', async () => {
     const wrapper = await mountSuspended(MCard, { props: { title: 'Static', to: '/next' } })
 
@@ -41,6 +32,19 @@ describe('m-card', () => {
     const title = wrapper.find('.ui-card__title')
 
     expect(title.attributes('id')).toBeTruthy()
+    expect(wrapper.attributes('aria-labelledby')).toBe(title.attributes('id'))
+  })
+
+  // Q-5 (M3-polish): rich title content without losing the card's name.
+  it('fills the title through #title and keeps the card named by it', async () => {
+    const wrapper = await mountSuspended(MCard, {
+      props: { headingLevel: 3 },
+      slots: { title: () => h('em', 'Rich title') },
+    })
+    const title = wrapper.find('.ui-card__title')
+
+    expect(title.element.tagName).toBe('H3')
+    expect(title.find('em').text()).toBe('Rich title')
     expect(wrapper.attributes('aria-labelledby')).toBe(title.attributes('id'))
   })
 

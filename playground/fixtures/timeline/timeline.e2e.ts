@@ -108,6 +108,40 @@ test.describe('MTimeline', () => {
     expect(content.y).toBeGreaterThanOrEqual(time.y + time.height - 1)
   })
 
+  // Q-11 (M3-polish): the threshold is 768rem — the kit's design pixel — so a
+  // timeline collapses by its width in the layout, whatever the root's scale.
+  test('alternate collapses below 768rem of its own width at any window width', async ({ page }) => {
+    for (const width of [780, 1280, 1920]) {
+      await page.setViewportSize({ width, height: 900 })
+      await openFixture(page, 'timeline/stress')
+      const unit = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).fontSize))
+
+      for (const id of ['narrow-alternate', 'wide-alternate']) {
+        const timeline = page.getByTestId(id)
+        const widthInRem = (await box(timeline)).width / unit
+        const first = timeline.locator(':scope > .ui-timeline-item').first()
+        expect(await columns(first), `${id} at ${width}px is ${Math.round(widthInRem)}rem`).toBe(widthInRem > 768 ? 3 : 2)
+      }
+    }
+  })
+
+  // TL-1 (M3-polish): without a title the first line is body text, and the dot
+  // and the time centre on it.
+  test('the dot of an item without a title sits on the centre of its first line', async ({ page }) => {
+    await openFixture(page, 'timeline/stress')
+    const unit = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).fontSize))
+
+    for (const id of ['no-title-titled', 'no-title-text', 'no-title-time']) {
+      const item = page.getByTestId(id)
+      const line = item.locator('.ui-timeline-item__title').or(item.locator('.ui-timeline-item__body')).first()
+      const lineBox = await box(line)
+      const lineHeight = Number.parseFloat(await style(line, 'line-height'))
+      const dot = await box(item.locator('.ui-timeline-divider__dot'))
+
+      expect(Math.abs((dot.y + dot.height / 2) - (lineBox.y + lineHeight / 2)) / unit, id).toBeLessThan(0.5)
+    }
+  })
+
   test('long unbroken values wrap inside their column', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 900 })
     await openFixture(page, 'timeline/stress')

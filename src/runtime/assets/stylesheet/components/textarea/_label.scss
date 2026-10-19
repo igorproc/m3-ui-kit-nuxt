@@ -1,4 +1,5 @@
 @use '../../abstracts/forward.scss' as *;
+@use '../text-field/family';
 
 // ==========================================
 // TEXTAREA · LABEL PLACEMENT AND OUTLINE
@@ -6,7 +7,9 @@
 // Included inside `.ui-textarea`. Base is `top`, a block above the box. A
 // multi-line box has no free first line, so an overlaid label is raised from
 // the start: `float` and `inset` differ only on `outlined`, where one notches
-// the top border and the other sits inside it.
+// the top border and the other sits inside it. Mechanics are the text field's.
+
+$overlay: ':where(.ui-textarea--label-float, .ui-textarea--label-inset)';
 
 @mixin label($t) {
   // Above the box a long label wraps, as in the text field: nothing there
@@ -17,37 +20,58 @@
     overflow-wrap: anywhere;
     transition: color g($t, 'state.duration') g($t, 'state.easing');
 
-    @include typescale(g($t, 'typography.label'));
+    @include typescale(g($t, 'typography.label.top'));
   }
 
   &--label-float,
   &--label-inset {
     .ui-textarea__label {
       position: absolute;
+      top: g($t, 'label.overlay.top');
       inset-inline-start: var(--ui-textarea-inset);
-      top: g($t, 'label.inset.top');
       z-index: 1;
-      max-width: g($t, 'label.max-width');
+      max-width: g($t, 'label.room.base');
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       pointer-events: none;
-      transform: scale(g($t, 'label.active.scale'));
-      transform-origin: var(--ui-textarea-start) top;
+      transform: g($t, 'label.transform');
+      transform-origin: left center;
+
+      @include typescale(g($t, 'typography.label.overlay'));
+
+      // The scale origin is physical, so the writing direction picks its side.
+      &:dir(rtl) {
+        transform-origin: right center;
+      }
     }
   }
 
+  // Beside an adornment an overlaid label starts and stops where the value
+  // does. The placement sits in `:where()`, so the notch rule still wins.
+  &--prepend#{$overlay} .ui-textarea__label {
+    inset-inline-start: g($t, 'label.start.prepend');
+  }
+
+  &:where(.ui-textarea--prepend, .ui-textarea--append)#{$overlay} .ui-textarea__label {
+    max-width: g($t, 'label.room.one');
+  }
+
+  &--prepend.ui-textarea--append#{$overlay} .ui-textarea__label {
+    max-width: g($t, 'label.room.both');
+  }
+
   // Notch: on `outlined` the raised label lands on the top border, into the gap
-  // the outline's legend opens for it.
+  // the outline's legend opens for it, at the content start.
   &--label-float.ui-textarea--outlined {
     .ui-textarea__label {
       top: 0;
-      transform: translateY(-50%) scale(g($t, 'label.active.scale'));
-      transform-origin: var(--ui-textarea-start) center;
+      inset-inline-start: var(--ui-textarea-inset);
+      max-width: g($t, 'label.room.base');
     }
 
     .ui-textarea__notch {
-      max-width: 100%;
+      max-width: g($t, 'outlined.notch.open');
     }
   }
 
@@ -81,24 +105,5 @@
     transition: border-color g($t, 'state.duration') g($t, 'state.easing');
   }
 
-  // As tall as the border it sits on, so the fieldset never shifts its top edge
-  // to centre a taller legend. Its width is the only thing that matters.
-  &__notch {
-    display: block;
-    width: auto;
-    max-width: 0.01rem;
-    height: g($t, 'container.border.width');
-    padding: 0;
-    overflow: hidden;
-    visibility: hidden;
-    white-space: nowrap;
-
-    @include typescale(g($t, 'typography.label'));
-  }
-
-  &__notch-text {
-    display: inline-block;
-    padding-inline: g($t, 'outlined.notch.padding.inline');
-    font-size: g($t, 'outlined.notch.font-size');
-  }
+  @include family.notch($t);
 }

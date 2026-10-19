@@ -23,14 +23,6 @@ describe('m-dropdown · axes', () => {
     expect(field.classes()).toContain('ui-text-field--density-compact')
   })
 
-  // The dev warning is not observable under Vitest (`import.meta.dev` is
-  // false); the retired value still has to reach the field for one release.
-  it('still forwards a retired rounded value as its shape for one release', async () => {
-    const wrapper = await mount({ ...base, rounded: 'pill' })
-
-    expect(wrapper.find('.ui-text-field').classes()).toContain('ui-text-field--shape-full')
-  })
-
   it('carries its density into the rows of the panel', async () => {
     const wrapper = await mount({ ...base, density: 'compact' })
     await open(wrapper)
@@ -42,7 +34,7 @@ describe('m-dropdown · axes', () => {
     const wrapper = await mount({ ...base, maxHeight: 200 })
     await open(wrapper)
 
-    const list = document.querySelector<HTMLElement>('.ui-dropdown__list')!
+    const list = document.querySelector<HTMLElement>('.ui-dropdown-panel__list')!
     expect(list.style.getPropertyValue('--m-dropdown-panel-max-height')).toBe('200rem')
   })
 
@@ -50,7 +42,7 @@ describe('m-dropdown · axes', () => {
     const wrapper = await mount({ ...base, maxHeight: '50vh' })
     await open(wrapper)
 
-    const list = document.querySelector<HTMLElement>('.ui-dropdown__list')!
+    const list = document.querySelector<HTMLElement>('.ui-dropdown-panel__list')!
     expect(list.style.getPropertyValue('--m-dropdown-panel-max-height')).toBe('50vh')
   })
 
@@ -149,7 +141,7 @@ describe('m-dropdown · slots', () => {
     await open(wrapper)
 
     // The kit's list is gone; the consumer's markup carries the semantics.
-    expect(document.querySelector('.ui-dropdown__list')).toBeNull()
+    expect(document.querySelector('.ui-dropdown-panel__list')).toBeNull()
     const listbox = document.querySelector('[role="listbox"].custom-panel')
     expect(listbox).not.toBeNull()
     expect(listbox!.querySelectorAll('[role="option"]')).toHaveLength(3)
@@ -175,7 +167,7 @@ async function mountWithSlots() {
   return mountSuspended(MDropdown, {
     props: base,
     slots: {
-      default: (scope) => {
+      default: (scope: unknown) => {
         const slot = scope as unknown as {
           entries: { id: string, title: string }[]
           listboxAttrs: Record<string, unknown>
@@ -196,7 +188,7 @@ async function mountItemSlot() {
   return mountSuspended(MDropdown, {
     props: base,
     slots: {
-      item: (scope) => {
+      item: (scope: unknown) => {
         const { title } = scope as unknown as { title: string }
         return h('span', { class: 'custom-row' }, `· ${title} ·`)
       },

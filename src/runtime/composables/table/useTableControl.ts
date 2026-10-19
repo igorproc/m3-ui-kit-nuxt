@@ -26,6 +26,8 @@ export interface UseTableControlOptions<T extends TableData> {
   hasCaption: () => boolean
   /** The table's own `aria-label`, which names the scroll region without a caption. */
   label: () => string | undefined
+  /** The table's own `aria-labelledby`, which names the scroll region without a caption or `aria-label`. */
+  labelledBy?: () => string | undefined
   onRowClick: (row: T, event: MouseEvent) => void
 }
 
@@ -70,9 +72,12 @@ export function useTableControl<T extends TableData>(options: UseTableControlOpt
   const viewportAttrs = computed<Record<string, unknown>>(() => {
     if (!overflowing.value) return {}
 
-    return options.hasCaption()
-      ? { 'tabindex': 0, 'role': 'region', 'aria-labelledby': captionId }
-      : { 'tabindex': 0, 'role': 'region', 'aria-label': options.label() }
+    if (options.hasCaption()) return { 'tabindex': 0, 'role': 'region', 'aria-labelledby': captionId }
+
+    const label = options.label()
+    return label
+      ? { 'tabindex': 0, 'role': 'region', 'aria-label': label }
+      : { 'tabindex': 0, 'role': 'region', 'aria-labelledby': options.labelledBy?.() }
   })
 
   const tableAttrs = computed<Record<string, unknown>>(() => ({

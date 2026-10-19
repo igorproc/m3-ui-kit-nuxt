@@ -12,9 +12,11 @@
  *
  * `modelValue`, `focused` and `unit` are models, declared in the SFC.
  */
-import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { ExtractPublicPropTypes, PropType, VNode } from 'vue'
 import { fieldDensityProp, mFieldProps } from '#kit/components/ui/text-field/props'
+import type { MFieldMessageSlotProps } from '#kit/components/ui/text-field/props'
 import { MESSAGES } from '#kit/shared/constants/messages'
+import type { NumberStepperAttrs } from '#kit/composables/number-input/useNumberInputControl'
 
 export type MNumberInputVariant = 'filled' | 'outlined'
 
@@ -68,3 +70,31 @@ export const mNumberInputProps = {
 }
 
 export type MNumberInputProps = ExtractPublicPropTypes<typeof mNumberInputProps>
+
+/** What a stepper slot receives: the bag for its button and the values around the step. */
+export interface MNumberInputStepperSlotProps {
+  /** Spread on the replacement button: type, disabled, name, `aria-controls`, the click. */
+  props: NumberStepperAttrs
+  value: number | null
+  /** The value one step away in this direction, already clamped. */
+  nextValue: number
+}
+
+export interface MNumberInputSlots {
+  /** Replaces the decrease zone's button. */
+  decrement?: (props: MNumberInputStepperSlotProps) => VNode[]
+  /** Replaces the increase zone's button. */
+  increment?: (props: MNumberInputStepperSlotProps) => VNode[]
+  /** Content of the scrub handle; the label text by default. */
+  scrub?: () => VNode[]
+  /** Replaces the unit's text (static or in the menu trigger). */
+  unit?: () => VNode[]
+  /** Before the value, inside the box — a 24rem adornment. */
+  prepend?: () => VNode[]
+  /** After the value, inside the box. */
+  append?: () => VNode[]
+  /** Replaces the error text in the support line; the glyph is then the slot's. */
+  error?: (props: MFieldMessageSlotProps) => VNode[]
+  /** Replaces the helper text in the support line. */
+  helper?: (props: MFieldMessageSlotProps) => VNode[]
+}

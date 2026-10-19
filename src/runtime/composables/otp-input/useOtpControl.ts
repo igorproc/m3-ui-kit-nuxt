@@ -9,7 +9,8 @@
  *
  * The field is layered the same way the textarea and the number input are:
  * - {@link useOtpValue} — alphabet, length, grouping
- * - `useOtpControl` — that plus caret, focus, ids and ARIA, markup-agnostic
+ * - {@link useOtpCaret} — the caret mapped onto the drawn cells
+ * - `useOtpControl` — those plus focus, ids and ARIA, markup-agnostic
  * - `<MOtpInput>` — one possible markup on top of this composable
  *
  * The cells it hands back are decorations: the value lives in one real input,
@@ -22,11 +23,11 @@
  * <input ref="element" v-bind="inputAttrs">
  * ```
  */
-import { computed, onScopeDispose, shallowRef, useId } from 'vue'
+import { computed, shallowRef, useId } from 'vue'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
 import { useField } from '#kit/composables/useField'
-import { useGlobalListener } from '#kit/composables/useGlobalListener'
 import { useTimer } from '#kit/composables/useTimer'
+import { useOtpCaret } from '#kit/composables/otp-input/useOtpCaret'
 import { useOtpValue } from '#kit/composables/otp-input/useOtpValue'
 import type { OtpValueHooks, OtpValueProps, UseOtpValueReturn } from '#kit/composables/otp-input/useOtpValue'
 import { OTP_AUTOCOMPLETE, OTP_INPUT_MODE, OTP_MASK_CHARACTER, OTP_MASK_REVEAL } from '#kit/shared/constants/otp'
@@ -47,11 +48,8 @@ export interface OtpControlProps extends OtpValueProps {
   /** A check is running (typically after `complete`): the code is held still. */
   loading?: boolean
   autofocus?: boolean
-  /**
-   * When characters are hidden. A retired `true` reads as `'always'`, and a
-   * retired glyph string as `'always'` drawn with that glyph.
-   */
-  mask?: OtpMaskMode | boolean | string
+  /** When characters are hidden. */
+  mask?: OtpMaskMode
   /** Per-cell pattern for empty cells; see {@link OtpCell.hint}. */
   placeholder?: string
 }
@@ -93,6 +91,7 @@ export interface OtpInputAttrs {
   'onFocus': (event: FocusEvent) => void
   'onBlur': () => void
   'onClick': (event: MouseEvent) => void
+  'onBeforeinput': (event: InputEvent) => void
   'onInput': (event: Event) => void
   'onPaste': (event: ClipboardEvent) => void
   'onCompositionstart': () => void
@@ -161,8 +160,12 @@ export function useOtpControl(
   const messageId = `${fieldId}-message`
 
   const composing = shallowRef(false)
-  const activeIndex = shallowRef(0)
-  const cells = new Map<number, Element>()
+  const { activeIndex, syncCaret, watchCaret, stopWatchingCaret, focusAt, selectAll, registerCell, cellAt } = useOtpCaret({
+    element,
+    model,
+    focused,
+    disabled: () => Boolean(props.disabled),
+  })
 
   const value = useOtpValue(model, props, hooks)
   const field = useField({ path: props.path, model })
@@ -170,14 +173,7 @@ export function useOtpControl(
   const isError = computed(() => Boolean(props.error) || Boolean(props.errorMessage) || field.hasError.value)
   const message = computed(() => field.errorMessage.value || props.errorMessage)
 
-  const maskMode = computed<OtpMaskMode>(() => {
-    if (props.mask === 'last' || props.mask === 'always' || props.mask === false) return props.mask
-    return props.mask ? 'always' : false
-  })
-  // A retired glyph string keeps drawing with that glyph for its grace release.
-  const maskCharacter = computed(() => (typeof props.mask === 'string' && props.mask !== 'last' && props.mask !== 'always'
-    ? props.mask
-    : OTP_MASK_CHARACTER))
+  const maskMode = computed<OtpMaskMode>(() => props.mask ?? false)
 
   // `last` leaves the newest character readable for a moment, so a mistyped
   // digit can be caught before it disappears behind the mask.
@@ -186,12 +182,16 @@ export function useOtpControl(
     revealIndex.value = null
   }, { duration: OTP_MASK_REVEAL })
 
-  function revealNewest(previous: string, next: string, caret: number | null) {
+  function reveal(index: number | null) {
     if (maskMode.value !== 'last') return
 
-    revealIndex.value = next.length === previous.length + 1 && caret ? caret - 1 : null
-    if (revealIndex.value === null) revealTimer.stop()
+    revealIndex.value = index
+    if (index === null) revealTimer.stop()
     else revealTimer.start()
+  }
+
+  function revealNewest(previous: string, next: string, caret: number | null) {
+    reveal(next.length === previous.length + 1 && caret ? caret - 1 : null)
   }
 
   const hintFor = (index: number) => props.placeholder?.[index] ?? props.placeholder?.[0] ?? ''
@@ -218,42 +218,11 @@ export function useOtpControl(
         disabled: Boolean(props.disabled),
         readonly: Boolean(props.readonly),
         masked: isMasked(index, character),
-        maskCharacter: maskCharacter.value,
+        maskCharacter: OTP_MASK_CHARACTER,
         hint: character === '' ? hintFor(index) : '',
       }
     },
   )))
-
-  // Caret positions outnumber cells by one: a code of six has seven of them,
-  // and the seventh sits past the last cell. Clamping it onto the last cell
-  // made a full field light one up for no reason, and ate the first ArrowLeft —
-  // the caret moved 6 → 5 while the clamped index stayed at 5.
-  function syncCaret(caret: number | null) {
-    activeIndex.value = caret ?? model.value.length
-  }
-
-  // `selectionchange` is the only event that reports every way a caret moves:
-  // a held arrow key repeats `keydown` and fires `keyup` once, so watching keys
-  // left the highlight frozen until release and then jumped it to the end.
-  // It covers the pointer, drag-selection and programmatic moves as well.
-  let stopCaretWatch: (() => void) | undefined
-
-  function watchCaret() {
-    stopCaretWatch ??= useGlobalListener('document', 'selectionchange', () => {
-      // `focused` is this composable's own source of truth for liveness — the
-      // same flag the cells read — so the guard cannot disagree with them.
-      if (!focused.value) return
-
-      syncCaret(element.value?.selectionStart ?? null)
-    })
-  }
-
-  function stopWatchingCaret() {
-    stopCaretWatch?.()
-    stopCaretWatch = undefined
-  }
-
-  onScopeDispose(stopWatchingCaret, true)
 
   function applyInput(target: HTMLInputElement) {
     const previous = model.value
@@ -286,36 +255,30 @@ export function useOtpControl(
     syncCaret(caret)
   }
 
-  function focusAt(index: number) {
-    if (props.disabled) return
+  // `maxlength` refuses a keystroke into a full code. Typed inside it, the
+  // character replaces the one under the caret instead — fixing one digit is
+  // one keystroke; paste and SMS autofill go through `input` as before.
+  function overwriteFullCode(event: InputEvent) {
+    const target = event.target as HTMLInputElement
+    if (event.inputType !== 'insertText' || !event.data || target.readOnly || target.disabled) return
 
-    // The caret cannot stand past the typed text, so neither can the highlight.
-    const caret = Math.min(index, model.value.length)
+    const start = target.selectionStart ?? 0
+    const end = target.selectionEnd ?? start
+    if (start !== end || start >= target.value.length || target.value.length < value.length.value) return
 
-    element.value?.focus()
-    element.value?.setSelectionRange(caret, caret)
-    activeIndex.value = caret
-  }
-
-  function selectAll() {
-    if (props.disabled) return
-
-    element.value?.focus()
-    element.value?.select()
-    activeIndex.value = 0
-  }
-
-  /** The drawn cell under a horizontal pointer position: the one containing it, else the nearest. */
-  function cellAt(x: number) {
-    let nearest: { index: number, distance: number } | undefined
-
-    for (const [index, cell] of cells) {
-      const { left, right } = cell.getBoundingClientRect()
-      const distance = x < left ? left - x : x > right ? x - right : 0
-      if (!nearest || distance < nearest.distance) nearest = { index, distance }
+    event.preventDefault()
+    const typed = value.sanitize(event.data).value
+    if (!typed) {
+      value.commit(target.value + event.data)
+      return
     }
 
-    return nearest?.index
+    const committed = value.commit(target.value.slice(0, start) + typed + target.value.slice(start + typed.length))
+    const caret = Math.min(start + typed.length, committed.length)
+    target.value = committed
+    target.setSelectionRange(caret, caret)
+    syncCaret(caret)
+    reveal(caret - 1)
   }
 
   const inputAttrs = computed<OtpInputAttrs>(() => ({
@@ -360,6 +323,7 @@ export function useOtpControl(
       const index = cellAt(event.clientX)
       if (index !== undefined) focusAt(index)
     },
+    'onBeforeinput': overwriteFullCode,
     'onInput': (event: Event) => {
       if (composing.value) return
 
@@ -388,10 +352,7 @@ export function useOtpControl(
   const cellAttrs = (index: number): OtpCellAttrs => ({
     // The value is carried by the input; the grid is a picture of it.
     'aria-hidden': 'true',
-    'ref': (cell) => {
-      if (cell instanceof Element) cells.set(index, cell)
-      else cells.delete(index)
-    },
+    'ref': registerCell(index),
     'onClick': () => focusAt(index),
   })
 

@@ -43,14 +43,6 @@ describe('m-textarea · variants', () => {
       expect(wrapper.classes()).toContain('ui-textarea--shape-large')
     })
 
-    // The dev warning is not observable under Vitest (`import.meta.dev` is
-    // false); the retired value still has to render for its grace release.
-    it('still applies a retired rounded value as its shape for one release', async () => {
-      const wrapper = await mount({ rounded: 'pill' })
-
-      expect(wrapper.classes()).toContain('ui-textarea--shape-full')
-    })
-
     it('drops the shapes a multi-line box has no use for', async () => {
       const wrapper = await mount()
 
@@ -144,11 +136,20 @@ describe('m-textarea · variants', () => {
   })
 
   describe('support line', () => {
-    it('reserves its row even with nothing to say, so validity never reflows the form', async () => {
-      const wrapper = await mount()
+    // Decision 2026-10-19: reserved only when something can appear in it.
+    it('renders no row when nothing can appear in it, an empty one when an error is bound', async () => {
+      const bare = await mount()
+      expect(bare.find('.ui-textarea__support').exists()).toBe(false)
+
+      const bound = await mount({ errorMessage: undefined })
+      expect(bound.find('.ui-textarea__support').exists()).toBe(true)
+      expect(bound.find('.ui-textarea__message').text()).toBe('')
+    })
+
+    it('keeps the row for a counter alone', async () => {
+      const wrapper = await mount({ counter: true, maxlength: 20 })
 
       expect(wrapper.find('.ui-textarea__support').exists()).toBe(true)
-      expect(wrapper.find('.ui-textarea__message').text()).toBe('')
     })
 
     it('shows helper text and swaps it for the error message', async () => {
@@ -184,7 +185,6 @@ describe('m-textarea · variants', () => {
       const wrapper = await mount({}, { footer: footerSlot })
       const footer = wrapper.find('.ui-textarea__footer')
 
-      expect(wrapper.classes()).toContain('ui-textarea--composer')
       expect(footer.exists()).toBe(true)
       expect(wrapper.find('.ui-textarea__control').element.contains(footer.element)).toBe(true)
     })
@@ -244,7 +244,6 @@ describe('m-textarea · variants', () => {
     it('stays out of the container when no footer is given', async () => {
       const wrapper = await mount()
 
-      expect(wrapper.classes()).not.toContain('ui-textarea--composer')
       expect(wrapper.find('.ui-textarea__footer').exists()).toBe(false)
     })
   })
@@ -293,15 +292,14 @@ describe('m-textarea · variants', () => {
   })
 
   describe('state modifiers', () => {
-    it('reflects populated, disabled and readonly on the root', async () => {
+    it('reflects disabled and readonly on the root', async () => {
       const wrapper = await mount({ modelValue: 'text', disabled: true, readonly: true })
 
-      expect(wrapper.classes()).toContain('ui-textarea--populated')
       expect(wrapper.classes()).toContain('ui-textarea--disabled')
       expect(wrapper.classes()).toContain('ui-textarea--readonly')
     })
 
-    it('marks an editable field interactive, so hover chrome applies to it alone', async () => {
+    it('marks an editable field interactive, so the grip answers it alone', async () => {
       const editable = await mount()
       expect(editable.classes()).toContain('ui-textarea--interactive')
 

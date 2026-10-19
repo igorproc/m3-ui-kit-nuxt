@@ -43,7 +43,7 @@
 | Примитив | Кто ждёт | План |
 |---|---|---|
 | Внутренний popover: кламп высоты, RTL, перемер, `appear` | menu, dropdown, autocomplete, tooltip, search view, color-input, split | [menu](overlays/menu.md) |
-| `MMenuItem` / `MMenuGroup`, роль поверхности не `menu` для listbox | dropdown, autocomplete, color-input | [menu](overlays/menu.md) |
+| `MMenuItem` / `MMenuGroup`, роль поверхности не `menu` для listbox | dropdown, autocomplete, color-input, search view | [menu](overlays/menu.md) |
 | Порядок открытия и фокус в `MOverlay` (A11-12), прокрутка панели | dialog, sheet, drawer | [overlay](overlays/overlay.md) |
 | Общий постоянный живой регион | snackbar, alert, banner, lazy, file-upload | [snackbar](feedback/snackbar.md) |
 | Общий roving-контроллер (вынос, без третьего) | toolbar, chip-group, swatches, navigation | [selection-group](form/selection-group.md) ВГ-3 |
@@ -89,7 +89,7 @@
 - Card (интерактивная), list (Expressive-геометрия, `ul`), divider (inset-ось).
 - Dialog (fullscreen, `alertdialog`), sheet (+ side sheet), tooltip (rich), snackbar (инверсия,
   длительности, очередь).
-- Search view, badge (размещение), progress (зазор, stop), loading (contained).
+- Search view (план v2: полный M3-поиск на движке и панели MDropdown, решение владельца 2026-10-19), badge (размещение), progress (зазор, stop), loading (contained).
 
 ## Волна 6 — поля и пикеры
 

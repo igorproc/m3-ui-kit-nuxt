@@ -202,20 +202,6 @@ describe('m-otp-input · variants', () => {
       expect(cells(wrapper).map(cell => cell.text())).toEqual(['•', '•', ''])
     })
 
-    // The dev warnings are not observable under Vitest (`import.meta.dev` is
-    // false); the retired values still have to render for their grace release.
-    it('still masks with a retired mask="true" for one release', async () => {
-      const wrapper = await mount({ length: 4, modelValue: '12', mask: true })
-
-      expect(cells(wrapper).map(cell => cell.text())).toEqual(['•', '•', '', ''])
-    })
-
-    it('still draws a retired glyph string for one release', async () => {
-      const wrapper = await mount({ length: 2, modelValue: '12', mask: '*' })
-
-      expect(cells(wrapper).map(cell => cell.text())).toEqual(['*', '*'])
-    })
-
     it('never masks an empty cell — there is nothing to hide', async () => {
       const wrapper = await mount({ length: 3, modelValue: '1', mask: 'always' })
 
@@ -235,7 +221,7 @@ describe('m-otp-input · variants', () => {
 
     it('lets a consumer replace the mask', async () => {
       const wrapper = await mount(
-        { length: 2, modelValue: '12', mask: true },
+        { length: 2, modelValue: '12', mask: 'always' },
         { mask: () => 'x' },
       )
 

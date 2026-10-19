@@ -11,7 +11,8 @@ const items: City[] = [
   { id: 3, name: 'Gamma' },
 ]
 
-const base = { items, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off' } as const
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
+const base = { items, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off', messages } as const
 
 let host: HTMLElement
 let current: { unmount: () => void } | null = null
@@ -58,7 +59,7 @@ describe('m-autocomplete · a11y', () => {
 
       await input.trigger('keydown', { key: 'ArrowDown' })
       await nextTick()
-      const active = document.querySelector('.ui-autocomplete__option--active')
+      const active = document.querySelector('.ui-dropdown-panel__option--active')
       expect(active?.id).toBe(wrapper.find('input.ui-text-field__input').attributes('aria-activedescendant'))
     })
 
@@ -68,7 +69,7 @@ describe('m-autocomplete · a11y', () => {
       await nextTick()
 
       expect(document.querySelector('[role="listbox"]')!.getAttribute('aria-multiselectable')).toBe('true')
-      const option = document.querySelector('.ui-autocomplete__option')!
+      const option = document.querySelector('.ui-dropdown-panel__option')!
       expect(option.getAttribute('role')).toBe('option')
       expect(option.getAttribute('aria-selected')).toBe('false')
     })
@@ -91,9 +92,9 @@ describe('m-autocomplete · a11y', () => {
       await wrapper.find('input.ui-text-field__input').trigger('keydown', { key: 'ArrowDown' })
       await nextTick()
 
-      const selected = document.querySelector('.ui-autocomplete__option.ui-list-item--selected')!
-      expect(selected.querySelector('.ui-autocomplete__check')).not.toBeNull()
-      expect(document.querySelectorAll('.ui-autocomplete__check')).toHaveLength(1)
+      const selected = document.querySelector('.ui-dropdown-panel__option.ui-list-item--selected')!
+      expect(selected.querySelector('.ui-dropdown-panel__check')).not.toBeNull()
+      expect(document.querySelectorAll('.ui-dropdown-panel__check')).toHaveLength(1)
     })
 
     it('announces "no results" through a live region that was already there', async () => {

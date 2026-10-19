@@ -9,7 +9,6 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps } from '#kit/shared/utils/props'
 import { ICONS } from '#kit/shared/constants/icons'
-import type { MSize } from '#kit/shared/types/props'
 import type { MButtonDensity } from '#kit/components/ui/button/props'
 
 export interface MFabMenuItem {
@@ -28,18 +27,10 @@ export const mFabMenuProps = {
   ...makeColorProps(),
   /** FAB step: 40 / 56 / 96. */
   density: { type: String as PropType<MButtonDensity>, default: 'default' },
-  /**
-   * @deprecated Use `density`: `sm` → `compact`, `md` → `default`,
-   * `lg` → `comfortable`. Still honoured for one release.
-   */
-  size: { type: String as PropType<MSize>, default: undefined },
   disabled: { type: Boolean, default: false },
   items: { type: Array as PropType<MFabMenuItem[]>, default: () => [] },
-  /**
-   * Edge the FAB and its actions align to. `left` / `right` are retired
-   * (`start` / `end`) and still honoured for one release.
-   */
-  align: { type: String as PropType<MFabMenuAlign | 'left' | 'right'>, default: 'end' },
+  /** Edge the FAB and its actions align to, in the writing direction. */
+  align: { type: String as PropType<MFabMenuAlign>, default: 'end' },
   /** Accessible name of the default FAB; no default copy is shipped. */
   ariaLabel: { type: String, default: undefined },
   openIcon: { type: String, default: ICONS.add },

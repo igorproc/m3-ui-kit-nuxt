@@ -33,10 +33,9 @@
 </template>
 
 <script setup lang="ts">
-import { useVModel } from '@vueuse/core'
 import UiButton from '#kit/components/ui/button/index.vue'
 import UiIcon from '#kit/components/ui/icon/index.vue'
-import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
+import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
 import { useSegmentedButton } from '#kit/composables/button/useSegmentedButton'
 import { useReducedMotion } from '#kit/composables/useReducedMotion'
 import { toggleTransition } from '../morph'
@@ -45,21 +44,15 @@ import type { MButtonGroupModelValue } from './props'
 
 const props = defineProps(mButtonGroupProps)
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: MButtonGroupModelValue): void
-}>()
-
-const value = useVModel(props, 'modelValue', emit, {
-  passive: true,
-  deep: true,
-})
+/** Selected value, or values with `multiple`. */
+const value = defineModel<MButtonGroupModelValue>()
 
 // The toggle look comes from MButton's selected / unselected classes; the
 // state itself is announced by the engine (`aria-checked` or `aria-pressed`),
 // so the buttons get no `selected` prop of their own.
 const { isSelected, groupAttrs, segmentAttrs, segmentRef } = useSegmentedButton(value, props)
 
-useButtonNameWarning('m-button-group', () => undefined)
+useButtonNameWarning('m-button-group', () => undefined, '`aria-label` or `aria-labelledby`')
 
 // Every button of a connected group is a toggle: a selected one becomes a pill on a spring.
 const reducedMotion = useReducedMotion()
@@ -75,29 +68,33 @@ const reducedMotion = useReducedMotion()
   max-width: 100%;
   gap: g($t, 'gap');
 
-  // The doubled class outranks MButton's own round and selected-square
-  // corners. Inner corners stay small; pressing does not reshape, only
-  // selection does.
-  &__item.ui-button {
-    border-radius: g($t, 'inner');
+  // The step class outranks MButton's own toggle corners. Inner corners stay
+  // small; the ends and a selected button are the step's pill. Pressing does
+  // not reshape, only selection does.
+  @each $step in ('compact', 'default', 'comfortable') {
+    &__item.ui-button.ui-button--#{$step} {
+      $outer: g($t, 'outer.#{$step}');
 
-    &:first-child {
-      border-start-start-radius: g($t, 'outer');
-      border-end-start-radius: g($t, 'outer');
-    }
+      border-radius: g($t, 'inner');
 
-    &:last-child {
-      border-start-end-radius: g($t, 'outer');
-      border-end-end-radius: g($t, 'outer');
-    }
+      &:first-child {
+        border-start-start-radius: $outer;
+        border-end-start-radius: $outer;
+      }
 
-    &:focus-visible {
-      z-index: 1;
+      &:last-child {
+        border-start-end-radius: $outer;
+        border-end-end-radius: $outer;
+      }
+
+      &.ui-button--selected {
+        border-radius: $outer;
+      }
     }
   }
 
-  &__item.ui-button.ui-button--selected {
-    border-radius: g($t, 'selected');
+  &__item.ui-button:focus-visible {
+    z-index: 1;
   }
 }
 </style>

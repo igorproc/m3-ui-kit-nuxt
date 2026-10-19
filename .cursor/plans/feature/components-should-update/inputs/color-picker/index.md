@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита на системе M3 (слайдер, поля, выбор) · Токены Compose: нет · Код: `src/runtime/components/ui/color-picker/`, части `src/runtime/components/fragments/color-picker/{Canvas,Edit,Preview,Swatches}.vue` ([canvas.md](canvas.md), [edit.md](edit.md), [preview.md](preview.md), [swatches.md](swatches.md)), контекст `context.ts` · Аудит: `data/color-picker.json` (28 FAIL) · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–9 и тесты (документация — в docs). Сравнение образцов по цвету, группа с подписью, readonly, ошибка формата с объяснением, disabled по ролям, RTL-градиенты, слушатели только на время драга.</implementation-status>
+<implementation-status state="done" updated="2026-10-18">Реализовано: шаги 1–9 и тесты (документация — в docs). Сравнение образцов по цвету, группа с подписью, readonly, ошибка формата с объяснением, disabled по ролям, RTL-градиенты, слушатели только на время драга. M3-polish (2026-10-18, w5): ряд «превью | формат | значение», каналы своим рядом (2 × 2 при альфе), кольцо фокуса — вокруг бегунка, полосы 12 врозь (цели перекрываются, ≥ 28), плоская карточка без тени, в хосте без своей поверхности (`useColorPickerHosted`), слоты `#preview`, `#swatch`, `#actions`, выбранный образец — кольцо тенью + фокус снаружи, pressed-слой, без подъёма в readonly/disabled, шахматка — миксин `checker`, контекст → `utils/color-picker`.</implementation-status>
 
 ## Вердикт
 

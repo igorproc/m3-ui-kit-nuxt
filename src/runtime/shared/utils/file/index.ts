@@ -55,3 +55,23 @@ export function formatFileSize(bytes: number) {
   if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`
 }
+
+/**
+ * Makes a native `<input type="file">` hold exactly `files`, so `required` and
+ * a form submission see the files a field holds even when they came from its
+ * model or a drop rather than from the picker. Call on the client only; where
+ * `DataTransfer` cannot be constructed the input is left as it is.
+ */
+export function syncInputFiles(input: HTMLInputElement, files: readonly File[]) {
+  const current = input.files ? [...input.files] : []
+  if (current.length === files.length && current.every((file, index) => file === files[index])) return
+
+  try {
+    const transfer = new DataTransfer()
+    for (const file of files) transfer.items.add(file)
+    input.files = transfer.files
+  } catch {
+    // No DataTransfer constructor (Safari before 14.1): the picker's own
+    // selection stays, as it did before the sync existed.
+  }
+}

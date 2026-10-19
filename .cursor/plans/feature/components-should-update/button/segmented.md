@@ -2,7 +2,7 @@
 
 <identity>M3: Segmented buttons (baseline; в Expressive вместо них рекомендована connected button group) · Токены Compose: `OutlinedSegmentedButtonTokens`; поведение — `SegmentedButton.kt` (`SingleChoiceSegmentedButtonRow`, `MultiChoiceSegmentedButtonRow`, `SegmentedButtonDefaults`) · Код: `src/runtime/components/ui/button/segmented/`, композабл `src/runtime/composables/button/useSegmentedButton.ts`, токены `assets/stylesheet/components/button/segmented/_index.scss` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-07">Реализовано. В-1 остаётся рядом с connected-группой на общем движке (`useSegmentedButton` переиспользуется `MButtonGroup`, принимает ref компонента). В-2 слот `#item` не добавлен. Мин. ширина 58 (держит контентный блок), слой фокуса 10%, подписи переносятся только по словам; если ряд не помещается — горизонтальная прокрутка. Pressed 12% (СВ-1).</implementation-status>
+<implementation-status state="done" updated="2026-10-19">Реализовано. В-1 остаётся рядом с connected-группой на общем движке (`useSegmentedButton` переиспользуется `MButtonGroup`, принимает ref компонента). В-2 слот `#item` не добавлен. Мин. ширина 58 (держит контентный блок), слой фокуса 10%, подписи переносятся только по словам; если ряд не помещается — горизонтальная прокрутка. Pressed 12% (СВ-1). M3-polish (2026-10-19): равные сегменты (`grid-auto-columns: 1fr`) с местом под галочку — выбор не двигает соседей (Q-3); слой + рипл (Q-2); hairline из карты; `loading` удалён (Q-12); `defineModel`; один тип пункта. CSS 9 → 4.4 KB.</implementation-status>
 
 ## Вердикт
 

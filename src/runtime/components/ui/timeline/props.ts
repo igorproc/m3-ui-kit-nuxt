@@ -10,12 +10,13 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MColor } from '#kit/shared/types/props'
 import type { MSurfaceVariant } from '#kit/components/ui/surface/props'
-import type {
-  MTimelineDensity,
-  MTimelineLine,
-  MTimelineResolvedSide,
-  MTimelineSide,
-} from '#kit/composables/timeline/context'
+import type { MFieldDensity } from '#kit/components/ui/text-field/props'
+
+export type MTimelineSide = 'start' | 'end' | 'alternate'
+/** Rhythm between items: the kit's density steps. */
+export type MTimelineDensity = MFieldDensity
+export type MTimelineLine = 'solid' | 'dashed' | 'none'
+export type MTimelineResolvedSide = 'start' | 'end'
 
 export const mTimelineProps = {
   /** Which side content sits on. `alternate` zig-zags by registration order. */
@@ -66,3 +67,15 @@ export const mTimelineItemProps = {
 }
 
 export type MTimelineItemProps = ExtractPublicPropTypes<typeof mTimelineItemProps>
+
+/** Slots of `<MTimelineItem>`. */
+export interface MTimelineItemSlots {
+  /** Replaces the time in the opposite column. */
+  opposite?: () => unknown
+  /** Content of the marker dot (an icon, a figure); decorative. */
+  dot?: () => unknown
+  /** Replaces the title text. */
+  title?: () => unknown
+  /** The event's body; replaces `text`. */
+  default?: () => unknown
+}

@@ -39,9 +39,8 @@
 <script setup lang="ts">
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { useAvatar } from '#kit/composables/avatar/useAvatar'
-import { useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
 import type { MAvatarDefaultSlot, MAvatarFallbackSlot } from './props'
-import { AVATAR_SIZE_TO_DENSITY, mAvatarProps } from './props'
+import { mAvatarProps } from './props'
 
 const props = defineProps(mAvatarProps)
 const emit = defineEmits<{
@@ -55,14 +54,6 @@ defineSlots<{
 
 const slots = useSlots()
 const image = useTemplateRef<HTMLImageElement>('image')
-
-useRetiredValueWarning('m-avatar', 'size', () => props.size, {
-  sm: '`density="compact"`',
-  md: '`density="default"`',
-  lg: '`density="comfortable"`',
-})
-
-const density = computed(() => (props.size ? AVATAR_SIZE_TO_DENSITY[props.size] : props.density))
 
 const { normalizedName, initials, fallbackIcon, failed, showImage, errorEvent, rootAttrs, imageAttrs } = useAvatar(props, {
   image,
@@ -83,7 +74,7 @@ const fallbackSlotProps = computed<MAvatarFallbackSlot>(() => ({
 @use '#kit/assets/stylesheet/components/avatar/index' as t;
 
 .ui-avatar {
-  $t: material-map(t.$tokens, 'md-avatar');
+  $t: t.$tokens;
 
   display: inline-flex;
   align-items: center;

@@ -1,52 +1,49 @@
 @use 'sass:map';
 @use '../../../abstracts/forward.scss' as *;
 
-$hover-opacity: state-opacity(hover);
-$focus-opacity: state-opacity(focus);
-$pressed-opacity: state-opacity(pressed);
-$disabled-container-opacity: state-opacity(disabled-container);
-$disabled-content-opacity: state-opacity(disabled-content);
 $on-surface: map.get($theme-color-link, 'on-surface');
 
-// One surface treatment for a (variant, scheme) pair: $container is the
-// background fill, $on-container the icon/state-layer source.
-@function fab-surface($container, $on-container) {
-  @return (container: (color: $container,
-      hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
-      focus: (color: color-mix(in srgb, $on-container $focus-opacity, $container)),
-      pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
-      disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
+// M3's two FAB sets of one role: `tonal` = the role's container (the default
+// FAB), `filled` = the role itself. Hover, focus and pressed are drawn by the
+// FAB's state layer in its content colour, so nothing is premixed here.
+@function fab-sets($role) {
+  @return (
+    tonal: (
+      container: map.get($theme-color-link, '#{$role}-container'),
+      content: map.get($theme-color-link, 'on-#{$role}-container'),
     ),
-    icon: (color: $on-container,
-      disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-    ));
+    filled: (
+      container: map.get($theme-color-link, $role),
+      content: map.get($theme-color-link, 'on-#{$role}'),
+    ),
+  );
 }
 
-// A full MD3 role in M3's two FAB sets: `tonal` = the role's container (the
-// default FAB), `filled` = the role itself.
-@function fab-scheme($role, $on-role, $container, $on-container) {
-  @return (tonal: fab-surface($container, $on-container),
-    filled: fab-surface($role, $on-role));
-}
-
-$tokens: (
-  primary: fab-scheme(map.get($theme-color-link, 'primary'),
-    map.get($theme-color-link, 'on-primary'),
-    map.get($theme-color-link, 'primary-container'),
-    map.get($theme-color-link, 'on-primary-container')),
-  secondary: fab-scheme(map.get($theme-color-link, 'secondary'),
-    map.get($theme-color-link, 'on-secondary'),
-    map.get($theme-color-link, 'secondary-container'),
-    map.get($theme-color-link, 'on-secondary-container')),
-  tertiary: fab-scheme(map.get($theme-color-link, 'tertiary'),
-    map.get($theme-color-link, 'on-tertiary'),
-    map.get($theme-color-link, 'tertiary-container'),
-    map.get($theme-color-link, 'on-tertiary-container')),
-  error: fab-scheme(map.get($theme-color-link, 'error'),
-    map.get($theme-color-link, 'on-error'),
-    map.get($theme-color-link, 'error-container'),
-    map.get($theme-color-link, 'on-error-container')),
-
+// Shared by MButtonFab and MButtonExtendedFab (and the open FAB of MFabMenu).
+$schemes: (
+  primary: fab-sets('primary'),
+  secondary: fab-sets('secondary'),
+  tertiary: fab-sets('tertiary'),
+  error: fab-sets('error'),
+  disabled: (
+    container: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent),
+    content: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent),
+  ),
+  state: (
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+  ),
+  elevation: (
+    resting: elevation(3),
+    hover: elevation(4),
+    pressed: elevation(3),
+  ),
+  motion: (
+    duration: map.get(map.get($theme-animation-link, 'duration'), 'short', '3'),
+    easing: map.get(map.get($theme-animation-link, 'easing'), 'standard'),
+  ),
+);
+$tokens: map.merge($schemes, (
   // The family's density steps: baseline small FAB 40, FAB 56, large FAB 96.
   density: (
     compact: (container: (size: 40rem, shape: map.get($theme-shape-link, 'medium')),
@@ -56,13 +53,4 @@ $tokens: (
     comfortable: (container: (size: 96rem, shape: map.get($theme-shape-link, 'extra-large')),
       icon: (size: 36rem)),
   ),
-
-  // Shared
-  elevation: (resting: elevation(3),
-    hover: elevation(4),
-    pressed: elevation(3),
-  ),
-  motion: (duration: map.get(map.get($theme-animation-link, 'duration'), 'short', '3'),
-    easing: map.get(map.get($theme-animation-link, 'easing'), 'standard'),
-  )
-);
+));

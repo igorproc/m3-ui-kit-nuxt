@@ -21,7 +21,30 @@ describe('m-dropdown · a11y', () => {
     expect(field.attributes('aria-controls')).toBeTruthy()
     // A select offers no inline completion; the combobox says so.
     expect(field.attributes('aria-autocomplete')).toBe('none')
-    expect(field.attributes('readonly')).toBeDefined()
+    // Not `readonly`: a screen reader would call a working select read-only.
+    // Typing is refused instead, and no virtual keyboard comes up.
+    expect(field.attributes('readonly')).toBeUndefined()
+    expect(field.attributes('inputmode')).toBe('none')
+    expect(field.attributes('autocomplete')).toBe('off')
+  })
+
+  it('is read-only on the input only when the prop says so', async () => {
+    const wrapper = await mount({ ...base, readonly: true })
+
+    expect(input(wrapper).attributes('readonly')).toBeDefined()
+  })
+
+  it('refuses typed text and puts back what a composition left', async () => {
+    const wrapper = await mount({ ...base, modelValue: 3 })
+    const element = input(wrapper).element as HTMLInputElement
+
+    const typed = new InputEvent('beforeinput', { inputType: 'insertText', data: 'x', cancelable: true })
+    element.dispatchEvent(typed)
+    expect(typed.defaultPrevented).toBe(true)
+
+    element.value = 'Gammaに'
+    element.dispatchEvent(new CompositionEvent('compositionend', { data: 'に' }))
+    expect(element.value).toBe('Gamma')
   })
 
   it('points aria-controls at the listbox it opens', async () => {
@@ -84,7 +107,7 @@ describe('m-dropdown · a11y', () => {
   })
 
   it('lets the listbox own options only; progress and state sit beside it', async () => {
-    const wrapper = await mount({ items: [], loading: true })
+    const wrapper = await mount({ items: [], loading: true, messages: { loading: 'Loading', empty: 'Nothing' } })
     await open(wrapper)
 
     const listbox = document.querySelector('[role="listbox"]')!
@@ -92,12 +115,12 @@ describe('m-dropdown · a11y', () => {
     expect(document.querySelector('[role="progressbar"]')).not.toBeNull()
 
     await wrapper.setProps({ loading: false })
-    expect(document.querySelector('.ui-dropdown__state')).not.toBeNull()
-    expect(listbox.querySelector('.ui-dropdown__state')).toBeNull()
+    expect(document.querySelector('.ui-dropdown-panel__state')).not.toBeNull()
+    expect(listbox.querySelector('.ui-dropdown-panel__state')).toBeNull()
   })
 
   it('announces the empty panel through a live region that was already there', async () => {
-    const wrapper = await mount({ items: [] })
+    const wrapper = await mount({ items: [], messages: { empty: 'No options' } })
     const region = wrapper.find('[role="status"]')
 
     expect(region.exists()).toBe(true)
@@ -124,11 +147,20 @@ describe('m-dropdown · a11y', () => {
     const wrapper = await mount({ ...base, modelValue: 3 })
     await open(wrapper)
 
-    const checks = document.querySelectorAll('.ui-dropdown__check')
+    const checks = document.querySelectorAll('.ui-dropdown-panel__check')
     expect(checks).toHaveLength(1)
     expect(checks[0]!.closest('.ui-list-item__trailing')).not.toBeNull()
-    expect(checks[0]!.closest('.ui-dropdown__option')!.classList).toContain('ui-list-item--selected')
-    expect(document.querySelectorAll('.ui-dropdown__option .ui-list-item__leading')).toHaveLength(0)
+    expect(checks[0]!.closest('.ui-dropdown-panel__option')!.classList).toContain('ui-list-item--selected')
+    expect(document.querySelectorAll('.ui-dropdown-panel__option .ui-list-item__leading')).toHaveLength(0)
+  })
+
+  it('keeps the place of the check on every row of a multiple panel, shown only on the chosen', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [3] })
+    await open(wrapper)
+
+    const checks = [...document.querySelectorAll('.ui-dropdown-panel__check')]
+    expect(checks).toHaveLength(options().length)
+    expect(checks.filter(check => !check.classList.contains('ui-dropdown-panel__check--off'))).toHaveLength(1)
   })
 
   it('reports the combobox busy while the adapter validates the choice', async () => {

@@ -279,12 +279,15 @@ describe('m-list-item', () => {
     })
   })
 
-  it('still accepts the retired loading prop without any effect', async () => {
-    const wrapper = await mountSuspended(MListItem, { props: { interactive: true, loading: true } })
+  // Q-1 (M3-polish): the slot is kebab-case like every other multi-word slot;
+  // Vue does not normalise slot names, so `#trailing-supporting` used to render nothing.
+  it('fills the trailing supporting text through #trailing-supporting', async () => {
+    const wrapper = await mountSuspended(MListItem, {
+      props: { headline: 'Inbox' },
+      slots: { 'trailing-supporting': () => '12' },
+    })
 
-    expect(wrapper.attributes('aria-busy')).toBeUndefined()
-    expect(wrapper.attributes('tabindex')).toBe('0')
-    expect(wrapper.classes()).not.toContain('ui-list-item--disabled')
+    expect(wrapper.find('.ui-list-item__trailing-supporting').text()).toBe('12')
   })
 
   describe('inside a list', () => {

@@ -119,14 +119,17 @@ const closeSlotProps = computed<MBannerCloseSlot>(() => ({
 .ui-banner {
   $t: material-map(t.$tokens, 'md-banner');
 
-  display: grid;
   align-items: start;
   gap: g($t, 'root-gap');
   min-height: g($t, 'root-min-height');
   padding-block: g($t, 'root-padding-block');
   padding-inline: g($t, 'root-padding-inline');
 
+  // The root is an MSurface: whatever the surface also sets is written on
+  // `.ui-surface`, because the surface's own rules weigh one class and in a
+  // production build its stylesheet may load after this one.
   &.ui-surface {
+    display: grid;
     border-radius: g($t, 'root-shape');
     border-style: solid;
     border-width: 0;
@@ -213,34 +216,32 @@ const closeSlotProps = computed<MBannerCloseSlot>(() => ({
     }
   }
 
-  &--surface {
+  &--surface.ui-surface {
     color: g($t, 'surface-content-color');
     background-color: g($t, 'surface-container-color');
 
     // M3 separates a page-level banner from following content with a divider.
     box-shadow: inset 0 calc(-1 * #{g($t, 'surface-divider-width')}) 0 0 g($t, 'surface-divider-color');
 
-    // Forced colours drop the shadow that draws the divider. `.ui-surface`
-    // outweighs the root's own `border-width: 0` above.
+    // Forced colours drop the shadow that draws the divider. Weighs what the
+    // root's own `border-width: 0` above does, and comes after it.
     @include forced-colors {
-      &.ui-surface {
-        border-block-end: 1px solid CanvasText;
-      }
+      border-block-end: 1px solid CanvasText;
     }
   }
 
-  &--tonal {
+  &--tonal.ui-surface {
     color: g($t, 'tonal-content-color');
     background-color: g($t, 'tonal-container-color');
 
     @include forced-colors {
-      &.ui-surface {
-        border: 1px solid CanvasText;
-      }
+      border: 1px solid CanvasText;
     }
   }
 
-  & &__close {
+  // Three classes: MButton's variant colours already weigh two
+  // (`.ui-button.ui-button--text`), and its sheet may load later in production.
+  &.ui-surface &__close {
     grid-area: close;
     display: inline-flex;
     align-items: center;
@@ -264,7 +265,7 @@ const closeSlotProps = computed<MBannerCloseSlot>(() => ({
   }
 
   @media (prefers-reduced-motion: reduce) {
-    & &__close { transition: none; }
+    &.ui-surface &__close { transition: none; }
   }
 }
 </style>

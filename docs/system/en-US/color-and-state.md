@@ -27,19 +27,24 @@ complete there is no active cell. Confirmation is the application's job, not the
 ## States
 
 Every interactive component handles five: **initial, hover, pressed, focused, disabled**.
-Hover and pressed are `color-mix` at the MD3 opacities, resolved at build time. The
-opacities live in one map (`$theme-state-link`: hover 8%, focus 10%, pressed 12%,
-dragged 16%, disabled container 12% / content 38%, and `disabled-container-subtle` 4% for a
-disabled filled field's fill) and are read with `state-opacity()` —
-never a literal:
+Hover, focus, pressed and dragged are a **layer**: the `::before` overlay in the content's own
+ink that [craft.md §1](craft.md#the-background-swap) builds, its opacity set to the MD3 value
+for the state — never a pre-mixed background. The opacities live in one map
+(`$theme-state-link`: hover 8%, focus 10%, pressed 12%, dragged 16%) and are read with
+`state-opacity()`, never a literal:
 
 ```scss
 @include can-hover {
-  &:hover {
-    background: color-mix(in srgb, #{$color} state-opacity(hover), transparent);
+  &:hover::before {
+    opacity: state-opacity(hover);
   }
 }
 ```
+
+In the button family a press is the ripple alone, with no pressed layer under it
+([decisions.md](decisions.md)). Disabled is where `color-mix` stays: the property the variant
+owns, mixed at the disabled opacity — container 12%, content 38%, and
+`disabled-container-subtle` 4% for a disabled filled field's fill.
 
 Every `:hover` rule sits inside `@include can-hover` (`@media (hover: hover)`), so a tap on
 a touch screen does not leave the state stuck. Keep `:focus-visible` and other states
@@ -54,8 +59,10 @@ property for a state — see [principles.md](principles.md#q2-does-the-component
 ### A state is never colour-only
 
 Colour alone fails colour-blind users and low-contrast displays. Pair it: an icon, a border,
-a message, a position. The support line under a field is reserved height for exactly this
-reason — the layout must not move when an error appears.
+a message, a position. Wherever an error can arrive, the support line under a field is
+reserved height for exactly this reason — the layout must not move when the error appears.
+A field with nothing that could appear there (no helper, no path, not required, no helper or
+error slot, no `error` / `errorMessage` bound by its parent) renders no line at all.
 
 ### Focus is colour, not motion
 
@@ -67,9 +74,10 @@ already satisfies WCAG 2.4.7.
 
 Focus outranks error on the edge: an invalid field takes the focus colour while it is
 focused, and the error stays in the label, the message and its icon — which a state must
-have anyway. Read-only fields show focus like any other. Every other control (buttons,
-chips, items, thumbs) uses the shared `@include focus-ring`. In forced colors an error edge
-is dashed: a system colour for it can vanish on a light contrast theme, a line style cannot.
+have anyway. Read-only fields show focus and answer hover like any other (decisions.md).
+Every other control (buttons, chips, items, thumbs) uses the shared `@include focus-ring`. In
+forced colors an error edge is dashed: a system colour for it can vanish on a light contrast
+theme, a line style cannot.
 
 The one case where a caret and a ring genuinely disagree — returning to edit a fully typed
 code, where the caret sits *after* a character while the ring highlights the cell — was

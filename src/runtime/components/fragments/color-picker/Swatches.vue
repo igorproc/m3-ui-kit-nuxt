@@ -21,21 +21,27 @@
       :class="{
         'ui-color-swatches__item--selected': swatch.selected,
         'ui-color-swatches__item--active': focused && activeIndex === index,
+        'ui-color-swatches__item--light': swatch.light,
       }"
       role="option"
       :aria-selected="swatch.selected"
       :aria-label="swatch.label"
-      :style="{ '--swatch-color': swatch.value }"
+      :style="{ '--m-color-picker-swatch': swatch.value }"
       @pointerdown.prevent
       @click="choose(index)"
     >
-      <MIcon
-        v-if="swatch.selected"
-        :name="ICONS.check"
-        class="ui-color-swatches__check"
-        :class="{ 'ui-color-swatches__check--dark': swatch.light }"
-        aria-hidden="true"
-      />
+      <slot
+        :swatch="{ value: swatch.value, label: swatch.label }"
+        :selected="swatch.selected"
+        name="swatch"
+      >
+        <MIcon
+          v-if="swatch.selected"
+          :name="ICONS.check"
+          class="ui-color-swatches__check"
+          aria-hidden="true"
+        />
+      </slot>
     </div>
   </div>
 </template>
@@ -49,7 +55,7 @@
  */
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import { useColorPickerContext } from '#kit/composables/color-picker/context'
+import { useColorPickerContext } from '#kit/utils/color-picker/context'
 import { useListbox } from '#kit/composables/listbox/useListbox'
 import { isLightColor, normalizeSwatch, parseColor } from '#kit/shared/utils/color'
 import type { ColorSwatch, RGBA } from '#kit/shared/utils/color'
@@ -59,6 +65,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+defineSlots<{ swatch?: (props: { swatch: { value: string, label: string }, selected: boolean }) => unknown }>()
 
 const ctx = useColorPickerContext()
 const listId = useId()
@@ -138,6 +146,8 @@ function onKeydown(event: KeyboardEvent) {
   outline: none;
 
   &__item {
+    position: relative;
+    isolation: isolate;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -145,13 +155,56 @@ function onKeydown(event: KeyboardEvent) {
     height: g($t, 'swatches.size');
     border: g($t, 'swatches.outline-width') solid g($t, 'swatches.outline');
     border-radius: g($t, 'swatches.radius');
-    background-color: var(--swatch-color);
+    background-color: var(--m-color-picker-swatch);
+
+    // The ink that stands out from the colour: light on a dark swatch, dark
+    // on a light one. The check and the press layer take it.
+    color: g($t, 'swatches.selected.check.on-dark');
     cursor: pointer;
+
+    &--light {
+      color: g($t, 'swatches.selected.check.on-light');
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: currentcolor;
+      opacity: 0;
+      pointer-events: none;
+    }
 
     // The colour is the option itself: forcing would flatten every swatch.
     @include forced-colors {
       forced-color-adjust: none;
       border-color: CanvasText;
+    }
+
+    // The chosen swatch: a ring in the content ink and a check, never colour
+    // alone. A shadow, not the outline, so the focus ring can stand around it.
+    &--selected {
+      box-shadow: 0 0 0 g($t, 'swatches.selected.width') g($t, 'swatches.selected.ring');
+
+      @include forced-colors {
+        outline: g($t, 'swatches.selected.width') solid Highlight;
+      }
+    }
+
+    // The keyboard's position in the list: the kit's focus ring, outside the
+    // selection ring.
+    &--active {
+      @include focus-ring(g($t, 'swatches.selected.focus-offset'));
+    }
+  }
+
+  // A small lift under the pointer and a layer under the press — only while
+  // the palette can be chosen from.
+  &:not(&--locked) &__item {
+    &:active::before {
+      opacity: g($t, 'swatches.layer.pressed');
     }
 
     @media (prefers-reduced-motion: no-preference) {
@@ -163,33 +216,10 @@ function onKeydown(event: KeyboardEvent) {
         }
       }
     }
-
-    // The chosen swatch: a ring in the content ink and a check, never colour
-    // alone.
-    &--selected {
-      outline: g($t, 'swatches.selected.width') solid g($t, 'swatches.selected.ring');
-      outline-offset: g($t, 'swatches.selected.width');
-
-      @include forced-colors {
-        outline-color: Highlight;
-      }
-    }
-
-    // The keyboard's position in the list: the kit's focus ring.
-    &--active {
-      @include focus-ring;
-    }
   }
 
-  // The check stands out from the swatch it sits on: light ink on a dark
-  // colour, dark ink on a light one.
   &__check {
-    color: g($t, 'swatches.selected.check.on-dark');
     font-size: g($t, 'swatches.selected.check.size');
-
-    &--dark {
-      color: g($t, 'swatches.selected.check.on-light');
-    }
   }
 
   &--locked &__item {

@@ -124,13 +124,13 @@ describe('m-dropdown · keyboard (APG select-only combobox)', () => {
     const wrapper = await mount(base)
 
     await key(wrapper, 'ArrowDown')
-    expect(optionByText('Alpha')!.classList).toContain('ui-dropdown__option--keyboard')
+    expect(optionByText('Alpha')!.classList).toContain('ui-dropdown-panel__option--keyboard')
 
     optionByText('Gamma')!.dispatchEvent(new Event('pointermove', { bubbles: true }))
     await nextTick()
     await nextTick()
     const gamma = optionByText('Gamma')!
-    expect(gamma.classList).toContain('ui-dropdown__option--active')
-    expect(gamma.classList).not.toContain('ui-dropdown__option--keyboard')
+    expect(gamma.classList).toContain('ui-dropdown-panel__option--active')
+    expect(gamma.classList).not.toContain('ui-dropdown-panel__option--keyboard')
   })
 })

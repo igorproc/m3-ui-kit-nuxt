@@ -1,12 +1,18 @@
 @use 'sass:map';
 @use '../../../abstracts/forward.scss' as *;
+@use '../index' as button;
 
 // Connected button group. Compose and MDC define it at S only; MDC applies the
-// same gap and inner corner to every button size, and so does the kit.
+// same gap and inner corner to every button size, and so does the kit. The
+// outer corners and a selected button's pill are the step's half height
+// (button `round`), not `full`: a corner set that mixes 999rem with 8 is
+// scaled down until the 8 is gone, and a spring to 999rem shows only its end.
 $tokens: (
   gap: spacing(2),
   inner: map.get($theme-shape-link, 'small'),
-  outer: map.get($theme-shape-link, 'full'),
-  // A selected button becomes a pill, whatever its neighbours.
-  selected: map.get($theme-shape-link, 'full'),
+  outer: (
+    compact: map.get(button.$tokens, density, compact, round),
+    default: map.get(button.$tokens, density, default, round),
+    comfortable: map.get(button.$tokens, density, comfortable, round),
+  ),
 );

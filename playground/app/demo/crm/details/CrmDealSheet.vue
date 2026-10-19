@@ -46,7 +46,10 @@
             <CrmDealActivity :deal-id="deal.id" />
           </MTabsPanel>
           <MTabsPanel value="files">
-            <CrmDealFiles :deal-id="deal.id" />
+            <CrmDealFiles
+              :deal-id="deal.id"
+              :queue="uploads.queueFor(deal.id)"
+            />
           </MTabsPanel>
         </template>
       </MTabs>
@@ -63,6 +66,7 @@ import { formatMoney } from '../data/crmFormat'
 import { companyName } from '../data/crmLookup'
 import { stageLabel } from '../data/crmTypes'
 import { useCrmStore } from '../composables/useCrmStore'
+import { useCrmDealUploads } from '../composables/useCrmDealUploads'
 import CrmDealActivity from './CrmDealActivity.vue'
 import CrmDealFiles from './CrmDealFiles.vue'
 import CrmDealOverview from './CrmDealOverview.vue'
@@ -74,6 +78,7 @@ const TABS: MTabItem[] = [
 ]
 
 const store = useCrmStore()
+const uploads = useCrmDealUploads()
 const titleId = useId()
 const tab = ref<string | number | null>('overview')
 

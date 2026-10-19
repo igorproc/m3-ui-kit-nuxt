@@ -2,10 +2,12 @@
  * @module messages
  *
  * @remarks
- * User-facing copy the kit ships as a fallback. Gathered here so it can be
- * pointed at a message source later — today every one of these is also a prop,
- * so an app that only needs one string changed overrides that prop and never
- * touches this file.
+ * User-facing copy the kit still ships as a fallback, gathered here so it can be
+ * pointed at a message source later. Each entry is the default of a prop — the
+ * `datePattern*` letters build the date field's placeholder, which the
+ * `placeholder` prop replaces whole — so an app overrides the prop and never
+ * touches this file. Newer components ship no copy at all: they take a
+ * `messages` prop without defaults and warn in development when a name is missing.
  *
  * Only phrases belong here. A number or a boolean default is not copy: it stays
  * a literal on the prop that exposes it, where the API table can show it.
@@ -18,11 +20,6 @@ export const MESSAGES = {
   numberIncrement: 'Increase value',
   numberDecrement: 'Decrease value',
   numberUnit: 'Change unit',
-  dropdownClear: 'Clear selection',
-  dropdownToggle: 'Toggle options',
-  dropdownLoading: 'Loading options',
-  dropdownEmpty: 'No options',
-  dropdownNoResults: 'No results',
   dateTitle: 'Select date',
   dateInputTitle: 'Enter date',
   datePrevMonth: 'Previous month',

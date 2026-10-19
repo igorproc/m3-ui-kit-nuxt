@@ -4,7 +4,6 @@
     class="ui-search"
     :class="{
       'ui-search--focused': isFocused,
-      'ui-search--empty': !modelValue,
       'ui-search--disabled': disabled,
     }"
   >
@@ -19,7 +18,6 @@
 
     <input
       v-bind="controlAttrs()"
-      :id="fieldId"
       ref="input"
       v-model="modelValue"
       class="ui-search__input"
@@ -29,7 +27,8 @@
       :disabled="disabled"
       @focus="isFocused = true"
       @blur="isFocused = false"
-      @keydown.enter="emit('submit', modelValue)"
+      @keydown.enter="onEnter"
+      @keydown.esc="onEscape"
     >
 
     <!-- Rendered while hidden, so its arrival never reflows the query. -->
@@ -91,7 +90,6 @@ defineSlots<{
 const modelValue = defineModel<string>({ default: '' })
 const isFocused = defineModel<boolean>('focused', { default: false })
 
-const fieldId = useId()
 const canClear = computed(() => Boolean(modelValue.value) && !props.disabled)
 
 // The kit ships no default name: it would be English in a kit with no i18n.
@@ -118,6 +116,24 @@ function onClear() {
   // The button disappears under the pointer; the query field is where the
   // user goes next.
   input.value?.focus()
+}
+
+// An IME confirms its candidate with Enter; that keystroke is not a search.
+// Safari reports it with `isComposing` already false, but `keyCode` 229.
+function onEnter(event: KeyboardEvent) {
+  if (event.isComposing || event.keyCode === 229) return
+  emit('submit', modelValue.value)
+}
+
+// Escape empties the query the same way in every browser (Chromium does it
+// natively, without telling anyone; Firefox does not). An empty bar lets the
+// key go on — to the dialog or sheet around it.
+function onEscape(event: KeyboardEvent) {
+  if (!modelValue.value || props.disabled) return
+  event.preventDefault()
+  event.stopPropagation()
+  modelValue.value = ''
+  emit('clear')
 }
 </script>
 
@@ -206,6 +222,16 @@ function onClear() {
     &::-webkit-search-decoration {
       appearance: none;
     }
+
+    // Autofill paints an !important background of its own, light even in a
+    // dark theme; clipped to the glyphs, the bar's container shows through.
+    &:autofill {
+      // Safari clips to text only under the prefix.
+      /* stylelint-disable-next-line property-no-vendor-prefix */
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: g($t, 'input.color');
+    }
   }
 
   // The clear button keeps its place while there is nothing to clear.
@@ -240,9 +266,12 @@ function onClear() {
     }
   }
 
-  // The container is drawn by its fill alone, which forced colours drop.
+  // The container is drawn by its fill alone, which forced colours drop. The
+  // edge is for rest only: a focused bar keeps the focus ring's width.
   @include forced-colors {
-    outline: 1px solid CanvasText;
+    &:not(.ui-search--focused) {
+      outline: 1px solid CanvasText;
+    }
 
     &--focused {
       outline-color: Highlight;

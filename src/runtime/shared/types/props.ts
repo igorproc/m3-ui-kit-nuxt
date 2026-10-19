@@ -111,3 +111,5 @@ export type BreakpointName = ReservedBreakpointName | keyof KitBreakpointRegistr
  * in {@link KitBreakpointRegistry}.
  */
 export type BreakpointFlags = Record<BreakpointName, boolean>
+
+export type * from './components'

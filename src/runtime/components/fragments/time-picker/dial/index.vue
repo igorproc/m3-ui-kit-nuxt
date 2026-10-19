@@ -11,6 +11,7 @@
     <span
       v-if="dial.hand.value.visible"
       class="ui-time-picker__hand"
+      :class="{ 'ui-time-picker__hand--dragging': dial.hand.value.dragging }"
       aria-hidden="true"
       :style="{ height: `${dial.hand.value.length * 100}%`, transform: `rotate(${dial.hand.value.angle}deg)` }"
     >
@@ -22,11 +23,9 @@
       </span>
     </span>
 
-    <!-- Numbers are what the slider's value text already says. -->
-    <Transition
-      name="ui-time-picker-face"
-      mode="out-in"
-    >
+    <!-- Numbers are what the slider's value text already says. Both faces
+         stand while they cross-fade, so the dial is never empty. -->
+    <Transition name="ui-time-picker-face">
       <span
         :key="view"
         class="ui-time-picker__numbers"
@@ -50,11 +49,11 @@
  * drawn on two rings in 24-hour hours. Behavior comes whole from
  * `useTimeDialControl`.
  */
-import type { DialNumber, TimeField } from '#kit/composables/time/createClock'
-import type { useTimeDialControl } from '#kit/composables/time/useTimeDialControl'
+import type { DialNumber, TimeField } from '#kit/utils/time/createClock'
+import type { UseTimeDialControlReturn } from '#kit/composables/time/useTimeDialControl'
 
 const props = defineProps<{
-  dial: ReturnType<typeof useTimeDialControl>
+  dial: UseTimeDialControlReturn
   view: TimeField
   ring: { outer: number, inner: number }
 }>()

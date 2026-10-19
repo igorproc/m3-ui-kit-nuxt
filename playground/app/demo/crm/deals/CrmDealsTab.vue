@@ -104,6 +104,7 @@
 
     <div class="crm-deals__footer">
       <MDropdown
+        :messages="CRM_SELECT_MESSAGES"
         class="crm-deals__size"
         :model-value="pageSize"
         :items="PAGE_SIZE_ITEMS"
@@ -125,6 +126,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { countLabel } from '../data/crmFormat'
+import { CRM_SELECT_MESSAGES } from '../data/crmSelectMessages'
 import { CRM_PAGE_SIZES, useCrmDealsTable } from '../composables/useCrmDealsTable'
 import { useCrmStore } from '../composables/useCrmStore'
 import CrmDealsPager from './CrmDealsPager.vue'

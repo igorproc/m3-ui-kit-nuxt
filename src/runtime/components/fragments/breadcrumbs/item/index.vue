@@ -73,8 +73,10 @@ if (import.meta.dev) {
   $t: material-map(t.$tokens, 'md-breadcrumbs');
 
   // Compounded with `.ui-button` to adapt the reused text-link geometry
-  // without duplicating its state layers.
-  &__link.ui-button {
+  // without duplicating its state layers, and under the block: MButton's
+  // variant colours already weigh two classes (`.ui-button.ui-button--text`),
+  // and its sheet may load after this one in a production build.
+  & &__link.ui-button {
     min-height: g($t, 'item-height');
     padding-inline: g($t, 'item-padding-inline');
     border-radius: g($t, 'item-shape');

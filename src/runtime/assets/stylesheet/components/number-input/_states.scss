@@ -7,9 +7,10 @@
 // error + hover → focused → disabled with every rule at the same weight, so
 // the later one wins: focus comes after error on the edge, and the label and
 // the message keep saying "error". Hover sits in `:where()` and weighs
-// nothing; it answers an editable field only, over its container.
+// nothing; it answers any field that is not disabled — read-only included, as
+// in Compose, where `readOnly` changes no colour — over its container.
 
-$hovered: ':where(.ui-number-input--interactive:has(.ui-number-input__control:hover))';
+$hovered: ':where(:not(.ui-number-input--disabled):has(.ui-number-input__control:hover))';
 
 @mixin states($t) {
   // ── filled · a container tone, an indicator, and a state layer on hover ──
@@ -101,7 +102,8 @@ $hovered: ':where(.ui-number-input--interactive:has(.ui-number-input__control:ho
   }
 
   // ── content · the same ink in every shape, states ascending ──
-  &--focused:where(.ui-number-input--interactive) .ui-number-input__label {
+  // Read-only shows focus like any other field (color-and-state.md).
+  &--focused .ui-number-input__label {
     color: g($t, 'focused.label.color');
   }
 

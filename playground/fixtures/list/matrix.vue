@@ -171,6 +171,47 @@
       />
     </MList>
 
+    <h2>Selection on click</h2>
+    <MList
+      class="fixture-list__panel"
+      data-test="list-pick"
+    >
+      <MListItem
+        v-for="option in pickOptions"
+        :key="option"
+        tag="button"
+        :headline="`Option ${option}`"
+        supporting-text="Supporting text"
+        :leading-icon="ICONS.email"
+        :selected="picked === option"
+        :data-test="`pick-${option}`"
+        @click="picked = option"
+      />
+    </MList>
+
+    <h2>Avatar image in leading</h2>
+    <MList
+      class="fixture-list__panel"
+      data-test="list-avatar-media"
+    >
+      <MListItem
+        v-for="density in densities"
+        :key="density"
+        :headline="`Avatar image, ${density}, large shape`"
+        supporting-text="Supporting text"
+        :data-test="`avatar-media-${density}`"
+      >
+        <template #leading>
+          <MAvatar
+            :src="thumbnail"
+            name="Ada Lovelace"
+            shape="large"
+            :density="density"
+          />
+        </template>
+      </MListItem>
+    </MList>
+
     <button
       type="button"
       data-test="after"
@@ -217,6 +258,9 @@ const thumbnail = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://w
 
 const checked = ref(true)
 const switched = ref(false)
+
+const pickOptions = ['a', 'b', 'c'] as const
+const picked = ref<typeof pickOptions[number]>('a')
 </script>
 
 <style lang="scss">

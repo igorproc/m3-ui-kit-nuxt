@@ -22,6 +22,5 @@ export function toggleTransition(reduced: boolean): string {
     ['color', reduced ? CALM : COLOR],
     ['box-shadow', STANDARD],
     ['border-color', STANDARD],
-    ['transform', STANDARD],
   ])
 }

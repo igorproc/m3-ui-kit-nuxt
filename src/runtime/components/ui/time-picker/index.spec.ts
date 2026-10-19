@@ -71,15 +71,6 @@ describe('m-time-picker', () => {
     expect(wrapper.emitted('update:modelValue')).toBeFalsy()
   })
 
-  it('still reads the retired is24h and mode spellings for one release', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '21:00', is24h: false, mode: 'keyboard' } })
-
-    expect(wrapper.find('.ui-time-picker--input').exists()).toBe(true)
-    expect(wrapper.find('.ui-time-picker__period').exists()).toBe(true)
-    warn.mockRestore()
-  })
-
   it('types the time in two fields named by the labels under them', async () => {
     const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input', modelValue: '08:30' } })
     const fields = wrapper.findAll('.ui-time-picker__field')
@@ -140,9 +131,54 @@ describe('m-time-picker', () => {
 
   it('renders the helper slot and points the fields at it', async () => {
     const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input' }, slots: { helper: () => 'Opening hours 9–18' } })
-    const helper = wrapper.find('.ui-time-picker__helper')
+    const helper = wrapper.find('.ui-picker-support__line:not([role="alert"])')
 
     expect(helper.text()).toBe('Opening hours 9–18')
     expect(wrapper.find('.ui-time-picker__field').attributes('aria-describedby')).toContain(helper.attributes('id'))
+  })
+
+  it('keeps one support line while typing; a refused part takes the helper’s place', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { mode: 'input', helperText: 'Opening hours 9–18', modelValue: '14:30' } })
+    const minutes = wrapper.findAll('.ui-time-picker__field')[1]!
+
+    expect(wrapper.find('[role="alert"]').text()).toBe('')
+    await minutes.setValue('75')
+    await minutes.trigger('blur')
+
+    expect(wrapper.find('[role="alert"]').text()).not.toBe('')
+    expect(wrapper.find('[role="alert"] .ui-icon').exists()).toBe(true)
+    expect(wrapper.find('.ui-picker-support').text()).not.toContain('Opening hours')
+    expect(minutes.attributes('aria-describedby')).toBe(wrapper.find('[role="alert"]').attributes('id'))
+  })
+
+  it('reserves no support line for a dial outside a form', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '14:30' } })
+
+    expect(wrapper.find('.ui-picker-support').exists()).toBe(false)
+  })
+
+  it('offers the mode switch only when asked, named by the app', async () => {
+    const plain = await mountSuspended(MTimePicker)
+    expect(plain.find('.ui-time-picker__actions').exists()).toBe(false)
+
+    const wrapper = await mountSuspended(MTimePicker, {
+      props: { 'modeToggle': true, 'switchToInputLabel': 'Type the time', 'switchToPickerLabel': 'Use the dial', 'onUpdate:mode': () => {} },
+    })
+    const toggle = wrapper.find('.ui-time-picker__actions button')
+
+    expect(toggle.attributes('aria-label')).toBe('Type the time')
+    await toggle.trigger('click')
+    expect(wrapper.emitted('update:mode')!.at(-1)).toEqual(['input'])
+  })
+
+  it('keeps the focus on the chosen period while read-only', async () => {
+    const wrapper = await mountSuspended(MTimePicker, { props: { modelValue: '09:00', hourCycle: 'h12', readonly: true }, attachTo: document.body })
+    const chosen = wrapper.find('.ui-time-picker__period-option--selected')
+
+    ;(chosen.element as HTMLElement).focus()
+    await chosen.trigger('keydown', { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(chosen.element)
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+    wrapper.unmount()
   })
 })

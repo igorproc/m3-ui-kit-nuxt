@@ -7,7 +7,7 @@
       'ui-file-upload__dropzone--disabled': ctx.disabled.value,
     }"
     @dragenter.prevent="enter"
-    @dragover.prevent
+    @dragover.prevent="over"
     @dragleave.prevent="leave"
     @drop.prevent="drop"
   >
@@ -75,7 +75,7 @@ import MButton from '#kit/components/ui/button/index.vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import { useFileUploadContext } from '#kit/composables/file-upload/context'
+import { useFileUploadContext } from '#kit/utils/file-upload/context'
 import { dragRefused } from './upload'
 
 const ctx = useFileUploadContext()
@@ -99,6 +99,11 @@ function enter(event: DragEvent) {
   drag.value = dragRefused(ctx.accept.value, types) ? 'refusing' : 'accepting'
 }
 
+// An inactive zone takes nothing: the cursor says so instead of offering a copy.
+function over(event: DragEvent) {
+  if (inactive.value && event.dataTransfer) event.dataTransfer.dropEffect = 'none'
+}
+
 function leave() {
   depth.value = Math.max(0, depth.value - 1)
   if (!depth.value) drag.value = null
@@ -109,6 +114,6 @@ function drop(event: DragEvent) {
   drag.value = null
   if (inactive.value) return
 
-  ctx.addFiles(Array.from(event.dataTransfer?.files ?? []), 'drop')
+  ctx.addFiles(Array.from(event.dataTransfer?.files ?? []))
 }
 </script>

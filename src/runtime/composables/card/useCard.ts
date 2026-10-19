@@ -7,12 +7,11 @@
  * root named by its title, the title's heading level, a disabled link with no
  * destination. Returns attribute bags only; classes stay with the component.
  */
-import { computed, defineAsyncComponent, useId } from 'vue'
+import { computed, useId } from 'vue'
 import type { Component, ComputedRef } from 'vue'
 import type { MCardTag } from '#kit/components/ui/card/props'
 import type { MHeadingLevel } from '#kit/shared/types/props'
-
-const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
+import { linkAttrs, linkTag } from '#kit/utils/link'
 
 export interface UseCardProps {
   tag: MCardTag
@@ -48,14 +47,8 @@ export function useCard(props: UseCardProps, options: UseCardOptions = {}): UseC
   const isLink = computed(() => props.tag === 'link')
   const isDisabled = computed(() => isLink.value && props.disabled)
 
-  // A disabled link card keeps its anchor but loses the destination: without
-  // `href` it leaves the Tab order on its own (no tabindex needed), and
-  // `role="link"` keeps `aria-disabled` meaningful to a screen reader.
-  const rootTag = computed<Component | string>(() => {
-    if (!isLink.value) return 'article'
-
-    return isDisabled.value ? 'a' : NuxtLink
-  })
+  // A disabled link card keeps its anchor but loses the destination (utils/link).
+  const rootTag = computed<Component | string>(() => (isLink.value ? linkTag(isDisabled.value) : 'article'))
 
   // The title names the card, article or link alike: a link card's content
   // would otherwise read out whole as its name. Without a title the link
@@ -63,10 +56,7 @@ export function useCard(props: UseCardProps, options: UseCardOptions = {}): UseC
   const rootAttrs = computed<Record<string, unknown>>(() => {
     const named = { 'aria-labelledby': hasTitle() ? titleId : undefined }
 
-    if (!isLink.value) return named
-    if (isDisabled.value) return { ...named, 'role': 'link', 'aria-disabled': 'true' }
-
-    return { ...named, to: props.to }
+    return isLink.value ? { ...named, ...linkAttrs(props.to, isDisabled.value) } : named
   })
 
   const titleTag = computed(() => (props.headingLevel ? `h${props.headingLevel}` : 'p'))

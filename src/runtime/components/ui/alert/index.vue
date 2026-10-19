@@ -139,11 +139,16 @@ const close = () => {
   $t: material-map($tokens, 'md-alert');
 
   position: relative;
-  display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: g($t, 'root.gap');
   padding: g($t, 'root.padding');
+
+  // The root is an MSurface, whose own `display: block` weighs one class; in a
+  // production build its stylesheet may load after this one.
+  &.ui-surface {
+    display: flex;
+  }
 
   &__icon {
     font-size: g($t, 'icon.size');

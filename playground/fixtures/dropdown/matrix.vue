@@ -31,6 +31,7 @@
           >
             <MDropdown
               v-model="values[`${state.name}-${variant}`]"
+              :messages="messages"
               :items="fruit"
               item-title="name"
               item-value="id"
@@ -50,6 +51,7 @@
       <MDropdown
         v-for="density in densities"
         :key="density"
+        :messages="messages"
         :items="fruit"
         item-title="name"
         item-value="id"
@@ -73,6 +75,9 @@ import MDropdown from '#kit/components/ui/dropdown/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import type { MDropdownVariant } from '#kit/components/ui/dropdown/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
+
+// The kit ships no copy of its own: the app names the controls and states.
+const messages = { clear: 'Clear selection', loading: 'Loading options', empty: 'No options' }
 
 const fruit = [
   { id: 1, name: 'Apple' },

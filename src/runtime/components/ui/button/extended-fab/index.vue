@@ -19,17 +19,20 @@
     >
       <slot name="prepend" />
     </span>
-    <span class="ui-extended-fab__label">
+    <span
+      class="ui-extended-fab__label"
+      :class="{ 'ui-extended-fab__label--folding': folding }"
+      @transitionend.self="onLabelTransitionEnd"
+    >
       <slot />
     </span>
   </component>
 </template>
 
 <script setup lang="ts">
-import { useSlots, watchEffect } from 'vue'
+import { ref, useSlots, watch, watchEffect } from 'vue'
 import MLoading from '#kit/components/ui/loading/index.vue'
-import { useButton } from '#kit/composables/button/useButton'
-import { useFabProps } from '#kit/composables/button/useFabProps'
+import { useButton } from '#kit/utils/button/useButton'
 import { mExtendedFabProps } from './props'
 
 const props = defineProps(mExtendedFabProps)
@@ -37,9 +40,23 @@ const slots = useSlots()
 
 const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
   block: 'ui-extended-fab',
-  props: useFabProps('m-button-extended-fab', props),
+  props,
   modifiers: () => ({ collapsed: !props.expanded }),
 })
+
+// While the label opens or closes, it stays on one line: wrapping at the
+// width it passes through would grow the button in height for a few frames.
+// Settled, a long label may wrap again. The label's opacity always moves on
+// a fold, so its end closes the window even where the width cannot animate.
+const folding = ref(false)
+
+watch(() => props.expanded, () => {
+  folding.value = true
+})
+
+function onLabelTransitionEnd(event: TransitionEvent) {
+  if (event.propertyName === 'opacity') folding.value = false
+}
 
 if (import.meta.dev) {
   watchEffect(() => {
@@ -52,44 +69,30 @@ if (import.meta.dev) {
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/extended-fab' as t;
+@use '#kit/assets/stylesheet/components/button/fab/surface' as surface;
 
 .ui-extended-fab {
-  $prefix: 'm3-extended-fab';
-  $t: material-map(t.$tokens, $prefix);
-  $fold: g($t, 'motion.fold.duration') g($t, 'motion.fold.easing');
+  $t: material-map(t.$tokens, 'm3-extended-fab');
+  $move: g($t, 'motion.duration') g($t, 'motion.easing');
+  $fold: g($t, 'fold.duration') g($t, 'fold.easing');
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  position: relative;
-  isolation: isolate;
   overflow: hidden;
   max-width: 100%;
   outline: none;
-  box-shadow: g($t, 'container.elevation.resting');
-  transition:
-    box-shadow g($t, 'motion.duration') g($t, 'motion.easing'),
-    background-color g($t, 'motion.duration') g($t, 'motion.easing'),
-    width $fold,
-    padding $fold,
-    gap $fold;
+  transition: box-shadow $move, background-color $move, color $move, padding $fold;
 
-  // Folding animates between the label's width and the square; where `auto`
-  // cannot be interpolated the fold is simply instant.
+  // The label opens to its own width; where `auto` cannot be interpolated the
+  // fold is simply instant.
   @supports (interpolate-size: allow-keywords) {
     interpolate-size: allow-keywords;
   }
 
-  &:focus-visible {
-    @include focus-ring;
-  }
-
-  // The container is only a background and a shadow, both dropped by forced colors.
-  @include forced-colors {
-    border: 1px solid ButtonText;
-  }
+  @include surface.fab-surface($t, 'ui-extended-fab');
 
   &__icon,
   &__label,
@@ -100,11 +103,19 @@ if (import.meta.dev) {
     align-items: center;
   }
 
-  // The container grows with a long label instead of clipping it.
+  // Folding closes the label, not the button: the button's width stays `auto`
+  // and follows the label frame by frame, so the icon never moves.
   &__label {
+    justify-content: center;
     min-width: 0;
+    overflow: hidden;
     overflow-wrap: anywhere;
     text-align: center;
+    transition: inline-size $fold, margin $fold, opacity $fold;
+
+    &--folding {
+      white-space: nowrap;
+    }
   }
 
   &__spinner {
@@ -124,104 +135,38 @@ if (import.meta.dev) {
     }
   }
 
-  // One variant's surface for the active scheme. Focus and pressed are separate
-  // layers, and pressed comes last: pressing a focused FAB still reads as a press.
-  @mixin apply-surface($scheme, $variant) {
-    $base: '#{$scheme}.#{$variant}';
+  @each $step in ('compact', 'default', 'comfortable') {
+    &--#{$step} {
+      $d: 'density.#{$step}';
 
-    background-color: g($t, '#{$base}.container.color');
-    color: g($t, '#{$base}.content.color');
+      min-height: g($t, '#{$d}.height');
+      border-radius: g($t, '#{$d}.shape');
+      padding-inline: g($t, '#{$d}.padding');
 
-    @include can-hover {
-      &:hover:not(.ui-extended-fab--disabled) {
-        background-color: g($t, '#{$base}.container.hover-color');
+      @include typescale(g($t, '#{$d}.font'));
+
+      .ui-extended-fab__icon,
+      .ui-extended-fab__spinner {
+        font-size: g($t, '#{$d}.icon');
+      }
+
+      .ui-extended-fab__icon ~ .ui-extended-fab__label {
+        margin-inline-start: g($t, '#{$d}.gap');
+      }
+
+      // Folded into the FAB of the same step: a square around the icon. The
+      // label closes to nothing and stays the accessible name.
+      &.ui-extended-fab--collapsed {
+        padding-inline: g($t, '#{$d}.collapsed.padding');
+
+        .ui-extended-fab__label {
+          inline-size: 0;
+          margin-inline-start: 0;
+          opacity: 0;
+          white-space: nowrap;
+        }
       }
     }
-
-    &:focus-visible:not(.ui-extended-fab--disabled) {
-      background-color: g($t, '#{$base}.container.focus-color');
-    }
-
-    &:active:not(.ui-extended-fab--disabled) {
-      background-color: g($t, '#{$base}.container.pressed-color');
-    }
-
-    &.ui-extended-fab--disabled {
-      background-color: g($t, '#{$base}.container.disabled-color');
-      color: g($t, '#{$base}.content.disabled-color');
-
-      @include forced-colors {
-        border-color: GrayText;
-        color: GrayText;
-      }
-    }
-  }
-
-  @mixin apply-scheme($scheme) {
-    $variants: ('tonal', 'filled');
-
-    @each $v in $variants {
-      &.ui-extended-fab--#{$v} {
-        @include apply-surface($scheme, $v);
-      }
-    }
-  }
-
-  @mixin apply-density($step) {
-    $d: 'density.#{$step}';
-
-    min-height: g($t, '#{$d}.height');
-    width: auto;
-    border-radius: g($t, '#{$d}.shape');
-    padding-inline: g($t, '#{$d}.padding');
-    gap: g($t, '#{$d}.gap');
-
-    @include typescale(g($t, '#{$d}.font'));
-
-    .ui-extended-fab__icon,
-    .ui-extended-fab__spinner {
-      font-size: g($t, '#{$d}.icon');
-    }
-
-    // Folded into the FAB of the same step: a square around the icon. The
-    // label leaves the layout but stays the accessible name.
-    &.ui-extended-fab--collapsed {
-      width: g($t, '#{$d}.height');
-      padding-inline: 0;
-      gap: 0;
-
-      .ui-extended-fab__label {
-        @include sr-only;
-      }
-    }
-  }
-
-  // Schemes (MD3 color roles)
-  &--primary { @include apply-scheme('primary'); }
-  &--secondary { @include apply-scheme('secondary'); }
-  &--tertiary { @include apply-scheme('tertiary'); }
-  &--error { @include apply-scheme('error'); }
-
-  &--compact { @include apply-density('compact'); }
-  &--default { @include apply-density('default'); }
-  &--comfortable { @include apply-density('comfortable'); }
-
-  // Interactions
-  @include can-hover {
-    &:hover:not(.ui-extended-fab--disabled) {
-      box-shadow: g($t, 'container.elevation.hover');
-    }
-  }
-
-  &:active:not(.ui-extended-fab--disabled) {
-    box-shadow: g($t, 'container.elevation.pressed');
-  }
-
-  &--disabled,
-  &--loading {
-    box-shadow: none;
-    cursor: default;
-    pointer-events: none;
   }
 }
 </style>

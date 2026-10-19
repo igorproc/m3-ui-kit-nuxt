@@ -3,7 +3,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MTimeline from './index.vue'
 import MTimelineItem from './item/index.vue'
-import { useTimelineContext } from '#kit/composables/timeline/context'
+import { useTimelineContext } from './context'
 
 function timeline(timelineProps: Record<string, unknown>, items: Array<Record<string, unknown>>) {
   return defineComponent({
@@ -167,6 +167,34 @@ describe('MTimeline', () => {
   it('renders the content as an article when requested', async () => {
     const wrapper = await mountSuspended(timeline({}, [{ title: 'A', contentTag: 'article' }]))
     expect(wrapper.find('.ui-timeline-item__content').element.tagName).toBe('ARTICLE')
+  })
+
+  // M3-polish: the timeline's axes reach the items as their own modifiers (no
+  // `>` from the list), and an item without a title says so (TL-1).
+  it('gives every item the timeline\'s density, line and alternate as its own modifiers', async () => {
+    const wrapper = await mountSuspended(timeline({ side: 'alternate', density: 'compact', line: 'dashed' }, [{ title: 'A' }, { text: 'Only a body' }]))
+    const [titled, untitled] = wrapper.findAll('.ui-timeline-item')
+
+    expect(titled!.classes()).toEqual(expect.arrayContaining([
+      'ui-timeline-item--density-compact',
+      'ui-timeline-item--line-dashed',
+      'ui-timeline-item--alternate',
+    ]))
+    expect(titled!.classes()).not.toContain('ui-timeline-item--untitled')
+    expect(untitled!.classes()).toContain('ui-timeline-item--untitled')
+  })
+
+  // Q-10 (M3-polish): `#dot` is the one slot for the marker's content.
+  it('fills the dot through #dot only', async () => {
+    const wrapper = await mountSuspended(defineComponent({
+      setup: () => () => h(MTimeline, null, () => [
+        h(MTimelineItem, { title: 'A' }, { dot: () => h('b', { class: 'mark' }, '1') }),
+        h(MTimelineItem, { title: 'B' }, { icon: () => h('b', { class: 'retired' }, '2') }),
+      ]),
+    }))
+
+    expect(wrapper.find('.ui-timeline-divider__dot .mark').exists()).toBe(true)
+    expect(wrapper.find('.retired').exists()).toBe(false)
   })
 
   it('throws when the timeline context is missing', async () => {

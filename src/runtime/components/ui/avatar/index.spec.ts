@@ -179,16 +179,6 @@ describe('MAvatar', () => {
     )
   })
 
-  // The dev-only warning is not observable here: `import.meta.dev` is false under Vitest.
-  it('renders a retired size as its density step for one release', async () => {
-    const wrapper = await mountSuspended(MAvatar, { props: { size: 'sm', density: 'comfortable' } })
-    expect(wrapper.find('.ui-avatar').classes()).toContain('ui-avatar--density-compact')
-    expect(wrapper.find('.ui-avatar').classes()).not.toContain('ui-avatar--sm')
-
-    await wrapper.setProps({ size: 'lg' })
-    expect(wrapper.find('.ui-avatar').classes()).toContain('ui-avatar--density-comfortable')
-  })
-
   it('falls back when the image failed before the listeners were attached', async () => {
     vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true)
     vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0)

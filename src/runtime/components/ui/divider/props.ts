@@ -17,11 +17,8 @@ export type MDividerInset = 'start' | 'center' | 'end'
 /** `<MDivider>` props. */
 export const mDividerProps = {
   orientation: { type: String as PropType<MDividerOrientation>, default: 'horizontal' },
-  /**
-   * Absent: the line runs the full length. `true` is retired (read as
-   * `'start'`) and still accepted for one release.
-   */
-  inset: { type: [Boolean, String] as PropType<MDividerInset | boolean>, default: undefined },
+  /** Which end steps in; absent, the line runs the full length. */
+  inset: { type: String as PropType<MDividerInset>, default: undefined },
 }
 
 export type MDividerProps = ExtractPublicPropTypes<typeof mDividerProps>

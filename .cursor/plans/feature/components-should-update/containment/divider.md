@@ -2,7 +2,7 @@
 
 <identity>M3: Divider (full-width, inset, middle-inset; horizontal / vertical) · Токены Compose: `DividerTokens.kt`; поведение — `Divider.kt` (`HorizontalDivider`, `VerticalDivider`, `DividerDefaults`); отступы в контексте — `ListTokens.Divider*Space`, `MenuDefaults.HorizontalDividerPadding` · Код: `src/runtime/components/ui/divider/`, токены `src/runtime/assets/stylesheet/components/divider/_index.scss` · Аудит: `data/divider.json` · Тип: public (+ используется рецептом разделителя меню)</identity>
 
-<implementation-status state="done" updated="2026-10-07">Реализовано (агентом, 2026-10-07). Решения владельца: `inset: 'start' | 'center' | 'end'` (M3 middle назван `center`; `true` = `start` на релиз с предупреждением); семантика по контексту списка — внутри `MList` `li aria-hidden`, в списке с ролью `div aria-hidden`, вне списка `div role="separator"`. Линия рисуется рамкой `max(1px, 1rem)`, без `width/height: 100%`, вертикаль `align-self: stretch`.</implementation-status>
+<implementation-status state="done" updated="2026-10-19">Реализовано (агентом, 2026-10-07). Решения владельца: `inset: 'start' | 'center' | 'end'` (M3 middle назван `center`; `true` = `start` на релиз с предупреждением); семантика по контексту списка — внутри `MList` `li aria-hidden`, в списке с ролью `div aria-hidden`, вне списка `div role="separator"`. Линия рисуется рамкой `max(1px, 1rem)`, без `width/height: 100%`, вертикаль `align-self: stretch`. M3-polish (2026-10-18/19): снят `inset: true` — тип `inset` теперь только `start | center | end`.</implementation-status>
 
 ## Вердикт
 

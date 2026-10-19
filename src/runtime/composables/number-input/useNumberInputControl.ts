@@ -16,7 +16,7 @@
  * The number input is layered the same way the textarea and the slider are:
  * - {@link useNumberValue} — draft ⇄ model, stepping, clamping
  * - {@link useNumberScrub} — the horizontal drag gesture
- * - {@link useField} — validation-adapter binding
+ * - `useFieldValidation` (`utils/text-field`) — the family's validity rule
  * - `useNumberInputControl` — all three plus ids and ARIA, markup-agnostic
  * - `<MNumberInput>` — one possible markup on top of this composable
  *
@@ -35,7 +35,7 @@
  */
 import { computed, shallowRef, useId } from 'vue'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
-import { useField } from '#kit/composables/useField'
+import { useFieldValidation } from '#kit/utils/text-field/useFieldValidation'
 import { useNumberValue } from '#kit/composables/number-input/useNumberValue'
 import { useNumberScrub } from '#kit/composables/number-input/useNumberScrub'
 import type { NumberValueHooks, NumberValueProps, UseNumberValueReturn } from '#kit/composables/number-input/useNumberValue'
@@ -174,14 +174,9 @@ export function useNumberInputControl(
   const messageId = `${fieldId}-message`
   const labelId = `${fieldId}-label`
 
-  const field = useField({ path: props.path, model })
+  const { isError, message, meta } = useFieldValidation(model, props)
   const value = useNumberValue(model, focused, props, hooks)
   const { handle, isScrubbing } = useNumberScrub(value, props)
-
-  const isError = computed(() => Boolean(props.error) || Boolean(props.errorMessage) || field.hasError.value)
-  const message = computed(() => (isError.value
-    ? field.errorMessage.value || props.errorMessage || props.helperText
-    : props.helperText))
   const isPopulated = computed(() => value.draft.value !== '')
 
   const describedBy = computed(() => (message.value ? messageId : undefined))
@@ -248,7 +243,7 @@ export function useNumberInputControl(
     'aria-valuenow': model.value ?? undefined,
     'aria-valuetext': model.value === null ? undefined : value.codec.value.format(model.value),
     'aria-invalid': isError.value ? 'true' : undefined,
-    'aria-busy': field.meta.pending ? 'true' : undefined,
+    'aria-busy': meta.pending ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,
     'onFocus': value.onFocus,

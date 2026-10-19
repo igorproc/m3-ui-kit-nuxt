@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent, h, nextTick, ref } from 'vue'
+import { createSSRApp, defineComponent, h, nextTick, ref } from 'vue'
 import type { Ref } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import MExpansionPanel from '#kit/components/ui/expansion-panel/index.vue'
 import MExpansionPanels from './index.vue'
-import type { PanelValue } from '#kit/composables/expansion-panel/useExpansionPanelGroup'
+import type { PanelValue } from '#kit/components/ui/expansion-panel/props'
 
 type Model = PanelValue | PanelValue[] | undefined
 
 // Regression coverage for the grouped "initial v-model" bug: a preset value on
 // the group must select/open the matching child at mount (the child registers
-// after the group's setup, so the model->selection apply must re-run reactively).
+// after the group's setup, so the group applies the model when it registers).
 
 describe('grouped initial v-model', () => {
   it('MExpansionPanels opens the panel matching a preset model at mount', async () => {
@@ -25,6 +26,30 @@ describe('grouped initial v-model', () => {
     expect(headers.length).toBeGreaterThanOrEqual(2)
     expect(headers[0]!.attributes('aria-expanded')).toBe('false')
     expect(headers[1]!.attributes('aria-expanded')).toBe('true')
+  })
+
+  // E-1 (M3-polish): the open panel has to be in the server HTML. Applied only
+  // by a watch, it opened after hydration with a height transition that pushed
+  // everything below it down.
+  it('renders the preset panel open on the server', async () => {
+    const html = await renderToString(createSSRApp(defineComponent({
+      render: () => [
+        h(MExpansionPanels, { modelValue: 'b' }, () => [
+          h(MExpansionPanel, { value: 'a', title: 'A' }, () => 'A body'),
+          h(MExpansionPanel, { value: 'b', title: 'B' }, () => 'B body'),
+        ]),
+        h(MExpansionPanels, { modelValue: ['a', 'c'], multiple: true }, () => ['a', 'b', 'c'].map(value =>
+          h(MExpansionPanel, { value, title: value }, () => value))),
+      ],
+    })))
+
+    expect(html.match(/aria-expanded="(true|false)"/g)).toEqual([
+      'aria-expanded="false"',
+      'aria-expanded="true"',
+      'aria-expanded="true"',
+      'aria-expanded="false"',
+      'aria-expanded="true"',
+    ])
   })
 })
 

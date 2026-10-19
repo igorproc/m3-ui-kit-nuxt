@@ -13,11 +13,13 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import dayjs from 'dayjs'
-import { createCalendar } from './createCalendar'
-import type { Calendar, CalendarBounds } from './createCalendar'
+import { createCalendar } from '#kit/utils/date/createCalendar'
+import type { Calendar, CalendarBounds } from '#kit/utils/date/createCalendar'
+import { toDate, toModelValue } from '#kit/utils/date/value'
+import type { DateModelValue } from '#kit/utils/date/value'
 
 export type DatePickerView = 'calendar' | 'year'
-export type DatePickerValue = Date | string | number
+export type DatePickerValue = DateModelValue
 
 export interface UseDatePickerOptions {
   model: Ref<DatePickerValue | null>
@@ -48,12 +50,6 @@ export interface UseDatePickerReturn {
 
 /** How far the year list reaches each way when no bound limits it. */
 const YEAR_SPAN = 100
-
-function toDate(value: DatePickerValue | null | undefined): Date | null {
-  if (value === null || value === undefined || value === '') return null
-  const parsed = dayjs(value)
-  return parsed.isValid() ? parsed.toDate() : null
-}
 
 export function useDatePicker(options: UseDatePickerOptions): UseDatePickerReturn {
   const calendar = computed(() => createCalendar(options.locale()))
@@ -109,9 +105,11 @@ export function useDatePicker(options: UseDatePickerOptions): UseDatePickerRetur
     view.value = 'calendar'
   }
 
+  // The model keeps the type it came in: a form holding `'2026-10-14'` gets a
+  // day string back, not a `Date`.
   function select(date: Date) {
     if (calendar.value.isOutside(date, bounds.value)) return
-    options.model.value = date
+    options.model.value = toModelValue(date, options.model.value)
   }
 
   return { calendar, selected, month, view, today, bounds, years, canGoPrev, canGoNext, prevMonth, nextMonth, toggleView, selectYear, select }

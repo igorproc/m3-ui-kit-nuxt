@@ -31,6 +31,7 @@
           >
             <MAutocomplete
               v-model="values[`${state.name}-${variant}`]"
+              :messages="messages"
               :items="cities"
               item-title="name"
               item-value="id"
@@ -58,6 +59,9 @@ import { reactive } from 'vue'
 import MAutocomplete from '#kit/components/ui/autocomplete/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import type { MDropdownVariant } from '#kit/components/ui/dropdown/props'
+
+// The kit ships no copy of its own: the app names the controls and states.
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
 
 const cities = [
   { id: 1, name: 'Amsterdam' },

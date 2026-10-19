@@ -183,8 +183,10 @@ test.describe('MNumberInput', () => {
   test('the alert region is mounted before any error arrives, and the helper stays outside it', async ({ page }) => {
     await openFixture(page, 'number-input/matrix')
 
+    // A field with nothing to say has no line at all (decision 2026-10-19); one with a
+    // bound error and no message keeps an empty region.
     const [emptyAlert, helperAlert, helperSupport, errorAlert] = await Promise.all([
-      page.getByTestId('empty-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
+      page.getByTestId('bare-error-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
       page.getByTestId('populated-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
       page.getByTestId('populated-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('.ui-number-input__support')!.textContent?.trim()),
       page.getByTestId('error-filled-split').evaluate(input => input.closest('.ui-number-input')!.querySelector('[role="alert"]')?.textContent?.trim()),
@@ -249,7 +251,7 @@ test.describe('MNumberInput', () => {
 
   test('the support line is one body-small line high', async ({ page }) => {
     await openFixture(page, 'number-input/matrix')
-    const height = await page.getByTestId('empty-outlined-split').evaluate(input =>
+    const height = await page.getByTestId('populated-outlined-split').evaluate(input =>
       input.closest('.ui-number-input')!.querySelector('.ui-number-input__support')!.getBoundingClientRect().height)
 
     expect(height / await remInPx(page)).toBeCloseTo(16, 0)
@@ -276,6 +278,100 @@ test.describe('MNumberInput', () => {
 
     expect(control!.right - label!.right).toBeLessThan(label!.left - control!.left)
   })
+
+  // Rects of the field's parts relative to its control, in rem.
+  const parts = (page: Page, testId: string) => page.getByTestId(testId).evaluate((input) => {
+    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+    const root = input.closest('.ui-number-input')!
+    const box = root.querySelector('.ui-number-input__control')!.getBoundingClientRect()
+    const place = (element: Element | null) => {
+      if (!element) return null
+      const rect = element.getBoundingClientRect()
+      return { top: (rect.top - box.top) / rem, bottom: (rect.bottom - box.top) / rem, start: (rect.left - box.left) / rem, height: rect.height / rem }
+    }
+    const style = getComputedStyle(input)
+    const valueTop = input.getBoundingClientRect().top + Number.parseFloat(style.paddingTop)
+    const valueBottom = input.getBoundingClientRect().bottom - Number.parseFloat(style.paddingBottom)
+    return {
+      boxBottom: box.height / rem,
+      valueCentre: ((valueTop + valueBottom) / 2 - box.top) / rem,
+      valueStart: (input.getBoundingClientRect().left - box.left) / rem,
+      label: place(root.querySelector('.ui-number-input__label')),
+      unit: place(root.querySelector('.ui-number-input__unit')),
+      column: place(root.querySelector('.ui-number-input__stacked')),
+      halves: [...root.querySelectorAll('.ui-number-input__stacked .ui-number-input__stepper')].map(place),
+      support: place(root.querySelector('.ui-number-input__support')),
+    }
+  })
+
+  for (const id of ['family-stacked-compact', 'family-stacked-default', 'family-stacked-comfortable', 'populated-outlined-stacked']) {
+    test(`the stacked halves split their column, none squashed (${id})`, async ({ page }) => {
+      await openFixture(page, 'number-input/matrix')
+      const { column, halves } = await parts(page, id)
+
+      for (const half of halves) expect(half!.height).toBeGreaterThan(column!.height / 2 - 1)
+    })
+  }
+
+  test('the unit sits on the line of the digits', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+
+    for (const id of ['unit-static', 'unit-menu']) {
+      const { unit, valueCentre } = await parts(page, id)
+      expect((unit!.top + unit!.bottom) / 2, id).toBeCloseTo(valueCentre, 0)
+    }
+  })
+
+  test('a raised label sits on the value and the support line starts 4 below the box', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const { label, support, boxBottom } = await parts(page, 'populated-filled-split')
+
+    expect((label!.top + label!.bottom) / 2).toBeCloseTo(15, 0)
+    expect(support!.top - boxBottom).toBeCloseTo(4, 0)
+  })
+
+  test('beside a prepend the overlaid label starts where the value does', async ({ page }) => {
+    await openFixture(page, 'text-field/family')
+    const { label, valueStart } = await parts(page, 'ni-prepend-filled-none')
+
+    // Within the box's edge: the label is placed from the outer edge, the value from inside its hairline.
+    expect(Math.abs(label!.start - valueStart)).toBeLessThanOrEqual(2)
+  })
+
+  test('a read-only field shows focus in its label too', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const ink = () => page.getByTestId('readonly-filled-split').evaluate(input =>
+      getComputedStyle(input.closest('.ui-number-input')!.querySelector('.ui-number-input__label')!).color)
+    const rest = await ink()
+
+    await page.getByTestId('readonly-filled-split').focus()
+    await expect.poll(ink).not.toBe(rest)
+  })
+
+  test('a press on the box focuses the field', async ({ page }) => {
+    await openFixture(page, 'text-field/family')
+    const input = page.getByTestId('ni-prepend-outlined-none')
+    const box = (await input.evaluate(el => el.closest('.ui-number-input')!.querySelector('.ui-number-input__control')!.getBoundingClientRect().toJSON()))
+    await page.mouse.click(box.x + box.width - 4, box.y + 4)
+
+    await expect(input).toBeFocused()
+  })
+
+  for (const dir of DIRECTIONS) {
+    test(`dragging the scrub towards the line's end increases the value (${dir})`, async ({ page }) => {
+      await openFixture(page, 'number-input/matrix', { dir })
+      const handle = page.getByTestId('populated-filled-scrub').locator('xpath=ancestor::div[contains(@class, "ui-number-input ")][1]').locator('.ui-number-input__scrub')
+      const box = (await handle.boundingBox())!
+      const towardsEnd = dir === 'rtl' ? -1 : 1
+
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.down()
+      for (let step = 1; step <= 10; step++) await page.mouse.move(box.x + box.width / 2 + towardsEnd * step * 4, box.y + box.height / 2)
+      await page.mouse.up()
+
+      expect(Number(await valueOf(page, 'populated-filled-scrub'))).toBeGreaterThan(42)
+    })
+  }
 
   test.describe('forced colors', () => {
     test.beforeEach(async ({ page }) => {

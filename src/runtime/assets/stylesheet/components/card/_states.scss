@@ -71,7 +71,8 @@
   }
 
   // Only a link card is ever disabled. It has no `href`, so it is out of the
-  // Tab order; `pointer-events` keeps a consumer's click handler from firing.
+  // Tab order; `pointer-events` keeps a consumer's click handler from firing,
+  // and with no hover or press its shadow stays the resting one.
   &--disabled {
     color: g($t, 'disabled.content.color');
     pointer-events: none;
@@ -83,7 +84,6 @@
     @each $variant in $variants {
       &.ui-card--#{$variant} {
         background-color: g($t, '#{$variant}.disabled.container.color');
-        box-shadow: g($t, '#{$variant}.disabled.elevation');
       }
     }
 

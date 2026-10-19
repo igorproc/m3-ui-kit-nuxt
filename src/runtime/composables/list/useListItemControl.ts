@@ -12,10 +12,9 @@
  * consumer set a `role` (a listbox option) belongs to that role's owner: the
  * row adds no role and no selected state of its own.
  */
-import { computed, defineAsyncComponent, mergeProps } from 'vue'
+import { computed, mergeProps } from 'vue'
 import type { Component, ComputedRef } from 'vue'
-
-const NuxtLink = defineAsyncComponent(async () => await import('#app/components/nuxt-link'))
+import { linkAttrs, linkTag, withoutDestination } from '#kit/utils/link'
 
 export interface ListItemControlProps {
   tag: string
@@ -53,7 +52,7 @@ export function useListItemControl({ props, attrs, semantic }: UseListItemContro
   const hasConsumerRole = computed(() => attrs().role !== undefined)
 
   const tag = computed<string | Component>(() => {
-    if (props.to) return props.disabled ? 'a' : NuxtLink
+    if (props.to) return linkTag(props.disabled)
     if (semantic() && !isInteractive.value) return 'li'
     return props.tag
   })
@@ -81,10 +80,11 @@ export function useListItemControl({ props, attrs, semantic }: UseListItemContro
   const ownAttrs = computed(() => {
     const own: Record<string, unknown> = {}
 
-    if (props.to && !props.disabled) own.to = props.to
     // Dimmed text is not the only sign of a disabled row (color-and-state.md):
-    // a native button says it with `disabled`, everything else with ARIA.
-    if (isNativeButton.value) own.disabled = props.disabled
+    // a native button says it with `disabled`, a link with the disabled-link
+    // semantics (utils/link), everything else with ARIA.
+    if (isLink.value) Object.assign(own, linkAttrs(props.to, props.disabled))
+    else if (isNativeButton.value) own.disabled = props.disabled
     else if (props.disabled) own['aria-disabled'] = 'true'
 
     if (emulatesButton.value) {
@@ -95,18 +95,13 @@ export function useListItemControl({ props, attrs, semantic }: UseListItemContro
     if (hasConsumerRole.value) return own
 
     if (emulatesButton.value) own.role = 'button'
-    // Without `href` an anchor has no role; `link` keeps it announced as a
-    // link that is unavailable.
-    if (isLink.value && props.disabled) own.role = 'link'
 
     return { ...own, ...selectionAttrs() }
   })
 
   const rowAttrs = computed(() => {
     const merged = mergeProps(ownAttrs.value, attrs())
-    // A disabled link leaves the tab order the way a disabled button does: an
-    // anchor without `href` is not focusable and Enter does not follow it.
-    if (isLink.value && props.disabled) delete merged.href
+    if (isLink.value && props.disabled) withoutDestination(merged)
     // A row never submits a form, whatever `type` it was handed: submitting
     // belongs to a button placed in one of its slots.
     if (isNativeButton.value) merged.type = 'button'

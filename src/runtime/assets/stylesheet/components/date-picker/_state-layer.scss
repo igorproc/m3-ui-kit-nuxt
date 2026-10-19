@@ -1,0 +1,42 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// PICKERS · STATE LAYER
+// ==========================================
+// The MD3 state layer of the date and time pickers' own buttons and cells: an
+// overlay in the element's own ink (`::before`), so a selected cell hovers in
+// `on-primary` over `primary` without a premixed colour. Focus is the kit's
+// ring around the element's own shape. `$t` needs `layer.hover`,
+// `layer.pressed` and `motion.duration` / `motion.easing`.
+
+@mixin state-layer($t) {
+  position: relative;
+  isolation: isolate;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  @include can-hover {
+    &:hover::before {
+      opacity: g($t, 'layer.hover');
+    }
+  }
+
+  &:active::before {
+    opacity: g($t, 'layer.pressed');
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}

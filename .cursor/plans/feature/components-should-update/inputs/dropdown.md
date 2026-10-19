@@ -2,7 +2,7 @@
 
 <identity>M3: Menus → exposed dropdown menu (`ExposedDropdownMenuBox` + `ExposedDropdownMenu`, якорь `PrimaryNotEditable`) · Токены Compose: `FilledAutocompleteTokens.kt`, `OutlinedAutocompleteTokens.kt` (поле + `MenuContainer*`), `MenuTokens.kt` (выбранный пункт), `ListTokens.kt` (строка); поведение — `ExposedDropdownMenu.kt` (`ItemContentPadding` 16, `calculateMaxHeight`, `TrailingIcon`), `Menu.kt` (`MenuVerticalMargin` 48, `DropdownMenuVerticalPadding` 8, `MenuListItemContainerHeight` 48) · Код: `src/runtime/components/ui/dropdown/` (`index.vue`, `props.ts`, `context.ts`), движок `src/runtime/composables/dropdown/*` (`useDropdownControl`, `useDropdownSelection`, `useDropdownEntries`, `useDropdownKeyboard`, `useDropdownChips`, `useTypeahead`, `usePanelStatus`) + `composables/listbox/useListbox.ts`, токены `src/runtime/assets/stylesheet/components/dropdown/{_index,_panel}.scss` · Аудит: `data/dropdown.json` · Тип: public; родитель семейства выбора (`MAutocomplete` спредит `mDropdownProps` и рисует ту же панель)</identity>
 
-<implementation-status state="planned" updated="2026-10-08">Частично (2026-10-08): шаги 1, 2, 6, 7 сделаны — роли строк (hover 8%, клавиатура 10%), галочка в `#trailing` выбранной строки, класс плотности списка, потолок панели на половине строки, `pending` → `aria-busy`. Не сделаны: шаг 3 (поверхность MMenu — ждёт плана меню), шаг 4 (input-чип — план чипа), шаг 5 (ошибка загрузки, `retry`, задержка индикатора).</implementation-status>
+<implementation-status state="partial" updated="2026-10-19">M3-polish (2026-10-19): панель вынесена в общий фрагмент `fragments/dropdown/Panel.vue` (классы `ui-dropdown-panel__*`), строки рисует слой `::before` по виртуальному фокусу (8/10 %); фразы — проп `messages` без дефолтов; механика без нативного `readonly` (ввод гасится, IME откатывается), `readonly` — по пропу; read-only: очистка off, чипы в полной краске без ×; чипы не tab stop, стрелки по чипам зеркалятся в RTL; Enter/Space на очистке очищают и возвращают фокус; наведение не прокручивает список; галочка держит место в multiple; не открывается «в пустоту»; `#loading`; `defineSlots`; движок — `utils/dropdown/` вне автоимпорта. Не сделаны: шаг 3 (поверхность MMenu), шаг 4 (input-чип), типизированный generic по `items` (нужен типовой интерфейс пропов поля).</implementation-status>
 
 ## Вердикт
 
@@ -271,3 +271,6 @@ hatch с `listboxAttrs`, `getOptionAttrs`, `panelStyle`…); `expose` — `open`
 
 - Вопросы: 1 → 1 (запись в decisions.md предложена); 2 → 1 (галочка в trailing); 3 → 2 (половина строки).
 - Ломающее: галочка переехала в trailing; цвета стрелки/очистки — от поля.
+- Новый потребитель движка (2026-10-19): вид результатов MSearch v2 ([search](search.md)). Ему нужны режим
+  `useDropdownControl` без выбранного значения (модель — запрос, выбор — событие) и группы с подзаголовком
+  в общей панели (вопрос 4 плана search). Группы, если их примут, получают и MDropdown, и MAutocomplete.

@@ -46,13 +46,12 @@ describe('m-split-button', () => {
     expect(wrapper.emitted('click')).toHaveLength(1)
   })
 
-  it('emits trailing (and the retired dropdown) when the trailing button is pressed', async () => {
+  it('emits trailing when the trailing button is pressed', async () => {
     const wrapper = await mountSuspended(MSplitButton)
 
     await wrapper.find('.ui-split-button__trailing').trigger('click')
 
     expect(wrapper.emitted('trailing')).toHaveLength(1)
-    expect(wrapper.emitted('dropdown')).toHaveLength(1)
   })
 
   it('does nothing on the trailing button while disabled', async () => {
@@ -76,7 +75,8 @@ describe('m-split-button', () => {
       .toContain('ui-button--disabled')
   })
 
-  // B-2: loading shows on the action and holds both buttons.
+  // B-2: loading shows on the action and holds both buttons. The trailing one
+  // stays focusable (В-6): a native `disabled` would drop its focus.
   it('loads on the action button and holds the trailing one', async () => {
     const wrapper = await mountSuspended(MSplitButton, {
       props: { loading: true },
@@ -84,12 +84,42 @@ describe('m-split-button', () => {
     })
 
     const action = wrapper.find('.ui-split-button__action')
+    const trailing = wrapper.find('.ui-split-button__trailing')
     expect(action.attributes('aria-busy')).toBe('true')
     expect(action.find('.ui-loading--inline').exists()).toBe(true)
-    expect(wrapper.find('.ui-split-button__trailing').attributes('disabled')).toBeDefined()
+    expect(trailing.attributes('disabled')).toBeUndefined()
+    expect(trailing.attributes('aria-disabled')).toBe('true')
+    expect(trailing.classes()).toContain('ui-button--disabled')
 
     await action.trigger('click')
+    await trailing.trigger('click')
     expect(wrapper.emitted('click')).toBeUndefined()
+    expect(wrapper.emitted('trailing')).toBeUndefined()
+    expect(trailing.attributes('aria-expanded')).toBe('false')
+  })
+
+  it('puts class and style on the root and every other attribute on the main button', async () => {
+    const wrapper = await mountSuspended(MSplitButton, {
+      props: { trailingAriaLabel: 'More' },
+      attrs: { 'class': 'extra', 'style': 'margin: 1px', 'aria-describedby': 'hint', 'data-x': '1' },
+    })
+    const root = wrapper.find('.ui-split-button')
+    const action = wrapper.find('.ui-split-button__action')
+
+    expect(root.classes()).toContain('extra')
+    expect(root.attributes('style')).toContain('margin')
+    expect(root.attributes('aria-describedby')).toBeUndefined()
+    expect(action.attributes('aria-describedby')).toBe('hint')
+    expect(action.attributes('data-x')).toBe('1')
+  })
+
+  it('makes the main button a submit button or a link', async () => {
+    const submit = await mountSuspended(MSplitButton, { props: { type: 'submit' } })
+    expect(submit.find('.ui-split-button__action').attributes('type')).toBe('submit')
+    expect(submit.find('.ui-split-button__trailing').attributes('type')).toBe('button')
+
+    const link = await mountSuspended(MSplitButton, { props: { tag: 'link', to: '/orders' } })
+    expect(link.find('a.ui-split-button__action').attributes('href')).toBe('/orders')
   })
 
   it('names the trailing button and announces the menu it opens', async () => {
@@ -106,14 +136,6 @@ describe('m-split-button', () => {
     await trailing.trigger('click')
 
     expect(trailing.attributes('aria-expanded')).toBe('true')
-  })
-
-  it('still names the trailing button from the retired dropdownAriaLabel', async () => {
-    const wrapper = await mountSuspended(MSplitButton, {
-      props: { dropdownAriaLabel: 'More save options' },
-    })
-
-    expect(wrapper.find('.ui-split-button__trailing').attributes('aria-label')).toBe('More save options')
   })
 
   it('is a plain button, claiming no popup, without a menu slot', async () => {

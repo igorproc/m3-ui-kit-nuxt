@@ -12,7 +12,8 @@ const items: City[] = [
   { id: 4, name: 'Delta' },
 ]
 
-const base = { items, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off' } as const
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
+const base = { items, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off', messages } as const
 
 let host: HTMLElement
 // Only one component stays mounted at a time so its teleported menu is the only
@@ -42,12 +43,12 @@ async function openMenu(wrapper: Awaited<ReturnType<typeof mountSuspended>>) {
   await nextTick()
 }
 
-const options = () => document.querySelectorAll('.ui-autocomplete__option')
+const options = () => document.querySelectorAll('.ui-dropdown-panel__option')
 
 describe('m-autocomplete · variants', () => {
-  it('reflects the multiple and open props as root modifier classes', async () => {
+  it('marks an open panel on the root, which turns the indicator over', async () => {
     const wrapper = await mount({ ...base, multiple: true, modelValue: [1] })
-    expect(wrapper.find('.ui-autocomplete').classes()).toContain('ui-autocomplete--multiple')
+    expect(wrapper.find('.ui-autocomplete').classes()).not.toContain('ui-autocomplete--open')
 
     await openMenu(wrapper)
     expect(wrapper.find('.ui-autocomplete').classes()).toContain('ui-autocomplete--open')
@@ -98,7 +99,7 @@ describe('m-autocomplete · variants', () => {
   it('marks the selected option', async () => {
     const wrapper = await mount({ ...base, modelValue: 1 })
     await openMenu(wrapper)
-    expect(document.querySelector('.ui-autocomplete__option.ui-list-item--selected')).toBeTruthy()
+    expect(document.querySelector('.ui-dropdown-panel__option.ui-list-item--selected')).toBeTruthy()
   })
 
   it('removes selected entries from the list when hide-selected is set', async () => {

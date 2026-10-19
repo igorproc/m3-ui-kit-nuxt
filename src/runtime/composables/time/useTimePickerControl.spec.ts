@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { computed, defineComponent, h, nextTick, ref } from 'vue'
-import { createClock } from './createClock'
-import type { HourCycle } from './createClock'
+import { createClock } from '#kit/utils/time/createClock'
+import type { HourCycle } from '#kit/utils/time/createClock'
 import { useTimeDialControl } from './useTimeDialControl'
 import { useTimeFieldsControl } from './useTimeFieldsControl'
 import { useTimePickerControl } from './useTimePickerControl'
 
-type Bag = Record<string, unknown>
+type Bag = object
 
 /** Mounts the bags on anonymous markup — no kit component, no kit class. */
 function createHarness(initial = '09:30', cycle: HourCycle = 'h23') {
   const model = ref(initial)
-  const exposed: { bags: () => Bag[], control?: ReturnType<typeof useTimePickerControl> } = { bags: () => [] }
+  const exposed: { bags: () => Bag[], control?: ReturnType<typeof useTimePickerControl>, dial?: ReturnType<typeof useTimeDialControl> } = { bags: () => [] }
 
   const component = defineComponent({
     setup() {
@@ -32,6 +32,7 @@ function createHarness(initial = '09:30', cycle: HourCycle = 'h23') {
       }, 'fields')
 
       exposed.control = control
+      exposed.dial = dial
       exposed.bags = () => [
         control.rootAttrs.value,
         control.getSelectorAttrs('hours'),
@@ -143,6 +144,24 @@ describe('useTimePickerControl', () => {
 
     expect(model.value).toBe('21:45')
     expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('carries the hand under a dragging pointer and settles it on the value at release', async () => {
+    const { component, exposed } = createHarness('09:30')
+    const wrapper = await mountSuspended(component)
+    const dial = wrapper.find('[role="slider"]')
+
+    // The dial measures nothing here (no layout), so its centre is the origin:
+    // (10, -10) is 45° clockwise from 12 o'clock.
+    await dial.trigger('pointerdown', { button: 0, clientX: 10, clientY: -10, pointerId: 1 })
+    expect(exposed.dial!.hand.value.dragging).toBe(false)
+    await dial.trigger('pointermove', { clientX: 10, clientY: -10, pointerId: 1 })
+    expect(exposed.dial!.hand.value.dragging).toBe(true)
+    expect(((exposed.dial!.hand.value.angle % 360) + 360) % 360).toBeCloseTo(45, 5)
+
+    await dial.trigger('pointerup', { pointerId: 1 })
+    expect(exposed.dial!.hand.value.dragging).toBe(false)
+    expect(((exposed.dial!.hand.value.angle % 360) + 360) % 360 % 30).toBe(0)
   })
 
   it('produces no classes and no data attributes — presentation stays with the consumer', async () => {

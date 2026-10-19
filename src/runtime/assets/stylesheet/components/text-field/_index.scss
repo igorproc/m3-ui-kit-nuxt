@@ -1,5 +1,4 @@
 @use 'sass:map';
-@use 'sass:math';
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
@@ -11,27 +10,33 @@
 // edge, and the label never moves (`float` sits on the top edge from the start).
 
 // Spacing reads the 4-unit scale through `spacing()`. Values off it stay
-// literal on purpose — sizes (heights, icon boxes, the input's minimum width),
-// the 6rem glyph gap — and the density steps' raise and value offsets (14/18
-// and 18/28), which place the label and a 24rem value line in 44/64 boxes.
+// literal on purpose — sizes (heights, icon boxes, the input's minimum width,
+// an input chip), the 6rem glyph gap — and the density steps' value offsets
+// (18 and 28), which place a 24rem value line in 44/64 boxes.
 
 // The default height, named once for the `default` density step.
 $field-height: 56rem;
 
+// Never thinner than one device pixel: below it `1rem` fades on a narrow
+// screen (decisions.md, hairline). Every vertical sum it is part of is a calc.
+$hairline: max(1px, 1rem);
+
 // Shared by the label and the outline notch, which has to reproduce the raised
 // label's footprint in layout terms.
-$border-width: 1rem;
 $label-typescale: 'body-large';
-$label-left: spacing(16);
 $label-raised-scale: 0.75;
+$label-line-height: var(--md-sys-typescale-#{$label-typescale}-line-height);
 $notch-padding-inline: spacing(4);
 
-// A label beside a prepend starts where the value does: past the container's
-// prepend padding, the icon box and the icon's margin.
+// Beside an icon the label starts where the value does: past the container's
+// padding, the icon box and the icon's margin. `underline` has no padding.
 $padding-prepend: spacing(12);
+$padding-append: spacing(12);
 $icon-width: 24rem;
-$icon-prepend-margin: spacing(16);
-$label-prepend-left: $padding-prepend + $icon-width + $icon-prepend-margin;
+$icon-margin: spacing(16);
+$label-icon-clearance: $icon-width + $icon-margin;
+$label-prepend-start: $padding-prepend + $label-icon-clearance;
+$label-append-end: $padding-append + $label-icon-clearance;
 $on-surface: map.get($theme-color-link, on-surface);
 $disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
 $disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
@@ -39,32 +44,26 @@ $disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-co
 // The value line: one line of the input's type scale.
 $value-line: var(--md-sys-typescale-body-large-line-height);
 
-// One density step. The label is centred on `top` (half the height) and raised
-// by a static transform: `inside` lifts it by `$raise` for the placements that
-// keep it in the box, `notch` lifts its centre by half the height so it lands
-// on the top border. Scaling is around the vertical centre, so the lift is pure
-// height math.
+// The room a raised label may take, in layout units — it is drawn at three
+// quarters, so the visible width is the gap between `start` and `end`.
+@function label-room($start, $end) {
+  @return calc((100% - #{$start} - #{$end}) / #{$label-raised-scale});
+}
 
-// With a label inside the box the value starts `$value-top` below the outer
-// top edge. The control is border-box and its border is part of that
-// distance, so the row's own padding is what is left after the border, and
-// the bottom padding is what remains of the height: the row fills the box
-// exactly and the border never adds height to it (LY-02).
-@function density-step($height, $raise, $value-top) {
-  $top: math.div($height, 2);
-
+// One density step. With a label inside the box the value starts `$value-top`
+// below the outer top edge, and the raised label sits right on it: its centre
+// is half a raised line above the value (craft.md: derive the offset, never
+// pick it). The control is border-box and its edge is part of that distance,
+// so the row's own padding is what is left after the edge, and the bottom
+// padding is what remains of the height: the row fills the box exactly and
+// the edge never adds height to it (LY-02).
+@function density-step($height, $value-top) {
   @return (
     height: $height,
-    label: (
-      top: $top,
-      transform: (
-        inside: translateY(calc(-50% - #{$raise})) scale($label-raised-scale),
-        notch: translateY(calc(-50% - #{$top})) scale($label-raised-scale),
-      ),
-    ),
+    label: (top: calc(#{$value-top} - #{$label-line-height} * #{$label-raised-scale * 0.5})),
     input: (padding: (
-      top: $value-top - $border-width,
-      bottom: calc(#{$height - $value-top - $border-width} - #{$value-line}),
+      top: calc(#{$value-top} - #{$hairline}),
+      bottom: calc(#{$height - $value-top} - #{$hairline} - #{$value-line}),
     )),
   );
 }
@@ -72,9 +71,15 @@ $value-line: var(--md-sys-typescale-body-large-line-height);
 $tokens: (
   container: (
     gap: spacing(4),
-    padding: (inline: spacing(16), prepend: $padding-prepend, append: spacing(12)),
-    border: (width: $border-width),
-    field: (gap: spacing(8), input-min-width: 60rem),
+    padding: (inline: spacing(16), prepend: $padding-prepend, append: $padding-append),
+    border: (width: $hairline),
+    field: (
+      gap: spacing(8),
+      input-min-width: 60rem,
+      // An input chip's height: a composite's chip row is reserved at it, so
+      // the first chip does not grow the box.
+      leading: (min-height: 32rem),
+    ),
   ),
   typography: (
     // Above the box the label is a heading for the value; over the box it is
@@ -85,15 +90,20 @@ $tokens: (
     support: 'body-small',
   ),
   label: (
-    max-width: calc(100% - #{2 * $label-left}),
     color: map.get($theme-color-link, on-surface-variant),
     required: (color: map.get($theme-color-link, error)),
-    // Beside a prepend the overlaid label starts where the value does; on the
-    // notch it returns to the start edge, because nothing bounds what a
-    // prepend holds and the gap in the border must not depend on it.
-    prepend: (
-      left: $label-prepend-left,
-      notch: (shift: calc(var(--ui-text-field-inset) - #{$label-prepend-left})),
+    transform: translateY(-50%) scale($label-raised-scale),
+    // Where an overlaid label starts and how far it may run, per what stands
+    // beside it. On the notch it always returns to the content start: nothing
+    // bounds what a prepend holds, and the gap in the border must not depend on it.
+    start: (prepend: $label-prepend-start, underline-prepend: $label-icon-clearance),
+    room: (
+      base: calc((100% - 2 * var(--ui-text-field-inset)) / #{$label-raised-scale}),
+      // An icon on one side: the box is symmetric, so start or end is the same sum.
+      one: label-room($label-prepend-start, var(--ui-text-field-inset)),
+      both: label-room($label-prepend-start, $label-append-end),
+      underline-one: label-room($label-icon-clearance, 0rem),
+      underline-both: label-room($label-icon-clearance, $label-icon-clearance),
     ),
   ),
   input: (
@@ -110,12 +120,11 @@ $tokens: (
     color: map.get($theme-color-link, on-surface-variant),
     width: $icon-width,
     size: 24rem,
-    prepend: (margin: $icon-prepend-margin),
-    append: (margin: spacing(16)),
+    prepend: (margin: $icon-margin),
+    append: (margin: $icon-margin),
   ),
   support: (
     padding: (inline: spacing(16)),
-    margin: (top: spacing(4)),
     // One line of body-small: the reserved height is the line itself.
     min-height: var(--md-sys-typescale-body-small-line-height),
     color: map.get($theme-color-link, on-surface-variant),
@@ -125,9 +134,9 @@ $tokens: (
   // Vertical scale. Height and padding only — type size never changes, so a
   // compact field and a comfortable one still align their values.
   density: (
-    compact: density-step(44rem, 14rem, 18rem),
-    default: density-step($field-height, 18rem, spacing(24)),
-    comfortable: density-step(64rem, spacing(20), 28rem),
+    compact: density-step(44rem, 18rem),
+    default: density-step($field-height, spacing(24)),
+    comfortable: density-step(64rem, 28rem),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
@@ -141,7 +150,6 @@ $tokens: (
   ),
   // Roles shared by every shape: the label, the trailing icon, the caret and
   // the support line. A shape's own edge lives in its branch below.
-  hover: (label: (color: map.get($theme-color-link, on-surface-variant))),
   focused: (label: (color: map.get($theme-color-link, primary))),
   error: (
     color: map.get($theme-color-link, error),
@@ -152,16 +160,18 @@ $tokens: (
     content: $disabled-content,
     support: (color: $disabled-content),
   ),
+  // The indicator under a filled box and the rule of `underline` are one part
+  // with one set of states; they differ only at rest.
+  indicator: (
+    color: map.get($theme-color-link, on-surface-variant),
+    hover: (color: $on-surface),
+    focused: (color: map.get($theme-color-link, primary)),
+    error: (color: map.get($theme-color-link, error)),
+    // `DisabledActiveIndicatorOpacity`: the indicator is content, 38%.
+    disabled: (color: $disabled-content),
+  ),
   filled: (
     container: (color: map.get($theme-color-link, surface-container-highest)),
-    indicator: (
-      color: map.get($theme-color-link, on-surface-variant),
-      hover: (color: $on-surface),
-      focused: (color: map.get($theme-color-link, primary)),
-      error: (color: map.get($theme-color-link, error)),
-      // `DisabledActiveIndicatorOpacity`: the indicator is content, 38%.
-      disabled: (color: $disabled-content),
-    ),
     // `DisabledContainerOpacity`: on-surface at 4%.
     disabled: (container: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container-subtle), transparent))),
   ),
@@ -170,12 +180,12 @@ $tokens: (
     // start, and a notch cut into that curve reads as a broken corner — so the
     // content (and with it the notch) starts past the effective radius. A `full`
     // radius is capped by the box to half its height.
-    inset: max(#{$label-left}, min(var(--ui-text-field-radius), var(--ui-text-field-height) / 2) + #{$notch-padding-inline}),
+    inset: max(#{spacing(16)}, min(var(--ui-text-field-radius), var(--ui-text-field-height) / 2) + #{$notch-padding-inline}),
     // The `<fieldset>` that draws the border, laid over the control's own. Its
     // start padding puts the legend where the raised label's padding box begins.
     outline: (
-      inset: -1 * $border-width,
-      padding: (start: calc(var(--ui-text-field-inset) - #{$notch-padding-inline + $border-width})),
+      inset: calc(-1 * #{$hairline}),
+      padding: (start: calc(var(--ui-text-field-inset) - #{$notch-padding-inline} - #{$hairline})),
       color: map.get($theme-color-link, outline),
       hover: (color: $on-surface),
       focused: (color: map.get($theme-color-link, primary)),
@@ -184,19 +194,23 @@ $tokens: (
     ),
     // The gap cut into the top border behind a raised label: the label text at
     // its raised size (a real font size — only layout size widens the gap),
-    // plus breathing room on either side.
+    // plus breathing room on either side. Open, it is capped where the label's
+    // own room ends, so a truncated label never takes the edge with it.
     notch: (
       padding: (inline: $notch-padding-inline),
       font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
+      collapsed: 0.01rem,
+      open: calc(100% - var(--ui-text-field-inset) + #{$notch-padding-inline} + #{$hairline}),
     ),
     // `HoverLabelColor`: outlined lifts its label with its edge on hover.
     hover: (label: (color: $on-surface)),
   ),
   // `underline` is the kit's own: no container, so the support line starts at
-  // the value's edge rather than at a container inset.
-  // Its rule rests at `outline`, the lowest ink of the family; every other
-  // state is the filled indicator's.
+  // the value's edge rather than at a container inset. Its rule rests at
+  // `outline`, the lowest ink of the family; every other state is the indicator's.
   underline: (
+    // Content starts at the edge. A unit, not `0`: the start is summed in `calc()`.
+    inset: 0rem,
     indicator: (color: map.get($theme-color-link, outline)),
     support: (padding: (inline: spacing(0))),
   ),

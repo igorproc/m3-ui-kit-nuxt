@@ -37,6 +37,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { useReducedMotion } from '#kit/composables/useReducedMotion'
 import { useTimer } from '#kit/composables/useTimer'
 import { resolveTransition } from '#kit/utils/motion'
 import { mLoadingProps } from './props'
@@ -85,34 +86,32 @@ const currentShape = computed(() =>
 // the shape sitting still for the remainder, which reads as a stutter.
 const transition = computed(() => resolveTransition(props.transition))
 
+// Reduced motion slows the cycle (the morph itself turns calm in MShape), as it
+// slows the circular spinner — `$reduced` in the loading tokens.
+const REDUCED_SLOWDOWN = 2
+const reducedMotion = useReducedMotion()
+
 const cycle = useTimer(() => {
   currentShapeIndex.value
     = (currentShapeIndex.value + 1) % expressiveSequence.length
 }, {
-  duration: () => transition.value.duration + transition.value.hold,
+  duration: () => (transition.value.duration + transition.value.hold) * (reducedMotion.value ? REDUCED_SLOWDOWN : 1),
   repeat: true,
 })
 
-watch(() => props.type, (type) => {
-  if (type === 'expressive') {
-    cycle.start()
-  } else {
-    cycle.stop()
-  }
-}, { immediate: true })
+function runCycle(type: string) {
+  if (type === 'expressive') cycle.start()
+  else cycle.stop()
+}
+
+// The cycle is a browser timer: it starts once mounted, never during a server
+// render, which has no unmount to stop it.
+onMounted(() => runCycle(props.type))
+watch(() => props.type, runCycle)
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/loading' as t;
-
-$arc-duration: 1333ms;
-$cycle-duration: calc(4 * $arc-duration);
-$linear-rotate-duration: calc($arc-duration * 360 / 306);
-$indeterminate-easing: cubic-bezier(0.4, 0, 0.2, 1);
-
-// Reduced motion slows the spinner instead of stopping it: a frozen arc reads
-// as a finished or broken control, not as waiting.
-$calm: 2;
 
 .ui-loading {
   $prefix: 'md-loading';
@@ -142,7 +141,7 @@ $calm: 2;
   &--inline {
     width: 1em;
     height: 1em;
-    vertical-align: middle;
+    vertical-align: g($t, 'inline.align');
     color: inherit;
 
     .ui-loading__circle {
@@ -153,7 +152,7 @@ $calm: 2;
   // 3. linear-rotate wrapper
   &--circular {
     animation: linear infinite ui-loading-linear-rotate;
-    animation-duration: $linear-rotate-duration;
+    animation-duration: g($t, 'motion.loop.turn');
   }
 
   &__spinner,
@@ -174,8 +173,8 @@ $calm: 2;
   // 2. rotate-arc spinner
   &__spinner {
     animation: infinite both ui-loading-rotate-arc;
-    animation-duration: $cycle-duration;
-    animation-timing-function: $indeterminate-easing;
+    animation-duration: g($t, 'motion.loop.cycle');
+    animation-timing-function: g($t, 'motion.easing');
   }
 
   &__left {
@@ -197,8 +196,8 @@ $calm: 2;
     animation: ui-loading-expand-arc;
     animation-iteration-count: infinite;
     animation-fill-mode: both;
-    animation-duration: $arc-duration;
-    animation-timing-function: $indeterminate-easing;
+    animation-duration: g($t, 'motion.loop.arc');
+    animation-timing-function: g($t, 'motion.easing');
   }
 
   &__left &__circle {
@@ -209,24 +208,24 @@ $calm: 2;
   &__right &__circle {
     transform: rotate(100deg);
     inset: 0 0 0 -100%;
-    animation-delay: calc(-0.5 * $arc-duration);
+    animation-delay: g($t, 'motion.loop.offset');
   }
 
   @media (prefers-reduced-motion: reduce) {
     &--circular {
-      animation-duration: calc($linear-rotate-duration * $calm);
+      animation-duration: g($t, 'motion.reduced.turn');
     }
 
     &__spinner {
-      animation-duration: calc($cycle-duration * $calm);
+      animation-duration: g($t, 'motion.reduced.cycle');
     }
 
     &__circle {
-      animation-duration: calc($arc-duration * $calm);
+      animation-duration: g($t, 'motion.reduced.arc');
     }
 
     &__right &__circle {
-      animation-delay: calc(-0.5 * $arc-duration * $calm);
+      animation-delay: g($t, 'motion.reduced.offset');
     }
   }
 

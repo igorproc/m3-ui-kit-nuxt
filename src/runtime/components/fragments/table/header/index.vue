@@ -73,7 +73,7 @@ const emit = defineEmits<{
 @use '#kit/assets/stylesheet/components/table/index' as t;
 
 .ui-table {
-  $t: material-map(t.$tokens, 'md-table');
+  $t: t.$tokens;
 
   &__head-row {
     border-block-end: g($t, 'row.divider.width') solid g($t, 'row.divider.color');
@@ -172,11 +172,5 @@ const emit = defineEmits<{
     &--idle { visibility: hidden; }
   }
 
-  @each $step in ('compact', 'default', 'comfortable') {
-    .ui-table-container--density-#{$step} & {
-      &__head-row { height: g($t, 'density.#{$step}.header'); }
-      &__sort { min-height: g($t, 'density.#{$step}.header'); }
-    }
-  }
 }
 </style>

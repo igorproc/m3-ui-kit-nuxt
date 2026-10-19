@@ -1,5 +1,4 @@
 import { watchEffect, watchPostEffect } from 'vue'
-import { useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
 import type { MCardTag } from './props'
 
 // HTML "interactive content", plus anything made focusable: none of it may sit
@@ -20,7 +19,6 @@ const INTERACTIVE_CONTENT = [
 ].join(', ')
 
 interface CardWarningSources {
-  variant: () => string
   tag: () => MCardTag
   disabled: () => boolean
   /** The rendered parts that hold slot content; read through template refs. */
@@ -36,8 +34,6 @@ interface CardWarningSources {
  */
 export function useCardWarnings(sources: CardWarningSources) {
   if (!import.meta.dev) return
-
-  useRetiredValueWarning('m-card', 'variant', sources.variant, { tonal: '`filled`', text: '`outlined`' })
 
   watchEffect(() => {
     if (!sources.disabled() || sources.tag() === 'link') return

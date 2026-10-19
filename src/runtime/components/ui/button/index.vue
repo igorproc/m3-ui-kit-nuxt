@@ -4,7 +4,7 @@
     v-ripple="rippleEnabled"
     :class="rootClass"
     :style="toggleStyle"
-    v-bind="rootAttrs"
+    v-bind="bindings()"
   >
     <span
       v-if="loading"
@@ -19,44 +19,61 @@
       v-else-if="$slots.prepend"
       class="ui-button__icon ui-button__icon--prepend"
     >
-      <slot name="prepend" />
+      <slot
+        name="prepend"
+        :selected="isSelected"
+      />
     </span>
 
     <span
       v-if="$slots.default"
       class="ui-button__label"
     >
-      <slot />
+      <slot :selected="isSelected" />
     </span>
 
     <span
       v-if="$slots.append"
       class="ui-button__icon ui-button__icon--append"
     >
-      <slot name="append" />
+      <slot
+        name="append"
+        :selected="isSelected"
+      />
     </span>
   </component>
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue'
+import { computed, mergeProps, useAttrs } from 'vue'
 import MLoading from '#kit/components/ui/loading/index.vue'
-import { useButton } from '#kit/composables/button/useButton'
+import { useButton } from '#kit/utils/button/useButton'
+import { withoutDestination } from '#kit/utils/link'
 import { useReducedMotion } from '#kit/composables/useReducedMotion'
 import { toggleTransition } from './morph'
 import { mButtonProps } from './props'
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps(mButtonProps)
 const emit = defineEmits<{
   (e: 'update:selected', selected: boolean): void
 }>()
-const slots = useSlots()
+// `selected` lets a toggle swap its glyph (an outlined icon for a filled one):
+// a selected text toggle differs from an unselected one in colour alone otherwise.
+const slots = defineSlots<{
+  default?: (props: { selected: boolean }) => unknown
+  prepend?: (props: { selected: boolean }) => unknown
+  append?: (props: { selected: boolean }) => unknown
+}>()
 
 const hasPrepend = computed(() => !!slots.prepend)
 const hasAppend = computed(() => !!slots.append)
 const hasDefault = computed(() => !!slots.default)
+const isSelected = computed(() => props.selected === true)
 
-const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
+const attrs = useAttrs()
+const { tag, rootClass, rootAttrs, rippleEnabled, isDisabledLink } = useButton({
   block: 'ui-button',
   props,
   modifiers: () => ({
@@ -67,75 +84,25 @@ const { tag, rootClass, rootAttrs, rippleEnabled } = useButton({
   onToggle: selected => emit('update:selected', selected),
 })
 
+// The consumer's attributes go on the root as they would by fallthrough; a
+// disabled link drops a destination passed among them (`href`), too.
+function bindings() {
+  const merged = mergeProps(rootAttrs.value, attrs)
+  return isDisabledLink.value ? withoutDestination(merged) : merged
+}
+
 const reducedMotion = useReducedMotion()
 const toggleStyle = computed(() => (props.selected === undefined ? undefined : { transition: toggleTransition(reducedMotion.value) }))
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/_index' as t;
+@use '#kit/assets/stylesheet/components/button/_schemes' as schemes;
 
 $prefix: 'md-button';
 $t: material-map(t.$tokens, $prefix);
-$variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
 $densities: ('compact', 'default', 'comfortable');
-
-@mixin paint($path) {
-  background-color: g($t, '#{$path}.container.color');
-  color: g($t, '#{$path}.content.color');
-}
-
-// Applies the tokens of one colour role to every variant. Disabled comes last
-// in each variant, so it outranks a selected toggle of the same role.
-@mixin apply-scheme($scheme) {
-  @each $v in $variants {
-    &.ui-button--#{$v} {
-      $base: '#{$scheme}.#{$v}';
-      $disabled: '#{$scheme}.disabled';
-
-      @include paint($base);
-
-      @if $v == 'outlined' {
-        border-color: g($t, '#{$base}.outline.color');
-      }
-
-      &.ui-button--unselected {
-        @include paint('#{$base}.unselected');
-      }
-
-      &.ui-button--selected {
-        @include paint('#{$base}.selected');
-
-        @if $v == 'outlined' {
-          border-color: transparent;
-        }
-      }
-
-      &.ui-button--disabled {
-        color: g($t, '#{$disabled}.content.color');
-
-        @if $v == 'outlined' or $v == 'text' {
-          background-color: transparent;
-        } @else {
-          background-color: g($t, '#{$disabled}.container.color');
-        }
-
-        @if $v == 'outlined' {
-          border-color: g($t, '#{$disabled}.outline.color');
-
-          &.ui-button--selected {
-            background-color: g($t, '#{$disabled}.container.color');
-            border-color: transparent;
-          }
-        }
-
-        @include forced-colors {
-          border-color: GrayText;
-          color: GrayText;
-        }
-      }
-    }
-  }
-}
+$icon-only: '.ui-button--icon-only';
 
 .ui-button {
   display: inline-flex;
@@ -157,8 +124,7 @@ $densities: ('compact', 'default', 'comfortable');
     background-color g($t, 'state.duration') g($t, 'state.easing'),
     color g($t, 'state.duration') g($t, 'state.easing'),
     box-shadow g($t, 'state.duration') g($t, 'state.easing'),
-    border-color g($t, 'state.duration') g($t, 'state.easing'),
-    transform g($t, 'state.duration') g($t, 'state.easing');
+    border-color g($t, 'state.duration') g($t, 'state.easing');
 
   // State layer in the button's own content colour (craft.md, «Подмена фона»).
   &::before {
@@ -256,6 +222,19 @@ $densities: ('compact', 'default', 'comfortable');
         font-size: g($t, '#{$d}.icon');
       }
 
+      // An icon-only box keeps its width; there the edge sits inside it.
+      // `:where` keeps the step's specificity, so the split's own padding wins.
+      &.ui-button--outlined:where(:not(#{$icon-only}, .ui-icon-button)) {
+        padding-inline: g($t, '#{$d}.outlined.padding');
+      }
+
+      // A toggle's round shape is the step's half height, not `full`: its
+      // spring to the square then runs the whole way instead of waiting at
+      // 999rem for its last frames (`button/_index.scss`).
+      &.ui-button--unselected {
+        border-radius: g($t, '#{$d}.round');
+      }
+
       // A selected toggle is square whatever its resting shape (M3
       // ToggleButton `checkedShape`), and keeps it while disabled or loading;
       // it gets there on a spring (`morph.ts`).
@@ -291,35 +270,6 @@ $densities: ('compact', 'default', 'comfortable');
     inset: min(0rem, calc((100% - #{g($t, 'target.size')}) / 2));
   }
 
-  @include apply-scheme('primary');
-
-  &--secondary {
-    @include apply-scheme('secondary');
-  }
-
-  &--tertiary {
-    @include apply-scheme('tertiary');
-  }
-
-  &--error {
-    @include apply-scheme('error');
-  }
-
-  // No role (set by MButtonIcon when it has no `color`): a standard or outlined
-  // button takes its container's content colour (Compose LocalContentColor)
-  // until it is selected, which needs one. Kept at the role schemes'
-  // specificity, so a host that recolours the button still wins.
-  &--current {
-    &.ui-button--text,
-    &.ui-button--outlined {
-      color: inherit;
-
-      &.ui-button--unselected:not(.ui-button--disabled) {
-        color: inherit;
-      }
-    }
-  }
-
   &--elevated {
     box-shadow: g($t, 'elevation.elevated.rest');
   }
@@ -348,13 +298,6 @@ $densities: ('compact', 'default', 'comfortable');
     box-shadow: none;
   }
 
-  // Last in the sheet, so it outranks the role schemes' selected fills, which
-  // forcing would flatten to Canvas.
-  @include forced-colors {
-    &.ui-button--selected:not(.ui-button--disabled) {
-      background-color: Highlight;
-      color: HighlightText;
-    }
-  }
+  @include schemes.schemes($t);
 }
 </style>

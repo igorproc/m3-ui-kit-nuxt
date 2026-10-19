@@ -11,7 +11,6 @@ import type { MHeadingLevel, MVariant } from '#kit/shared/types/props'
 export type MCardVariant = Extract<MVariant, 'elevated' | 'filled' | 'outlined'>
 /** Root behavior: a static `<article>` or a Nuxt link that is the whole card. */
 export type MCardTag = 'article' | 'link'
-/** Level of the title heading; the page outline decides it, not the kit. */
 /** `<MCard>` props — a static MD3 `elevated` card by default. */
 export const mCardProps = {
   /** Surface treatment of the card container. */
@@ -22,7 +21,7 @@ export const mCardProps = {
   to: { type: [String, Object] as PropType<NuxtLinkProps['to']>, default: undefined },
   /** Disables a link card: no destination, out of the Tab order. */
   disabled: { type: Boolean, default: false },
-  /** Plain-text headline; the header slot takes precedence. */
+  /** Plain-text headline; `#title` replaces its text, `#header` the whole header. */
   title: { type: String, default: '' },
   /** Plain-text subhead, rendered with or without a title. */
   subtitle: { type: String, default: '' },
@@ -33,3 +32,20 @@ export const mCardProps = {
 }
 
 export type MCardProps = ExtractPublicPropTypes<typeof mCardProps>
+
+/** Slots of `<MCard>`. */
+export interface MCardSlots {
+  /** Full-bleed media above the header; its box keeps `mediaAspectRatio`. */
+  media?: () => unknown
+  /**
+   * Content of the title. The element around it — its `id` that names the
+   * card and its heading level — stays the kit's.
+   */
+  title?: () => unknown
+  /** Replaces the whole header, title and subtitle included; the card is then named by the consumer. */
+  header?: () => unknown
+  /** Supporting content. */
+  default?: () => unknown
+  /** Buttons at the end of the card; a link card cannot hold them (dev warning). */
+  actions?: () => unknown
+}

@@ -192,4 +192,39 @@ test.describe('MList', () => {
       expect(uncovered).toBeGreaterThanOrEqual(-1)
     }
   })
+  // L-2 (M3-polish): the row used to size every avatar to 40 and round it
+  // full, and to stretch the avatar's image to 56 inside it.
+  test('an avatar in the leading slot keeps its own density and shape', async ({ page }) => {
+    await openFixture(page, 'list/matrix')
+    const unit = await rem(page)
+    const sizes = { compact: 24, default: 40, comfortable: 56 }
+
+    for (const [density, size] of Object.entries(sizes)) {
+      const avatar = page.getByTestId(`avatar-media-${density}`).locator('.ui-avatar')
+      const image = avatar.locator('.ui-avatar__image')
+      expect((await box(avatar)).width / unit, density).toBeCloseTo(size, 0)
+      expect((await box(image)).width / unit, density).toBeCloseTo(size, 0)
+      expect(Number.parseFloat(await style(avatar, 'border-top-left-radius')) / unit, density).toBeCloseTo(16, 0)
+    }
+
+    // Bare media keeps the row's 56 image anatomy.
+    const bare = page.getByTestId('content-1-image').locator('img')
+    expect((await box(bare)).width / unit).toBeCloseTo(56, 0)
+  })
+
+  // L-1 (M3-polish): selection changes the tone and, statically, the corner — never the geometry.
+  test('choosing a row moves nothing and changes no height', async ({ page }) => {
+    await openFixture(page, 'list/matrix')
+    const rows = ['a', 'b', 'c'].map(id => page.getByTestId(`pick-${id}`))
+    await rows[0]!.scrollIntoViewIfNeeded()
+    const before = await Promise.all(rows.map(box))
+
+    await rows[1]!.click()
+    await waitForMotion(page)
+    const after = await Promise.all(rows.map(box))
+
+    expect(after.map(rect => [rect.y, rect.height])).toEqual(before.map(rect => [rect.y, rect.height]))
+    await expect(rows[1]!).toHaveAttribute('aria-pressed', 'true')
+    await expect(rows[0]!).toHaveAttribute('aria-pressed', 'false')
+  })
 })

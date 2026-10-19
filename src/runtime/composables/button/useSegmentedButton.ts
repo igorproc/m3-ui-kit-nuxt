@@ -15,12 +15,14 @@
 import { computed } from 'vue'
 import type { Ref } from 'vue'
 
+/** One choice of a segmented button or a connected button group. */
 export interface SegmentedItem {
-  label?: string
-  /** Accessible name for a segment drawn with an icon only. */
-  ariaLabel?: string
-  icon?: string
   value: string | number
+  label?: string
+  /** Leading icon; alone, the choice is drawn as an icon and needs `ariaLabel`. */
+  icon?: string
+  /** Accessible name for a choice drawn with an icon only. */
+  ariaLabel?: string
   disabled?: boolean
 }
 

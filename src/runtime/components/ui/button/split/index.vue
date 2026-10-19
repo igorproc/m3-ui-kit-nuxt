@@ -2,6 +2,7 @@
   <div
     class="ui-split-button"
     :class="`ui-split-button--${density}`"
+    v-bind="rootAttrs()"
   >
     <div class="ui-split-button__wrapper">
       <UiButton
@@ -11,6 +12,10 @@
         :density="density"
         :disabled="disabled"
         :loading="loading"
+        :type="type"
+        :tag="tag"
+        :to="to"
+        v-bind="controlAttrs()"
         @click="emit('click')"
       >
         <template
@@ -25,11 +30,13 @@
       <UiButton
         ref="trailing"
         class="ui-split-button__trailing"
+        :class="{ 'ui-button--disabled': loading && !disabled }"
         :variant="variant"
         :color="color"
         :density="density"
-        :disabled="disabled || loading"
-        :aria-label="trailingLabel"
+        :disabled="disabled"
+        :aria-disabled="loading && !disabled ? 'true' : undefined"
+        :aria-label="trailingAriaLabel"
         :aria-haspopup="hasMenu ? 'menu' : undefined"
         :aria-expanded="hasMenu ? String(isMenuOpen) : undefined"
         @click="onTrailing"
@@ -62,42 +69,40 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, nextTick, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useSlots, useTemplateRef, watch } from 'vue'
 
 import UiButton from '#kit/components/ui/button/index.vue'
 import UiIcon from '#kit/components/ui/icon/index.vue'
 import UiMenu from '#kit/components/ui/menu/index.vue'
-import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
-import { useRetiredPropWarning, useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
 import { ICONS } from '#kit/shared/constants/icons'
 import { mSplitButtonProps } from './props'
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps(mSplitButtonProps)
 
 const emit = defineEmits<{
-  /** @deprecated Listen to `trailing`. Still emitted for one release. */
-  (e: 'click' | 'trailing' | 'dropdown'): void
+  (e: 'click' | 'trailing'): void
 }>()
 
 const slots = useSlots()
+const { rootAttrs, controlAttrs } = useControlAttrs()
 const isMenuOpen = ref(false)
 const hasMenu = computed(() => !!slots.menu)
-const trailingLabel = computed(() => props.trailingAriaLabel ?? props.dropdownAriaLabel)
 const trailing = useTemplateRef<{ $el: HTMLElement }>('trailing')
 
-useButtonNameWarning('m-button-split', () => trailingLabel.value)
-useRetiredValueWarning('m-button-split', 'variant', () => props.variant, { text: '`outlined`' })
-useRetiredPropWarning('m-button-split', 'dropdownAriaLabel', () => props.dropdownAriaLabel, '`trailingAriaLabel`')
-if (import.meta.dev && getCurrentInstance()?.vnode.props?.onDropdown) {
-  console.warn('[m-button-split] the `dropdown` event is retired: listen to `trailing`.')
-}
+useButtonNameWarning('m-button-split', () => props.trailingAriaLabel)
 
+// While the action loads, the trailing button is inert like it (В-6): it keeps
+// focus through `aria-disabled` instead of a native `disabled` that would
+// throw focus to <body>, and its click is ignored here.
 function onTrailing() {
   if (props.disabled || props.loading) return
 
   if (hasMenu.value) isMenuOpen.value = !isMenuOpen.value
   emit('trailing')
-  emit('dropdown')
 }
 
 function closeMenu() {
@@ -122,6 +127,7 @@ watch(isMenuOpen, async (open) => {
 
 $t: material-map(t.$tokens, 'md-button');
 $densities: ('compact', 'default', 'comfortable');
+$icon-only: '.ui-button--icon-only';
 
 .ui-split-button {
   display: inline-flex;
@@ -137,41 +143,47 @@ $densities: ('compact', 'default', 'comfortable');
     isolation: isolate;
   }
 
-  // The wrapper's child combinator outranks `.ui-button`'s own radius, padding
-  // and icon-only box without `!important`; a focused button rises over its
-  // neighbour so its ring shows. Corners stay put on hover, press and open.
-  &__wrapper > &__action.ui-button,
-  &__wrapper > &__trailing.ui-button {
-    &:focus-visible {
-      z-index: 1;
-    }
+  // A focused button rises over its neighbour so its ring shows.
+  &__action:focus-visible,
+  &__trailing:focus-visible {
+    z-index: 1;
   }
 
-  &__wrapper > &__action.ui-button {
+  &__action {
     min-width: g($t, 'split.min-width');
-    border-start-end-radius: g($t, 'split.inner');
-    border-end-end-radius: g($t, 'split.inner');
   }
 
-  &__wrapper > &__trailing.ui-button {
-    padding-inline: 0;
-    border-start-start-radius: g($t, 'split.inner');
-    border-end-start-radius: g($t, 'split.inner');
-  }
-
+  // The step class outranks `.ui-button`'s own corners and padding. The outer
+  // corners are the step's half height, not `full`: next to a 4 corner, 999rem
+  // would scale the whole set down until the 4 is gone. Corners stay put on
+  // hover, press and open. The trailing button is icon-only, whose box it
+  // resizes, hence the extra class.
   @each $step in $densities {
-    &--#{$step} {
-      $d: 'split.density.#{$step}';
+    $d: 'split.density.#{$step}';
+    $round: g($t, 'density.#{$step}.round');
+    $inner: g($t, 'split.inner');
 
-      .ui-split-button__wrapper > .ui-split-button__action.ui-button {
+    &--#{$step} {
+      .ui-split-button__action {
+        border-start-start-radius: $round;
+        border-end-start-radius: $round;
+        border-start-end-radius: $inner;
+        border-end-end-radius: $inner;
         padding-inline-end: g($t, '#{$d}.leading.end');
+
+        &.ui-button--outlined {
+          padding-inline-end: g($t, '#{$d}.leading.outlined.end');
+        }
       }
 
-      .ui-split-button__wrapper > .ui-split-button__trailing.ui-button {
+      .ui-split-button__trailing#{$icon-only} {
         width: g($t, '#{$d}.trailing.width');
+        border-start-start-radius: $inner;
+        border-end-start-radius: $inner;
+        border-start-end-radius: $round;
+        border-end-end-radius: $round;
 
-        .ui-button__icon,
-        .ui-button__spinner {
+        .ui-button__icon {
           font-size: g($t, '#{$d}.trailing.icon');
         }
       }

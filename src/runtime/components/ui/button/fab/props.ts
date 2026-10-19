@@ -8,18 +8,11 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps, makeStateProps } from '#kit/shared/utils/props'
-import type { MSize, MVariant } from '#kit/shared/types/props'
+import type { MVariant } from '#kit/shared/types/props'
 import type { MButtonDensity } from '../props'
 
 /** `tonal`: the role's container (M3 default FAB); `filled`: the role itself. */
 export type MFabVariant = Extract<MVariant, 'tonal' | 'filled'>
-
-/** Retired `size` → the `density` step that replaced it. */
-export const FAB_SIZE_TO_DENSITY: Record<MSize, MButtonDensity> = {
-  sm: 'compact',
-  md: 'default',
-  lg: 'comfortable',
-}
 
 /** Props shared by the FAB and the extended FAB. */
 export const makeFabProps = () => ({
@@ -28,11 +21,6 @@ export const makeFabProps = () => ({
   variant: { type: String as PropType<MFabVariant>, default: 'tonal' },
   /** Container step: 40 / 56 / 96. */
   density: { type: String as PropType<MButtonDensity>, default: 'default' },
-  /**
-   * @deprecated Use `density`: `sm` → `compact`, `md` → `default`,
-   * `lg` → `comfortable`. Still honoured for one release.
-   */
-  size: { type: String as PropType<MSize>, default: undefined },
   ...makeStateProps(),
 })
 

@@ -1,111 +1,35 @@
 @use 'sass:map';
 @use '../../../abstracts/forward.scss' as *;
+@use '../fab' as fab;
 
-// Material 3 State Opacities
-$hover-state-layer-opacity: state-opacity(hover);
-$focus-state-layer-opacity: state-opacity(focus);
-$pressed-state-layer-opacity: state-opacity(pressed);
-$disabled-container-opacity: state-opacity(disabled-container);
-$disabled-content-opacity: state-opacity(disabled-content);
-$on-surface: map.get($theme-color-link, 'on-surface');
-
-// One surface treatment for a (variant, scheme) pair.
-@function extended-fab-surface($container, $on-container) {
+// One density step. Folded, the button is the FAB of the same step: a square
+// whose padding is what the height leaves around the icon, with the label
+// closed to zero width.
+@function extended-step($height, $shape, $padding, $gap, $icon, $font) {
   @return (
-    container: (
-      color: $container,
-      hover-color: color-mix(in srgb, $on-container $hover-state-layer-opacity, $container),
-      focus-color: color-mix(in srgb, $on-container $focus-state-layer-opacity, $container),
-      pressed-color: color-mix(in srgb, $on-container $pressed-state-layer-opacity, $container),
-      disabled-color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent),
-    ),
-    content: (
-      color: $on-container,
-      disabled-color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent),
-    )
+    height: $height,
+    shape: $shape,
+    padding: $padding,
+    gap: $gap,
+    icon: $icon,
+    font: $font,
+    collapsed: (padding: calc(($height - $icon) / 2)),
   );
 }
 
-// A full MD3 role in M3's two FAB sets: `tonal` = the role's container,
-// `filled` = the role itself.
-@function extended-fab-scheme($role, $on-role, $container, $on-container) {
-  @return (
-    tonal: extended-fab-surface($container, $on-container),
-    filled: extended-fab-surface($role, $on-role)
-  );
-}
-
-$tokens: (
+// Colours, states, elevation and motion are the FAB's (`fab.$schemes`).
+$tokens: map.merge(fab.$schemes, (
   // The family's density steps. 56 and 96 are M3 Expressive's small and large
   // extended FAB; 40 has no M3 counterpart and keeps the kit's own values.
   density: (
-    compact: (
-      height: 40rem,
-      shape: map.get($theme-shape-link, 'medium'),
-      padding: spacing(12),
-      gap: spacing(8),
-      icon: 20rem,
-      font: 'label-large',
-    ),
-    default: (
-      height: 56rem,
-      shape: map.get($theme-shape-link, 'large'),
-      padding: spacing(16),
-      gap: spacing(8),
-      icon: 24rem,
-      font: 'title-medium',
-    ),
-    comfortable: (
-      height: 96rem,
-      shape: map.get($theme-shape-link, 'extra-large'),
-      padding: calc(#{spacing(24)} + #{spacing(4)}),
-      gap: spacing(16),
-      icon: 32rem,
-      font: 'headline-small',
-    ),
+    compact: extended-step(40rem, map.get($theme-shape-link, 'medium'), spacing(12), spacing(8), 20rem, 'label-large'),
+    default: extended-step(56rem, map.get($theme-shape-link, 'large'), spacing(16), spacing(8), 24rem, 'title-medium'),
+    comfortable: extended-step(96rem, map.get($theme-shape-link, 'extra-large'), calc(#{spacing(24)} + #{spacing(4)}), spacing(16), 32rem, 'headline-small'),
   ),
 
-  container: (
-    elevation: (
-      resting: elevation(3),
-      hover: elevation(4),
-      pressed: elevation(3),
-    ),
+  // Folding and unfolding: the label's width, gap and opacity, and the padding.
+  fold: (
+    duration: map.get(map.get($theme-animation-link, 'duration'), 'medium', '2'),
+    easing: map.get(map.get($theme-animation-link, 'easing'), 'emphasized'),
   ),
-
-  // Schemes (MD3 roles) — each with the tonal and filled sets
-  primary: extended-fab-scheme(
-    map.get($theme-color-link, 'primary'),
-    map.get($theme-color-link, 'on-primary'),
-    map.get($theme-color-link, 'primary-container'),
-    map.get($theme-color-link, 'on-primary-container')
-  ),
-  secondary: extended-fab-scheme(
-    map.get($theme-color-link, 'secondary'),
-    map.get($theme-color-link, 'on-secondary'),
-    map.get($theme-color-link, 'secondary-container'),
-    map.get($theme-color-link, 'on-secondary-container')
-  ),
-  tertiary: extended-fab-scheme(
-    map.get($theme-color-link, 'tertiary'),
-    map.get($theme-color-link, 'on-tertiary'),
-    map.get($theme-color-link, 'tertiary-container'),
-    map.get($theme-color-link, 'on-tertiary-container')
-  ),
-  error: extended-fab-scheme(
-    map.get($theme-color-link, 'error'),
-    map.get($theme-color-link, 'on-error'),
-    map.get($theme-color-link, 'error-container'),
-    map.get($theme-color-link, 'on-error-container')
-  ),
-
-  // Motion
-  motion: (
-    duration: map.get(map.get($theme-animation-link, 'duration'), 'short', '3'),
-    easing: map.get(map.get($theme-animation-link, 'easing'), 'standard'),
-    fold: (
-      duration: map.get(map.get($theme-animation-link, 'duration'), 'medium', '2'),
-      easing: map.get(map.get($theme-animation-link, 'easing'), 'emphasized'),
-    ),
-  )
-);
+));

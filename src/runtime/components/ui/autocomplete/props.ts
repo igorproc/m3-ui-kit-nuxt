@@ -8,7 +8,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { mDropdownProps } from '#kit/components/ui/dropdown/props'
-import type { MDropdownProps } from '#kit/components/ui/dropdown/props'
+import type { DropdownPanelSlotProps, MDropdownProps, MDropdownSlots } from '#kit/components/ui/dropdown/props'
 import type { DropdownItemBase } from '#kit/composables/dropdown/types'
 import type { AutocompleteOpenOnFocus } from '#kit/composables/autocomplete/useAutocomplete'
 
@@ -66,4 +66,27 @@ export interface MAutocompleteProps<TItem extends DropdownItemBase, TValue = TIt
   hideSelected?: boolean
   autoSelectFirst?: boolean
   openOnFocus?: AutocompleteOpenOnFocus
+}
+
+/** Scope of `#hint`: the query is still shorter than `minSearchLength`. */
+export interface AutocompleteHintSlotProps {
+  query: string
+  /** Characters still to type. */
+  missing: number
+}
+
+/** Scope of `#no-results`. */
+export interface AutocompleteNoResultsSlotProps {
+  query: string
+  /** Empties the query and keeps the panel open on the whole list. */
+  clear: () => void
+}
+
+export interface MAutocompleteSlots<TItem, TValue> extends Omit<MDropdownSlots<TItem, TValue>, 'default'> {
+  /** Replaces the whole panel; `query` is the text typed so far. */
+  'default'?: (props: DropdownPanelSlotProps<TItem, TValue> & { query: string }) => unknown
+  /** Shown while the query is shorter than `minSearchLength`; no text of the kit's own. */
+  'hint'?: (props: AutocompleteHintSlotProps) => unknown
+  /** Shown when the query matches nothing; outranks `messages.noResults`. */
+  'no-results'?: (props: AutocompleteNoResultsSlotProps) => unknown
 }

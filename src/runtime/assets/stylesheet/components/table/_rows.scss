@@ -74,15 +74,12 @@
     }
   }
 
+  // Only rows that do something answer the pointer: selectable rows and rows
+  // with a `row-click` listener. `>`: the cells of a table nested in a cell
+  // must not light up with the outer row.
   @include can-hover {
-    .ui-table__row:hover > .ui-table__cell::before {
+    &--interactive .ui-table__row:hover > .ui-table__cell::before {
       opacity: g($t, 'state.hover');
-    }
-  }
-
-  @each $step in ('compact', 'default', 'comfortable') {
-    .ui-table-container--density-#{$step} &__row {
-      height: g($t, 'density.#{$step}.row');
     }
   }
 

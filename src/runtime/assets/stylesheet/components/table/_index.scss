@@ -13,6 +13,10 @@ $-radius: map.get($theme-shape-link, 'medium');
 $-row-compact: spacing(40);
 $-row-default: calc(#{spacing(48)} + #{spacing(4)});
 $-row-comfortable: spacing(64);
+$-caption-padding: spacing(12);
+
+// One line of caption: its padding and the title-medium line.
+$-caption: calc(2 * #{$-caption-padding} + #{map.get($theme-typography-link, 'title', 'medium', 'line-height')});
 $tokens: (
   container: (
     color: map.get($theme-color-link, 'surface'),
@@ -27,6 +31,9 @@ $tokens: (
   // Row height per step; the header stands 4 taller than its rows. Loading,
   // empty and error stand in for the rows at three rows' height, so arriving
   // data grows the table rather than conjuring it from nothing.
+  // A caption stands above the header inside the scroll region: the indicator
+  // over refreshing rows steps down by one caption line.
+  busy: (caption: $-caption),
   density: (
     compact: (
       row: $-row-compact,
@@ -95,7 +102,7 @@ $tokens: (
     disabled: state-opacity(disabled-content),
   ),
   caption: (
-    padding: (block: spacing(12)),
+    padding: (block: $-caption-padding),
     color: map.get($theme-color-link, 'on-surface'),
     typography: 'title-medium',
   ),
@@ -130,6 +137,7 @@ $tokens: (
       icon: (
         size: spacing(24),
         inset: spacing(4),
+        disabled: (color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(disabled-content), transparent)),
       ),
     ),
   ),

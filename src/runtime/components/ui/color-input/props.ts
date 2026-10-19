@@ -20,8 +20,16 @@ export type MColorInputVariant = Extract<MTextFieldVariant, 'filled' | 'outlined
 
 const ALL_FORMATS: ColorFormat[] = ['hex', 'hexa', 'rgb', 'rgba', 'hsl', 'hsla']
 
+// A colour value is never autocompleted (the field pins `autocomplete="off"`)
+// and the field family has no loading state: props that would do nothing are
+// left out rather than neutered.
+const NEUTERED_KEYS = ['autocomplete', 'loading'] as const
+type NeuteredKey = typeof NEUTERED_KEYS[number]
+const fieldProps = Object.fromEntries(Object.entries(mFieldProps)
+  .filter(([key]) => !NEUTERED_KEYS.includes(key as NeuteredKey))) as Omit<typeof mFieldProps, NeuteredKey>
+
 export const mColorInputProps = {
-  ...mFieldProps,
+  ...fieldProps,
   ...fieldDensityProp,
   variant: { type: String as PropType<MColorInputVariant>, default: 'filled' },
   format: { type: String as PropType<ColorInputFormat>, default: 'hex' },

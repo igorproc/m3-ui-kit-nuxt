@@ -163,8 +163,16 @@ export function useTimer(
     isActive.value = true
     isPaused.value = false
 
-    timeoutId = globalThis.setTimeout(fire, ms)
+    schedule(ms)
     startTracking()
+  }
+
+  // A server render has no unmount to clear a timer, so a repeating one would
+  // outlive the request forever: nothing is scheduled off the browser.
+  function schedule(ms: number) {
+    if (!IN_BROWSER) return
+
+    timeoutId = globalThis.setTimeout(fire, ms)
   }
 
   function start() {
@@ -200,7 +208,7 @@ export function useTimer(
     isPaused.value = false
     startedAt = Date.now()
 
-    timeoutId = globalThis.setTimeout(fire, budget)
+    schedule(budget)
     startTracking()
   }
 

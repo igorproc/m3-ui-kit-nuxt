@@ -23,19 +23,21 @@ $tokens: (
     padding: spacing(24),
     gap: spacing(12),
     shape: map.get($theme-shape-link, large),
-    // The kit's hairline (an open system question, see surface): a dashed edge
-    // is what says "drop here" without a fill.
-    border: (width: 1rem, style: dashed),
+    // The kit's hairline, never thinner than a device pixel: a dashed edge is
+    // what says "drop here" without a fill.
+    border: (width: max(1px, 1rem), style: dashed),
     outline: map.get($theme-color-link, outline),
     color: map.get($theme-color-link, on-surface-variant),
     icon: (size: 32rem),
     typography: 'body-large',
     hint: (typography: 'body-small'),
-    // Dragging something it takes: the container role pair and an active edge.
+    // Dragging something it takes: the container role pair and an active
+    // edge, drawn solid — the state is not told by colour alone.
     accepting: (
       container: map.get($theme-color-link, primary-container),
       color: map.get($theme-color-link, on-primary-container),
       outline: map.get($theme-color-link, primary),
+      border: (style: solid),
     ),
     // Dragging a type it refuses: the error pair, with the reason in text.
     refusing: (
@@ -72,6 +74,8 @@ $tokens: (
     meta: (color: map.get($theme-color-link, on-surface-variant), typography: 'body-small'),
     error: (color: map.get($theme-color-link, error)),
     success: (color: map.get($theme-color-link, primary)),
+    // The bar rides in the bottom padding (12), clear of the text above it.
+    progress: (top: calc(100% + #{spacing(4)})),
     // Room between two 48 targets, so a press on one never lands on the other.
     actions: (gap: spacing(8)),
   ),

@@ -181,8 +181,8 @@ describe('m-number-input · a11y', () => {
       expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
     })
 
-    it('has the alert region in place before the error arrives, and writes the error into it', async () => {
-      const wrapper = await mount()
+    it('has the alert region in place before a bound error arrives, and writes the error into it', async () => {
+      const wrapper = await mount({ errorMessage: undefined })
       const region = wrapper.find('[role="alert"]')
 
       expect(region.exists()).toBe(true)

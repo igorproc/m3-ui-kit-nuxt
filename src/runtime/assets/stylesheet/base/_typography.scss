@@ -1,14 +1,12 @@
- html,
- body {
-  font-family:
-    'Google Sans',
-    -apple-system,
-    BlinkMacSystemFont,
-    system-ui,
-    sans-serif;
- }
+@use 'sass:map';
+@use '../abstracts/forward' as *;
 
- body {
+html,
+body {
+  font-family: map.get($theme-typography-link, 'body', 'medium', 'font');
+}
+
+body {
   font-size: 14rem;
   line-height: 1.5;
- }
+}

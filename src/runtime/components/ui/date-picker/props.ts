@@ -6,6 +6,8 @@
  *
  * Every phrase is a prop whose English default lives in `MESSAGES`; names,
  * formats and the first day of the week come from `locale` through `Intl`.
+ * The model keeps the type it came in: a day string (`YYYY-MM-DD`) stays a
+ * string, a timestamp a number, a `Date` (or nothing yet) a `Date`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { MESSAGES } from '#kit/shared/constants/messages'
@@ -25,11 +27,6 @@ export const mDatePickerProps = {
   label: { type: String, default: MESSAGES.dateTitle },
   /** Title over the date while typing it. */
   inputTitle: { type: String, default: MESSAGES.dateInputTitle },
-  /**
-   * @deprecated Retired: the title is `label` (in M3 the headline is the chosen
-   * date). Still shown for one release, with a dev warning.
-   */
-  headline: { type: String, default: undefined },
   minDate: { type: [Date, String, Number] as PropType<MDatePickerValue>, default: undefined },
   maxDate: { type: [Date, String, Number] as PropType<MDatePickerValue>, default: undefined },
   /** Names, formats and the first day of the week. */
@@ -42,6 +39,15 @@ export const mDatePickerProps = {
   switchToDayLabel: { type: String, default: MESSAGES.dateSwitchToDay },
   switchToInputLabel: { type: String, default: MESSAGES.dateSwitchToInput },
   switchToCalendarLabel: { type: String, default: MESSAGES.dateSwitchToCalendar },
+  /** Text under the picker; an error takes its place. */
+  helperText: { type: String, default: undefined },
+  /** Shows the error state; `errorMessage` says why. */
+  error: { type: Boolean, default: false },
+  errorMessage: { type: String, default: undefined },
+  /** A host's `validate()` refuses an empty picker; the typed field is marked required. */
+  required: { type: Boolean, default: false },
+  /** Submits the chosen day (`YYYY-MM-DD`) with a form. */
+  name: { type: String, default: undefined },
   /** Label of the typed-date field. */
   inputLabel: { type: String, default: MESSAGES.dateInputLabel },
   /** Pattern shown in the empty field. Built from the locale's order when absent ("MM/DD/YYYY"). */

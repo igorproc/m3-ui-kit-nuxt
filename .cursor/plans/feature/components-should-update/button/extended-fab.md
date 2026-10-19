@@ -2,7 +2,7 @@
 
 <identity>M3: Extended FAB (Small, Medium, Large) · Токены Compose: `ExtendedFabSmallTokens`, `ExtendedFabMediumTokens`, `ExtendedFabLargeTokens`, `ExtendedFabPrimaryTokens` (baseline), `FabPrimaryContainerTokens`; поведение — `FloatingActionButton.kt` (`SmallExtendedFloatingActionButton` … `LargeExtendedFloatingActionButton`, параметр `expanded`) · Код: `src/runtime/components/ui/button/extended-fab/`, токены `assets/stylesheet/components/button/extended-fab/_index.scss` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-07">Реализовано. Лестница `density` 40 / 56 / 96 как у FAB: 56 и 96 — значения M3 Expressive S и L (шрифт, иконка, отступы, радиус), 40 — значения кита. В-1: только проп `expanded`; свёрнутая кнопка — квадрат ступени, подпись остаётся доступным именем (`sr-only`), ширина анимируется через `interpolate-size`, где он есть.</implementation-status>
+<implementation-status state="done" updated="2026-10-19">Реализовано. Лестница `density` 40 / 56 / 96 как у FAB: 56 и 96 — значения M3 Expressive S и L (шрифт, иконка, отступы, радиус), 40 — значения кита. В-1: только проп `expanded`; свёрнутая кнопка — квадрат ступени, подпись остаётся доступным именем (`sr-only`), ширина анимируется через `interpolate-size`, где он есть. M3-polish (2026-10-19): «подпись гаснет» сделано — сворачивается подпись (ширина + прозрачность + отступ), кнопка следует за ней без скачка и качания; на время сворачивания подпись в одну строку; слой + рипл (Q-2), шим `size` удалён. CSS 13 → 6 KB.</implementation-status>
 
 ## Вердикт
 

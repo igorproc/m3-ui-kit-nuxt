@@ -20,6 +20,7 @@
     <div class="orders-filters__status">
       <MDropdown
         v-model="statuses"
+        :messages="SELECT_MESSAGES"
         :items="STATUS_ITEMS"
         item-value="id"
         label="Статус заказа"
@@ -62,6 +63,7 @@
 
 <script setup lang="ts">
 import OrdersPeriodPicker from './OrdersPeriodPicker.vue'
+import { SELECT_MESSAGES } from './data/selectMessages'
 import { FLAG_LABELS, FLAG_ORDER, STATUS_META, STATUS_ORDER } from './data/model'
 import type { OrderFlag, OrderStatus } from './data/model'
 

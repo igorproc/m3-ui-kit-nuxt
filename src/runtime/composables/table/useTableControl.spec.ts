@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h, useTemplateRef } from 'vue'
+import { defineComponent, h, nextTick, useTemplateRef } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { useTableControl } from './useTableControl'
 
@@ -80,5 +80,49 @@ describe('useTableControl', () => {
     await wrapper.findAll('tr')[1]!.find('input').trigger('click')
 
     expect(clicks).toEqual([data[1]])
+  })
+
+  // M3-polish: a table named by `aria-labelledby` left its scroll region unnamed.
+  it('names a scrolling region by the table\'s aria-labelledby when there is no caption or label', async () => {
+    const OriginalObserver = globalThis.ResizeObserver
+    globalThis.ResizeObserver = class {
+      constructor(private callback: () => void) {}
+      observe() {
+        this.callback()
+      }
+
+      disconnect() {}
+    } as unknown as typeof ResizeObserver
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', { configurable: true, get: () => 200 })
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 100 })
+
+    try {
+      const wrapper = await mountSuspended(defineComponent({
+        setup() {
+          const viewport = useTemplateRef<HTMLElement>('viewport')
+          const table = useTemplateRef<HTMLElement>('table')
+          const control = useTableControl<Row>({
+            viewport,
+            table,
+            selectable: () => false,
+            isSelected: () => false,
+            busy: () => false,
+            hasCaption: () => false,
+            label: () => undefined,
+            labelledBy: () => 'report-title',
+            onRowClick: () => {},
+          })
+          return () => h('div', { ref: 'viewport', ...control.viewportAttrs.value }, [h('table', { ref: 'table' })])
+        },
+      }))
+      await nextTick()
+
+      expect(wrapper.attributes('role')).toBe('region')
+      expect(wrapper.attributes('aria-labelledby')).toBe('report-title')
+    } finally {
+      globalThis.ResizeObserver = OriginalObserver
+      delete (HTMLElement.prototype as { scrollWidth?: number }).scrollWidth
+      delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth
+    }
   })
 })

@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита — поле семейства полей (`mFieldProps`) с кнопкой «Обзор» · Токены Compose: через `MTextField` · Код: `src/runtime/components/ui/file-input/`, `src/runtime/composables/useFileSelection` · Аудит: `data/file-input.json` · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–5 (документация — в репозитории docs). `mFieldProps` и `density` пробрасываются, отказ показан в строке поддержки «имя: причины», `browseLabel` / `clearLabel` / `rejectMessages`, сводка «a, b, c +N».</implementation-status>
+<implementation-status state="done" updated="2026-10-19">M3-polish (2026-10-19): поле — кнопка пикера (клик в коробке, Enter, Space); нативный input держит файлы модели (DataTransfer, только на клиенте) — `required` и форма честные; `formatSize`; снят `autocomplete`; `margin-block-start`.</implementation-status>
 
 ## Вердикт
 

@@ -37,9 +37,12 @@ export interface SortState<T> {
   direction: SortDirection
 }
 
+/**
+ * What a row must have: an `id`. No index signature, so an ordinary
+ * `interface Order { id: number, … }` is accepted as it is.
+ */
 export interface TableData {
   id: string | number
-  [key: string]: unknown
 }
 
 /** Numbers of the page the footer shows, for the `pagination-info` slot. */
@@ -100,6 +103,34 @@ export interface MTableProps<T extends TableData> {
   previousPageLabel?: string
   /** Accessible name of the next-page button. */
   nextPageLabel?: string
+}
+
+/**
+ * Slots of `<MTable>`. Cell and header slots are named after the column key:
+ * `#cell-amount`, `#header-amount`.
+ */
+export type MTableSlots<T extends TableData> = {
+  /** Content of the visible caption that names the table. */
+  'caption'?: () => unknown
+  /** Stands in for the rows while the first page loads. */
+  'loading'?: () => unknown
+  /** Stands in for the rows when there are none. */
+  'empty'?: () => unknown
+  /** Stands in for the rows, or follows them, when loading failed. */
+  'error'?: (props: MTableErrorSlot) => unknown
+  /** The footer's range text: "1–10 of 120" in the app's words. */
+  'pagination-info'?: (props: MTablePageRange) => unknown
+} & {
+  [name: `cell-${string}`]: ((props: MTableCellSlot<T>) => unknown) | undefined
+} & {
+  [name: `header-${string}`]: ((props: { column: TableColumn<T> }) => unknown) | undefined
+}
+
+/** Payload of a `#cell-<key>` slot. */
+export interface MTableCellSlot<T extends TableData> {
+  row: T
+  column: TableColumn<T>
+  value: T[keyof T]
 }
 
 export interface MTableEmits<T extends TableData> {

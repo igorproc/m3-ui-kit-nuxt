@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита на системе M3 (поле, кнопки, прогресс) · Токены Compose: нет · Код: `src/runtime/components/ui/file-upload/`, части `src/runtime/components/fragments/file-upload/{Dropzone,List,Item}.vue` ([dropzone.md](dropzone.md), [list.md](list.md), [item.md](item.md)), очередь `useFileUploadQueue` · Аудит: `data/file-upload.json` (33 FAIL) · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 1–9 и тесты (документация — в docs). Группа с подписью, скрытый picker (вопрос 1 → 1), постоянный регион отказа под dropzone, двусторонняя синхронизация модели, причины ошибок, фокус после действий, все строки — `messages`. CT-08 закрыт ограничением высоты списка (list.md). Disabled-группа несёт `aria-disabled`, read-only dropzone не гаснет. Старый дефект очереди исправлен с одобрения владельца: планируются только запрошенные строки (`start(id)` — одна строка, `cancel` перепланирует лишь после остановленной загрузки).</implementation-status>
+<implementation-status state="done" updated="2026-10-19">M3-polish (2026-10-19): пикер — голый sr-only `input type=file` в синхроне с моделью (вместо скрытого MFileInput; политика файлов считается один раз); загрузка не стартует на сервере; гидрация без расхождений (строки слота через компонент, не фрагмент); проп `queue` — очередь приложения переживает ремаунт; удаление незапущенной строки — не отмена; «Start uploads» остаётся (off) и по ширине подписи; `messages.size`; `defineSlots`; снят `loading`.</implementation-status>
 
 ## Вердикт
 

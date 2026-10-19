@@ -5,28 +5,28 @@
 // ==========================================
 // NUMBER INPUT COMPONENT TOKENS
 // ==========================================
-// Anatomy: a floating label (mechanics shared with `<MTextField>`), a container
-// that owns the border and the surface, and stepper zones that span the full
-// height of that container.
-// The full-height zone is the load-bearing decision. Centred icon buttons sat
-// on the container's mid-line while the value sat lower — pushed down by the
-// padding that makes room for the raised label — so the two never lined up. A
-// zone that spans the whole box has no mid-line to disagree about, and it adds
-// no height of its own the way a button with its own min-size did.
+// Anatomy: a label (mechanics shared with `<MTextField>`), a container that
+// owns the border and the surface, and stepper zones — tonal objects one tier
+// rounder than the box, inset from its edges. With a label inside the box the
+// zones and the unit ride down with the value, so digits, zones and unit share
+// one line; a tall zone is capped at the room the box leaves it, so in a
+// filled field it rests on the indicator rather than crossing it.
 // ==========================================
 
-// One source of truth for the default height: the container token and the
-// `default` density entry are the same number by construction.
+// One source of truth for the default height: the `default` density step.
 $field-height: 56rem;
 
-// Shared by the label and the outline notch, which has to reproduce the raised
-// label's footprint in layout terms.
-$border-width: 1rem;
+// Never thinner than one device pixel (decisions.md, hairline). Every vertical
+// sum it is part of is a calc.
+$hairline: max(1px, 1rem);
 $padding-inline: spacing(16);
 $label-typescale: 'body-large';
 $label-raised-scale: 0.75;
+$label-line-height: var(--md-sys-typescale-#{$label-typescale}-line-height);
 $notch-padding-inline: spacing(4);
 $stepper-inset: spacing(4);
+$adornment-size: 24rem;
+$adornment-gap: spacing(8);
 
 // A leading split zone pushes the resting label past it: the zone's inset, the
 // zone itself (its size follows density) and the usual content start.
@@ -35,39 +35,31 @@ $label-split-left: calc(#{$stepper-inset} + var(--ui-number-input-stepper-size) 
 // The value line: one line of the input's type scale.
 $value-line: var(--md-sys-typescale-body-large-line-height);
 
-// One density step. The label is centred on `top` (half the height) and raised
-// by a static transform: `inside` lifts it by `$raise` for a label held inside
-// the box, `notch` lifts its centre by half the height onto the top border.
-
-// With a label inside the box the value starts `$value-top` below the outer top
-// edge. The control is border-box and its border is part of that distance, so
-// the input's own padding is what is left after the border — and the bottom
-// padding is whatever remains of the height, so the row fills the box exactly
-// and the border never adds height to it (LY-02: filled used to be 2 taller).
+// One density step. With a label inside the box the value starts `$value-top`
+// below the outer top edge and the raised label sits right on it: its centre
+// half a raised line above the value (the text field's rule). The input's own
+// padding is what is left after the edge, and the bottom padding what remains
+// of the height, so the row fills the box exactly (LY-02).
 
 // The zones ride down with the value: a centred zone with a top margin moves
 // by half of it, so the margin is the whole top/bottom imbalance — capped at
 // the room the zone leaves in the box, so a tall zone is never pushed through
 // the indicator.
-@function density-step($height, $raise, $value-top, $split, $stacked) {
-  $top: math.div($height, 2);
-  $padding-top: $value-top - $border-width;
-  $padding-bottom: calc(#{$height - $value-top - $border-width} - #{$value-line});
+@function density-step($height, $value-top, $split, $stacked) {
+  $padding-top: calc(#{$value-top} - #{$hairline});
+  $padding-bottom: calc(#{$height - $value-top} - #{$hairline} - #{$value-line});
   $imbalance: calc(#{$padding-top} - #{$padding-bottom});
-  $content: $height - 2 * $border-width;
+  $content: calc(#{$height} - 2 * #{$hairline});
 
   @return (height: $height,
-    label: (top: $top,
-      transform: (inside: translateY(calc(-50% - #{$raise})) scale($label-raised-scale),
-        notch: translateY(calc(-50% - #{$top})) scale($label-raised-scale),
-      )),
+    label: (top: calc(#{$value-top} - #{$label-line-height} * #{$label-raised-scale * 0.5})),
     input: (padding: (top: $padding-top, bottom: $padding-bottom)),
     stepper: (
       split: $split,
       stacked: $stacked,
       offset: (
-        split: min(#{$imbalance}, #{$content - $split}),
-        stacked: min(#{$imbalance}, #{$content - $stacked}),
+        split: min(#{$imbalance}, #{$content} - #{$split}),
+        stacked: min(#{$imbalance}, #{$content} - #{$stacked}),
       ),
     ),
   );
@@ -82,10 +74,9 @@ $zone-tone: map.get($theme-color-link, surface-container-high);
 $zone-filled-opacity: state-opacity(hover);
 $tokens: (
   container: (
-    height: $field-height,
     gap: spacing(4),
     padding: (inline: $padding-inline),
-    border: (width: $border-width, color: map.get($theme-color-link, outline)),
+    border: (width: $hairline, color: map.get($theme-color-link, outline)),
     surface: transparent,
   ),
   typography: (
@@ -98,20 +89,31 @@ $tokens: (
     scrub: 'label-large',
   ),
   label: (
-    left: $padding-inline,
+    // Inside the box the label keeps clear of what may stand at the trailing
+    // edge (a zone, the unit), so its room is the box less both paddings.
     max-width: calc(100% - #{2 * $padding-inline}),
     color: map.get($theme-color-link, on-surface-variant),
+    transform: translateY(-50%) scale($label-raised-scale),
     // A leading split zone pushes the resting label past it, so the two never
-    // overlap. Raised onto the border it returns to the content start: the
-    // notch does not follow the zone.
-    // The same clearance at the trailing edge keeps a long label off the
-    // increment zone.
+    // overlap; the same clearance at the trailing edge keeps a long label off
+    // the increment zone. Raised onto the border it returns to the content
+    // start: the notch does not follow the zone.
     split: (left: $label-split-left,
       max-width: calc(100% - 2 * #{$label-split-left}),
-      notch: (shift: calc(var(--ui-number-input-inset) - #{$label-split-left})),
     ),
-    // Raised label lifts by transform only — no reflow, no font-size animation.
-    active: (scale: $label-raised-scale, raise: (filled: 18rem)),
+    // Beside a prepend the label starts where the value does (the text
+    // field's contract): past the adornment and its gap.
+    prepend: (
+      left: calc(var(--ui-number-input-inset) + #{$adornment-size + $adornment-gap}),
+      max-width: calc(100% - #{2 * $padding-inline + $adornment-size + $adornment-gap}),
+      split: (
+        left: calc(#{$label-split-left} + #{$adornment-size + $adornment-gap}),
+        max-width: calc(100% - 2 * #{$label-split-left} - #{$adornment-size + $adornment-gap}),
+      ),
+    ),
+    // On the notch the label sits above every zone, so it may run to the
+    // content end; drawn at three quarters, hence the division.
+    notch: (max-width: calc((100% - 2 * var(--ui-number-input-inset)) / #{$label-raised-scale})),
     required: (color: map.get($theme-color-link, error)),
   ),
   input: (
@@ -120,9 +122,9 @@ $tokens: (
     caret: (color: map.get($theme-color-link, primary)),
   ),
   adornment: (
-    gap: spacing(8),
+    gap: $adornment-gap,
     color: map.get($theme-color-link, on-surface-variant),
-    size: 24rem,
+    size: $adornment-size,
   ),
   // Trailing suffix. Part of the container — one focus ring, one label, no
   // alignment drift against a separate control. Plain text on the field's own
@@ -162,10 +164,11 @@ $tokens: (
       surface: color-mix(in srgb, #{$zone-tone} state-opacity(disabled-content), transparent),
       filled: (surface: color-mix(in srgb, #{$on-surface} $zone-filled-opacity * $zone-disabled-share, transparent)),
     ),
-    // Touch-safe zones at both edges, value between them.
-    split: (width: 40rem, height: 40rem, size: 24rem),
+    // Touch-safe zones at both edges, value between them; their size follows
+    // density (`density.*.stepper`), the glyph does not.
+    split: (size: 24rem),
     // One narrow column of arrows at the trailing edge. Desktop only.
-    stacked: (width: 30rem, height: 44rem, size: 16rem),
+    stacked: (width: 30rem, size: 16rem),
     // One tier rounder than the container it sits in, so the zone always reads
     // as an object placed inside the box rather than a slice cut out of it.
     radius: (
@@ -184,16 +187,14 @@ $tokens: (
   scrub: (
     color: map.get($theme-color-link, primary),
     padding: (inline: spacing(12)),
-    gap: spacing(2),
     // A long label truncates instead of squeezing the value out.
     max-width: 40%,
-    border: (width: 1rem, style: dotted),
+    border: (width: $hairline, style: dotted),
     // While dragging the hint turns solid: the gesture has engaged.
     active: (color: map.get($theme-color-link, primary), border: (style: solid)),
   ),
   support: (
     padding: (inline: spacing(16)),
-    margin: (top: spacing(4)),
     // One body-small line, held even when empty so an arriving error never
     // pushes what is below the field.
     min-height: var(--md-sys-typescale-body-small-line-height),
@@ -204,9 +205,9 @@ $tokens: (
   // compact field and a comfortable one still align their values. `compact`
   // keeps its stepper zone at 32rem, clear of the 24rem WCAG 2.5.8 floor.
   density: (
-    compact: density-step(44rem, 14rem, 18rem, 32rem, 36rem),
-    default: density-step($field-height, 18rem, spacing(24), 40rem, 44rem),
-    comfortable: density-step(64rem, spacing(20), 28rem, 40rem, 48rem),
+    compact: density-step(44rem, 18rem, 32rem, 36rem),
+    default: density-step($field-height, spacing(24), 40rem, 44rem),
+    comfortable: density-step(64rem, 28rem, 40rem, 48rem),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
@@ -251,10 +252,10 @@ $tokens: (
     // The control trades its own border for padding of the same width, so its
     // `overflow: hidden` clips at the outer edge and the outline drawn inside
     // that ring is never cut.
-    frame: $border-width,
+    frame: $hairline,
     // The `<fieldset>` that draws the border. Its start padding puts the legend
     // where the raised label's padding box begins.
-    outline: (padding: (start: calc(var(--ui-number-input-inset) - #{$notch-padding-inline + $border-width}))),
+    outline: (padding: (start: calc(var(--ui-number-input-inset) - #{$notch-padding-inline} - #{$hairline}))),
     // The gap cut into the top border behind a raised label: the label text at
     // its raised size (a real font size — only layout size widens the gap),
     // plus breathing room on either side.
@@ -262,6 +263,7 @@ $tokens: (
     // notch is open or closed by placement, never by a transition.
     notch: (padding: (inline: $notch-padding-inline),
       collapsed: 0.01rem,
+      open: calc(100% - var(--ui-number-input-inset) + #{$notch-padding-inline} + #{$hairline}),
       font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
     ),
     // `HoverLabelColor`: outlined lifts its label with its edge on hover.

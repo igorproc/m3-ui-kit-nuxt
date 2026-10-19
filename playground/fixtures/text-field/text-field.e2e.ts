@@ -83,14 +83,15 @@ test.describe('MTextField', () => {
     }
   })
 
-  test('the support line is reserved: an error does not change the field height', async ({ page }) => {
+  test('the support line is there only when something can appear in it, one line tall either way', async ({ page }) => {
     await openFixture(page, 'text-field/matrix')
 
     for (const variant of VARIANTS) {
-      const enabled = await root(page.getByTestId(`enabled-${variant}`)).boundingBox()
+      const helper = await root(page.getByTestId(`helper-${variant}`)).boundingBox()
       const invalid = await root(page.getByTestId(`error-${variant}`)).boundingBox()
 
-      expect(invalid!.height, variant).toBeCloseTo(enabled!.height, 0)
+      expect(invalid!.height, variant).toBeCloseTo(helper!.height, 0)
+      await expect(root(page.getByTestId(`enabled-${variant}`)).locator('.ui-text-field__support'), variant).toHaveCount(0)
     }
   })
 
@@ -189,7 +190,7 @@ test.describe('MTextField', () => {
     await openFixture(page, 'text-field/matrix')
     const ink = (id: string) => root(page.getByTestId(id)).locator('.ui-text-field__support').evaluate(el => getComputedStyle(el).color)
 
-    expect(await ink('disabled-filled')).not.toBe(await ink('enabled-filled'))
+    expect(await ink('disabled-filled')).not.toBe(await ink('helper-filled'))
   })
 
   test('the trailing icon takes the error role', async ({ page }) => {
@@ -215,7 +216,7 @@ test.describe('MTextField', () => {
     const rem = await remInPx(page)
 
     for (const variant of VARIANTS) {
-      const support = await root(page.getByTestId(`enabled-${variant}`)).locator('.ui-text-field__support').boundingBox()
+      const support = await root(page.getByTestId(`helper-${variant}`)).locator('.ui-text-field__support').boundingBox()
       expect(support!.height / rem, variant).toBeCloseTo(16, 0)
     }
   })
@@ -253,6 +254,88 @@ test.describe('MTextField', () => {
     const label = (await field.locator('.ui-text-field__label').boundingBox())!
 
     expect(control.x + control.width - (label.x + label.width)).toBeLessThan(control.width / 4)
+  })
+
+  // Rects relative to the field's control, in rem.
+  const geometry = (input: Locator, part: string) => root(input).evaluate((field, selector) => {
+    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+    const box = field.querySelector('.ui-text-field__control')!.getBoundingClientRect()
+    const rect = field.querySelector(selector)!.getBoundingClientRect()
+    return {
+      top: (rect.top - box.top) / rem,
+      bottom: (rect.bottom - box.top) / rem,
+      start: (rect.left - box.left) / rem,
+      end: (rect.right - box.left) / rem,
+      boxHeight: box.height / rem,
+      boxBottom: (box.bottom - box.top) / rem,
+    }
+  }, part)
+
+  for (const [density, valueTop] of [['compact', 18], ['default', 24], ['comfortable', 28]] as const) {
+    test(`a raised label sits on the value, not on the edge (${density})`, async ({ page }) => {
+      await openFixture(page, 'text-field/matrix')
+      const label = await geometry(page.getByTestId(`density-${density}`), '.ui-text-field__label')
+
+      // Its centre half a raised body-large line (24 × 0.75) above the value.
+      expect((label.top + label.bottom) / 2).toBeCloseTo(valueTop - 9, 0)
+    })
+  }
+
+  test('the support line starts 4 below the box', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+
+    for (const variant of VARIANTS) {
+      const support = await geometry(page.getByTestId(`helper-${variant}`), '.ui-text-field__support')
+      expect(support.top - support.boxBottom, variant).toBeCloseTo(4, 0)
+    }
+  })
+
+  test('a press anywhere on the box focuses the field', async ({ page }) => {
+    await openFixture(page, 'text-field/matrix')
+    const rem = await remInPx(page)
+
+    for (const variant of VARIANTS) {
+      const input = page.getByTestId(`enabled-${variant}`)
+      const box = (await root(input).locator('.ui-text-field__control').boundingBox())!
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+      await page.mouse.click(box.x + box.width / 2, box.y + 4 * rem)
+      await expect(input, variant).toBeFocused()
+    }
+  })
+
+  for (const width of [360, 1280]) {
+    test(`a value row does not grow the box (${width}px)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 })
+      await openFixture(page, 'text-field/matrix')
+
+      const plain = await geometry(page.getByTestId('enabled-filled'), '.ui-text-field__control')
+      const affixes = await geometry(page.getByTestId('affixes'), '.ui-text-field__control')
+      expect(affixes.boxHeight).toBeCloseTo(plain.boxHeight, 0)
+    })
+  }
+
+  test('a truncated label on outlined never opens the notch past itself', async ({ page }) => {
+    await openFixture(page, 'text-field/family')
+    const input = page.getByTestId('tf-long-outlined')
+    const label = await geometry(input, '.ui-text-field__label')
+    const notch = await geometry(input, '.ui-text-field__notch')
+
+    // The notch's own breathing room is 4 on either side of the text.
+    expect(notch.end).toBeLessThanOrEqual(label.end + 5)
+  })
+
+  test('beside icons an overlaid label starts and stops where the value does', async ({ page }) => {
+    await openFixture(page, 'text-field/family')
+
+    const underline = page.getByTestId('tf-icons-underline-float')
+    const label = await geometry(underline, '.ui-text-field__label')
+    const value = await geometry(underline, '.ui-text-field__input')
+    expect(label.start).toBeCloseTo(value.start, 0)
+
+    const long = page.getByTestId('tf-long-filled')
+    const longLabel = await geometry(long, '.ui-text-field__label')
+    const append = await geometry(long, '.ui-text-field__icon--append')
+    expect(longLabel.end).toBeLessThanOrEqual(append.start)
   })
 
   test('forced colors: focus is Highlight and error is a dashed edge', async ({ page }) => {

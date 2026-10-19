@@ -65,6 +65,7 @@ const states = [
   { name: 'input-error', props: { mode: 'input' as const, error: true, errorMessage: 'Pick a time after 9:00' }, value: '07:00' },
   { name: 'disabled', props: { disabled: true, hourCycle: 'h12' as const }, value: '10:30' },
   { name: 'readonly', props: { readonly: true }, value: '10:30' },
+  { name: 'toggle', props: { label: 'Select time', modeToggle: true, switchToInputLabel: 'Switch to typing the time', switchToPickerLabel: 'Switch to the dial' }, value: '10:15' },
 ]
 
 const values = reactive<Record<string, string>>(Object.fromEntries(states.map(state => [state.name, state.value])))

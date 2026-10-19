@@ -81,6 +81,39 @@ test.describe('MTable', () => {
     expect(Number(await style(plain.locator('td').nth(2), 'opacity', '::before'))).toBeCloseTo(0.08, 2)
   })
 
+  // Q-6 (M3-polish): rows that do nothing on click answer no hover.
+  test('rows of a table without selection or row-click show no hover layer', async ({ page }) => {
+    await openFixture(page, 'table/matrix')
+    const cell = page.getByTestId('state-partial').locator('tbody tr').first().locator('td').first()
+
+    await cell.hover()
+    await waitForMotion(page)
+    expect(Number(await style(cell, 'opacity', '::before'))).toBe(0)
+  })
+
+  // T-1 (M3-polish): the refresh indicator sat on the header row when a caption stood above it.
+  test('the refresh indicator stays below the header, with or without a caption', async ({ page }) => {
+    await openFixture(page, 'table/matrix')
+
+    for (const id of ['state-refreshing', 'state-refreshing-caption']) {
+      const table = frame(page, id)
+      const head = await box(table.locator('thead'))
+      const indicator = await box(table.locator('.ui-table-container__busy'))
+      expect(indicator.y, id).toBeGreaterThanOrEqual(head.y + head.height)
+    }
+  })
+
+  // T-2 (M3-polish): previous / next chevrons point the reading direction.
+  test('the footer chevrons turn around in RTL', async ({ page }) => {
+    for (const [dir, scale] of [['ltr', 'none'], ['rtl', '-1 1']] as const) {
+      await openFixture(page, 'table/matrix', { dir })
+      const icons = frame(page, 'main').locator('.ui-table__page-icon')
+
+      await expect(icons).toHaveCount(2)
+      expect(await style(icons.first(), 'scale'), dir).toBe(scale)
+    }
+  })
+
   test('select-all completes the page from a partial selection', async ({ page }) => {
     await openFixture(page, 'table/matrix')
     const table = page.getByTestId('main')
@@ -207,7 +240,9 @@ test.describe('MTable', () => {
       await page.keyboard.press('Tab')
     }
     await expect(region).toBeFocused()
-    expect(await style(region, 'outline-style')).toBe('solid')
+    // T-3 (M3-polish): the ring is drawn on the frame, outside the edge-fade mask.
+    expect(await style(frame(page, 'wide'), 'outline-style')).toBe('solid')
+    expect(await style(region, 'outline-style')).toBe('none')
 
     await page.keyboard.press('ArrowRight')
     await page.keyboard.press('ArrowRight')

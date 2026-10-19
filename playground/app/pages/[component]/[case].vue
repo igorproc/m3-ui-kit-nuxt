@@ -13,9 +13,10 @@ import { fixtures } from '~/utils/fixtures'
 
 const route = useRoute()
 const key = `${route.params.component}/${route.params.case}`
-const fixture = fixtures[key]
+const loader = fixtures[key]
 
-if (!fixture) throw createError({ statusCode: 404, statusMessage: `No fixture ${key}` })
+if (!loader) throw createError({ statusCode: 404, statusMessage: `No fixture ${key}` })
+const fixture = (await loader()).default
 
 // Set once the fixture is hydrated; e2e waits for it before interacting.
 const ready = ref(false)

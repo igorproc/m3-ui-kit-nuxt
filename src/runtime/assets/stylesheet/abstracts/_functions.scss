@@ -164,7 +164,6 @@
 /// @param $container - the role's container
 /// @param $on-container - content on the role's container
 @function m3-button-scheme($main, $on-main, $container, $on-container) {
-  $on-surface: map.get($theme-color-link, 'on-surface');
   $on-surface-variant: map.get($theme-color-link, 'on-surface-variant');
   $outline-variant: map.get($theme-color-link, 'outline-variant');
   $surface-container: map.get($theme-color-link, 'surface-container');
@@ -202,10 +201,5 @@
       unselected: (container: (color: transparent), content: (color: $on-surface-variant)),
       selected: $bare,
     )),
-    disabled: (
-      container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
-      content: (color: color-mix(in srgb, $on-surface-variant state-opacity(disabled-content), transparent)),
-      outline: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
-    ),
   );
 }

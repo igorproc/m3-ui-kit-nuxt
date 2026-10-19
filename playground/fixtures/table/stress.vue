@@ -71,7 +71,8 @@ const quarters = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10']
 
 const wideColumns: TableColumn<Line>[] = [
   { key: 'region', label: 'Region', minWidth: '160rem' },
-  ...quarters.map(key => ({ key, label: `Revenue ${key.toUpperCase()}`, numeric: true, minWidth: '120rem' })),
+  // The last column sorts, so its focus ring sits under the edge fade.
+  ...quarters.map(key => ({ key, label: `Revenue ${key.toUpperCase()}`, numeric: true, minWidth: '120rem', sortable: key === quarters.at(-1) })),
 ]
 
 const report: Line[] = ['North', 'South', 'East', 'West'].map((region, index) => ({

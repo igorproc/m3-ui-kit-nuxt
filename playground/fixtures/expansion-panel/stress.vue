@@ -104,7 +104,7 @@ import { ref } from 'vue'
 import MExpansionPanel from '#kit/components/ui/expansion-panel/index.vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MExpansionPanels from '#kit/components/ui/expansion-panels/index.vue'
-import type { PanelValue } from '#kit/composables/expansion-panel/useExpansionPanelGroup'
+import type { PanelValue } from '#kit/components/ui/expansion-panel/props'
 
 const fields = ['name', 'street', 'city', 'postcode', 'country']
 

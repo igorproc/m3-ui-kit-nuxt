@@ -151,12 +151,17 @@ const {
   onClear: () => emit('clear'),
 })
 
+// Focused with the caret past the last cell (a code typed to the end): no
+// cell is active, so the whole code shows the focus instead.
+const caretPast = computed(() => focusedModel.value && !groups.value.some(cells => cells.some(cell => cell.active)))
+
 const rootClasses = computed(() => [
   'ui-otp-input',
   `ui-otp-input--${props.variant}`,
   `ui-otp-input--label-${props.labelPlacement}`,
   {
     'ui-otp-input--focused': focusedModel.value,
+    'ui-otp-input--caret-past': caretPast.value,
     'ui-otp-input--disabled': props.disabled,
     'ui-otp-input--error': isError.value,
   },
@@ -169,16 +174,6 @@ if (import.meta.dev) {
   watchEffect(() => {
     if (!props.label && !slots.label) {
       console.warn('[m-otp-input] has no accessible name: pass `label` or fill the #label slot.')
-    }
-  })
-}
-
-if (import.meta.dev) {
-  watchEffect(() => {
-    if (props.mask === true) {
-      console.warn('[m-otp-input] `mask` as `true` is retired: use `mask="always"`.')
-    } else if (typeof props.mask === 'string' && props.mask !== 'last' && props.mask !== 'always') {
-      console.warn('[m-otp-input] a glyph in `mask` is retired: use `mask="always"` and draw the glyph in the `#mask` slot.')
     }
   })
 }
@@ -320,7 +315,8 @@ const cellClasses = (cell: OtpCell) => [
   }
 
   // Sized by the line it stands in, like the glyph an error would put there.
-  &__loading {
+  // Outranks the indicator's own colour: its sheet may load later in production.
+  & &__loading {
     flex: 0 0 auto;
     color: g($t, 'message.loading.color');
     font-size: g($t, 'message.icon.size');

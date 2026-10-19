@@ -5,6 +5,7 @@
     <div class="fixture-stress__narrow">
       <MDropdown
         v-model="longValue"
+        :messages="messages"
         :items="long"
         item-title="name"
         item-value="id"
@@ -16,6 +17,7 @@
     <div class="fixture-stress__narrow">
       <MDropdown
         v-model="chips"
+        :messages="messages"
         :items="many"
         item-title="name"
         item-value="id"
@@ -29,6 +31,7 @@
     <div class="fixture-stress__narrow">
       <MDropdown
         v-model="huge"
+        :messages="messages"
         :items="many"
         item-title="name"
         item-value="id"
@@ -39,6 +42,7 @@
 
     <div class="fixture-stress__narrow">
       <MDropdown
+        :messages="messages"
         :items="[]"
         label="Nothing to choose"
         data-test="empty"
@@ -47,6 +51,7 @@
 
     <div class="fixture-stress__narrow">
       <MDropdown
+        :messages="messages"
         :items="[]"
         loading
         label="Still loading"
@@ -56,6 +61,7 @@
 
     <div class="fixture-stress__narrow">
       <MDropdown
+        :messages="messages"
         :items="scripts"
         item-title="name"
         item-value="id"
@@ -70,6 +76,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MDropdown from '#kit/components/ui/dropdown/index.vue'
+
+// The kit ships no copy of its own: the app names the controls and states.
+const messages = { clear: 'Clear selection', loading: 'Loading options', empty: 'No options' }
 
 const long = [
   { id: 1, name: 'Express overnight delivery with signature on receipt and insurance up to the declared value' },

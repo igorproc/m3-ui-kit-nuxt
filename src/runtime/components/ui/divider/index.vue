@@ -8,9 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue'
+import { computed } from 'vue'
 import { mDividerProps } from './props'
-import type { MDividerInset } from './props'
 import { useListContext } from '#kit/components/ui/list/context'
 
 const props = defineProps(mDividerProps)
@@ -24,20 +23,10 @@ const semantics = computed(() => (list.present
   ? { 'aria-hidden': 'true' as const }
   : { 'role': 'separator', 'aria-orientation': props.orientation }))
 
-const inset = computed<MDividerInset | undefined>(() => (props.inset === true ? 'start' : props.inset || undefined))
-
 const dividerClasses = computed(() => [
   `ui-divider--${props.orientation}`,
-  { [`ui-divider--inset-${inset.value}`]: Boolean(inset.value) },
+  { [`ui-divider--inset-${props.inset}`]: Boolean(props.inset) },
 ])
-
-if (import.meta.dev) {
-  watchEffect(() => {
-    if (typeof props.inset === 'boolean') {
-      console.warn('[m-divider] a boolean `inset` is retired: use `inset="start"`, or leave it out for a full-length line.')
-    }
-  })
-}
 </script>
 
 <style lang="scss">

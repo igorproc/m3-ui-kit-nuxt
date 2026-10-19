@@ -2,7 +2,7 @@
   <li
     ref="root"
     class="ui-timeline-item"
-    :class="[`ui-timeline-item--${ticket.resolvedSide.value}`, { 'ui-timeline-item--no-dot': hideDot }]"
+    :class="itemClasses"
   >
     <div
       v-if="hasOpposite"
@@ -23,12 +23,10 @@
       :hide-dot="hideDot"
     >
       <template
-        v-if="$slots.dot || $slots.icon"
+        v-if="$slots.dot"
         #dot
       >
-        <slot name="dot">
-          <slot name="icon" />
-        </slot>
+        <slot name="dot" />
       </template>
     </TimelineDivider>
 
@@ -62,13 +60,14 @@
 <script setup lang="ts">
 import MSurface from '#kit/components/ui/surface/index.vue'
 import TimelineDivider from '#kit/components/fragments/timeline/divider/index.vue'
-import { useTimelineContext } from '#kit/composables/timeline/context'
+import { useTimelineContext } from '../context'
 import { mTimelineItemProps } from '../props'
+import type { MTimelineItemSlots } from '../props'
 
 const props = defineProps(mTimelineItemProps)
 
 const context = useTimelineContext()
-const slots = useSlots()
+const slots = defineSlots<MTimelineItemSlots>()
 const root = useTemplateRef<HTMLElement>('root')
 
 const ticket = context.register({
@@ -79,6 +78,19 @@ const ticket = context.register({
 const hasOpposite = computed(() => !props.hideOpposite && Boolean(slots.opposite || props.time))
 const hasTitle = computed(() => Boolean(slots.title || props.title))
 const hasBody = computed(() => Boolean(slots.default || props.text))
+
+// The timeline's own axes travel as the item's modifiers: the item styles
+// itself, with no child combinator reaching in from the list.
+const itemClasses = computed(() => [
+  `ui-timeline-item--${ticket.resolvedSide.value}`,
+  `ui-timeline-item--density-${context.density.value}`,
+  `ui-timeline-item--line-${context.line.value}`,
+  {
+    'ui-timeline-item--alternate': context.side.value === 'alternate',
+    'ui-timeline-item--untitled': !hasTitle.value,
+    'ui-timeline-item--no-dot': props.hideDot,
+  },
+])
 
 if (import.meta.dev) {
   watchEffect(() => {
@@ -92,7 +104,7 @@ if (import.meta.dev) {
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/timeline/index' as t;
 
-$t: material-map(t.$tokens, 'md-timeline');
+$t: t.$tokens;
 
 // Two columns instead of three: the rail at one inline edge, the content in
 // the other column.
@@ -120,6 +132,21 @@ $t: material-map(t.$tokens, 'md-timeline');
   }
 }
 
+// Where the rail stops short of the dot, and where the time starts, for a
+// first line that is the title's (`titled`) or the body's (`untitled`).
+@mixin first-line($line) {
+  &::before { block-size: g($t, 'first-line.#{$line}.before'); }
+  &::after { inset-block-start: g($t, 'first-line.#{$line}.after'); }
+
+  .ui-timeline-item__opposite { padding-block-start: g($t, 'first-line.#{$line}.time'); }
+}
+
+// Without a dot the two halves of the rail meet at its centre.
+@mixin rail-through-dot($line) {
+  &::before { block-size: g($t, 'first-line.#{$line}.center'); }
+  &::after { inset-block-start: g($t, 'first-line.#{$line}.center'); }
+}
+
 .ui-timeline-item {
   position: relative;
   display: grid;
@@ -144,11 +171,10 @@ $t: material-map(t.$tokens, 'md-timeline');
 
   &::before {
     inset-block-start: 0;
-    block-size: g($t, 'line.before');
   }
 
   &::after {
-    inset-block: g($t, 'line.after') 0;
+    inset-block-end: 0;
   }
 
   &:first-child::before,
@@ -156,18 +182,54 @@ $t: material-map(t.$tokens, 'md-timeline');
     content: none;
   }
 
-  // Without a dot the two halves meet at its centre.
-  &--no-dot {
-    &::before { block-size: g($t, 'line.center'); }
-    &::after { inset-block-start: g($t, 'line.center'); }
-  }
-
   &__opposite {
     display: flex;
     align-items: flex-start;
     grid-row: 1;
-    padding-block: g($t, 'opposite.padding.start') g($t, 'content.padding.block');
+    padding-block-end: g($t, 'content.padding.block');
     overflow-wrap: anywhere;
+  }
+
+  // The dot, the time and the ends of the rail sit on the centre of the first
+  // line: the title's, or the body's when there is no title.
+  @include first-line(titled);
+
+  &--untitled {
+    @include first-line(untitled);
+
+    .ui-timeline-divider__dot {
+      margin-block-start: g($t, 'first-line.untitled.dot');
+    }
+  }
+
+  &--no-dot {
+    @include rail-through-dot(titled);
+
+    &.ui-timeline-item--untitled {
+      @include rail-through-dot(untitled);
+    }
+  }
+
+  // The space after an item is the item's own padding, so the rail runs
+  // through it; the last item has nothing to connect to.
+  @each $step in ('compact', 'default', 'comfortable') {
+    &--density-#{$step}:not(:last-child) {
+      padding-block-end: g($t, 'density.#{$step}.gap');
+    }
+  }
+
+  &--line-dashed {
+    &::before,
+    &::after {
+      border-inline-start-style: dashed;
+    }
+  }
+
+  &--line-none {
+    &::before,
+    &::after {
+      content: none;
+    }
   }
 
   &__divider {
@@ -217,22 +279,9 @@ $t: material-map(t.$tokens, 'md-timeline');
   }
 }
 
-// Rules that read the parent timeline's modifiers.
+// The time column is a decision of one timeline, read from its own items:
+// `>` keeps a timeline nested in an item's content out of it.
 .ui-timeline {
-  &--line-dashed > .ui-timeline-item {
-    &::before,
-    &::after {
-      border-inline-start-style: dashed;
-    }
-  }
-
-  &--line-none > .ui-timeline-item {
-    &::before,
-    &::after {
-      content: none;
-    }
-  }
-
   // A one-sided timeline where no item has a time drops the empty time column
   // instead of spending half its width on it. Detected in CSS so the server
   // renders it right; `:where()` keeps the detection out of the specificity.
@@ -245,22 +294,23 @@ $t: material-map(t.$tokens, 'md-timeline');
     @include rail-at(end);
   }
 
-  // Alternate collapses to one side when the timeline itself is narrow: the
-  // time stacks over the content, and the rail spans both rows.
-  @container ui-timeline (max-width: #{g($t, 'collapse.threshold')}) {
-    &--side-alternate > .ui-timeline-item {
-      @include rail-at(start);
+}
 
-      .ui-timeline-item__opposite {
-        grid-column: 2;
-        justify-content: flex-start;
-        padding-block-end: 0;
-        text-align: start;
-      }
+// Alternate collapses to one side when the timeline itself is narrow: the
+// time stacks over the content, and the rail spans both rows.
+@container ui-timeline (max-width: #{g($t, 'collapse.threshold')}) {
+  .ui-timeline-item--alternate {
+    @include rail-at(start);
 
-      .ui-timeline-item__divider { grid-row: 1 / span 2; }
-      .ui-timeline-item__content { grid-row: auto; }
+    .ui-timeline-item__opposite {
+      grid-column: 2;
+      justify-content: flex-start;
+      padding-block-end: 0;
+      text-align: start;
     }
+
+    .ui-timeline-item__divider { grid-row: 1 / span 2; }
+    .ui-timeline-item__content { grid-row: auto; }
   }
 }
 </style>

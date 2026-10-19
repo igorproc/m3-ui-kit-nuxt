@@ -115,7 +115,7 @@ const tx = useConfirmEditTransaction<string | number>({
 
 const editButton = ref<ComponentPublicInstance | null>(null)
 const textField = ref<MFieldParts | null>(null)
-const numberField = ref<{ element: HTMLInputElement | null } | null>(null)
+const numberField = ref<MFieldParts | null>(null)
 const statusText = ref('')
 
 const display = computed(() => (props.kind === 'money' ? formatMoney(Number(model.value)) : String(model.value)))
@@ -133,7 +133,7 @@ async function start() {
   tx.begin()
   await nextTick()
   if (props.kind === 'text') textField.value?.input?.focus()
-  else numberField.value?.element?.focus()
+  else numberField.value?.input?.focus()
 }
 
 async function focusEditButton() {

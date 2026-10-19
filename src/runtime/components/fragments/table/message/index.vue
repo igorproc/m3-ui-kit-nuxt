@@ -51,7 +51,7 @@ defineProps({
 @use '#kit/assets/stylesheet/components/table/index' as t;
 
 .ui-table {
-  $t: material-map(t.$tokens, 'md-table');
+  $t: t.$tokens;
 
   &__message-cell {
     padding: g($t, 'message.padding');
@@ -80,10 +80,5 @@ defineProps({
     font-size: g($t, 'message.icon.size');
   }
 
-  @each $step in ('compact', 'default', 'comfortable') {
-    .ui-table-container--density-#{$step} &__message-row {
-      height: g($t, 'density.#{$step}.message');
-    }
-  }
 }
 </style>

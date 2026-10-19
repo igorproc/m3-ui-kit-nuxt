@@ -2,7 +2,7 @@
 
 <identity>M3: Menus → exposed dropdown menu, редактируемый якорь (`ExposedDropdownMenuAnchorType.PrimaryEditable` — поле, `SecondaryEditable` — trailing-иконка с ролью кнопки и состоянием раскрытия) · Токены Compose: `FilledAutocompleteTokens.kt`, `OutlinedAutocompleteTokens.kt`, `MenuTokens.kt`, `ListTokens.kt`; поведение — `ExposedDropdownMenu.kt` · Код: `src/runtime/components/ui/autocomplete/` (`index.vue`, `props.ts`), `src/runtime/composables/autocomplete/useAutocomplete.ts` поверх `composables/dropdown/useDropdownControl.ts`, токены `src/runtime/assets/stylesheet/components/autocomplete/_index.scss` (= токены дропдауна + `toggle`) и общий `dropdown/_panel.scss` · Аудит: `data/autocomplete.json` · Тип: public; член семейства выбора — [MDropdown](dropdown.md) плюс запрос</identity>
 
-<implementation-status state="planned" updated="2026-10-08">Частично (2026-10-08): шаги 1–5 и 8 сделаны — начальное значение в поле без события поиска, `#hint({ query, missing })`, `clear` в `#no-results`, `openOnFocus: 'pointer'` по умолчанию, поиск без учёта диакритики, `aria-busy` по `pending`. Не сделаны: шаг 6 (чипы — план чипа), шаг 7 (данные, как шаг 5 dropdown).</implementation-status>
+<implementation-status state="partial" updated="2026-10-19">M3-polish (2026-10-19): общий движок и панель с MDropdown; запрос = только напечатанное (выбор и blur не пишут заголовок в `search`), повторное открытие — весь список с посадкой на значение; ниже `minSearchLength` без `#hint` не открывается; нажатие на сфокусированное поле открывает; индикатор — тот же поворот стрелки; `messages` вместо английских дефолтов. Не сделаны: шаг 6 (чипы — план чипа), ошибка загрузки — рецептом через `#no-results` (решение Q-11).</implementation-status>
 
 ## Вердикт
 
@@ -255,3 +255,6 @@ End и стрелки влево-вправо — каретка, ↑/↓ отк
 
 - Вопросы: 1 → 1 (только черновик, без `search`); 2 → 1 (`#hint` без дефолта); 3 → 1 (`clear` в `#no-results`); 4 → 2 (`'pointer'`).
 - Ломающее: `openOnFocus` теперь `boolean | 'pointer'` с дефолтом `'pointer'`.
+- Связь с MSearch v2 (2026-10-19): поиск с подсказками строится на том же движке и панели
+  ([search](search.md)). MAutocomplete остаётся полем формы с выбранным значением; MSearch — строка, у которой
+  модель — запрос, а выбор — событие.

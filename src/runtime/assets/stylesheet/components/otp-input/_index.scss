@@ -10,6 +10,7 @@
 // owns: `outlined` its edge, `filled` its tone, `underline` its rule.
 
 $on-surface: map.get($theme-color-link, on-surface);
+$hairline: max(1px, 1rem);
 $message-typography: body-small;
 $disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
 $disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
@@ -29,14 +30,16 @@ $tokens: (
   field: (
     size: 48rem,
     shape: map.get($theme-shape-link, 'medium'),
-    border: (width: 1rem),
+    border: (width: $hairline),
     color: $on-surface,
     typography: title-large,
     // A per-cell pattern shown in empty cells, the field family's placeholder.
     placeholder: (color: map.get($theme-color-link, on-surface-variant)),
     // The one ring in the field family (color-and-state.md): with no caret, the
-    // active cell is the only place focus can be seen.
-    active: (color: map.get($theme-color-link, primary), width: 2rem),
+    // active cell is the only place focus can be seen. The edge keeps its
+    // width; the second rem is an inset shadow of the same colour, so the ring
+    // grows smoothly with the colour and the glyph never moves.
+    active: (color: map.get($theme-color-link, primary), ring: 1rem),
     error: (color: map.get($theme-color-link, error)),
     disabled: (color: $disabled-content),
   ),
@@ -88,7 +91,7 @@ $tokens: (
     loading: (color: map.get($theme-color-link, on-surface-variant)),
   ),
   state: (
-    duration: map.get($theme-animation-link, 'duration', 'short', '3'),
-    easing: map.get($theme-animation-link, 'easing', 'standard'),
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
   ),
 );

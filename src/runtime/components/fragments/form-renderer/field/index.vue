@@ -15,9 +15,8 @@
     v-bind="field.props"
   />
 
-  <m-text-field
+  <m-number-input
     v-else-if="field.type === 'number'"
-    type="number"
     :path="field.name"
     :label="field.label"
     :placeholder="field.placeholder"
@@ -62,6 +61,7 @@
 
 <script setup lang="ts">
 import MCheckbox from '#kit/components/ui/checkbox/index.vue'
+import MNumberInput from '#kit/components/ui/number-input/index.vue'
 import MRadio from '#kit/components/ui/radio/index.vue'
 import MSwitch from '#kit/components/ui/switch/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'

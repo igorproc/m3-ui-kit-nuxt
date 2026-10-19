@@ -4,8 +4,9 @@ import { defineComponent, h, nextTick, reactive, ref } from 'vue'
 import type { Ref } from 'vue'
 import { useExpansionPanelControl } from './useExpansionPanelControl'
 import type { ExpansionPanelControlProps } from './useExpansionPanelControl'
-import { provideExpansionPanelGroupContext } from './useExpansionPanelGroup'
-import type { ExpansionPanelGroupContext, PanelValue } from './useExpansionPanelGroup'
+import { provideExpansionPanelGroupContext } from '#kit/components/ui/expansion-panels/context'
+import type { ExpansionPanelGroupContext } from '#kit/components/ui/expansion-panels/context'
+import type { PanelValue } from '#kit/components/ui/expansion-panel/props'
 import type { GroupTicket } from '#kit/composables/registry/createGroup'
 
 type Control = ReturnType<typeof useExpansionPanelControl>

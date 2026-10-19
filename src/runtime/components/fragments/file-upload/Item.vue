@@ -24,8 +24,11 @@
         {{ meta }}
       </span>
 
+      <!-- Over the row's bottom padding, out of the flow: a row is as tall
+           uploading as it is waiting. -->
       <MProgressLinear
         v-if="entry.status === 'uploading'"
+        class="ui-file-upload__item-progress"
         :indeterminate="entry.progress === null"
         :value="entry.progress ?? 0"
         :aria-label="entry.file.name"
@@ -93,7 +96,7 @@ import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import { useFileUploadContext } from '#kit/composables/file-upload/context'
+import { useFileUploadContext } from '#kit/utils/file-upload/context'
 import { formatFileSize } from '#kit/shared/utils/file'
 import { actionName, splitFileName } from './upload'
 
@@ -122,7 +125,8 @@ const meta = computed(() => {
     : undefined
   const reason = props.entry.status === 'error' ? messages.error?.(props.entry.error) : undefined
 
-  return [formatFileSize(props.entry.file.size), messages.status?.[props.entry.status], progress, reason]
+  const size = (messages.size ?? formatFileSize)(props.entry.file.size)
+  return [size, messages.status?.[props.entry.status], progress, reason]
     .filter(Boolean)
     .join(' · ')
 })

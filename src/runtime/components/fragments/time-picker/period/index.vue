@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 /** AM and PM as a radio group of two toggle buttons. */
-import type { TimePeriod } from '#kit/composables/time/createClock'
+import type { TimePeriod } from '#kit/utils/time/createClock'
 import type { TimePickerControl } from '#kit/composables/time/useTimePickerControl'
 
 defineProps<{

@@ -6,6 +6,7 @@
 
     <MAutocomplete
       v-model="customerId"
+      :messages="SELECT_MESSAGES"
       :items="CUSTOMERS"
       item-value="id"
       label="Покупатель"
@@ -41,6 +42,7 @@
     <div class="new-order-group__row">
       <MDropdown
         v-model="productId"
+        :messages="SELECT_MESSAGES"
         class="new-order-group__grow"
         :items="PRODUCTS"
         item-value="id"
@@ -77,6 +79,7 @@
 <script setup lang="ts">
 import { money } from './data/format'
 import { CUSTOMERS, PRODUCTS } from './data/orders'
+import { SELECT_MESSAGES } from './data/selectMessages'
 import type { NewOrderErrors } from './useNewOrderDraft'
 
 defineProps<{

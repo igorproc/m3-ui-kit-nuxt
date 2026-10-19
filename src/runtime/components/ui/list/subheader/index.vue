@@ -21,12 +21,13 @@
  * pass one through the default slot, and the slotted heading is normalized so
  * its geometry matches the text-prop rendering.
  */
-import { computed, useSlots, watchEffect } from 'vue'
+import { computed, watchEffect } from 'vue'
 import { mListSubheaderProps } from './props'
+import type { MListSubheaderSlots } from './props'
 import { useListContext } from '../context'
 
 const props = defineProps(mListSubheaderProps)
-const slots = useSlots()
+const slots = defineSlots<MListSubheaderSlots>()
 const list = useListContext()
 
 // A direct child of a `ul` has to be an `li`. It carries no role: axe's `list`

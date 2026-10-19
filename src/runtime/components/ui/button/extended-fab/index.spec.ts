@@ -31,10 +31,20 @@ describe('m-button-extended-fab', () => {
     expect(wrapper.classes()).toContain('ui-extended-fab--compact')
   })
 
-  it('still honours the retired size as a density step', async () => {
-    const wrapper = await mountSuspended(MExtendedFab, { props: { size: 'lg' } })
+  // EXT.B-1: the label closes on one line, and the window ends with its fade.
+  it('keeps the label on one line only while it folds', async () => {
+    const wrapper = await mountSuspended(MExtendedFab, {
+      slots: { default: () => 'Compose', prepend: () => 'I' },
+    })
+    const label = () => wrapper.find('.ui-extended-fab__label')
 
-    expect(wrapper.classes()).toContain('ui-extended-fab--comfortable')
+    expect(label().classes()).not.toContain('ui-extended-fab__label--folding')
+    await wrapper.setProps({ expanded: false })
+    expect(label().classes()).toContain('ui-extended-fab__label--folding')
+
+    label().element.dispatchEvent(Object.assign(new Event('transitionend'), { propertyName: 'opacity' }))
+    await wrapper.vm.$nextTick()
+    expect(label().classes()).not.toContain('ui-extended-fab__label--folding')
   })
 
   it('folds when not expanded but keeps the label as the accessible name', async () => {

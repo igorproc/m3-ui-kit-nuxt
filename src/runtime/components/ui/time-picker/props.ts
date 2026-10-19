@@ -6,15 +6,12 @@
  * hour cycle shows.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import type { HourCycleOption } from '#kit/composables/time/createClock'
+import type { HourCycleOption } from '#kit/utils/time/createClock'
 import { MESSAGES } from '#kit/shared/constants/messages'
 
-/** `'dial'` and `'keyboard'` are retired spellings of `'picker'` and `'input'`. */
-export type MTimePickerMode = 'picker' | 'input' | 'dial' | 'keyboard'
+export type MTimePickerMode = 'picker' | 'input'
 export type MTimePickerLayout = 'vertical' | 'horizontal'
 export type MTimePickerHourCycle = HourCycleOption
-
-export const RETIRED_TIME_PICKER_MODES: Record<string, 'picker' | 'input'> = { dial: 'picker', keyboard: 'input' }
 
 export const mTimePickerProps = {
   /** Headline over the picker. Without one the group is still named, by `ariaLabel`. */
@@ -24,12 +21,20 @@ export const mTimePickerProps = {
   ariaLabel: { type: String, default: MESSAGES.timeTitle },
   /** `'picker'` turns a dial; `'input'` types the time. Also `v-model:mode`. */
   mode: { type: String as PropType<MTimePickerMode>, default: 'picker' },
+  /**
+   * Offer the switch between the dial and typed fields, under the picker.
+   * Needs `switchToInputLabel` and `switchToPickerLabel` — the kit ships no
+   * words of its own for them.
+   */
+  modeToggle: { type: Boolean, default: false },
+  /** Names the switch while the dial is shown. */
+  switchToInputLabel: { type: String, default: undefined },
+  /** Names the switch while the fields are shown. */
+  switchToPickerLabel: { type: String, default: undefined },
   /** Horizontal folds into vertical when its container is narrower than the two side by side. */
   layout: { type: String as PropType<MTimePickerLayout>, default: 'vertical' },
   /** The words of `Intl`: `'h23'` (0–23), `'h12'` (1–12 with a period), `'auto'` from `locale`. */
   hourCycle: { type: String as PropType<MTimePickerHourCycle>, default: 'h23' },
-  /** @deprecated Retired: use `hour-cycle`. Still read for one release, with a dev warning. */
-  is24h: { type: Boolean, default: undefined },
   locale: { type: String, default: 'en-US' },
   disabled: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },

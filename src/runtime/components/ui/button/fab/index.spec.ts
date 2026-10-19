@@ -31,16 +31,6 @@ describe('m-button-fab', () => {
     expect(wrapper.classes()).toContain('ui-fab--comfortable')
   })
 
-  it.each([['sm', 'compact'], ['md', 'default'], ['lg', 'comfortable']] as const)(
-    'still honours the retired size %s as the %s density',
-    async (size, density) => {
-      const wrapper = await mountSuspended(MFab, { props: { size, density: 'default' } })
-
-      expect(wrapper.classes()).toContain(`ui-fab--${density}`)
-      expect(wrapper.classes()).not.toContain(`ui-fab--${size}`)
-    },
-  )
-
   it('exposes ariaLabel as the accessible name', async () => {
     const wrapper = await mountSuspended(MFab, {
       props: { ariaLabel: 'Add item' },

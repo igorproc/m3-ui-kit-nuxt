@@ -10,11 +10,11 @@
  * a single rule under a multi-line block and was dropped along with the former
  * `code` mode.
  */
-import type { ExtractPublicPropTypes, PropType } from 'vue'
+import type { ExtractPublicPropTypes, PropType, VNode } from 'vue'
 import { mFieldProps } from '#kit/components/ui/text-field/props'
 import { MESSAGES } from '#kit/shared/constants/messages'
-import type { MFieldLabelPlacement } from '#kit/components/ui/text-field/props'
-import type { MTextareaWrap } from '#kit/composables/textarea/useTextareaControl'
+import type { MFieldLabelPlacement, MFieldMessageSlotProps } from '#kit/components/ui/text-field/props'
+import type { MTextareaWrap, TextareaCounterState } from '#kit/composables/textarea/useTextareaControl'
 
 export type { MTextareaWrap }
 
@@ -50,3 +50,18 @@ export const mTextareaProps = {
 }
 
 export type MTextareaProps = ExtractPublicPropTypes<typeof mTextareaProps>
+
+export interface MTextareaSlots {
+  /** Before the value, inside the box — a 20rem adornment. */
+  prepend?: () => VNode[]
+  /** After the value, at the last line — an adornment or an icon button. */
+  append?: () => VNode[]
+  /** A toolbar row inside the container, usually `<MTextareaFooter>`. */
+  footer?: () => VNode[]
+  /** Replaces the error text in the support line; the glyph is then the slot's. */
+  error?: (props: MFieldMessageSlotProps) => VNode[]
+  /** Replaces the helper text in the support line. */
+  helper?: (props: MFieldMessageSlotProps) => VNode[]
+  /** Replaces the counter text; receives the whole counter state. */
+  counter?: (props: TextareaCounterState) => VNode[]
+}

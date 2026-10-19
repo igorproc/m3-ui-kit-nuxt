@@ -11,14 +11,18 @@
 // saying "error".
 
 // The grid answers the pointer as one field: every resting cell darkens its
-// edge, never the one that already shows focus or an error.
-$hovered: ':not(.ui-otp-input--disabled) .ui-otp-input__visual:hover .ui-otp-input__field:not(.ui-otp-input__field--active, .ui-otp-input__field--error)';
+// edge, never one that shows focus, an error or a disabled state — and not
+// while the whole code shows the focus.
+$hovered: ':not(.ui-otp-input--caret-past) .ui-otp-input__visual:hover .ui-otp-input__field:not(.ui-otp-input__field--active, .ui-otp-input__field--error, .ui-otp-input__field--disabled)';
 
 @mixin cells($t) {
   $transition:
     border-color g($t, 'state.duration') g($t, 'state.easing'),
+    box-shadow g($t, 'state.duration') g($t, 'state.easing'),
     background-color g($t, 'state.duration') g($t, 'state.easing'),
     color g($t, 'state.duration') g($t, 'state.easing');
+  $ring: g($t, 'field.active.ring');
+  $active: g($t, 'field.active.color');
 
   &__field {
     position: relative;
@@ -35,6 +39,9 @@ $hovered: ':not(.ui-otp-input--disabled) .ui-otp-input__visual:hover .ui-otp-inp
     aspect-ratio: 1;
     border: g($t, 'field.border.width') solid transparent;
     border-radius: g($t, 'field.shape');
+
+    // The ring's second rem, at rest: the same shadow at zero, so it only grows.
+    box-shadow: inset 0 0 0 0 transparent;
     color: g($t, 'field.color');
     cursor: text;
     transition: $transition;
@@ -67,8 +74,8 @@ $hovered: ':not(.ui-otp-input--disabled) .ui-otp-input__visual:hover .ui-otp-inp
     }
 
     .ui-otp-input__field--active {
-      border-width: g($t, 'field.active.width');
-      border-color: g($t, 'field.active.color');
+      border-color: $active;
+      box-shadow: inset 0 0 0 $ring $active;
     }
 
     .ui-otp-input__field--disabled {
@@ -112,8 +119,8 @@ $hovered: ':not(.ui-otp-input--disabled) .ui-otp-input__visual:hover .ui-otp-inp
     }
 
     .ui-otp-input__field--active {
-      border-width: g($t, 'field.active.width');
-      border-color: g($t, 'field.active.color');
+      border-color: $active;
+      box-shadow: inset 0 0 0 $ring $active;
     }
 
     .ui-otp-input__field--disabled {
@@ -143,13 +150,24 @@ $hovered: ':not(.ui-otp-input--disabled) .ui-otp-input__visual:hover .ui-otp-inp
     }
 
     .ui-otp-input__field--active {
-      border-bottom-width: g($t, 'field.active.width');
-      border-bottom-color: g($t, 'field.active.color');
+      border-bottom-color: $active;
+      box-shadow: inset 0 calc(-1 * #{$ring}) 0 0 $active;
     }
 
     .ui-otp-input__field--disabled {
       border-bottom-color: g($t, 'underline.rule.disabled');
     }
+  }
+
+  // A code typed to the end, still focused: the caret is past the last cell,
+  // so no cell is active and every edge takes the focus colour — focus is a
+  // colour (color-and-state.md), and it outranks the error on the edge.
+  &--caret-past .ui-otp-input__field {
+    border-color: $active;
+  }
+
+  &--underline#{&}--caret-past .ui-otp-input__field {
+    border-color: transparent transparent $active;
   }
 
   // Disabled content is the same in every variant, and outranks the error ink.

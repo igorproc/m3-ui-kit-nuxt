@@ -9,15 +9,19 @@
 // token.
 
 $on-surface: map.get($theme-color-link, on-surface);
+$hairline: max(1px, 1rem);
+$band: spacing(16);
+$target: spacing(40);
 $tokens: (
   root: (
     width: 280rem,
     gap: spacing(16),
     padding: spacing(16),
     radius: map.get($theme-shape-link, large),
+    // A flat card, as the embedded date picker: a shadow says "floating",
+    // and an embedded picker lies in the page.
     surface: map.get($theme-color-link, surface-container-high),
     color: $on-surface,
-    elevation: elevation(1),
   ),
   // The 2-D field's ends are the math of HSV — pure white to the left, pure
   // black at the bottom — not theme colours.
@@ -34,18 +38,19 @@ $tokens: (
       shadow: elevation(1),
     ),
   ),
-  // The band is 16, the target 40 (WCAG 2.5.8 with the kit's 40 targets): the
-  // input's padding above and below is pointer area with no paint. The radius
-  // is given per axis so the painted band, clipped to the content box, keeps
-  // round ends: inline half the band, block half the band plus the padding.
+  // The band is 16, the target 40: the input's padding above and below is
+  // pointer area with no paint. The radius is given per axis so the painted
+  // band, clipped to the content box, keeps round ends: inline half the band,
+  // block half the band plus the padding. The targets do not overlap: on the
+  // vw-scaled root 40 is about 27 CSS px at 1280, and anything under 36
+  // unobscured falls below WCAG 2.5.8's 24 CSS px (axe `target-size`).
   slider: (
-    target: spacing(40),
-    inset: calc((#{spacing(40)} - #{spacing(16)}) / 2),
+    target: $target,
+    inset: calc((#{$target} - #{$band}) / 2),
     radius: (
-      inline: calc(#{spacing(16)} / 2),
-      block: calc(#{spacing(16)} / 2 + (#{spacing(40)} - #{spacing(16)}) / 2),
+      inline: calc(#{$band} / 2),
+      block: calc(#{$band} / 2 + (#{$target} - #{$band}) / 2),
     ),
-    gap: 0,
     thumb: (
       size: spacing(20),
       shape: map.get($theme-shape-link, full),
@@ -60,33 +65,42 @@ $tokens: (
     radius: map.get($theme-shape-link, medium),
     // The kit's hairline: a light colour on a light surface needs an edge.
     outline: map.get($theme-color-link, outline-variant),
-    outline-width: 1rem,
-    value: (color: map.get($theme-color-link, on-surface-variant), type: 'body-small'),
+    outline-width: $hairline,
   ),
   edit: (
     gap: spacing(8),
     inputs-gap: spacing(12),
-    channel: (min: (width: 56rem)),
+    // Wide enough for "HEXA" beside the menu arrow and the compact field's
+    // own padding.
+    format: (width: calc(#{spacing(64)} + #{spacing(48)} + #{spacing(8)})),
+    // What a hex value needs ("#RRGGBBAA" and the field's padding); with less
+    // room beside the format it wraps under the preview and the format.
+    value: (basis: calc(#{spacing(64)} + #{spacing(48)})),
   ),
   swatches: (
     gap: spacing(8),
     size: spacing(32),
     radius: map.get($theme-shape-link, small),
     outline: map.get($theme-color-link, outline-variant),
-    outline-width: 1rem,
+    outline-width: $hairline,
     // The chosen swatch: a check and a ring in the content ink, never colour
     // alone.
     selected: (
       ring: $on-surface,
       width: 2rem,
+      // The focus ring stands outside the selection ring, so a focused chosen
+      // swatch shows both.
+      focus-offset: calc(2rem + #{map.get($theme-focus-link, 'offset')}),
       check: (
         size: 20rem,
         on-dark: map.get($theme-color-link, surface),
         on-light: $on-surface,
       ),
     ),
-    // A small lift under the pointer, only where motion is welcome.
+    // A small lift under the pointer, only where motion is welcome; a press
+    // lays the state layer in the check's ink over the colour.
     hover-scale: 1.1,
+    layer: (pressed: state-opacity(pressed)),
     motion: (
       duration: var(--sys-motion-duration-short-2),
       easing: var(--sys-motion-easing-standard),

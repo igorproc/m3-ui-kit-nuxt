@@ -2,7 +2,7 @@
   <div
     v-bind="rootAttrs()"
     class="ui-table-container"
-    :class="`ui-table-container--density-${density}`"
+    :class="[`ui-table-container--density-${density}`, { 'ui-table-container--captioned': hasCaption }]"
   >
     <div
       ref="viewport"
@@ -12,6 +12,7 @@
       <table
         ref="table"
         class="ui-table"
+        :class="{ 'ui-table--interactive': rowsInteractive }"
         v-bind="controlAttrs(tableAttrs)"
       >
         <caption
@@ -36,10 +37,10 @@
           <template
             v-for="column in columns"
             :key="String(column.key)"
-            #[`header-${String(column.key)}`]="{ column: col }"
+            #[headerSlot(column)]="{ column: col }"
           >
             <slot
-              :name="`header-${String(column.key)}`"
+              :name="headerSlot(column)"
               :column="col"
             >
               {{ col.label }}
@@ -74,7 +75,7 @@
               :class="[`ui-table__cell--${tableColumnAlign(column)}`, { 'ui-table__cell--numeric': column.numeric }]"
             >
               <slot
-                :name="`cell-${String(column.key)}`"
+                :name="cellSlot(column)"
                 :row="row"
                 :column="column"
                 :value="row[column.key]"
@@ -156,14 +157,16 @@ import { resolveTableBody, tableColumnAlign } from '#kit/utils/table/model'
 import { useTableControl } from '#kit/composables/table/useTableControl'
 import { useTableSelection } from '#kit/composables/table/useTableSelection'
 import { useTableWarnings } from '#kit/utils/table/warnings'
-import type { MTableEmits, MTableProps, SortState, TableColumn, TableData } from './types'
+import type { MTableEmits, MTableErrorSlot, MTableProps, MTableSlots, SortState, TableColumn, TableData } from './types'
 
 // The root is a scroll frame; `aria-*` and listeners name and describe the table itself.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 const attrs = useAttrs()
 
-const props = withDefaults(defineProps<MTableProps<T>>(), {
+// `onRowClick` is read, not only emitted to: a bound `row-click` listener is
+// what makes the rows interactive, and only interactive rows show a hover layer.
+const props = withDefaults(defineProps<MTableProps<T> & { onRowClick?: (row: T, event: MouseEvent) => void }>(), {
   density: 'default',
   selectable: false,
   selectedRows: () => [],
@@ -176,7 +179,7 @@ const props = withDefaults(defineProps<MTableProps<T>>(), {
 })
 
 const emit = defineEmits<MTableEmits<T>>()
-const slots = useSlots()
+const slots = defineSlots<MTableSlots<T>>()
 
 const sortState = defineModel<SortState<T> | null>('sort', { default: null })
 
@@ -192,7 +195,10 @@ const { isSelected, toggleRow, isAllSelected, toggleAll } = useTableSelection<T>
 const body = computed(() => resolveTableBody({ loading: props.loading, error: props.error, rowCount: props.data.length }))
 const hasCaption = computed(() => Boolean(props.caption || slots.caption))
 const columnCount = computed(() => props.columns.length + (props.selectable ? 1 : 0))
-const announcement = computed(() => props.statusText ?? (typeof props.error === 'string' ? props.error : ''))
+const rowsInteractive = computed(() => props.selectable || Boolean(props.onRowClick))
+// A failure is the more urgent news: while `error` carries a message it is
+// what the status region says; `statusText` speaks again once it clears.
+const announcement = computed(() => (typeof props.error === 'string' && props.error) || props.statusText || '')
 
 const { captionId, viewportAttrs, tableAttrs, getRowAttrs, getRowNameId, getRowCheckboxAttrs, statusAttrs } = useTableControl<T>({
   viewport,
@@ -202,11 +208,16 @@ const { captionId, viewportAttrs, tableAttrs, getRowAttrs, getRowNameId, getRowC
   busy: () => props.loading,
   hasCaption: () => hasCaption.value,
   label: () => attrs['aria-label'] as string | undefined,
+  labelledBy: () => attrs['aria-labelledby'] as string | undefined,
   onRowClick: (row, event) => emit('row-click', row, event),
 })
 
-const messageSlotProps = computed(() =>
-  (body.value.message === 'error' ? { error: props.error, retry: () => emit('retry') } : {}))
+// The same payload for every message slot; only `#error` reads it.
+const messageSlotProps = computed<MTableErrorSlot>(() => ({ error: props.error, retry: () => emit('retry') }))
+
+// Slot names after the column key, typed as the slot families `defineSlots` declares.
+const cellSlot = (column: TableColumn<T>) => `cell-${String(column.key)}` as const
+const headerSlot = (column: TableColumn<T>) => `header-${String(column.key)}` as const
 
 function cellText(row: T, column: TableColumn<T>) {
   const value = row[column.key]
@@ -232,7 +243,7 @@ useTableWarnings(() => ({
 @use '#kit/assets/stylesheet/components/table/index' as t;
 @use '#kit/assets/stylesheet/components/table/rows' as rows;
 
-$t: material-map(t.$tokens, 'md-table');
+$t: t.$tokens;
 
 // The fade's width, animated by the scroll position (progressive: see below).
 @property --ui-table-fade {
@@ -265,8 +276,9 @@ $t: material-map(t.$tokens, 'md-table');
     overscroll-behavior-x: contain;
     scroll-padding-inline-end: g($t, 'fade.size');
 
+    // Its ring is the frame's (below): the browser's own would fade under the mask.
     &:focus-visible {
-      @include focus-ring(inset);
+      outline: none;
     }
 
     // More columns beyond the edge fade out there. Driven by the scroll
@@ -283,11 +295,24 @@ $t: material-map(t.$tokens, 'md-table');
     }
   }
 
+  // The focus ring of the scroll region is drawn here, outside the region:
+  // its edge fade is a mask, and a mask fades the region's own outline too.
+  // `>`: a table nested in a cell must not light this frame.
+  &:has(> .ui-table-container__viewport:focus-visible) {
+    @include focus-ring(inset);
+  }
+
   &__busy {
     z-index: 1;
     grid-area: 1 / 1;
     place-self: start center;
     pointer-events: none;
+  }
+
+  // A caption above the header: the indicator steps down by it. `translate`,
+  // one rule for every density: the indicator is an overlay, out of the flow.
+  &--captioned &__busy {
+    translate: 0 g($t, 'busy.caption');
   }
 
   &__status {
@@ -303,5 +328,15 @@ $t: material-map(t.$tokens, 'md-table');
 
 .ui-table {
   @include rows.rows($t);
+
+  // Every height of the table's parts that depends on the density, in one place.
+  @each $step in ('compact', 'default', 'comfortable') {
+    .ui-table-container--density-#{$step} & {
+      &__head-row { height: g($t, 'density.#{$step}.header'); }
+      &__sort { min-height: g($t, 'density.#{$step}.header'); }
+      &__row { height: g($t, 'density.#{$step}.row'); }
+      &__message-row { height: g($t, 'density.#{$step}.message'); }
+    }
+  }
 }
 </style>

@@ -33,18 +33,6 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((toUtcTime(to) - toUtcTime(from)) / DAY_MS)
 }
 
-/** The date pickers work in local time: a calendar day becomes local midnight. */
-export function toLocalDate(iso: string): Date {
-  const [year = 1970, month = 1, day = 1] = iso.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-export function fromLocalDate(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
-
 export const formatMoney = (value: number) => moneyFormat.format(value)
 export const formatCompactMoney = (value: number) => `${compactFormat.format(value)} ₽`
 export const formatPercent = (value: number) => percentFormat.format(value / 100)

@@ -1,0 +1,86 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// FIELD FAMILY · SHARED CHROME
+// ==========================================
+// Included inside the root of `<MTextField>`, `<MTextarea>` and
+// `<MNumberInput>` (`&` is the block). One copy of the parts the three draw the
+// same way; each reads its own `$tokens`, which carry the same paths here.
+
+// The shape axis: a modifier only picks the radius. A filled box has a flat
+// bottom, so a full radius would dome it on a short field — `full` is capped at
+// the large tier for filled only.
+@mixin shape-axis($t, $block) {
+  @each $shape in none, extra-small, medium, large, full {
+    &--shape-#{$shape} {
+      --ui-#{$block}-radius: #{g($t, 'shape.#{$shape}')};
+    }
+  }
+
+  &--filled#{&}--shape-full {
+    --ui-#{$block}-radius: #{g($t, 'shape.large')};
+  }
+}
+
+// Autofill paints an !important background and text colour of its own, light
+// even in a dark theme. Clipping that background to the glyphs — which the
+// fill colour then covers — lets the container show through.
+@mixin autofill($t) {
+  &:autofill {
+    // Safari clips to text only under the prefix.
+    /* stylelint-disable-next-line property-no-vendor-prefix */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: g($t, 'input.color');
+  }
+}
+
+// The legend that cuts the outline's notch: as tall as the border it sits on,
+// so the fieldset never shifts its top edge to centre a taller legend, and
+// holding the label text at the raised size — only its width matters. Closed
+// by placement, never by a transition.
+@mixin notch($t) {
+  &__notch {
+    display: block;
+    width: auto;
+    max-width: g($t, 'outlined.notch.collapsed');
+    height: g($t, 'container.border.width');
+    padding: 0;
+    overflow: hidden;
+    visibility: hidden;
+    white-space: nowrap;
+
+    @include typescale(g($t, 'typography.label.overlay'));
+  }
+
+  &__notch-text {
+    display: inline-block;
+    padding-inline: g($t, 'outlined.notch.padding.inline');
+    font-size: g($t, 'outlined.notch.font-size');
+  }
+}
+
+// The support line: one body-small line, its height reserved even when empty
+// so an arriving error never pushes what is below the field.
+@mixin support-line($t) {
+  // The line is often a `<p>`: no UA margin may add to the reserved height.
+  margin: 0;
+  min-width: 0;
+  min-height: g($t, 'support.min-height');
+  padding-inline: g($t, 'support.padding.inline');
+
+  // A URL or an address in a message has no break opportunity of its own.
+  overflow-wrap: anywhere;
+  color: g($t, 'support.color');
+
+  @include typescale(g($t, 'typography.support'));
+}
+
+// Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
+// message has nothing but this glyph to say it. A margin, not a flex gap: the
+// alert region beside it is empty whenever the helper is shown.
+@mixin support-glyph($t) {
+  flex: 0 0 auto;
+  margin-inline-end: g($t, 'support.icon.gap');
+  font-size: g($t, 'support.icon.size');
+}

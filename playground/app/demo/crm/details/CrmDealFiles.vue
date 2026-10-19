@@ -7,7 +7,7 @@
     accept=".pdf,.docx,.png"
     :max-size="MAX_SIZE"
     :max-files="8"
-    :upload="upload"
+    :queue="queue"
     auto-start
     :messages="MESSAGES"
     @update:model-value="list => store.setFiles(dealId, list)"
@@ -16,18 +16,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FileUploadTaskContext } from '#kit/composables/file-upload/useFileUploadQueue'
+import type { FileUploadQueue } from '#kit/composables/file-upload/useFileUploadQueue'
 import type { MFileUploadMessages } from '#kit/components/ui/file-upload/props'
-import { useCrmDelay } from '../composables/useCrmDelay'
 import { useCrmStore } from '../composables/useCrmStore'
 
 const props = defineProps<{
   dealId: string
+  /** The deal's uploads, kept by the sheet so a tab switch sends nothing twice. */
+  queue: FileUploadQueue
 }>()
 
 const MAX_SIZE = 10 * 1024 * 1024
-const SERVER_LIMIT = 5 * 1024 * 1024
-const PROGRESS_STEPS = 5
 
 const MESSAGES: MFileUploadMessages = {
   drop: 'Перетащите файлы сюда',
@@ -54,17 +53,6 @@ const MESSAGES: MFileUploadMessages = {
 }
 
 const store = useCrmStore()
-const { wait } = useCrmDelay()
 
 const files = computed(() => store.files.value[props.dealId] ?? [])
-
-async function upload(file: File, { signal, reportProgress }: FileUploadTaskContext) {
-  for (let step = 1; step <= PROGRESS_STEPS; step += 1) {
-    await wait(250, signal)
-    reportProgress((step / PROGRESS_STEPS) * 100)
-  }
-
-  if (file.size > SERVER_LIMIT) throw new Error('quota')
-  return { id: `${props.dealId}-${file.name}` }
-}
 </script>

@@ -121,9 +121,17 @@ export function useTextareaResize(
 
   const hasManualHeight = computed(() => height.value !== null)
 
+  // A row's height only changes with the font, so one measurement serves a
+  // whole drag: no style read per pointer move (behavior.md, cache measurement).
+  let gestureMetrics: { row: number, chrome: number } | null = null
+
   /** Live box metrics; falls back to a token-sized row before first layout. */
   function metrics() {
     const el = element.value
+
+    if (gestureMetrics) {
+      return gestureMetrics
+    }
 
     if (!el || !IN_BROWSER) {
       return { row: FALLBACK_ROW_HEIGHT, chrome: 0 }
@@ -216,6 +224,7 @@ export function useTextareaResize(
     const startY = event.clientY
     const startHeight = el.getBoundingClientRect().height
 
+    gestureMetrics = metrics()
     isResizing.value = true
 
     const stopMove = useGlobalListener('document', 'pointermove', (moveEvent) => {
@@ -223,6 +232,7 @@ export function useTextareaResize(
     })
 
     const finish = () => {
+      gestureMetrics = null
       isResizing.value = false
       stopMove()
       stopUp()

@@ -7,10 +7,11 @@
 // error + hover → focused → disabled with every rule at the same weight, so
 // the later one wins. Focus comes after error: an invalid field in focus shows
 // focus on its edge, and the label and the message keep saying "error".
-// Hover sits in `:where()` and weighs nothing; it answers an editable field
-// only (`--interactive`), over its container, not over the label or message.
+// Hover sits in `:where()` and weighs nothing; it answers any field that is
+// not disabled — read-only included, as in Compose, where `readOnly` changes no
+// colour — over its container, not over the label or message.
 
-$hovered: ':where(.ui-textarea--interactive:has(.ui-textarea__control:hover))';
+$hovered: ':where(:not(.ui-textarea--disabled):has(.ui-textarea__control:hover))';
 
 @mixin states($t) {
   // ── filled · a container tone, an indicator, and a state layer on hover ──

@@ -78,12 +78,16 @@ eases. Two states of one variant should differ in a value, never in a property l
 pushed down by the asymmetric padding that clears a floating label. Two objects, two different
 notions of "middle", visibly out of line.
 
-The fix was not a nudge. Full-height zones **have no midline**: a zone that spans the whole box
-cannot disagree with anything about where its centre is. And it adds no height of its own, which
-is what a nested icon button with its own `min-height` was doing to the row.
+The fix was not a nudge. The stepper zones are tonal objects — 40rem (32 in `compact`), inset
+from the box edges and one tier rounder than it — and they **ride with the value**: the same
+top/bottom imbalance that lowers the digits is the zone's top margin, so digits, zones and the
+unit share one line. A zone adds no height of its own, which is what a nested icon button with
+its own `min-height` was doing to the row. The ride is capped at the room the box leaves the
+zone, so in a `filled` box a tall zone comes to rest on the indicator instead of crossing it —
+the accepted price of the shared line.
 
-The general move: when two things must align, look for the axis on which they are allowed to
-disagree and remove it, rather than measuring one against the other.
+The general move: when two things must align, give them one source for their position rather
+than measuring one against the other.
 
 > Where the value genuinely does sit low — a label inside a `filled` box — derive the offset
 > instead of picking it: `(padding.top − padding.bottom) / 2`. A derived number survives a
@@ -276,6 +280,14 @@ and `rows`/`maxRows` were ignored wherever the native path won.
 `pointerdown` and recomputes `base + steps × step` on every move. Dragging back to the starting
 point restores the original value exactly, and a modifier pressed mid-gesture rescales the whole
 drag instead of leaving a seam.
+
+**A loop keeps its own clock.** The constants of an endless indicator — the circular arc's
+1333 ms cycle, its curve, its turns — are specification values with no system token, and they
+live in the component's token map with their M3 source. They never come from `--sys-motion-*`:
+those are transition durations, and reduced motion shortens them, so a spinner built on them
+would spin *faster* for exactly the people who asked for less motion. Under reduced motion the
+component's own map slows the loop instead (the arc runs at half speed). This is the one place a
+literal duration is legal, and only in the map, next to its source.
 
 ---
 

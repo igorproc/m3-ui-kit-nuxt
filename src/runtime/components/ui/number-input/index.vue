@@ -1,7 +1,7 @@
 <template>
   <div
     v-bind="rootAttrs()"
-    :class="rootClasses"
+    :class="rootClasses()"
   >
     <label
       v-if="label && !isScrub"
@@ -17,7 +17,12 @@
       >*</span>
     </label>
 
-    <div class="ui-number-input__control">
+    <div
+      ref="control"
+      class="ui-number-input__control"
+      @pointerdown="box.onPointerdown"
+      @click="box.onClick"
+    >
       <fieldset
         v-if="variant === 'outlined'"
         class="ui-number-input__outline"
@@ -137,9 +142,11 @@
       </span>
     </div>
 
-    <!-- Always rendered: the line keeps its height, and the alert region exists
-         before an error is written into it, so the first one is announced. -->
+    <!-- Rendered whenever something can appear in it: the line keeps its height,
+         and the alert region exists before an error is written into it, so the
+         first one is announced. With nothing to say there is no line at all. -->
     <p
+      v-if="hasSupport()"
       v-bind="supportAttrs"
       class="ui-number-input__support"
     >
@@ -180,15 +187,18 @@ import { ICONS } from '#kit/shared/constants/icons'
 import MNumberInputUnit from './unit.vue'
 import { useNumberInputControl } from '#kit/composables/number-input/useNumberInputControl'
 import { mNumberInputProps } from './props'
+import type { MNumberInputSlots } from './props'
 import type { NumberInputInvalidReason } from '#kit/shared/utils/number'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
-import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
+import { createFieldBoxPress } from '#kit/utils/text-field/boxPress'
+import { useSupportLine } from '#kit/utils/text-field/supportLine'
 
 // The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mNumberInputProps)
+const slots = defineSlots<MNumberInputSlots>()
 
 const modelValue = defineModel<number | null>({ default: null })
 const focusedModel = defineModel<boolean>('focused', { default: false })
@@ -232,21 +242,26 @@ if (import.meta.dev) {
   }
 }
 
+// The whole box is the input's hit target; zones, the unit and the scrub
+// handle keep their own presses.
+const control = useTemplateRef<HTMLElement>('control')
+const box = createFieldBoxPress(element)
+const hasSupport = useSupportLine(props, slots)
+
 const isScrub = computed(() => props.controls === 'scrub')
 // The notch is sized by this copy of the label, so it carries the asterisk too.
 const notchText = computed(() => props.required ? `${props.label} *` : props.label)
 const hasUnit = computed(() => Boolean(unitModel.value) || Boolean(props.units?.length))
 
-const shape = useFieldShape('m-number-input', props)
-
-const rootClasses = computed(() => [
+// Called from the template: slots are not reactive, so their presence is
+// read on every render.
+const rootClasses = () => [
   'ui-number-input',
   `ui-number-input--${props.variant}`,
-  `ui-number-input--shape-${shape.value}`,
+  `ui-number-input--shape-${props.shape}`,
   `ui-number-input--label-${props.labelPlacement}`,
   `ui-number-input--density-${props.density}`,
   {
-    'ui-number-input--interactive': !props.disabled && !props.readonly,
     'ui-number-input--focused': isFocused.value,
     'ui-number-input--error': isError.value,
     'ui-number-input--disabled': props.disabled,
@@ -256,8 +271,9 @@ const rootClasses = computed(() => [
     'ui-number-input--scrub': isScrub.value,
     'ui-number-input--scrubbing': isScrubbing.value,
     'ui-number-input--unit': hasUnit.value,
+    'ui-number-input--prepend': Boolean(slots.prepend),
   },
-])
+]
 
 const incrementSlot = computed(() => ({
   props: incrementAttrs.value,
@@ -271,11 +287,13 @@ const decrementSlot = computed(() => ({
   nextValue: nextDecrement.value,
 }))
 
-defineExpose({ element })
+/** The drawn box (what a popover anchors to) and the native input (where focus belongs). */
+defineExpose({ control, input: element })
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/number-input' as t;
+@use '#kit/assets/stylesheet/components/text-field/family' as family;
 @use '#kit/assets/stylesheet/components/number-input/label' as label;
 @use '#kit/assets/stylesheet/components/number-input/zones' as zones;
 @use '#kit/assets/stylesheet/components/number-input/states' as states;
@@ -366,14 +384,7 @@ defineExpose({ element })
       color: g($t, 'input.placeholder.color');
     }
 
-    // The UA repaints an autofilled input in its own colours (with
-    // `!important`), off the theme. Those are transitions like any other, so
-    // they are deferred out of reach instead of overridden.
-    &:autofill {
-      transition:
-        background-color 0s 600000s,
-        color 0s 600000s;
-    }
+    @include family.autofill($t);
   }
 
   &__adornment {

@@ -12,15 +12,10 @@
       v-ripple="!isItemDisabled(item)"
       v-bind="segmentAttrs(item, index)"
       class="ui-segmented-button__segment"
-      :class="{
-        'ui-segmented-button__segment--selected': isSelected(item.value),
-      }"
+      :class="segmentModifiers(item)"
     >
       <span class="ui-segmented-button__content">
-        <span
-          v-if="isSelected(item.value) || item.icon"
-          class="ui-segmented-button__icon"
-        >
+        <span class="ui-segmented-button__icon">
           <transition
             name="ui-segmented-button-icon-scale"
             mode="out-in"
@@ -48,46 +43,51 @@
 </template>
 
 <script setup lang="ts">
-import { useVModel } from '@vueuse/core'
 import UiIcon from '#kit/components/ui/icon/index.vue'
 import { useSegmentedButton } from '#kit/composables/button/useSegmentedButton'
 import { ICONS } from '#kit/shared/constants/icons'
 import { mSegmentedProps } from './props'
-import type { MSegmentedModelValue } from './props'
-
-// Re-exported for backwards compatibility with existing imports.
-export type { MSegmentedItem } from './props'
+import type { MSegmentedItem, MSegmentedModelValue } from './props'
 
 const props = defineProps(mSegmentedProps)
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: MSegmentedModelValue): void
-}>()
-
-const value = useVModel(props, 'modelValue', emit, {
-  passive: true,
-  deep: true,
-})
+/** Selected value, or values with `multiple`. */
+const value = defineModel<MSegmentedModelValue>()
 
 const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = useSegmentedButton(value, props)
+
+// Every segment keeps the room for the check, so choosing one changes no width
+// (M3 / material-web: segments are equal and the check opens inside one). An
+// unselected label segment shows that room empty, so its label is centred by
+// sliding the content back over half of it.
+function segmentModifiers(item: MSegmentedItem) {
+  const selected = isSelected(item.value)
+  return {
+    'ui-segmented-button__segment--selected': selected,
+    'ui-segmented-button__segment--centered': !selected && !item.icon && Boolean(item.label),
+  }
+}
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/segmented' as t;
 
-.ui-segmented-button {
-  $prefix: 'm3-segmented';
-  $t: material-map(t.$tokens, $prefix);
+$roles: ('primary', 'secondary', 'tertiary', 'error');
 
-  display: inline-flex;
-  align-items: stretch;
+.ui-segmented-button {
+  $t: material-map(t.$tokens, 'm3-segmented');
+  $move: g($t, 'motion.duration') g($t, 'motion.easing');
+
+  // Equal segments, each as wide as the widest (M3 `weight(1f)`, material-web
+  // `grid-auto-columns: 1fr`). A row too wide even with every label wrapped
+  // between words scrolls instead of spilling out of its container.
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   max-width: 100%;
   min-height: g($t, 'container.height');
   border-radius: g($t, 'container.shape');
-  border: 1rem solid g($t, 'container.outline.color');
-
-  // Clips the pill; a row too wide even with every label wrapped scrolls
-  // instead of spilling out of its container.
+  border: g($t, 'container.outline.width') solid g($t, 'container.outline.color');
   overflow: hidden;
   overflow-x: auto;
 
@@ -95,51 +95,53 @@ const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = use
     border-color: g($t, 'container.outline.disabled.color');
   }
 
-  // Segments keep their natural width and give it up only when the group runs
-  // out of room; a label then wraps between words, never inside one: the
-  // automatic minimum stops at the longest word (or M3's 58, whichever is wider).
+  // State layer in the segment's own content colour; pressed is the ripple.
   &__segment {
     position: relative;
+    isolation: isolate;
     display: inline-flex;
-    flex: 0 1 auto;
     align-items: center;
     justify-content: center;
     padding-block: g($t, 'segment.padding.block');
     padding-inline: g($t, 'segment.padding.inline');
-    background-color: g($t, 'unselected.container.color');
+    background-color: transparent;
     color: g($t, 'unselected.content.color');
     border: none;
-    border-inline-end: 1rem solid g($t, 'container.outline.color');
+    border-inline-end: g($t, 'container.outline.width') solid g($t, 'container.outline.color');
     cursor: pointer;
     outline: none;
+    transition: background-color $move, color $move;
 
     @include typescale(g($t, 'segment.typography'));
 
-    transition:
-      background-color g($t, 'motion.duration') g($t, 'motion.easing'),
-      color g($t, 'motion.duration') g($t, 'motion.easing');
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-color: currentcolor;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity $move;
+    }
 
     &:last-child {
       border-inline-end: none;
     }
 
-    // Segments sit edge to edge inside a clipped pill: the ring goes inside.
-    &:focus-visible {
-      @include focus-ring(inset);
-    }
-
     @include can-hover {
-      &:hover {
-        background-color: g($t, 'unselected.container.hover.color');
+      &:hover::before {
+        opacity: g($t, 'state.hover');
       }
     }
 
+    // Segments sit edge to edge inside a clipped pill: the ring goes inside.
     &:focus-visible {
-      background-color: g($t, 'unselected.container.focus.color');
-    }
+      @include focus-ring(inset);
 
-    &:active {
-      background-color: g($t, 'unselected.container.pressed.color');
+      &::before {
+        opacity: g($t, 'state.focus');
+      }
     }
 
     &:disabled {
@@ -147,95 +149,81 @@ const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = use
       cursor: default;
       pointer-events: none;
     }
-
-    @include forced-colors {
-      &:disabled {
-        color: GrayText;
-      }
-    }
   }
 
   &__content {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: g($t, 'segment.gap');
+    gap: g($t, 'graphic.gap');
     min-width: g($t, 'segment.content.min-width');
+    transition: translate $move;
+  }
+
+  &__segment--centered &__content {
+    translate: calc(-1 * #{g($t, 'graphic.shift')}) 0;
+
+    &:dir(rtl) {
+      translate: g($t, 'graphic.shift') 0;
+    }
   }
 
   &__label {
     text-align: center;
   }
 
-  // Selected-segment scheme per MD3 color role.
-  @mixin apply-selected($scheme) {
-    .ui-segmented-button__segment--selected {
-      background-color: g($t, 'selected.#{$scheme}.container.color');
-      color: g($t, 'selected.#{$scheme}.content.color');
+  &__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: g($t, 'graphic.size');
+    height: g($t, 'graphic.size');
+    font-size: g($t, 'graphic.size');
+  }
 
-      @include can-hover {
-        &:hover {
-          background-color: g($t, 'selected.#{$scheme}.container.hover.color');
-        }
-      }
+  @each $role in $roles {
+    &--#{$role} &__segment--selected {
+      background-color: g($t, 'selected.#{$role}.container');
+      color: g($t, 'selected.#{$role}.content');
+    }
+  }
+
+  &__segment--selected:disabled {
+    background-color: g($t, 'disabled.selected.container.color');
+    color: g($t, 'disabled.content.color');
+  }
+
+  // The selected fill is the selection: forcing would flatten it and paint the
+  // label's Canvas backplate over Highlight, so that segment opts out of
+  // forcing and states its colours in system colours.
+  @include forced-colors {
+    &__segment:disabled {
+      color: GrayText;
+    }
+
+    & &__segment--selected {
+      forced-color-adjust: none;
+      border-inline-end-color: CanvasText;
+      background-color: Highlight;
+      color: HighlightText;
 
       &:focus-visible {
-        background-color: g($t, 'selected.#{$scheme}.container.focus.color');
-      }
-
-      &:active {
-        background-color: g($t, 'selected.#{$scheme}.container.pressed.color');
+        outline-color: CanvasText;
       }
 
       &:disabled {
-        background-color: g($t, 'disabled.selected.container.color');
-        color: g($t, 'disabled.content.color');
-      }
-
-      // The fill is the selection, and forced colors drops it: restate it.
-      @include forced-colors {
-        &,
-        &:active {
-          background-color: Highlight;
-          color: HighlightText;
-        }
-
-        @include can-hover {
-          &:hover {
-            background-color: Highlight;
-          }
-        }
-
-        &:disabled {
-          background-color: Canvas;
-          color: GrayText;
-        }
+        background-color: Canvas;
+        color: GrayText;
       }
     }
   }
 
-  &--primary { @include apply-selected('primary'); }
-  &--secondary { @include apply-selected('secondary'); }
-  &--tertiary { @include apply-selected('tertiary'); }
-  &--error { @include apply-selected('error'); }
-
-  &__icon {
-    font-size: g($t, 'icon.size');
-    display: inline-flex;
-    flex-shrink: 0;
-    width: g($t, 'icon.size');
-    height: g($t, 'icon.size');
-    align-items: center;
-    justify-content: center;
-  }
-
-  // Transitions
+  // The check scales in and out inside its room.
   .ui-segmented-button-icon-scale {
     &-enter-active,
     &-leave-active {
-      transition:
-        transform g($t, 'motion.duration') g($t, 'motion.easing'),
-        opacity g($t, 'motion.duration') g($t, 'motion.easing');
+      transition: transform $move, opacity $move;
     }
 
     &-enter-from,

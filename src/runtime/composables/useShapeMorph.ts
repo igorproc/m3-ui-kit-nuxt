@@ -20,7 +20,8 @@
  * - Exposes the live interpolated `d` and the live rotation as readonly refs.
  * - Manual `start` / `stop` / `cancel` controls.
  * - Automatic cleanup on scope disposal (via `useRaf`).
- * - SSR-safe, and snaps without animating when the viewer prefers reduced motion.
+ * - SSR-safe. Under reduced motion it keeps morphing on the calm curve, without
+ *   the swing.
  *
  * @remarks Rotation
  * The rotation is reported in degrees for the *element*, never baked into the
@@ -32,7 +33,9 @@
  * It is a *swing*, not an accumulating spin: the angle tracks the curve's own
  * speed, so it peaks where the deformation is most violent and unwinds to zero
  * as the curve settles. Every shape therefore comes to rest square, however
- * many morphs it has been through.
+ * many morphs it has been through. Only the speed's size counts: a spring that
+ * overshoots runs backwards for a moment, and the shape would swing back past
+ * square with it.
  *
  * @remarks Performance
  * The morph core samples each endpoint to a fixed point count, so an
@@ -57,31 +60,19 @@
 
 // Composables
 import { useRaf } from '#kit/composables/useRaf'
+import { useReducedMotion } from '#kit/composables/useReducedMotion'
 
 // Constants
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 
 // Utilities
 import { createPathInterpolator } from '#kit/utils/morph'
-import { createVelocityProfile, prefersReducedMotion, resolveTransition } from '#kit/utils/motion'
+import { MORPH_TRANSITIONS, createVelocityProfile, resolveTransition } from '#kit/utils/motion'
 import { computed, readonly, shallowRef, toValue, watch } from 'vue'
 
 // Types
 import type { MorphTransition, MorphTransitionInput } from '#kit/utils/motion'
 import type { ComputedRef, MaybeRefOrGetter, ShallowRef } from 'vue'
-
-/** Easing function mapping linear progress `[0, 1]` to eased progress. */
-export type ShapeMorphEasing = (progress: number) => number
-
-/**
- * M3 standard (emphasized-decelerate) easing approximation.
- *
- * @deprecated Pass a transition instead — `{ transition: 'standard' }`, or
- *   `{ transition: { easing } }` for a curve of your own.
- * @param t Linear progress in `[0, 1]`.
- * @returns Eased progress in `[0, 1]`.
- */
-export const easeM3Standard: ShapeMorphEasing = t => 1 - Math.pow(1 - t, 4)
 
 export interface ShapeMorphOptions {
   /**
@@ -141,7 +132,13 @@ export function useShapeMorph(
 ): ShapeMorphContext {
   const { samples = 96, sequence } = options
 
+  const reduced = useReducedMotion()
+
+  // Reduced motion shortens the morph instead of switching it off: the calm
+  // curve, no overshoot, no swing.
   const transition = computed<MorphTransition>(() => {
+    if (reduced.value) return { ...MORPH_TRANSITIONS.calm, rotate: 0 }
+
     const resolved = resolveTransition(toValue(options.transition))
     const override = toValue(options.duration)
     return override === undefined || override === resolved.duration
@@ -159,6 +156,8 @@ export function useShapeMorph(
 
   let interpolator: ((t: number) => string) | undefined
   let startTime: number | undefined
+  /** Angle the current morph started from: a morph that interrupts another unwinds it. */
+  let rotateFrom = 0
 
   /**
    * Memoized interpolators keyed by geometry flags plus the canonical
@@ -170,16 +169,17 @@ export function useShapeMorph(
   /** Canonical path that `d` is currently anchored to (the last morph target). */
   let canonicalFrom = toValue(target)
 
+  function buildInterpolator(from: string, to: string): (t: number) => string {
+    const { preserveArea, overshoots } = transition.value
+    return createPathInterpolator(from, to, { samples, preserveArea, snapEnd: !overshoots })
+  }
+
   function getInterpolator(from: string, to: string): (t: number) => string {
     const { preserveArea, overshoots } = transition.value
     const key = `${preserveArea ? 1 : 0}${overshoots ? 1 : 0} ${from} ${to}`
     let fn = cache.get(key)
     if (!fn) {
-      fn = createPathInterpolator(from, to, {
-        samples,
-        preserveArea,
-        snapEnd: !overshoots,
-      })
+      fn = buildInterpolator(from, to)
       cache.set(key, fn)
     }
     return fn
@@ -208,7 +208,7 @@ export function useShapeMorph(
     const eased = easing(progress)
 
     d.value = interpolator(eased)
-    rotate.value = amplitude * (velocity.value?.(progress) ?? 0)
+    rotate.value = rotateFrom * (1 - progress) + amplitude * Math.abs(velocity.value?.(progress) ?? 0)
 
     if (progress < 1) {
       tick()
@@ -221,21 +221,24 @@ export function useShapeMorph(
 
   function start(): void {
     const to = toValue(target)
-    // Anchor the morph's `from` on the previous canonical target (clean
-    // geometry) when a sequence is supplied, falling back to the live `d`
-    // for the generic single-target use case.
+    // A morph that interrupts another starts from the live `d` and angle, so
+    // nothing jumps. Otherwise, with a sequence, it starts from the previous
+    // canonical target (clean geometry, memoized pairs); the generic
+    // single-target use starts from the live `d`, which at rest is canonical.
+    const interrupted = interpolator !== undefined
     const hasSequence = (toValue(sequence)?.length ?? 0) >= 2
-    const from = hasSequence ? canonicalFrom : d.value
+    const from = hasSequence && !interrupted ? canonicalFrom : d.value
 
     canonicalFrom = to
 
-    if (from === to || !IN_BROWSER || prefersReducedMotion()) {
+    if (from === to || !IN_BROWSER) {
       settle(to)
       return
     }
 
     tick.cancel()
-    interpolator = getInterpolator(from, to)
+    interpolator = interrupted ? buildInterpolator(from, to) : getInterpolator(from, to)
+    rotateFrom = rotate.value
     startTime = undefined
     tick()
   }

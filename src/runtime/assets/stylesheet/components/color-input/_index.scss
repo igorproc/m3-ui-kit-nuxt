@@ -7,18 +7,15 @@
 // The field is `<MTextField>` with its own tokens; what is owned here is the
 // swatch button in its trailing zone.
 
+// The swatch sits in an icon's place: the 24 of an icon, less its edge on
+// both sides. The checkerboard under it is the picker's own.
+$hairline: max(1px, 1rem);
 $tokens: (
-  trigger: (padding: spacing(2)),
   swatch: (
-    size: 22rem,
+    size: calc(#{spacing(24)} - 2 * #{$hairline}),
     shape: map.get($theme-shape-link, small),
     // The kit's hairline: a light colour on a light field needs an edge.
     outline: map.get($theme-color-link, outline-variant),
-    outline-width: 1rem,
-  ),
-  checker: (
-    a: map.get($theme-color-link, surface-container-highest),
-    b: map.get($theme-color-link, surface-container-low),
-    size: spacing(8),
+    outline-width: $hairline,
   ),
 );

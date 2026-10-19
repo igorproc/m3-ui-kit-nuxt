@@ -1,0 +1,83 @@
+@use '../../../abstracts/forward.scss' as *;
+
+// The surface every FAB shares (MButtonFab, MButtonExtendedFab): role × set
+// colours, the state layer in the content colour (hover 8, focus 10; pressed
+// is the ripple's alone), the elevation steps, disabled and forced colors.
+// Included inside the block's root rule; `$block` is its class, e.g. `ui-fab`.
+
+$roles: ('primary', 'secondary', 'tertiary', 'error');
+$sets: ('tonal', 'filled');
+
+@mixin fab-surface($t, $block) {
+  $move: g($t, 'motion.duration') g($t, 'motion.easing');
+
+  position: relative;
+  isolation: isolate;
+  box-shadow: g($t, 'elevation.resting');
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $move;
+  }
+
+  @include can-hover {
+    &:hover:not(.#{$block}--disabled) {
+      box-shadow: g($t, 'elevation.hover');
+
+      &::before {
+        opacity: g($t, 'state.hover');
+      }
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    &:not(.#{$block}--disabled)::before {
+      opacity: g($t, 'state.focus');
+    }
+  }
+
+  &:active:not(.#{$block}--disabled) {
+    box-shadow: g($t, 'elevation.pressed');
+  }
+
+  @each $role in $roles {
+    @each $set in $sets {
+      &--#{$role}.#{$block}--#{$set} {
+        background-color: g($t, '#{$role}.#{$set}.container');
+        color: g($t, '#{$role}.#{$set}.content');
+      }
+    }
+  }
+
+  // After the roles, at their specificity.
+  &.#{$block}--disabled {
+    background-color: g($t, 'disabled.container');
+    color: g($t, 'disabled.content');
+  }
+
+  &--disabled,
+  &--loading {
+    box-shadow: none;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  // The container is only a background and a shadow, both dropped by forced colors.
+  @include forced-colors {
+    border: 1px solid ButtonText;
+
+    &.#{$block}--disabled {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+}

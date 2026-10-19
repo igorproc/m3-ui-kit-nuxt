@@ -1,6 +1,7 @@
 <template>
   <div class="crm-new-deal-fields">
     <MAutocomplete
+      :messages="CRM_SELECT_MESSAGES"
       class="crm-new-deal-fields__wide"
       :model-value="extras.companyId"
       :items="CRM_COMPANIES"
@@ -21,6 +22,7 @@
     </MAutocomplete>
 
     <MDropdown
+      :messages="CRM_SELECT_MESSAGES"
       :model-value="extras.stage"
       :items="STAGE_ITEMS"
       item-value="id"
@@ -119,6 +121,7 @@ import type { MColorPickerMessages } from '#kit/components/ui/color-picker/props
 import type { ColorSwatch } from '#kit/shared/utils/color'
 import { CRM_TODAY } from '../data/crmFormat'
 import { CRM_COMPANIES } from '../data/crmSeed'
+import { CRM_SELECT_MESSAGES } from '../data/crmSelectMessages'
 import { CRM_STAGES, CRM_TAGS } from '../data/crmTypes'
 import type { CrmStageId, CrmTagId } from '../data/crmTypes'
 import { useCrmNewDealForm } from '../composables/useCrmNewDeal'

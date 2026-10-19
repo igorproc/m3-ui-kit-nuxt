@@ -212,6 +212,46 @@ describe('m-otp-input · interaction', () => {
       expect(wrapper.find('.ui-otp-input__field--active').exists()).toBe(false)
     })
 
+    it('shows the focus on the whole code once the caret sits past the last cell', async () => {
+      const wrapper = await mount({ length: 3 })
+      const input = wrapper.find('input')
+
+      await input.trigger('focus')
+      expect(wrapper.find('.ui-otp-input').classes()).not.toContain('ui-otp-input--caret-past')
+      await input.setValue('123')
+      expect(wrapper.find('.ui-otp-input').classes()).toContain('ui-otp-input--caret-past')
+
+      await input.trigger('blur')
+      expect(wrapper.find('.ui-otp-input').classes()).not.toContain('ui-otp-input--caret-past')
+    })
+
+    it('lets a character typed inside a full code replace the one under the caret', async () => {
+      const wrapper = await mount({ length: 4, modelValue: '1234' })
+      const input = wrapper.find('input')
+      const element = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      element.setSelectionRange(1, 1)
+      const event = new InputEvent('beforeinput', { inputType: 'insertText', data: '9', cancelable: true, bubbles: true })
+      element.dispatchEvent(event)
+      await wrapper.vm.$nextTick()
+
+      expect(event.defaultPrevented).toBe(true)
+      expect(last(wrapper, 'update:modelValue')).toEqual(['1934'])
+      expect(element.selectionStart).toBe(2)
+    })
+
+    it('leaves typing into a code that is not full to the input itself', async () => {
+      const wrapper = await mount({ length: 4, modelValue: '12' })
+      const element = wrapper.find('input').element as HTMLInputElement
+
+      element.setSelectionRange(1, 1)
+      const event = new InputEvent('beforeinput', { inputType: 'insertText', data: '9', cancelable: true, bubbles: true })
+      element.dispatchEvent(event)
+
+      expect(event.defaultPrevented).toBe(false)
+    })
+
     it('lights the last cell when the caret steps back into it', async () => {
       const wrapper = await mount({ length: 3 })
       const input = wrapper.find('input')

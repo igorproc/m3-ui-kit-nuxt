@@ -8,14 +8,10 @@
 import { computed, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 import { createGroup } from '#kit/composables/registry/createGroup'
+import type { PanelValue } from '#kit/components/ui/expansion-panel/props'
 import { mExpansionPanelsProps } from './props'
-import {
-  provideExpansionPanelGroupContext,
-} from '#kit/composables/expansion-panel/useExpansionPanelGroup'
-import type {
-  ExpansionPanelGroupContext,
-  PanelValue,
-} from '#kit/composables/expansion-panel/useExpansionPanelGroup'
+import { provideExpansionPanelGroupContext } from './context'
+import type { ExpansionPanelGroupContext } from './context'
 
 const props = defineProps(mExpansionPanelsProps)
 
@@ -40,13 +36,13 @@ const modelAsArray = computed(() => {
   return Array.isArray(value) ? value : [value]
 })
 
-// External v-model -> selection. Panels register after the group's setup and
-// again when their `value` changes, so the model is re-applied whenever the
-// registered values move — a preset v-model opens its panel at mount.
+// External v-model -> selection, for a model that changes after mount and for
+// panels whose `value` changes. A preset model is applied at registration
+// (below): this watch would only reach it after the first render.
 watch(
   [() => modelAsArray.value, () => sel.values().map(ticket => ticket.value)],
   () => sel.apply(modelAsArray.value),
-  { immediate: true, deep: true },
+  { deep: true },
 )
 
 // Selection -> external v-model.
@@ -89,13 +85,22 @@ function toggle(value: PanelValue) {
   sel.toggle(props.multiple ? ids : ids[0]!)
 }
 
+// Panels register in their own setup, before they render: selecting a preset
+// value right there is what lets the server, and the first client frame, draw
+// that panel open — with no height transition after hydration.
+function register(ticket: { value: PanelValue, disabled?: MaybeRefOrGetter<boolean> }) {
+  const registered = sel.register(ticket)
+  if (modelAsArray.value.includes(ticket.value)) sel.apply(modelAsArray.value)
+  return registered
+}
+
 const isOpen = (value: PanelValue) => sel.selectedValues.value.has(value)
 
 const context: ExpansionPanelGroupContext = {
   get multiple() {
     return props.multiple
   },
-  register: ({ value, disabled }) => sel.register({ value, disabled }),
+  register,
   unregister: id => sel.unregister(id),
   toggle,
   isOpen,
@@ -110,25 +115,9 @@ provideExpansionPanelGroupContext(context)
 
 $t: panel.$tokens;
 
-// Static corners: neighbours meet small and the group is rounded at its ends,
-// with no shape change as panels open or close.
 .ui-expansion-panels {
   display: flex;
   flex-direction: column;
   gap: g($t, 'group.gap');
-
-  > .ui-expansion-panel {
-    border-radius: g($t, 'group.shape.inner');
-
-    &:first-child {
-      border-start-start-radius: g($t, 'group.shape.outer');
-      border-start-end-radius: g($t, 'group.shape.outer');
-    }
-
-    &:last-child {
-      border-end-start-radius: g($t, 'group.shape.outer');
-      border-end-end-radius: g($t, 'group.shape.outer');
-    }
-  }
 }
 </style>

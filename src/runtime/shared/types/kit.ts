@@ -86,6 +86,24 @@ export interface IMaterialKitTheme {
   semanticBlend?: boolean
 }
 
+/** CSS `font-family` stacks of the MD3 reference typefaces (`--md-ref-typeface-*`). */
+export interface ITypeface {
+  /** Display, headline and title-large. */
+  brand?: string
+  /** Title-medium/small, label and body. */
+  plain?: string
+  mono?: string
+}
+
+export interface IMaterialKitTypography {
+  typeface?: ITypeface
+  /**
+   * Stylesheet URLs with the `@font-face` rules to load: Google Fonts, an S3/CDN bucket
+   * or a path served from `public/`. `false` loads nothing. Defaults to Roboto.
+   */
+  fonts?: string[] | false
+}
+
 export interface MaterialKitOptions {
   /** Reserved keys are hinted; consumers may add their own named breakpoints. */
   breakpoints?: Partial<Record<BreakpointKey, string | number>> & Record<string, string | number>
@@ -94,7 +112,5 @@ export interface MaterialKitOptions {
   cookie?: Partial<ICookie>
   /** All theme-scoped configuration (palettes, defaults, semantic seeds). */
   theme?: IMaterialKitTheme
-  typography?: {
-    fontFamily?: string // Base font family
-  }
+  typography?: IMaterialKitTypography
 }

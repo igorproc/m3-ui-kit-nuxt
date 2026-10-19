@@ -19,24 +19,21 @@
       >*</span>
     </p>
 
-    <!-- The one picker. Hidden: the dropzone's button opens it, and the queue
-         already shows what was chosen, so a second field for it would only
-         repeat both. -->
-    <div hidden>
-      <MFileInput
-        ref="picker"
-        :model-value="model"
-        :accept="accept"
-        :multiple="multiple"
-        :max-files="maxFiles"
-        :max-size="maxSize"
-        :required="required"
-        :disabled="disabled"
-        :readonly="readonly"
-        @select="files => addFiles(files, 'picker')"
-        @reject="onReject"
-      />
-    </div>
+    <!-- The one picker: the dropzone's button opens it, the queue shows what
+         was chosen. It holds every file of the model, so `required` and a
+         form see what the control holds. -->
+    <input
+      ref="picker"
+      class="ui-file-upload__picker"
+      type="file"
+      tabindex="-1"
+      aria-hidden="true"
+      :accept="accept"
+      :multiple="multiple"
+      :required="required"
+      :disabled="disabled || readonly"
+      @change="onPick"
+    >
 
     <slot
       name="dropzone"
@@ -71,7 +68,7 @@
       name="list"
       :entries="queue.entries.value"
     >
-      <FileUploadList :can-upload="Boolean(upload)">
+      <FileUploadList :can-upload="canUpload">
         <template
           v-if="$slots.item"
           #item="state"
@@ -95,10 +92,14 @@
       :start="queue.start"
       :entries="queue.entries.value"
     >
+      <!-- There while the queue has rows, off when nothing waits: finishing
+           the uploads does not pull the page up. With auto-start nothing ever
+           waits for it, so it is not offered. -->
       <MButton
-        v-if="messages.startAll && hasQueued"
+        v-if="messages.startAll && !autoStart && queue.entries.value.length"
         type="button"
-        :disabled="disabled || readonly || !upload"
+        class="ui-file-upload__start"
+        :disabled="disabled || readonly || !canUpload || !hasQueued"
         @click="queue.start()"
       >
         {{ messages.startAll }}
@@ -113,18 +114,19 @@
 </template>
 
 <script setup lang="ts" generic="TResult = unknown">
+import { onBeforeUnmount, onMounted } from 'vue'
 import type { FileRejection } from '#kit/shared/utils/file'
-import type { FileUploadEntry } from '#kit/composables/file-upload/useFileUploadQueue'
+import type { FileUploadEntry, FileUploadEvent, FileUploadQueue } from '#kit/composables/file-upload/useFileUploadQueue'
 import MButton from '#kit/components/ui/button/index.vue'
-import MFileInput from '#kit/components/ui/file-input/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import FileUploadDropzone from '#kit/components/fragments/file-upload/Dropzone.vue'
 import FileUploadList from '#kit/components/fragments/file-upload/List.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import { createFilePolicy } from '#kit/shared/utils/file'
-import { provideFileUploadContext } from '#kit/composables/file-upload/context'
+import { createFilePolicy, syncInputFiles } from '#kit/shared/utils/file'
+import { provideFileUploadContext } from '#kit/utils/file-upload/context'
 import { useFileUploadQueue } from '#kit/composables/file-upload/useFileUploadQueue'
 import { mFileUploadProps } from './props'
+import type { MFileUploadSlots } from './props'
 
 const props = defineProps(mFileUploadProps)
 const model = defineModel<File[]>({ default: () => [] })
@@ -135,49 +137,46 @@ const emit = defineEmits<{
   (event: 'remove', file: File): void
   (event: 'complete'): void
 }>()
+defineSlots<MFileUploadSlots>()
 
 const labelId = useId()
 const hintId = useId()
-const picker = ref<{ open: () => void }>()
+const picker = ref<HTMLInputElement | null>(null)
 const lastRejection = ref<FileRejection>()
 const announcement = ref('')
-const messages = computed(() => props.messages)
 
+// One evaluation, against what is left of `maxFiles` once the model's files count.
 const policy = computed(() => createFilePolicy({
   accept: props.accept,
   maxFiles: props.maxFiles === undefined ? undefined : Math.max(0, props.maxFiles - model.value.length),
   maxSize: props.maxSize,
 }))
 
-// Every status change is said once, through one region that already exists:
-// "contract.pdf · Uploaded". Silent without a status word to say.
-function announce(entry: FileUploadEntry<TResult>) {
-  const word = props.messages.status?.[entry.status]
-  if (word) announcement.value = `${entry.file.name} · ${word}`
-}
-
-const queue = useFileUploadQueue<TResult>({
+// The app's queue outlives this component; without one, the component keeps
+// its own for as long as it is mounted.
+const queue: FileUploadQueue<TResult> = (props.queue as FileUploadQueue<TResult> | undefined) ?? useFileUploadQueue<TResult>({
   upload: props.upload as ((file: File, context: Parameters<NonNullable<typeof props.upload>>[1]) => Promise<TResult>) | undefined,
   concurrency: () => props.concurrency,
-  onStart: (entry) => {
-    announce(entry)
-    emit('start', entry)
-  },
-  onProgress: entry => emit('progress', entry),
-  onSuccess: (entry) => {
-    announce(entry)
-    emit('success', entry)
-  },
-  onError: (entry) => {
-    announce(entry)
-    emit('error', entry)
-  },
-  onCancel: (entry) => {
-    announce(entry)
-    emit('cancel', entry)
-  },
-  onComplete: () => emit('complete'),
 })
+const canUpload = computed(() => queue.canUpload)
+
+// Every status change is said once, through one region that already exists:
+// "contract.pdf · Uploaded". Silent without a status word to say.
+function onQueueEvent(event: FileUploadEvent, entry?: FileUploadEntry<TResult>) {
+  if (event === 'complete') {
+    emit('complete')
+    return
+  }
+  if (!entry) return
+  if (event !== 'progress') {
+    const word = props.messages.status?.[entry.status]
+    if (word) announcement.value = `${entry.file.name} · ${word}`
+  }
+  emit(event, entry)
+}
+
+const unsubscribe = queue.subscribe(onQueueEvent)
+onBeforeUnmount(unsubscribe)
 
 // A file read back through reactive state may come wrapped in a proxy where
 // the DOM `File` has no string tag of its own (test DOMs); identity is the
@@ -194,7 +193,7 @@ const rejectionText = computed(() => {
 })
 
 function openPicker() {
-  if (!props.disabled && !props.readonly) picker.value?.open()
+  if (!props.disabled && !props.readonly) picker.value?.click()
 }
 
 function onReject(rejection: FileRejection) {
@@ -202,7 +201,15 @@ function onReject(rejection: FileRejection) {
   emit('reject', rejection)
 }
 
-function addFiles(files: readonly File[], _source: 'picker' | 'drop') {
+// Uploads run in the browser only: on the server nothing starts, so the HTML
+// shows the rows waiting and the client takes it from there once mounted.
+const mounted = ref(false)
+
+function startNew(added: readonly FileUploadEntry<TResult>[]) {
+  if (added.length && props.autoStart && mounted.value) queue.start()
+}
+
+function addFiles(files: readonly File[]) {
   if (props.disabled || props.readonly) return
   const result = policy.value.evaluate(files)
   result.rejected.forEach(onReject)
@@ -213,7 +220,17 @@ function addFiles(files: readonly File[], _source: 'picker' | 'drop') {
   if (!added.length) return
   model.value = [...model.value, ...added.map(entry => entry.file)]
   emit('add', added.map(entry => entry.file))
-  if (props.autoStart) queue.start()
+  startNew(added)
+}
+
+function syncPicker() {
+  if (import.meta.client && picker.value) syncInputFiles(picker.value, model.value.map(file => toRaw(file)))
+}
+
+function onPick() {
+  addFiles([...picker.value?.files ?? []])
+  // A refused pick leaves the model as it was; the picker goes back to it.
+  syncPicker()
 }
 
 function remove(id: string) {
@@ -232,7 +249,7 @@ provideFileUploadContext({
   label: computed(() => props.label),
   hint: computed(() => props.hint),
   hintId: computed(() => props.hint ? hintId : undefined),
-  messages,
+  messages: computed(() => props.messages),
   addFiles,
   openPicker,
   start: queue.start,
@@ -249,9 +266,15 @@ watch(model, (files) => {
   for (const entry of queue.entries.value) {
     if (!files.some(file => sameFile(file, entry.file))) queue.remove(entry.id)
   }
-  const added = queue.add(files)
-  if (added.length && props.autoStart) queue.start()
+  startNew(queue.add(files))
 }, { immediate: true })
+
+watch([model, picker], syncPicker, { flush: 'post' })
+
+onMounted(() => {
+  mounted.value = true
+  if (props.autoStart && hasQueued.value) queue.start()
+})
 
 if (import.meta.dev && !props.label) {
   console.warn('[m-file-upload] has no accessible name: pass `label`.')

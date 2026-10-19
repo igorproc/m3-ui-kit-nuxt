@@ -7,7 +7,7 @@
  * appropriate button/link component.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import type { MShape, MSize, MVariant } from '#kit/shared/types/props'
+import type { MShape, MVariant } from '#kit/shared/types/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
 
 /** MD3 surface presets meaningful for an identity surface. */
@@ -19,21 +19,9 @@ export type MAvatarShape = Extract<MShape, 'full' | 'large' | 'medium' | 'small'
 /** Avatar scale: the kit's density steps at 24 / 40 / 56. */
 export type MAvatarDensity = MFieldDensity
 
-/** Retired `size` → the `density` step that replaced it. */
-export const AVATAR_SIZE_TO_DENSITY: Record<MSize, MAvatarDensity> = {
-  sm: 'compact',
-  md: 'default',
-  lg: 'comfortable',
-}
-
 export const mAvatarProps = {
   /** Box, icon and initials step: 24 / 40 / 56. */
   density: { type: String as PropType<MAvatarDensity>, default: 'default' },
-  /**
-   * @deprecated Use `density`: `sm` → `compact`, `md` → `default`,
-   * `lg` → `comfortable`. Still honoured for one release.
-   */
-  size: { type: String as PropType<MSize>, default: undefined },
   /** Image source. An empty or failing source enters the fallback pipeline. */
   src: { type: String, default: undefined },
   /**

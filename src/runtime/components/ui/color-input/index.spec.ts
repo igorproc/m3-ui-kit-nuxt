@@ -144,4 +144,18 @@ describe('m-color-input', () => {
 
     expect(open.value).toBe(false)
   })
+
+  it('draws no second surface inside its popover', async () => {
+    const { mount } = mountInput({ modelValue: '#6750a4', pickerLabel: 'Pick a colour' })
+    const wrapper = await mount()
+
+    await wrapper.find('.ui-color-input__trigger').trigger('click')
+    await nextTick()
+    expect(document.querySelector('.ui-color-picker')!.classList.contains('ui-color-picker--hosted')).toBe(true)
+  })
+
+  it('takes no props it would ignore', async () => {
+    expect(Object.keys(MColorInput.props ?? {})).not.toContain('autocomplete')
+    expect(Object.keys(MColorInput.props ?? {})).not.toContain('loading')
+  })
 })

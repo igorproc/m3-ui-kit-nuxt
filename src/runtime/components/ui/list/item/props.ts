@@ -1,8 +1,9 @@
 /**
  * Public prop surface for `<MListItem>`.
  *
- * `disabled` is the only state: a row has no loading state (`loading` is
- * retired). The remaining props are list-item-specific content/behaviour fields.
+ * `disabled` is the only state: a row has no loading state — progress goes in
+ * the `#trailing` slot. The remaining props are list-item-specific content and
+ * behaviour fields.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
@@ -20,22 +21,23 @@ export type MListItemLines = 1 | 2 | 3 | 'auto'
  */
 export type MListItemDensity = MFieldDensity
 
+/**
+ * Element of the row. `button` and `a` are interactive by themselves; any
+ * other element (a `label` around a checkbox, say) is accepted as is.
+ */
+export type MListItemTag = 'div' | 'li' | 'button' | 'a' | 'label' | (string & {})
+
 /** `<MListItem>` props. */
 export const mListItemProps = {
   /** Prevents interaction and dims every part of the row. */
   disabled: { type: Boolean, default: false },
-  /**
-   * @deprecated A row has no loading state; show progress in the `#trailing`
-   * slot. Accepted and ignored for one release.
-   */
-  loading: { type: Boolean, default: undefined },
   headline: { type: String, default: '' },
   supportingText: { type: String, default: '' },
   overline: { type: String, default: '' },
   leadingIcon: { type: String, default: '' },
   trailingIcon: { type: String, default: '' },
   trailingSupportingText: { type: String, default: '' },
-  tag: { type: String, default: 'div' },
+  tag: { type: String as PropType<MListItemTag>, default: 'div' },
   to: { type: [String, Object] as PropType<NuxtLinkProps['to']>, default: undefined },
   interactive: { type: Boolean, default: false },
   /**
@@ -59,3 +61,18 @@ export const mListItemProps = {
 }
 
 export type MListItemProps = ExtractPublicPropTypes<typeof mListItemProps>
+
+/** Slots of `<MListItem>`. */
+export interface MListItemSlots {
+  /** Leading media: an icon, an `MAvatar`, an image (56) or a video (100 × 56). */
+  'leading'?: () => unknown
+  'overline'?: () => unknown
+  'headline'?: () => unknown
+  /** Content between the headline and the supporting text. */
+  'default'?: () => unknown
+  'supporting'?: () => unknown
+  /** Short trailing text — a count or a time — before `#trailing`. */
+  'trailing-supporting'?: () => unknown
+  /** Trailing icon or control (a checkbox, a switch, a progress indicator). */
+  'trailing'?: () => unknown
+}

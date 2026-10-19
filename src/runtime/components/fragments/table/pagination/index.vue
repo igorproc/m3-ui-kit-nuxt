@@ -38,7 +38,10 @@
         :disabled="loading || range.page <= 1"
         @click="emit('update:currentPage', range.page - 1)"
       >
-        <MIcon :name="ICONS.chevronLeft" />
+        <MIcon
+          class="ui-table__page-icon"
+          :name="ICONS.chevronLeft"
+        />
       </MButtonIcon>
 
       <MButtonIcon
@@ -46,7 +49,10 @@
         :disabled="loading || range.page >= range.pageCount"
         @click="emit('update:currentPage', range.page + 1)"
       >
-        <MIcon :name="ICONS.chevronRight" />
+        <MIcon
+          class="ui-table__page-icon"
+          :name="ICONS.chevronRight"
+        />
       </MButtonIcon>
     </div>
   </div>
@@ -98,7 +104,7 @@ function onPageSize(event: Event) {
 @use '#kit/assets/stylesheet/components/table/index' as t;
 
 .ui-table {
-  $t: material-map(t.$tokens, 'md-table');
+  $t: t.$tokens;
 
   &__pagination {
     display: flex;
@@ -178,6 +184,17 @@ function onPageSize(event: Event) {
       color: g($t, 'pagination.select.color');
       pointer-events: none;
     }
+
+    // The arrow is part of the select's face: it dims with it.
+    &-select:disabled + #{&}-icon {
+      color: g($t, 'pagination.select.icon.disabled.color');
+    }
+  }
+
+  // Previous and next follow the reading direction: in RTL the previous page
+  // lies to the right, so both chevrons turn around.
+  &__page-icon:dir(rtl) {
+    scale: -1 1;
   }
 }
 </style>

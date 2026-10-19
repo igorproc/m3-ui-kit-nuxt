@@ -5,39 +5,51 @@
 // BUTTON M3 COMPONENT TOKENS (COLLECTION)
 // ==========================================
 
+$on-surface: map.get($theme-color-link, on-surface);
+
+// The kit's hairline: `1rem` follows the vw root and fades below a device pixel on a narrow screen.
+$hairline: max(1px, 1rem);
+
+// One density step. `round` is half the step's height: the drawn corner of a
+// "full" shape, written out so a shape that morphs or meets a small corner
+// has a finite end (a browser clamps `full = 999rem` to half the height, so a
+// spring towards it shows only its last per mille, and a mixed corner set is
+// scaled down to nothing). `square` is the corner of `shape="square"` and of
+// a selected toggle. Outlined pays its edge back in padding, so it keeps the
+// size of the other variants.
+@function button-step($height, $padding, $gap, $icon, $square, $font) {
+  @return (
+    height: $height,
+    round: calc($height / 2),
+    padding: $padding,
+    outlined: (padding: calc($padding - $hairline)),
+    gap: $gap,
+    icon: $icon,
+    square: $square,
+    font: $font,
+  );
+}
+
+// One split step: the leading button's end padding (an outlined edge paid
+// back in it) and the trailing button's box and icon.
+@function split-step($end, $width, $icon) {
+  @return (
+    leading: (end: $end, outlined: (end: calc($end - $hairline))),
+    trailing: (width: $width, icon: $icon),
+  );
+}
+
 $tokens: (
   container: (
     shape: map.get($theme-shape-link, full),
-    outline: (width: 1rem),
+    outline: (width: $hairline),
   ),
 
-  // The kit's three density steps take M3 Expressive XS / S / M. `square` is the
-  // corner of `shape="square"` and of a selected toggle at that step.
+  // The kit's three density steps take M3 Expressive XS / S / M.
   density: (
-    compact: (
-      height: 32rem,
-      padding: spacing(12),
-      gap: spacing(4),
-      icon: 20rem,
-      square: map.get($theme-shape-link, medium),
-      font: 'label-large',
-    ),
-    default: (
-      height: 40rem,
-      padding: spacing(16),
-      gap: spacing(8),
-      icon: 20rem,
-      square: map.get($theme-shape-link, medium),
-      font: 'label-large',
-    ),
-    comfortable: (
-      height: 56rem,
-      padding: spacing(24),
-      gap: spacing(8),
-      icon: 24rem,
-      square: map.get($theme-shape-link, large),
-      font: 'title-medium',
-    ),
+    compact: button-step(32rem, spacing(12), spacing(4), 20rem, map.get($theme-shape-link, medium), 'label-large'),
+    default: button-step(40rem, spacing(16), spacing(8), 20rem, map.get($theme-shape-link, medium), 'label-large'),
+    comfortable: button-step(56rem, spacing(24), spacing(8), 24rem, map.get($theme-shape-link, large), 'title-medium'),
   ),
 
   // Pointer target of a button drawn smaller than M3's 48.
@@ -58,16 +70,23 @@ $tokens: (
     elevated: (rest: elevation(1), hover: elevation(2), pressed: elevation(1)),
   ),
 
+  // Every role disables to the same on-surface tints (M3 `*ButtonTokens.Disabled*`).
+  disabled: (
+    container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
+    content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
+    outline: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
+  ),
+
   // MIconButton (and an MButton with only an icon): the height is the density
   // step's, the width one of M3's three. A selected round button takes the
-  // step's square corner (as MButton does); a selected square one turns round.
+  // step's square corner (as MButton does); a selected square one turns round
+  // (the step's `round`).
   icon-button: (
     density: (
       compact: (icon: 20rem, width: (narrow: 28rem, default: 32rem, wide: 40rem)),
       default: (icon: 24rem, width: (narrow: 32rem, default: 40rem, wide: 52rem)),
       comfortable: (icon: 24rem, width: (narrow: 48rem, default: 56rem, wide: 72rem)),
     ),
-    selected: (square: map.get($theme-shape-link, full)),
   ),
 
   // MSplitButton: two buttons a gap apart, rounded small where they meet. The
@@ -77,9 +96,9 @@ $tokens: (
     inner: map.get($theme-shape-link, extra-small),
     min-width: spacing(48),
     density: (
-      compact: (leading: (end: calc(#{spacing(8)} + #{spacing(2)})), trailing: (width: 48rem, icon: 22rem)),
-      default: (leading: (end: spacing(12)), trailing: (width: 48rem, icon: 22rem)),
-      comfortable: (leading: (end: spacing(24)), trailing: (width: 56rem, icon: 26rem)),
+      compact: split-step(calc(#{spacing(8)} + #{spacing(2)}), 48rem, 22rem),
+      default: split-step(spacing(12), 48rem, 22rem),
+      comfortable: split-step(spacing(24), 56rem, 26rem),
     ),
     menu: (min-width: 150rem),
   ),

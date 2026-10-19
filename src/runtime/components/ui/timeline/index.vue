@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { createTimelineContext, provideTimelineContext } from '#kit/composables/timeline/context'
+import { createTimelineContext, provideTimelineContext } from './context'
 import { mTimelineProps } from './props'
 
 const props = defineProps(mTimelineProps)
@@ -21,11 +21,7 @@ provideTimelineContext(createTimelineContext({
 </script>
 
 <style lang="scss">
-@use '#kit/assets/stylesheet/components/timeline/index' as t;
-
 .ui-timeline {
-  $t: material-map(t.$tokens, 'md-timeline');
-
   // Items collapse `alternate` against the timeline's own width, not the
   // window's (`item/index.vue`).
   container: ui-timeline / inline-size;
@@ -34,13 +30,5 @@ provideTimelineContext(createTimelineContext({
   margin: 0;
   padding: 0;
   list-style: none;
-
-  // The space after an item is the item's own padding, so the rail runs
-  // through it; the last item has nothing to connect to.
-  @each $step in ('compact', 'default', 'comfortable') {
-    &--density-#{$step} > .ui-timeline-item:not(:last-child) {
-      padding-block-end: g($t, 'density.#{$step}.gap');
-    }
-  }
 }
 </style>

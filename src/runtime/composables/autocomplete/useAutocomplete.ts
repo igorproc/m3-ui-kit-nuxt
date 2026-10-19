@@ -9,7 +9,9 @@
  *
  * - **the filter** — which rows the query leaves standing;
  * - **the draft** — what the input shows while the user types, which is not the
- *   committed value and is put back on blur, Escape or Tab;
+ *   committed value and is put back on blur, Escape or Tab. The query is only
+ *   what was typed: a committed title in the box is not a search, so reopening
+ *   a field with a value lists everything, with the value ticked;
  * - **composition** — an IME's Enter belongs to the IME, not to the listbox.
  *
  * The built-in filter compares without case and without diacritics: "Zurich"
@@ -59,6 +61,8 @@ export interface UseAutocompleteOptions<TItem extends DropdownItemBase, TValue> 
   }
   /** The validation adapter is checking the value: the combobox reports itself busy. */
   pending?: () => boolean
+  /** Whether the panel would show anything (rows, a hint, a message); it does not open onto nothing. */
+  canOpen?: () => boolean
 }
 
 export interface UseAutocompleteReturn<TItem extends DropdownItemBase, TValue>
@@ -108,6 +112,8 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     })
   }
 
+  const canOpen = () => options.canOpen?.() ?? true
+
   const control = useDropdownControl<TItem, TValue>({
     props,
     model,
@@ -116,11 +122,14 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     draft: () => draft.value,
     autoSelectFirst: () => props.autoSelectFirst,
     pending: options.pending,
+    canOpen,
+    // With nothing typed the list is the whole list, and it opens on the value.
+    landOnValue: () => !search.value,
     visible: filterRows,
     onSelect: (entry) => {
-      // Multiple keeps collecting, so the query is spent; single commits the
+      // Multiple keeps collecting, so the query is spent; single shows the
       // chosen title as the new resting text.
-      setQuery(props.multiple ? '' : entry.title)
+      commit(props.multiple ? '' : entry.title)
       emit('select', entry.item)
     },
     onRemove: entry => emit('remove', entry.item),
@@ -130,14 +139,21 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     onDismiss: restore,
   })
 
+  /** What the user typed: the box and the query are the same text. */
   function setQuery(value: string) {
     draft.value = value
     search.value = value
   }
 
+  /** A committed title in the box is the value speaking, not a query. */
+  function commit(title: string) {
+    draft.value = title
+    search.value = ''
+  }
+
   /** Put back the committed value: a draft that was never chosen is not a value. */
   function restore() {
-    setQuery(props.multiple ? '' : control.displayTitle.value)
+    commit(props.multiple ? '' : control.displayTitle.value)
   }
 
   function onInput(value: string) {
@@ -145,7 +161,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     if (composing.value || props.disabled || props.readonly) return
     // Below the minimum there has been no search yet, so the panel would only
     // claim "no results" for a query nobody ran.
-    if (queryReady.value) open.value = true
+    if (queryReady.value && canOpen()) open.value = true
     else control.closePanel()
   }
 
@@ -175,6 +191,11 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
   const inputAttrs = computed<InputHTMLAttributes>(() => ({
     ...control.inputAttrs.value,
     onPointerdown: () => { pressed = true },
+    // A press on a field that already has focus (after Escape, say) opens it
+    // too; the focus watcher below only sees the press that brought focus.
+    onClick: () => {
+      if (!open.value && opensOnFocus(true) && queryReady.value) control.openPanel()
+    },
     onCompositionstart: () => { composing.value = true },
     // An IME commits with Enter; the listbox must not read that keystroke.
     onCompositionend: () => { composing.value = false },
@@ -191,7 +212,7 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     pressed = false
 
     if (value) {
-      if (opensOnFocus(byPointer) && queryReady.value && !props.disabled && !props.readonly) open.value = true
+      if (opensOnFocus(byPointer) && queryReady.value && canOpen() && !props.disabled && !props.readonly) open.value = true
       return
     }
 

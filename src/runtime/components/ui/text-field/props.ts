@@ -5,19 +5,20 @@
  * object — the canonical pattern for the kit's `propsFactory`-based components.
  *
  * `variant` is the field's surface-style (MD3 `filled | outlined`); `disabled`
- * is a single-source-of-truth prop via `makeStateProps` (no writable model),
- * and `readonly` comes from `makeReadonlyProps`.
+ * is a plain prop (no writable model), and `readonly` comes from
+ * `makeReadonlyProps`. A field has no `loading` of its own: a composite that
+ * loads (the dropdown's options) declares it.
  */
-import type { ExtractPublicPropTypes, InputHTMLAttributes, PropType } from 'vue'
-import { makeReadonlyProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
+import type { ExtractPublicPropTypes, InputHTMLAttributes, PropType, VNode } from 'vue'
+import { makeReadonlyProps, makeVariantProps } from '#kit/shared/utils/props'
 import type { MShape } from '#kit/shared/types/props'
 
 /**
- * Native input type. `number` is retired: the model is a string, and the
- * browser's wheel and arrows change it behind the field's back — a number
- * belongs to `<MNumberInput>`. It keeps working, with a dev warning.
+ * Native input type. There is no `number`: the model is a string, and the
+ * browser's wheel and arrows would change it behind the field's back — a
+ * number belongs to `<MNumberInput>`.
  */
-export type MTextFieldType = 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search'
+export type MTextFieldType = 'text' | 'email' | 'password' | 'tel' | 'url' | 'search'
 export type MTextFieldVariant = 'filled' | 'outlined' | 'underline'
 
 /**
@@ -27,18 +28,6 @@ export type MTextFieldVariant = 'filled' | 'outlined' | 'underline'
  * top would dome a short box.
  */
 export type MFieldShape = Extract<MShape, 'none' | 'extra-small' | 'medium' | 'large' | 'full'>
-
-/** @deprecated Retired name of {@link MFieldShape}; use `shape`. */
-export type MTextFieldRounded = 'sharp' | 'small' | 'medium' | 'large' | 'pill'
-
-/** How a retired `rounded` value maps onto the `shape` axis during its grace release. */
-export const RETIRED_ROUNDED_TO_SHAPE: Record<MTextFieldRounded, MFieldShape> = {
-  sharp: 'none',
-  small: 'extra-small',
-  medium: 'medium',
-  large: 'large',
-  pill: 'full',
-}
 
 /**
  * Where the label sits. Independent of `variant`: the shape draws the boundary,
@@ -85,7 +74,8 @@ export const fieldDensityProp = {
 }
 
 export const mFieldProps = {
-  ...makeStateProps(),
+  /** Prevents interaction and applies the disabled visual state. */
+  disabled: { type: Boolean, default: false },
   ...makeReadonlyProps(),
   ...makeVariantProps({ variant: 'filled' }),
   // Field variant is its own axis (filled | outlined | underline), narrower
@@ -93,12 +83,7 @@ export const mFieldProps = {
   variant: { type: String as PropType<MTextFieldVariant>, default: 'filled' },
   /** Corner of the container on the shape scale. Independent of `variant`. */
   shape: { type: String as PropType<MFieldShape>, default: 'extra-small' },
-  /**
-   * @deprecated Retired: use `shape` (`sharp` → `none`, `small` → `extra-small`,
-   * `pill` → `full`). Still applied for one release, with a dev warning.
-   */
-  rounded: { type: String as PropType<MTextFieldRounded>, default: undefined },
-  // Label placement, independent of `variant`. `float` keeps the shipped look.
+  /** Where the label sits, independent of `variant`. */
   labelPlacement: { type: String as PropType<MFieldLabelPlacement>, default: 'float' },
   path: { type: String, default: undefined },
   name: { type: String, default: undefined },
@@ -113,15 +98,33 @@ export const mFieldProps = {
 }
 
 /**
- * The two elements `<MTextField>` exposes to a composite field built on it.
- *
- * A popover anchors to `control`, not to the component root: the root's box
- * also holds the label and the support line, so anchoring to it would drop the
- * surface below the helper text. Focus belongs to `input`.
+ * The two elements a field exposes to a composite or a consumer through its
+ * `ref`. A popover anchors to `control`, not to the component root: the root's
+ * box also holds the label and the support line, so anchoring to it would drop
+ * the surface below the helper text. Focus belongs to `input`.
  */
-export interface MFieldParts {
+export interface MFieldParts<Input extends HTMLElement = HTMLInputElement> {
   control: HTMLElement | null
-  input: HTMLInputElement | null
+  input: Input | null
+}
+
+/** What the support line's slots receive. */
+export interface MFieldMessageSlotProps {
+  /** The error when the field is invalid, the helper text otherwise. */
+  message: string | undefined
+}
+
+export interface MTextFieldSlots {
+  /** Before the value, inside the box — usually a 24rem icon. */
+  'prepend'?: () => VNode[]
+  /** After the value, inside the box — an icon or an icon button. */
+  'append'?: () => VNode[]
+  /** Inline content before the value on its row — a composite's chips. */
+  'leading-content'?: () => VNode[]
+  /** Replaces the error text in the support line; the glyph is then the slot's. */
+  'error'?: (props: MFieldMessageSlotProps) => VNode[]
+  /** Replaces the helper text in the support line. */
+  'helper'?: (props: MFieldMessageSlotProps) => VNode[]
 }
 
 export const mTextFieldProps = {
@@ -134,11 +137,6 @@ export const mTextFieldProps = {
   prefix: { type: String, default: undefined },
   /** Text fixed after the value (`@gmail.com`, `kg`). Shown and announced with the field, never part of the model. */
   suffix: { type: String, default: undefined },
-  /**
-   * @deprecated Retired: the label no longer moves, so nothing has to hold it
-   * up. Ignored, with a dev warning, for one release.
-   */
-  populated: { type: Boolean, default: undefined },
 }
 
 export type MTextFieldProps = ExtractPublicPropTypes<typeof mTextFieldProps>

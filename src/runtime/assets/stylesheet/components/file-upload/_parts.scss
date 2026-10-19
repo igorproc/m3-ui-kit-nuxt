@@ -35,6 +35,10 @@
       }
     }
 
+    &--accepting {
+      border-style: g($t, 'dropzone.accepting.border.style');
+    }
+
     // Disabled recedes; read-only keeps its ink — the text stays readable, only
     // the drop and the button are off.
     &--disabled {
@@ -61,6 +65,13 @@
     font-size: g($t, 'dropzone.icon.size');
   }
 
+  // While something is dragged over the zone its button takes the zone's ink:
+  // the button's own role would sit on the zone's container colour.
+  &__dropzone--accepting &__choose.ui-button,
+  &__dropzone--refusing &__choose.ui-button {
+    color: inherit;
+  }
+
   &__hint {
     @include typescale(g($t, 'dropzone.hint.typography'));
   }
@@ -68,6 +79,8 @@
 
 @mixin queue($t) {
   &__list {
+    // The containing block of a row that leaves: it fades out of the flow.
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: g($t, 'list.gap');
@@ -79,7 +92,34 @@
     scroll-padding-block: g($t, 'list.scroll-padding');
     list-style: none;
 
-    @include use-scrollbar;
+    &--empty {
+      display: none;
+    }
+
+    &--settling {
+      overflow-y: visible;
+    }
+  }
+
+  // Rows arrive and leave by fading; a leaving row is out of the flow at once,
+  // so the rows after it slide up (transform) instead of jumping when it goes.
+  &-row-enter-active,
+  &-row-leave-active {
+    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  &-row-leave-active {
+    position: absolute;
+    inset-inline: 0;
+  }
+
+  &-row-move {
+    transition: transform g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  &-row-enter-from,
+  &-row-leave-to {
+    opacity: 0;
   }
 
   &__item {
@@ -113,10 +153,19 @@
   }
 
   &__item-content {
+    position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
     min-width: 0;
+  }
+
+  // Outranks the progress bar's own `position: relative`: in a production build
+  // its sheet may load after this one.
+  &__item-content &__item-progress {
+    position: absolute;
+    inset-block-start: g($t, 'item.progress.top');
+    inset-inline: 0;
   }
 
   // Middle ellipsis: the stem gives way, the extension does not.
@@ -150,22 +199,20 @@
     gap: g($t, 'item.actions.gap');
   }
 
+  &__start {
+    align-self: start;
+  }
+
+  // The picker is a native input the dropzone's button opens; it is never
+  // seen, but it stays focusable, so a form can point at it when it is required.
+  &__picker {
+    @include sr-only;
+  }
+
   &__empty {
     margin: 0;
     color: g($t, 'empty.color');
 
     @include typescale(g($t, 'empty.typography'));
   }
-}
-
-// Rows arrive and leave by fading, on the motion tokens; reduced motion is
-// shortened globally.
-.ui-file-upload-row-enter-active,
-.ui-file-upload-row-leave-active {
-  transition: opacity var(--sys-motion-duration-short-4) var(--sys-motion-easing-standard);
-}
-
-.ui-file-upload-row-enter-from,
-.ui-file-upload-row-leave-to {
-  opacity: 0;
 }

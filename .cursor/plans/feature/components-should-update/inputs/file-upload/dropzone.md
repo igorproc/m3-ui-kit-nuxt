@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MFileUpload](index.md)) · Код: `src/runtime/components/fragments/file-upload/Dropzone.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: состояния accepting / refusing / inactive различимы не только цветом и в forced colors, подсказка ограничений связана `aria-describedby`, единственная кнопка — «выбрать».</implementation-status>
+<implementation-status state="done" updated="2026-10-19">M3-polish (2026-10-19): accepting — сплошная рамка (не только цвет), кнопка берёт краску зоны при перетаскивании, неактивная зона показывает dropEffect none, hairline max(1px, 1rem).</implementation-status>
 
 ## Вердикт
 

@@ -88,3 +88,31 @@ test.describe('MFileInput', () => {
     await expect(root(page.getByTestId('icon-only')).getByRole('button', { name: 'Attachment with an icon button' })).toBeVisible()
   })
 })
+
+test.describe('MFileInput · the field is the picker (M3-polish)', () => {
+  for (const how of ['click', 'Enter', 'Space'] as const) {
+    test(`${how} on the field opens the file chooser`, async ({ page }) => {
+      await openFixture(page, 'file-input/matrix')
+      const input = page.getByTestId('empty-filled')
+      const chooser = page.waitForEvent('filechooser', { timeout: 3000 })
+
+      if (how === 'click') {
+        const box = (await root(input).locator('.ui-text-field__control').boundingBox())!
+        await page.mouse.click(box.x + 8, box.y + box.height / 2)
+      } else {
+        await input.focus()
+        await page.keyboard.press(how)
+      }
+
+      await chooser
+    })
+  }
+
+  test('a required field with a file from its model passes the form; an empty one does not', async ({ page }) => {
+    await openFixture(page, 'file-input/cases')
+    const missing = (name: string) => page.locator(`input[type="file"][name="${name}"]`).evaluate(el => (el as HTMLInputElement).validity.valueMissing)
+
+    await expect.poll(() => missing('given')).toBe(false)
+    expect(await missing('empty')).toBe(true)
+  })
+})

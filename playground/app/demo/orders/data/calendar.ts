@@ -29,20 +29,3 @@ export function dayCount(from: string, to: string): number {
 export function dayRange(from: string, to: string): string[] {
   return Array.from({ length: Math.max(0, dayCount(from, to)) }, (_, index) => shiftDay(from, index))
 }
-
-/** The kit's date pickers work in local `Date`s: a day key becomes local midnight of that day. */
-export function toPickerDate(key: string): Date {
-  const [year = 1970, month = 1, day = 1] = key.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-export function fromPickerDate(value: Date | string | number | null | undefined): string | null {
-  if (value === null || value === undefined) return null
-
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}

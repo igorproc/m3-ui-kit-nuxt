@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import type { Locator } from '@playwright/test'
 import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { drawnRadii, traceCorner } from '../button/motion'
 
 const radius = (locator: Locator) => locator.evaluate(el => getComputedStyle(el).borderTopRightRadius)
 
@@ -86,6 +87,47 @@ test.describe('MButtonGroup', () => {
     expect(await radius(day)).toBe(inner)
     expect((await day.boundingBox())!.width).toBeCloseTo(width, 0)
     await page.mouse.up()
+  })
+
+  // Q-1: a 999rem end beside an 8 corner scaled the corner set down until the 8
+  // drew as 0.16; the ends and the pill are now the step's half height.
+  test('ends, inner corners and the pill are drawn at their sizes on every step', async ({ page }) => {
+    await openFixture(page, 'button-group/matrix')
+
+    const filled = page.getByTestId('group-filled')
+    const day = await drawnRadii(filled.getByRole('radio', { name: 'Day' }))
+    const week = await drawnRadii(filled.getByRole('radio', { name: 'Week' }))
+    const year = await drawnRadii(filled.getByRole('radio', { name: 'Year' }))
+    expect(day.tl).toBeCloseTo(20, 0)
+    expect(day.tr).toBeCloseTo(8, 0)
+    expect(week.tl).toBeCloseTo(20, 0)
+    expect(week.tr).toBeCloseTo(20, 0)
+    expect(year.tl).toBeCloseTo(8, 0)
+    expect(year.br).toBeCloseTo(20, 0)
+
+    for (const [density, half] of [['compact', 16], ['comfortable', 28]] as const) {
+      const last = await drawnRadii(page.getByTestId(`group-density-${density}`).getByRole('radio', { name: 'Year' }))
+      expect(last.tl, density).toBeCloseTo(8, 0)
+      expect(last.tr, density).toBeCloseTo(half, 0)
+    }
+  })
+
+  test('a newly selected button grows into its pill frame by frame', async ({ page }) => {
+    await openFixture(page, 'button-group/matrix')
+    const day = page.getByTestId('group-filled').getByRole('radio', { name: 'Day' })
+
+    const motion = await traceCorner(page, '[data-test="group-filled"] .ui-button:nth-child(1)', () => day.click(), 'tr')
+    expect(motion.toRem - motion.fromRem).toBeGreaterThan(10)
+    expect(motion.lagMs!).toBeLessThanOrEqual(34)
+    expect(motion.largestStepShare).toBeLessThan(0.5)
+  })
+
+  test('a selected label stays readable in forced colors', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' })
+    await openFixture(page, 'button-group/matrix')
+    const week = page.getByTestId('group-tonal').getByRole('radio', { name: 'Week' })
+
+    expect(await week.evaluate(el => getComputedStyle(el).forcedColorAdjust)).toBe('none')
   })
 
   test('buttons are 2 apart', async ({ page }) => {

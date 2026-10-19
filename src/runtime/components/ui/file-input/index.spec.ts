@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MFileInput from './index.vue'
 
@@ -74,7 +74,39 @@ describe('m-file-input', () => {
 
     setFiles(native.element as HTMLInputElement, [new File(['x'], 'note.txt', { type: 'text/plain' })])
     await native.trigger('change')
-    expect(wrapper.find('[role="alert"]').text()).toBe('')
+    // With no error bound by the consumer the line lives only while there is a
+    // refusal to show (support-line decision 2026-10-19).
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+  })
+
+  it('opens the picker from the field itself: a press, Enter or Space', async () => {
+    const wrapper = await mountSuspended(MFileInput, { props: { browseLabel: 'Browse' } })
+    const native = wrapper.find('input[type="file"]').element as HTMLInputElement
+    const picked = vi.spyOn(native, 'click').mockImplementation(() => {})
+
+    await wrapper.find('input.ui-text-field__input').trigger('click')
+    await wrapper.find('input.ui-text-field__input').trigger('keydown', { key: 'Enter' })
+    await wrapper.find('input.ui-text-field__input').trigger('keydown', { key: ' ' })
+    await wrapper.find('input.ui-text-field__input').trigger('keydown', { key: 'a' })
+
+    expect(picked).toHaveBeenCalledTimes(3)
+  })
+
+  it('does not open the picker from a read-only field', async () => {
+    const wrapper = await mountSuspended(MFileInput, { props: { readonly: true } })
+    const native = wrapper.find('input[type="file"]').element as HTMLInputElement
+    const picked = vi.spyOn(native, 'click').mockImplementation(() => {})
+
+    await wrapper.find('input.ui-text-field__input').trigger('click')
+    expect(picked).not.toHaveBeenCalled()
+  })
+
+  it('formats the size with the formatter of the app', async () => {
+    const wrapper = await mountSuspended(MFileInput, {
+      props: { showSize: true, modelValue: new File(['abc'], 'a.txt'), formatSize: (bytes: number) => `${bytes} байт` },
+    })
+
+    expect(field(wrapper).value).toBe('a.txt (3 байт)')
   })
 
   it('blocks browse and clear while readonly', async () => {

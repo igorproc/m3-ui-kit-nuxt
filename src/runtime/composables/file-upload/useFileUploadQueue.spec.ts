@@ -136,3 +136,52 @@ describe('useFileUploadQueue', () => {
     stop()
   })
 })
+
+describe('useFileUploadQueue · removal and listeners', () => {
+  it('removing a row nobody started is not a cancellation', () => {
+    const onCancel = vi.fn()
+    const heard: string[] = []
+    const scope = effectScope()
+    const queue = scope.run(() => useFileUploadQueue({ upload: () => new Promise(() => {}), concurrency: () => 1, onCancel }))!
+    queue.subscribe(event => heard.push(event))
+    const [first] = queue.add([file('a.txt')])
+
+    queue.remove(first!.id)
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(heard).not.toContain('cancel')
+    expect(queue.entries.value).toHaveLength(0)
+    scope.stop()
+  })
+
+  it('removing a running upload stops it, once', () => {
+    const heard: string[] = []
+    const scope = effectScope()
+    const queue = scope.run(() => useFileUploadQueue({ upload: () => new Promise(() => {}), concurrency: () => 1 }))!
+    queue.subscribe(event => heard.push(event))
+    const [first] = queue.add([file('a.txt')])
+    queue.start(first!.id)
+
+    queue.remove(first!.id)
+
+    expect(heard.filter(event => event === 'cancel')).toHaveLength(1)
+    expect(heard.filter(event => event === 'complete')).toHaveLength(1)
+    scope.stop()
+  })
+
+  it('stops telling a listener once it unsubscribes', () => {
+    const heard: string[] = []
+    const scope = effectScope()
+    const queue = scope.run(() => useFileUploadQueue({ upload: () => new Promise(() => {}), concurrency: () => 1 }))!
+    const off = queue.subscribe(event => heard.push(event))
+    const [first, second] = queue.add([file('a.txt'), file('b.txt')])
+
+    queue.start(first!.id)
+    off()
+    queue.start(second!.id)
+    queue.cancel(first!.id)
+
+    expect(heard).toEqual(['start'])
+    scope.stop()
+  })
+})

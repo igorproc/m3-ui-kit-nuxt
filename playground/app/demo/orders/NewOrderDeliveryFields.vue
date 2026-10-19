@@ -23,14 +23,10 @@
           placeholder="ДД.ММ.ГГГГ"
           error-pattern="Дата не похожа на ДД.ММ.ГГГГ"
           error-range="Доставляем в ближайшие 30 дней"
+          required
+          :error="Boolean(errors.date)"
+          :error-message="errors.date"
         />
-        <!-- MDatePicker has no error state of its own; the region stays mounted so it is announced. -->
-        <p
-          class="new-order-delivery__error"
-          role="alert"
-        >
-          {{ errors.date }}
-        </p>
       </div>
 
       <div class="new-order-delivery__time">
@@ -109,7 +105,7 @@ import { ref } from 'vue'
 import type { MFileUploadMessages } from '#kit/components/ui/file-upload/props'
 import type { FileUploadTaskContext } from '#kit/composables/file-upload/useFileUploadQueue'
 import type { MTimePickerMode } from '#kit/components/ui/time-picker/props'
-import { TODAY, shiftDay, toPickerDate } from './data/calendar'
+import { TODAY, shiftDay } from './data/calendar'
 import { PAYMENT_LABELS } from './data/model'
 import type { PaymentMethod } from './data/model'
 import type { NewOrderErrors } from './useNewOrderDraft'
@@ -126,8 +122,8 @@ const comment = defineModel<string>('comment', { required: true })
 const files = defineModel<File[]>('files', { required: true })
 
 const timeMode = ref<MTimePickerMode>('input')
-const minDate = toPickerDate(shiftDay(TODAY, 1))
-const maxDate = toPickerDate(shiftDay(TODAY, 30))
+const minDate = shiftDay(TODAY, 1)
+const maxDate = shiftDay(TODAY, 30)
 
 const PAYMENT_METHODS: PaymentMethod[] = ['card', 'cash', 'invoice']
 
@@ -184,13 +180,6 @@ function simulateUpload(_file: File, { signal, reportProgress }: FileUploadTaskC
 
   &__time {
     flex: 1 1 220rem;
-  }
-
-  &__error {
-    margin: 0;
-    color: var(--md-sys-color-error);
-
-    @include typescale('body-small');
   }
 
   &__payment {

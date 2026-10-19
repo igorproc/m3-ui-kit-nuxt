@@ -1,18 +1,16 @@
 <template>
-  <transition-group
-    name="ui-fab-menu-item"
-    tag="ul"
+  <ul
     role="list"
     class="ui-fab-menu__list"
-    appear
   >
     <li
       v-for="(item, index) in items"
       :key="item.value ?? index"
       class="ui-fab-menu__entry"
-      :style="{ '--ui-fab-stagger': items.length - 1 - index }"
+      :style="cascade(index)"
     >
       <button
+        v-ripple="!item.disabled"
         type="button"
         class="ui-fab-menu__item"
         :disabled="item.disabled"
@@ -26,7 +24,7 @@
         <span class="ui-fab-menu__label">{{ item.label }}</span>
       </button>
     </li>
-  </transition-group>
+  </ul>
 </template>
 
 <script setup lang="ts">
@@ -35,16 +33,26 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import type { MFabMenuItem } from '#kit/components/ui/fab-menu/props'
 
 /**
- * The default actions of `<MFabMenu>`: M3 pills in reading order, the one
- * nearest the FAB revealed first. Colour comes from the menu's role class.
+ * The default actions of `<MFabMenu>`: M3 pills in reading order. They open
+ * nearest the FAB first and close farthest first (M3 / Compose
+ * `FloatingActionButtonMenu`); the menu's open class drives both directions,
+ * so a reversal mid-way continues from where the actions are. Colour comes
+ * from the menu's role class.
  */
-defineProps({
+const props = defineProps({
   items: { type: Array as PropType<MFabMenuItem[]>, required: true },
 })
 
 const emit = defineEmits<{
   (e: 'select', item: MFabMenuItem): void
 }>()
+
+// The position of each action in the cascade, both ways: live per-item order,
+// the one runtime value the stylesheet cannot know.
+function cascade(index: number) {
+  const fromFab = props.items.length - 1 - index
+  return { '--ui-fab-enter': fromFab, '--ui-fab-leave': index }
+}
 </script>
 
 <style lang="scss">
@@ -56,6 +64,7 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
   $t: material-map(t.$tokens, 'md-fab-menu');
   $item-in: g($t, 'motion.item.duration') g($t, 'motion.item.easing');
   $item-out: g($t, 'motion.item.leave.duration') g($t, 'motion.item.leave.easing');
+  $stagger: g($t, 'motion.item.stagger');
 
   &__list {
     display: flex;
@@ -71,28 +80,32 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
     }
   }
 
-  // Staggered reveal: the action nearest the FAB leads.
+  // Closed, an action rests below its place and invisible; the open drawer
+  // brings it up. Each direction carries its own curve and cascade order.
   &__entry {
     display: flex;
     max-width: 100%;
+    opacity: 0;
+    translate: 0 g($t, 'motion.item.shift');
+    transition: opacity $item-out, translate $item-out;
+    transition-delay: calc(#{$stagger} * var(--ui-fab-leave, 0));
 
-    &.ui-fab-menu-item-enter-active {
+    .ui-fab-menu__drawer--open & {
+      opacity: 1;
+      translate: none;
       transition: opacity $item-in, translate $item-in;
-      transition-delay: calc(#{g($t, 'motion.item.stagger')} * var(--ui-fab-stagger, 0));
+      transition-delay: calc(#{$stagger} * var(--ui-fab-enter, 0));
     }
 
-    &.ui-fab-menu-item-leave-active {
-      transition: opacity $item-out, translate $item-out;
-    }
-
-    &.ui-fab-menu-item-enter-from,
-    &.ui-fab-menu-item-leave-to {
-      opacity: 0;
-      translate: 0 g($t, 'motion.item.shift');
+    // Reduced motion keeps the fade and drops the travel.
+    @media (prefers-reduced-motion: reduce) {
+      translate: none;
     }
   }
 
   &__item {
+    position: relative;
+    isolation: isolate;
     display: inline-flex;
     align-items: center;
     gap: g($t, 'item.gap');
@@ -109,13 +122,37 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
 
     @include typescale(g($t, 'item.font'));
 
+    // State layer in the action's content colour; pressed is the ripple's.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: currentcolor;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @include can-hover {
+      &:hover:not(:disabled)::before {
+        opacity: g($t, 'state.hover');
+      }
+    }
+
     &:focus-visible {
       @include focus-ring;
+
+      &::before {
+        opacity: g($t, 'state.focus');
+      }
     }
 
     &:disabled {
       cursor: default;
       box-shadow: none;
+      background-color: g($t, 'disabled.container.color');
+      color: g($t, 'disabled.content.color');
     }
 
     // Only a fill and a shadow draw the action, and forced colors drops both.
@@ -135,28 +172,9 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
   }
 
   @each $role in $roles {
-    &--#{$role} .ui-fab-menu__item {
-      background-color: g($t, '#{$role}.item.container.color');
-      color: g($t, '#{$role}.item.content.color');
-
-      @include can-hover {
-        &:hover:not(:disabled) {
-          background-color: g($t, '#{$role}.item.container.hover.color');
-        }
-      }
-
-      &:focus-visible {
-        background-color: g($t, '#{$role}.item.container.focus.color');
-      }
-
-      &:active:not(:disabled) {
-        background-color: g($t, '#{$role}.item.container.pressed.color');
-      }
-
-      &:disabled {
-        background-color: g($t, 'disabled.container.color');
-        color: g($t, 'disabled.content.color');
-      }
+    &--#{$role} .ui-fab-menu__item:enabled {
+      background-color: g($t, '#{$role}.item.container');
+      color: g($t, '#{$role}.item.content');
     }
   }
 }

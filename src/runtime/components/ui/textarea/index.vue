@@ -1,7 +1,7 @@
 <template>
   <div
     v-bind="rootAttrs()"
-    :class="rootClasses"
+    :class="rootClasses()"
   >
     <label
       v-if="label"
@@ -17,7 +17,12 @@
       >*</span>
     </label>
 
-    <div class="ui-textarea__control">
+    <div
+      ref="control"
+      class="ui-textarea__control"
+      @pointerdown="box.onPointerdown"
+      @click="box.onClick"
+    >
       <fieldset
         v-if="variant === 'outlined'"
         class="ui-textarea__outline"
@@ -31,10 +36,7 @@
         </legend>
       </fieldset>
 
-      <div
-        class="ui-textarea__body"
-        @pointerdown="focusFromBox"
-      >
+      <div class="ui-textarea__body">
         <span
           v-if="$slots.prepend"
           class="ui-textarea__adornment ui-textarea__adornment--prepend"
@@ -66,7 +68,12 @@
       <slot name="footer" />
     </div>
 
-    <div class="ui-textarea__support">
+    <!-- Rendered whenever something can appear in it — a message or the
+         counter; with nothing to say there is no row at all. -->
+    <div
+      v-if="hasSupport() || counter"
+      class="ui-textarea__support"
+    >
       <p
         v-bind="supportAttrs"
         class="ui-textarea__message"
@@ -130,23 +137,26 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { textareaFieldStateKey, useTextareaControl } from '#kit/composables/textarea/useTextareaControl'
 import { mTextareaProps } from './props'
+import type { MTextareaSlots } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
-import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
+import { createFieldBoxPress } from '#kit/utils/text-field/boxPress'
+import { useSupportLine } from '#kit/utils/text-field/supportLine'
 
 // The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mTextareaProps)
-const slots = useSlots()
+const slots = defineSlots<MTextareaSlots>()
 
 const modelValue = defineModel<string>({ default: '' })
 const focusedModel = defineModel<boolean>('focused', { default: false })
 
+const control = useTemplateRef<HTMLElement>('control')
+
 const {
   element,
   isFocused,
-  isPopulated,
   isError,
   message,
   counter,
@@ -162,6 +172,11 @@ const {
   isResizing,
 } = useTextareaControl(modelValue, focusedModel, props)
 
+// The whole box is the control's hit target; the grip, an adornment's button
+// and the footer's actions keep their own presses.
+const box = createFieldBoxPress(element)
+const hasSupport = useSupportLine(props, slots)
+
 // The notch is sized by this copy of the label, so it carries the asterisk too.
 const notchText = computed(() => props.required ? `${props.label} *` : props.label)
 
@@ -169,17 +184,16 @@ const notchText = computed(() => props.required ? `${props.label} *` : props.lab
 // inert with the field instead of staying live inside a dead box.
 provide(textareaFieldStateKey, fieldState)
 
-const shape = useFieldShape('m-textarea', props)
-
-const rootClasses = computed(() => [
+// Called from the template: slots are not reactive, so their presence is
+// read on every render.
+const rootClasses = () => [
   'ui-textarea',
   `ui-textarea--${props.variant}`,
-  `ui-textarea--shape-${shape.value}`,
+  `ui-textarea--shape-${props.shape}`,
   `ui-textarea--label-${props.labelPlacement}`,
   {
     'ui-textarea--interactive': !props.disabled && !props.readonly,
     'ui-textarea--focused': isFocused.value,
-    'ui-textarea--populated': isPopulated.value,
     'ui-textarea--error': isError.value,
     'ui-textarea--disabled': props.disabled,
     'ui-textarea--readonly': props.readonly,
@@ -187,24 +201,18 @@ const rootClasses = computed(() => [
     'ui-textarea--capped': props.maxRows !== undefined,
     'ui-textarea--resizable': props.resizable,
     'ui-textarea--resizing': isResizing.value,
-    'ui-textarea--composer': Boolean(slots.footer),
+    'ui-textarea--prepend': Boolean(slots.prepend),
+    'ui-textarea--append': Boolean(slots.append),
   },
-])
+]
 
-// Only a press on the padding itself focuses the control; anything with its own
-// target — the textarea, the grip, an adornment's button — handles its own.
-function focusFromBox(event: PointerEvent) {
-  if (event.target !== event.currentTarget) {
-    return
-  }
-
-  event.preventDefault()
-  element.value?.focus()
-}
+/** The drawn box (what a popover anchors to) and the native control (where focus belongs). */
+defineExpose({ control, input: element })
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/textarea' as t;
+@use '#kit/assets/stylesheet/components/text-field/family' as family;
 @use '#kit/assets/stylesheet/components/textarea/label' as label;
 @use '#kit/assets/stylesheet/components/textarea/states' as states;
 @use '#kit/assets/stylesheet/components/textarea/parts' as parts;
@@ -214,10 +222,6 @@ function focusFromBox(event: PointerEvent) {
 
   --ui-textarea-inset: #{g($t, 'container.padding.inline')};
 
-  // The physical side the label scales from: transform-origin has no logical
-  // keyword, so the writing direction picks it here.
-  --ui-textarea-start: left;
-
   position: relative;
   isolation: isolate;
   display: flex;
@@ -225,25 +229,10 @@ function focusFromBox(event: PointerEvent) {
   gap: g($t, 'container.gap');
   min-width: 0;
 
-  // ── axes · a modifier only picks values; every rule below reads them once ──
-  @each $shape in none, extra-small, medium, large, full {
-    &--shape-#{$shape} {
-      --ui-textarea-radius: #{g($t, 'shape.#{$shape}')};
-    }
-  }
-
-  // A filled box has a flat bottom, so a full radius would dome it — cap `full`
-  // at the large tier for filled only.
-  &--filled#{&}--shape-full {
-    --ui-textarea-radius: #{g($t, 'shape.large')};
-  }
+  @include family.shape-axis($t, 'textarea');
 
   &--outlined {
     --ui-textarea-inset: #{g($t, 'outlined.inset')};
-  }
-
-  &:dir(rtl) {
-    --ui-textarea-start: right;
   }
 
   @include label.label($t);
@@ -296,11 +285,11 @@ function focusFromBox(event: PointerEvent) {
   // placements and the drag handle both do, and they must not fight over
   // source order.
 
-  // The value has to start below a label that sits inside the box — unless the
+  // The value starts below a label that sits inside the box — unless the
   // label went onto the border instead, where it takes no room.
   &--label-float &__body,
   &--label-inset &__body {
-    padding-top: g($t, 'label.inset.body-padding');
+    padding-top: g($t, 'label.overlay.body-padding');
   }
 
   &--label-float.ui-textarea--outlined &__body {
@@ -322,24 +311,13 @@ function focusFromBox(event: PointerEvent) {
     background-color: transparent;
     color: g($t, 'input.color');
     caret-color: g($t, 'input.caret.color');
-    line-height: g($t, 'input.line-height');
     resize: none;
 
     @include typescale(g($t, 'typography.input'));
+    @include family.autofill($t);
 
     &::placeholder {
       color: g($t, 'input.placeholder.color');
-    }
-
-    // Autofill paints an !important background and text colour of its own,
-    // light even in a dark theme. Clipping that background to the glyphs —
-    // which the fill colour then covers — lets the container show through.
-    &:autofill {
-      // Safari clips to text only under the prefix.
-      /* stylelint-disable-next-line property-no-vendor-prefix */
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: g($t, 'input.color');
     }
   }
 

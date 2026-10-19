@@ -23,7 +23,7 @@
 import { computed, nextTick, ref, useId, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import dayjs from 'dayjs'
-import type { Calendar, CalendarBounds, CalendarKey } from './createCalendar'
+import type { Calendar, CalendarBounds, CalendarKey } from '#kit/utils/date/createCalendar'
 
 export interface DateGridControlOptions {
   calendar: ComputedRef<Calendar>
@@ -96,6 +96,13 @@ export function useDateGridControl(options: DateGridControlOptions, gridId: stri
   }
 
   const focused = ref<Date>(restingFocus())
+  // Whether the user has placed the tab stop: until then it follows the resting
+  // rule, which can only see "today" after mount (the server has no today).
+  let placed = false
+
+  watch(() => options.today(), () => {
+    if (!placed) focused.value = restingFocus()
+  })
 
   // A month changed by its arrows keeps the tab stop on the same day of the
   // new month, clamped to its length.
@@ -134,6 +141,7 @@ export function useDateGridControl(options: DateGridControlOptions, gridId: stri
   }
 
   function focusDate(date: Date) {
+    placed = true
     focused.value = date
     if (!calendar.value.isSameMonth(date, month.value)) month.value = dayjs(date).startOf('month').toDate()
     nextTick(() => document.getElementById(cellId(date))?.focus())
@@ -184,10 +192,12 @@ export function useDateGridControl(options: DateGridControlOptions, gridId: stri
       ...(cell.today ? { 'aria-current': 'date' as const } : {}),
       ...(cell.unavailable || options.disabled() ? { 'aria-disabled': 'true' as const } : {}),
       'onClick': () => {
+        placed = true
         focused.value = date
         choose(date)
       },
       'onFocus': () => {
+        placed = true
         focused.value = date
       },
     }

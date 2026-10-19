@@ -102,7 +102,7 @@
 import MTimeline from '#kit/components/ui/timeline/index.vue'
 import MTimelineItem from '#kit/components/ui/timeline/item/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import type { MTimelineDensity, MTimelineLine, MTimelineSide } from '#kit/composables/timeline/context'
+import type { MTimelineDensity, MTimelineLine, MTimelineSide } from '#kit/components/ui/timeline/props'
 import type { MColor } from '#kit/shared/types/props'
 
 const sides: MTimelineSide[] = ['end', 'start', 'alternate']

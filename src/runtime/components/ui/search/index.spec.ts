@@ -22,7 +22,6 @@ describe('m-search', () => {
 
     const input = wrapper.find('input.ui-search__input')
 
-    expect(wrapper.classes()).toContain('ui-search--empty')
     expect(input.attributes('placeholder')).toBe('Find')
     expect(input.attributes('aria-label')).toBe('Find products')
   })
@@ -35,13 +34,12 @@ describe('m-search', () => {
     expect(wrapper.find('.ui-search__clear').attributes('aria-label')).toBeUndefined()
   })
 
-  it('updates v-model on input and drops the empty class', async () => {
+  it('updates v-model on input', async () => {
     const wrapper = await mountSuspended(MSearch)
 
     await wrapper.find('input.ui-search__input').setValue('query')
 
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual(['query'])
-    expect(wrapper.classes()).not.toContain('ui-search--empty')
   })
 
   it('submits the query on Enter', async () => {
@@ -50,6 +48,33 @@ describe('m-search', () => {
     await wrapper.find('input').trigger('keydown', { key: 'Enter' })
 
     expect(wrapper.emitted('submit')!.at(-1)).toEqual(['nuxt'])
+  })
+
+  it('does not submit the Enter that confirms an IME candidate', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'にほん' } })
+
+    await wrapper.find('input').trigger('keydown', { key: 'Enter', isComposing: true })
+    await wrapper.find('input').trigger('keydown', { key: 'Enter', keyCode: 229 })
+
+    expect(wrapper.emitted('submit')).toBeFalsy()
+  })
+
+  it('empties the query on Escape and says so; an empty bar lets Escape go on', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'abc', clearLabel: 'Clear search' } })
+
+    await wrapper.find('input').trigger('keydown', { key: 'Escape' })
+    expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual([''])
+    expect(wrapper.emitted('clear')).toHaveLength(1)
+
+    await wrapper.setProps({ modelValue: '' })
+    await wrapper.find('input').trigger('keydown', { key: 'Escape' })
+    expect(wrapper.emitted('clear')).toHaveLength(1)
+  })
+
+  it('keeps the id the app gives it on the input', async () => {
+    const wrapper = await mountSuspended(MSearch, { attrs: { id: 'archive-search' } })
+
+    expect(wrapper.find('input').attributes('id')).toBe('archive-search')
   })
 
   it('clears the model with a named clear button and says so', async () => {

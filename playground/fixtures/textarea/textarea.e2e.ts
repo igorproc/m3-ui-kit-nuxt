@@ -198,7 +198,7 @@ test.describe('MTextarea', () => {
     const rem = await remInPx(page)
 
     for (const variant of VARIANTS) {
-      const support = await root(page.getByTestId(`enabled-${variant}`)).locator('.ui-textarea__support').boundingBox()
+      const support = await root(page.getByTestId(`helper-${variant}`)).locator('.ui-textarea__support').boundingBox()
       expect(support!.height / rem, variant).toBeCloseTo(16, 0)
     }
   })
@@ -220,8 +220,9 @@ test.describe('MTextarea', () => {
     const footer = field.locator('.ui-textarea__footer')
     const style = await footer.evaluate((el) => {
       const own = getComputedStyle(el)
-      const support = getComputedStyle(el.closest('.ui-textarea')!.querySelector('.ui-textarea__support')!)
-      return { opacity: own.opacity, color: own.color, supportColor: support.color, inert: el.hasAttribute('inert') }
+      // The field has no helper, so no support line (decision 2026-10-19): its label carries the same disabled ink.
+      const label = getComputedStyle(el.closest('.ui-textarea')!.querySelector('.ui-textarea__label')!)
+      return { opacity: own.opacity, color: own.color, supportColor: label.color, inert: el.hasAttribute('inert') }
     })
 
     expect(style.opacity).toBe('1')
@@ -237,6 +238,95 @@ test.describe('MTextarea', () => {
 
     expect(await colour('disabled-filled')).not.toBe(await colour('resizable-filled'))
   })
+
+  // Rects relative to the field's control, in rem.
+  const geometry = (textarea: Locator, part: string) => root(textarea).evaluate((field, selector) => {
+    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+    const box = field.querySelector('.ui-textarea__control')!.getBoundingClientRect()
+    const rect = field.querySelector(selector)!.getBoundingClientRect()
+    return {
+      top: (rect.top - box.top) / rem,
+      bottom: (rect.bottom - box.top) / rem,
+      start: (rect.left - box.left) / rem,
+      height: rect.height / rem,
+      boxHeight: box.height / rem,
+    }
+  }, part)
+
+  test('the height changes at once — no transition rides on growth', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const transition = await page.getByTestId('grow-empty-filled').evaluate(el => getComputedStyle(el).transitionProperty)
+
+    expect(transition).not.toContain('height')
+  })
+
+  test('a read-only or disabled grip does not answer the pointer', async ({ page }) => {
+    await openFixture(page, 'text-field/family')
+    const grip = root(page.getByTestId('ta-readonly-resizable')).locator('.ui-textarea__grip')
+    const rest = await grip.evaluate(el => getComputedStyle(el).backgroundColor)
+
+    await grip.hover()
+    await waitForMotion(page)
+    expect(await grip.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(rest)
+    expect(await grip.evaluate(el => getComputedStyle(el, '::before').opacity)).toBe('0')
+  })
+
+  test('the grip keeps 3:1 against the surface it sits on', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const ratio = await root(page.getByTestId('resizable-filled')).evaluate((field) => {
+      const luminance = (colour: string) => {
+        const [r, g, b] = colour.match(/[\d.]+/g)!.slice(0, 3).map(Number).map((value) => {
+          const channel = value / 255
+          return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+        })
+        return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!
+      }
+      const grip = luminance(getComputedStyle(field.querySelector('.ui-textarea__grip')!).backgroundColor)
+      const surface = luminance(getComputedStyle(field.querySelector('.ui-textarea__control')!).backgroundColor)
+      return (Math.max(grip, surface) + 0.05) / (Math.min(grip, surface) + 0.05)
+    })
+
+    expect(ratio).toBeGreaterThanOrEqual(3)
+  })
+
+  test('the support line starts 4 below the box', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+
+    for (const variant of VARIANTS) {
+      const support = await geometry(page.getByTestId(`helper-${variant}`), '.ui-textarea__support')
+      expect(support.top - support.boxHeight, variant).toBeCloseTo(4, 0)
+    }
+  })
+
+  test('a raised label inside the box is the family\'s 12, sitting on the value', async ({ page }) => {
+    await openFixture(page, 'textarea/matrix')
+    const label = await geometry(page.getByTestId('placement-inset'), '.ui-textarea__label')
+
+    // A body-large line raised to three quarters, centred half that line above a value at 24.
+    expect(label.height).toBeCloseTo(18, 0)
+    expect((label.top + label.bottom) / 2).toBeCloseTo(15, 0)
+  })
+
+  test('beside a prepend the overlaid label starts where the value does', async ({ page }) => {
+    await openFixture(page, 'text-field/family')
+    const textarea = page.getByTestId('ta-icons-filled-float')
+    const label = await geometry(textarea, '.ui-textarea__label')
+    const value = await geometry(textarea, '.ui-textarea__input')
+
+    // Within the box's edge: the label is placed from the outer edge, the value from inside its hairline.
+    expect(Math.abs(label.start - value.start)).toBeLessThanOrEqual(2)
+  })
+
+  for (const width of [360, 1280]) {
+    test(`filled and outlined are one height (${width}px)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 })
+      await openFixture(page, 'textarea/matrix')
+
+      const filled = await geometry(page.getByTestId('populated-filled'), '.ui-textarea__control')
+      const outlined = await geometry(page.getByTestId('populated-outlined'), '.ui-textarea__control')
+      expect(filled.boxHeight).toBeCloseTo(outlined.boxHeight, 0)
+    })
+  }
 
   test('forced colors: focus is Highlight even read-only, and error is a dashed edge', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active' })

@@ -92,11 +92,8 @@ $tokens: (
       size: 24rem,
       selected: (color: $-on-secondary-container),
     ),
-    // Colour and initials belong to `<MAvatar>`; the row only sizes it.
-    avatar: (
-      size: 40rem,
-      shape: map.get($theme-shape-link, full),
-    ),
+    // `<MAvatar>` sizes itself: its default density and shape (40, full) are
+    // the M3 leading avatar, and a consumer's own density and shape hold.
     image: (
       width: 56rem,
       height: 56rem,

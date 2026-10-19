@@ -16,18 +16,20 @@
 
     <component
       :is="headerTag"
-      v-if="$slots.header || title || subtitle"
+      v-if="$slots.header || hasTitle || subtitle"
       ref="header"
       class="ui-card__header"
     >
       <slot name="header">
         <component
           :is="titleTag"
-          v-if="title"
+          v-if="hasTitle"
           v-bind="titleAttrs"
           class="ui-card__title"
         >
-          {{ title }}
+          <slot name="title">
+            {{ title }}
+          </slot>
         </component>
 
         <p
@@ -59,23 +61,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots, useTemplateRef } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { mCardProps } from './props'
+import type { MCardSlots } from './props'
 import { useCard } from '#kit/composables/card/useCard'
 import { useCardWarnings } from './useCardWarnings'
 
 const props = defineProps(mCardProps)
-const slots = useSlots()
+const slots = defineSlots<MCardSlots>()
+
+const hasTitle = computed(() => Boolean(props.title || slots.title))
 
 const { isLink, isDisabled, rootTag, rootAttrs, titleTag, titleAttrs } = useCard(props, {
-  hasTitle: () => Boolean(props.title) && !slots.header,
+  hasTitle: () => hasTitle.value && !slots.header,
 })
 
-// Retired values keep rendering as their replacement until they are removed.
-const RETIRED_VARIANTS: Record<string, string> = { tonal: 'filled', text: 'outlined' }
-
 const rootClass = computed(() => [
-  `ui-card--${RETIRED_VARIANTS[props.variant] ?? props.variant}`,
+  `ui-card--${props.variant}`,
   { 'ui-card--link': isLink.value, 'ui-card--disabled': isDisabled.value },
 ])
 
@@ -89,7 +91,6 @@ const mediaStyle = computed(() => (props.mediaAspectRatio ? { aspectRatio: props
 const parts = [useTemplateRef<Element>('media'), useTemplateRef<Element>('header'), useTemplateRef<Element>('content'), useTemplateRef<Element>('actions')]
 
 useCardWarnings({
-  variant: () => props.variant,
   tag: () => props.tag,
   disabled: () => props.disabled,
   parts: () => parts.map(part => part.value),
@@ -100,7 +101,7 @@ useCardWarnings({
 @use '#kit/assets/stylesheet/components/card/index' as t;
 @use '#kit/assets/stylesheet/components/card/states' as states;
 
-$t: material-map(t.$tokens, 'md-card');
+$t: t.$tokens;
 $variants: ('elevated', 'filled', 'outlined');
 
 .ui-card {
@@ -139,7 +140,7 @@ $variants: ('elevated', 'filled', 'outlined');
     // content-based minimum: a tall image would stretch the reserved ratio.
     min-height: 0;
     overflow: clip;
-    margin: calc(#{g($t, 'container.padding')} * -1) calc(#{g($t, 'container.padding')} * -1) 0;
+    margin: g($t, 'media.margin') g($t, 'media.margin') 0;
     border-radius: g($t, 'container.shape') g($t, 'container.shape') 0 0;
     background-color: g($t, 'media.placeholder');
 
@@ -149,8 +150,9 @@ $variants: ('elevated', 'filled', 'outlined');
       overflow-clip-margin: g($t, 'media.ring');
     }
 
-    img,
-    video {
+    // `:where()`: the slot's own media is normalised at the weight of the
+    // block alone, so a consumer's class still wins.
+    :where(img, video) {
       display: block;
       width: 100%;
       height: 100%;

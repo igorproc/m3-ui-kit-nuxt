@@ -5,15 +5,13 @@
     :class="{
       'ui-dropdown--open': open,
       'ui-dropdown--disabled': disabled,
-      'ui-dropdown--multiple': multiple,
     }"
     @click="onFieldClick"
-    @keydown.capture="keyboardCursor = true"
-    @pointerdown="keyboardCursor = false"
-    @keydown="onFieldKeydown"
+    @keydown.capture="onKeyboard"
+    @pointerdown="onPointer"
   >
     <MTextField
-      v-bind="controlAttrs()"
+      v-bind="{ ...controlAttrs(), ...fieldError() }"
       ref="fieldRef"
       v-model:focused="focused"
       class="ui-dropdown__field"
@@ -21,17 +19,15 @@
       :label="label"
       :placeholder="control.hasSelection.value ? undefined : placeholder"
       :helper-text="helperText"
-      :error="isError"
-      :error-message="displayError"
       :variant="variant"
-      :shape="fieldShape"
+      :shape="shape"
       :label-placement="labelPlacement"
       :density="density"
       :name="name ?? path"
       :disabled="disabled"
+      :readonly="readonly"
       :required="required"
       :autofocus="autofocus"
-      readonly
       :input-attrs="control.inputAttrs.value"
     >
       <template
@@ -41,8 +37,10 @@
         <slot name="prepend" />
       </template>
 
+      <!-- Always there in multiple, empty without chips: the field keeps the
+           chips' height from the first frame, so the first chip moves nothing. -->
       <template
-        v-if="hasChips"
+        v-if="multiple"
         #leading-content
       >
         <slot
@@ -50,31 +48,26 @@
           :entries="control.selectedEntries.value"
           :remove="control.removeEntry"
         >
-          <MChip
-            v-for="(entry, index) in control.selectedEntries.value"
-            :id="control.chipId(index)"
-            :key="entry.key"
-            type="input"
-            class="ui-dropdown__chip"
-            :class="{ 'ui-dropdown__chip--active': control.chipFocus.value === index }"
-            :disabled="disabled || entry.itemDisabled"
-            @mousedown.prevent
-            @click.stop="control.removeEntry(entry)"
+          <DropdownChips
+            v-if="control.selectedEntries.value.length"
+            :entries="control.selectedEntries.value"
+            block="ui-dropdown"
+            :chip-id="control.chipId"
+            :focus="control.chipFocus.value"
+            :disabled="disabled"
+            :readonly="readonly"
+            @remove="control.removeEntry"
           >
-            <slot
-              name="chip"
-              :item="entry.item"
-              :value="entry.value"
-              :title="entry.title"
-              :index="index"
-              :remove="() => control.removeEntry(entry)"
+            <template
+              v-if="$slots.chip"
+              #default="chip"
             >
-              {{ entry.title }}
-            </slot>
-            <template #trailing>
-              <MIcon :name="ICONS.close" />
+              <slot
+                name="chip"
+                v-bind="chip as DropdownChipSlotProps<TItem, TValue>"
+              />
             </template>
-          </MChip>
+          </DropdownChips>
         </slot>
       </template>
 
@@ -85,10 +78,10 @@
           v-if="control.canClear.value"
           type="button"
           class="ui-dropdown__clear"
-          :aria-label="MESSAGES.dropdownClear"
-          :disabled="disabled"
+          :aria-label="messages?.clear"
+          :disabled="disabled || readonly"
           @mousedown.prevent
-          @click.stop="control.clear"
+          @click.stop="clear"
         >
           <MIcon :name="ICONS.close" />
         </MButtonIcon>
@@ -121,77 +114,43 @@
         :select="control.selectEntry"
         :close="control.closePanel"
       >
-        <!-- Progress and the state message sit beside the listbox, not in it:
-             a listbox may only own options. -->
-        <div
-          class="ui-dropdown__panel"
-          @mousedown.prevent
-          @pointermove="keyboardCursor = false"
+        <DropdownPanel
+          ref="panelRef"
+          :entries="control.entries.value"
+          :listbox-attrs="control.listboxAttrs.value"
+          :get-option-attrs="control.getOptionAttrs"
+          :panel-style="control.panelStyle.value"
+          :active-id="control.activeId.value"
+          :keyboard="keyboardCursor"
+          :density="density"
+          :multiple="multiple"
+          :loading="loading"
+          :state="state"
+          :messages="messages"
+          @pointer="onPointer"
         >
-          <MProgressLinear
-            v-if="loading"
-            class="ui-dropdown__progress"
-            indeterminate
-            :aria-label="MESSAGES.dropdownLoading"
-          />
-
-          <MList
-            v-bind="control.listboxAttrs.value"
-            class="ui-dropdown__list"
-            :class="`ui-dropdown__list--${density}`"
-            :density="density"
-            :style="control.panelStyle.value"
+          <template
+            v-if="$slots.item"
+            #item="row"
           >
-            <MListItem
-              v-for="(entry, index) in control.entries.value"
-              :key="entry.key"
-              v-bind="control.getOptionAttrs(entry)"
-              class="ui-dropdown__option"
-              :class="optionClasses(entry)"
-              :interactive="true"
-              :selected="entry.selected"
-              :disabled="entry.disabled"
-              :lines="1"
-            >
-              <!-- At the end, and only on the chosen row: the row text then
-                   starts where the value does in the field above it. -->
-              <template
-                v-if="entry.selected"
-                #trailing
-              >
-                <MIcon
-                  :name="ICONS.check"
-                  class="ui-dropdown__check"
-                />
-              </template>
-
-              <slot
-                name="item"
-                :item="entry.item"
-                :index="index"
-                :value="entry.value"
-                :title="entry.title"
-                :selected="entry.selected"
-                :disabled="entry.disabled"
-                :blocked="entry.blocked"
-                :active="control.activeId.value === entry.id"
-              >
-                <span class="ui-dropdown__option-title">{{ entry.title }}</span>
-              </slot>
-            </MListItem>
-          </MList>
-
-          <div ref="stateRef">
             <slot
-              v-if="!loading && !control.entries.value.length"
-              name="empty"
-            >
-              <div class="ui-dropdown__state">
-                {{ MESSAGES.dropdownEmpty }}
-              </div>
-            </slot>
-          </div>
-        </div>
+              name="item"
+              v-bind="row as DropdownItemSlotProps<TItem, TValue>"
+            />
+          </template>
+          <template
+            v-if="$slots.empty"
+            #empty
+          >
+            <slot name="empty" />
+          </template>
+          <template
+            v-if="$slots.loading"
+            #loading
+          >
+            <slot name="loading" />
+          </template>
+        </DropdownPanel>
       </slot>
     </MMenu>
 
@@ -203,27 +162,25 @@
 </template>
 
 <script setup lang="ts" generic="TItem extends DropdownItemBase, TValue = TItem">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { mDropdownProps } from './props'
-import type { MDropdownEmits } from './props'
-import type { MFieldParts } from '#kit/components/ui/text-field/props'
+import type { DropdownChipSlotProps, DropdownItemSlotProps, MDropdownEmits, MDropdownSlots } from './props'
 import { provideDropdownContext } from './context'
 import { useDropdownControl } from '#kit/composables/dropdown/useDropdownControl'
-import { usePanelStatus } from '#kit/composables/dropdown/usePanelStatus'
-import type { DropdownContext, DropdownEntry, DropdownItemBase } from '#kit/composables/dropdown/types'
+import type { DropdownContext, DropdownItemBase, UseDropdownControlReturn } from '#kit/composables/dropdown/types'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
-import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
-import { useField } from '#kit/composables/useField'
+import { panelHasContent, panelState } from '#kit/utils/dropdown/panelState'
+import type { DropdownPanelState } from '#kit/utils/dropdown/panelState'
+import { usePanelStatus } from '#kit/utils/dropdown/usePanelStatus'
+import { useSelectionShell, useUnnamedControlWarning } from '#kit/utils/dropdown/useSelectionShell'
+import { useBoundProp } from '#kit/utils/text-field/supportLine'
 import { ICONS } from '#kit/shared/constants/icons'
-import { MESSAGES } from '#kit/shared/constants/messages'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
-import MChip from '#kit/components/ui/chip/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
-import MList from '#kit/components/ui/list/index.vue'
-import MListItem from '#kit/components/ui/list/item/index.vue'
 import MMenu from '#kit/components/ui/menu/index.vue'
-import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
+import DropdownChips from '#kit/components/fragments/dropdown/Chips.vue'
+import DropdownPanel from '#kit/components/fragments/dropdown/Panel.vue'
 
 // The root is a wrapper; aria-*, name and listeners belong on the combobox.
 defineOptions({ inheritAttrs: false })
@@ -231,25 +188,38 @@ const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mDropdownProps)
 const emit = defineEmits<MDropdownEmits<TItem>>()
+const slots = defineSlots<MDropdownSlots<TItem, TValue>>()
 
 const model = defineModel<TValue | TValue[] | undefined>()
 const open = defineModel<boolean>('open', { default: false })
 
 const focused = ref(false)
-const fieldRef = ref<MFieldParts | null>(null)
+const panelRef = ref<{ stateEl: HTMLElement | null } | null>(null)
 
-const fieldControl = computed(() => fieldRef.value?.control ?? null)
+const { fieldRef, fieldControl, field, isError, displayError, keyboardCursor, onKeyboard, onPointer, focusInput, isFieldFrame }
+  = useSelectionShell<TValue>({ props, model, open })
 
-const field = useField<TValue | TValue[] | undefined>({ path: props.path, model })
+// The field reserves its support line only when an error can reach it
+// (decision 2026-10-19): the consumer bound one, or an adapter path can
+// produce one. Otherwise the error props are not passed at all.
+const isBound = useBoundProp()
+const fieldError = () => (isBound('error') || isBound('errorMessage') || props.path
+  ? { error: isError.value, errorMessage: displayError.value }
+  : {})
 
-const isError = computed(() => props.error || Boolean(props.errorMessage) || field.hasError.value)
-const displayError = computed(() => field.errorMessage.value ?? props.errorMessage)
+const state = computed<DropdownPanelState>(() => panelState({
+  rows: control.entries.value.length,
+  loading: props.loading,
+  items: props.items.length,
+  queryReady: true,
+}))
 
-const control = useDropdownControl<TItem, TValue>({
+const control: UseDropdownControlReturn<TItem, TValue> = useDropdownControl<TItem, TValue>({
   props,
   model,
   open,
   pending: () => field.meta.pending,
+  canOpen: (): boolean => Boolean(slots.default) || panelHasContent(state.value, name => Boolean(slots[name as keyof typeof slots]), props.messages),
   onSelect: entry => emit('select', entry.item),
   onRemove: entry => emit('remove', entry.item),
   onClear: () => emit('clear'),
@@ -257,51 +227,38 @@ const control = useDropdownControl<TItem, TValue>({
   onClose: () => emit('close'),
 })
 
-const hasChips = computed(() => props.multiple && control.selectedEntries.value.length > 0)
-const fieldShape = useFieldShape('m-dropdown', props)
+useUnnamedControlWarning('m-dropdown', () => props.messages, () => [
+  ...(control.canClear.value ? ['clear' as const] : []),
+  ...(props.loading && open.value ? ['loading' as const] : []),
+])
 
-// The pointer also moves the virtual focus (hovering a row makes it active), so
-// the ring that marks keyboard focus is drawn only while the keyboard drives.
-const keyboardCursor = ref(false)
-
-const optionClasses = (entry: DropdownEntry<TItem, TValue>) => {
-  const active = control.activeId.value === entry.id
-  return {
-    'ui-dropdown__option--active': active,
-    'ui-dropdown__option--keyboard': active && keyboardCursor.value,
-  }
-}
-
-const stateRef = ref<HTMLElement | null>(null)
 const status = usePanelStatus({
   open: () => open.value,
   loading: () => props.loading,
   hasRows: () => control.entries.value.length > 0,
-  loadingText: MESSAGES.dropdownLoading,
-  state: () => stateRef.value,
+  loadingText: () => props.messages?.loading,
+  state: () => panelRef.value?.stateEl,
 })
 
-// A click can land on the box, the label or the arrow — none of which is
-// focusable — so the input is focused whenever the panel opens. Without it the
-// combobox has no DOM focus, and `aria-activedescendant` points from nowhere.
-watch(open, (value) => {
-  if (value) nextTick(() => fieldRef.value?.input?.focus())
-})
-
-const onFieldClick = () => {
-  if (props.disabled || props.readonly) {
-    return
+// The field passes a press anywhere in its box on to the input, and a label's
+// click reaches it natively: the input's click is the one that toggles — the
+// box's own click is that same press, seen twice. The field's frame between
+// the box and its support line passes nothing on, so it toggles here; the
+// support line itself does not.
+function onFieldClick(event: MouseEvent) {
+  if (props.disabled || props.readonly) return
+  if (event.target === fieldRef.value?.input) {
+    control.togglePanel()
+  } else if (isFieldFrame(event.target)) {
+    focusInput()
+    control.togglePanel()
   }
-
-  control.togglePanel()
 }
 
-const onFieldKeydown = (event: KeyboardEvent) => {
-  if (event.target === fieldRef.value?.input) {
-    return
-  }
-
-  control.onKeydown(event)
+// The button leaves with the value; the field is where the user goes next.
+function clear() {
+  control.clear()
+  focusInput()
 }
 
 provideDropdownContext(control.context as unknown as DropdownContext)
@@ -311,7 +268,7 @@ defineExpose({ open: control.openPanel, close: control.closePanel, clear: contro
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/dropdown' as t;
-@use '#kit/assets/stylesheet/components/dropdown/panel' as panel;
+@use '#kit/assets/stylesheet/components/dropdown/field' as field;
 
 .ui-dropdown {
   $t: t.$tokens;
@@ -319,29 +276,23 @@ defineExpose({ open: control.openPanel, close: control.closePanel, clear: contro
   position: relative;
   width: 100%;
   min-width: 0;
-  cursor: pointer;
 
-  &--disabled {
+  // The box is the control; the label and the support line around it are not.
+  &__field .ui-text-field__control {
+    cursor: pointer;
+  }
+
+  &--disabled &__field .ui-text-field__control {
     cursor: default;
   }
 
-  &__field {
+  // The input takes no text (see `useDropdownControl`): no I-beam, no caret.
+  // One class above the field's own caret rules, its error caret included.
+  &__field.ui-text-field .ui-text-field__input {
     cursor: inherit;
+    caret-color: g($t, 'input.caret');
   }
 
-  // The clear button and the arrow take their ink from the field's trailing
-  // zone, so they follow its roles — `on-surface-variant` at rest, `error` in
-  // an invalid field, `on-error-container` when that field is hovered, 38%
-  // when disabled — without a second copy of any of them.
-  &__arrow {
-    font-size: g($t, 'arrow.size');
-    transition: transform g($t, 'motion.duration') g($t, 'motion.easing');
-  }
-
-  &--open &__arrow {
-    transform: rotate(180deg);
-  }
-
-  @include panel.selection-panel($t);
+  @include field.selection-field($t);
 }
 </style>

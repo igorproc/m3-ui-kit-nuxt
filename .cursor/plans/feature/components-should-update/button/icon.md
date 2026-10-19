@@ -2,7 +2,7 @@
 
 <identity>M3: Icon buttons (standard, filled, tonal, outlined; toggle) · Токены Compose: `XSmallIconButtonTokens`, `SmallIconButtonTokens`, `MediumIconButtonTokens`, `IconButtonTokens` (`StandardIconButtonTokens`), `FilledIconButtonTokens`, `FilledTonalIconButtonTokens`, `OutlinedIconButtonTokens`; поведение — `IconButton.kt`, `IconButtonDefaults.kt` · Код: `src/runtime/components/ui/button/icon/` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-07">Реализовано. В-1 ось `width`; В-2 `elevated` снят из типа (dev-предупреждение, рендер сохранён на релиз); В-3 без `color` — цвет контента контейнера (`ui-button--current`), явный `color` — роль; В-4 MButton без подписи = геометрия кнопки-иконки. `density` × `width`, `shape`, toggle (round → square, square → round на пружине), слот `{ selected }`, цель 48 у всех ступеней.</implementation-status>
+<implementation-status state="done" updated="2026-10-19">Реализовано. В-1 ось `width`; В-2 `elevated` снят из типа (dev-предупреждение, рендер сохранён на релиз); В-3 без `color` — цвет контента контейнера (`ui-button--current`), явный `color` — роль; В-4 MButton без подписи = геометрия кнопки-иконки. `density` × `width`, `shape`, toggle (round → square, square → round на пружине), слот `{ selected }`, цель 48 у всех ступеней. M3-polish (2026-10-19): выбранная square → круг ступени (`round`), без снапа; шим `elevated` удалён.</implementation-status>
 
 ## Вердикт
 

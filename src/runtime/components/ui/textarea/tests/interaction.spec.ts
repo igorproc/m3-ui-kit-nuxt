@@ -38,14 +38,6 @@ describe('m-textarea · interaction', () => {
 
       expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['Multiline'])
     })
-
-    it('marks itself populated once the value is not empty', async () => {
-      const wrapper = await mount()
-
-      expect(wrapper.classes()).not.toContain('ui-textarea--populated')
-      await wrapper.find('textarea').setValue('x')
-      expect(wrapper.classes()).toContain('ui-textarea--populated')
-    })
   })
 
   describe('focus', () => {

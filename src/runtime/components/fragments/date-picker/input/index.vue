@@ -9,7 +9,8 @@
       :placeholder="placeholder"
       :disabled="disabled"
       :readonly="readonly"
-      :error-message="error"
+      :required="required"
+      v-bind="fieldError()"
       @blur="commit"
       @keydown.enter="commit"
       @update:model-value="error = undefined"
@@ -24,7 +25,7 @@
  * a previous error. Any separator goes, in the locale's part order.
  */
 import MTextField from '#kit/components/ui/text-field/index.vue'
-import type { Calendar, CalendarBounds } from '#kit/composables/date/createCalendar'
+import type { Calendar, CalendarBounds } from '#kit/utils/date/createCalendar'
 
 const props = defineProps<{
   calendar: Calendar
@@ -36,6 +37,9 @@ const props = defineProps<{
   errorRange: string
   disabled?: boolean
   readonly?: boolean
+  required?: boolean
+  /** The picker's own error state (set by the app), shown on the field's edge. */
+  invalid?: boolean
 }>()
 
 const emit = defineEmits<{ (e: 'commit', date: Date | null): void }>()
@@ -43,6 +47,12 @@ const emit = defineEmits<{ (e: 'commit', date: Date | null): void }>()
 const format = (date: Date | null) => date ? props.calendar.numeric(date) : ''
 const text = ref(format(props.value))
 const error = ref<string>()
+
+// The field reserves its support line only when there is an error to show
+// (decision 2026-10-19): the picker's own, or a typed date just refused.
+const fieldError = () => (props.invalid || error.value
+  ? { error: props.invalid, errorMessage: error.value }
+  : {})
 
 watch(() => [props.value, props.calendar] as const, ([value]) => {
   text.value = format(value)

@@ -79,6 +79,24 @@ describe('m-button-segmented', () => {
     }
   })
 
+  // Q-3: every segment keeps the room for the check, so choosing one changes no
+  // width; an unselected label segment centres its label over that room.
+  it('keeps the check room in every segment and centres unselected labels', async () => {
+    const wrapper = await mountSuspended(MSegmented, {
+      props: { items: [...items, { value: 'grid', icon: 'ic:outline-dashboard', ariaLabel: 'Grid' }], modelValue: 'week' },
+    })
+    const segments = wrapper.findAll('.ui-segmented-button__segment')
+
+    expect(segments.every(segment => segment.find('.ui-segmented-button__icon').exists())).toBe(true)
+    expect(segments.map(segment => segment.classes().includes('ui-segmented-button__segment--centered'))).toEqual([true, false, true, false])
+  })
+
+  it('has no loading state of its own', async () => {
+    const wrapper = await mountSuspended(MSegmented, { props: { items } })
+
+    expect(Object.keys(wrapper.props())).not.toContain('loading')
+  })
+
   it('renders nothing for an empty list', async () => {
     const wrapper = await mountSuspended(MSegmented, { props: { items: [] } })
 

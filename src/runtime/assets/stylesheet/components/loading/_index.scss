@@ -1,9 +1,33 @@
 @use 'sass:map';
+@use 'sass:math';
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
 // LOADING M3 COMPONENT TOKENS
 // ==========================================
+
+// The circular spinner's loop, from the M3 / MDC indeterminate circular
+// progress indicator: one arc grows and shrinks every 1333 ms on the standard
+// (legacy) curve, four arcs make a cycle, and the whole ring turns once every
+// 1333 × 360 / 306 ms. These are constants of an endless loop, not transition
+// durations: the system `--sys-motion-*` steps shorten under reduced motion,
+// which would speed the spinner up exactly when it should slow down.
+$arc: 1333ms;
+$curve: cubic-bezier(0.4, 0, 0.2, 1);
+
+// Reduced motion slows the loop instead of stopping it: a frozen arc reads as
+// a finished or broken control, not as waiting.
+$reduced: 2;
+
+@function loop($factor) {
+  @return (
+    arc: $arc * $factor,
+    cycle: $arc * 4 * $factor,
+    turn: math.div($arc * 360, 306) * $factor,
+    // The second half-ring starts half an arc behind the first.
+    offset: $arc * -0.5 * $factor,
+  );
+}
 
 $tokens: (
   size: (
@@ -19,7 +43,17 @@ $tokens: (
     large: 5rem,
     inline: 0.1em,
   ),
+  // Inline in a line of text, the 1em box is centred on the capital letters'
+  // middle, derived from the font's own cap height.
+  inline: (
+    align: calc((1cap - 1em) / 2),
+  ),
   spinner: (
     color: map.get($theme-color-link, 'primary'),
+  ),
+  motion: (
+    easing: $curve,
+    loop: loop(1),
+    reduced: loop($reduced),
   ),
 );

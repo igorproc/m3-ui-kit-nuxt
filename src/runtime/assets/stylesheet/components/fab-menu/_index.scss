@@ -5,29 +5,21 @@
 // FAB MENU M3 COMPONENT TOKENS
 // ==========================================
 
-$hover-opacity: state-opacity(hover);
-$focus-opacity: state-opacity(focus);
-$pressed-opacity: state-opacity(pressed);
 $on-surface: map.get($theme-color-link, 'on-surface');
-
-// One surface with its state layers, drawn in its own content colour.
-@function fab-menu-surface($container, $on-container) {
-  @return (
-    container: (
-      color: $container,
-      hover: (color: color-mix(in srgb, $on-container $hover-opacity, $container)),
-      focus: (color: color-mix(in srgb, $on-container $focus-opacity, $container)),
-      pressed: (color: color-mix(in srgb, $on-container $pressed-opacity, $container)),
-    ),
-    content: (color: $on-container),
-  );
-}
+$open-size: 56rem;
 
 // One MD3 role: the actions on its container, the open FAB on the role itself.
-@function fab-menu-scheme($role, $on-role, $container, $on-container) {
+// Hover, focus and pressed are a layer in each surface's content colour.
+@function fab-menu-scheme($role) {
   @return (
-    item: fab-menu-surface($container, $on-container),
-    open: fab-menu-surface($role, $on-role),
+    item: (
+      container: map.get($theme-color-link, '#{$role}-container'),
+      content: map.get($theme-color-link, 'on-#{$role}-container'),
+    ),
+    open: (
+      container: map.get($theme-color-link, $role),
+      content: map.get($theme-color-link, 'on-#{$role}'),
+    ),
   );
 }
 
@@ -53,11 +45,17 @@ $tokens: (
   ),
 
   // The open FAB: a 56 circle of the role with a 20 close icon, whatever the
-  // closed FAB's step was.
+  // closed FAB's step was. The circle is half the size, not `full`: a spring
+  // towards 999rem would show only its last frames (snap in, stall out).
   open: (
-    size: 56rem,
-    shape: map.get($theme-shape-link, 'full'),
+    size: $open-size,
+    shape: calc($open-size / 2),
     icon: (size: 20rem),
+  ),
+
+  state: (
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
   ),
 
   disabled: (
@@ -65,25 +63,14 @@ $tokens: (
     content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
   ),
 
-  primary: fab-menu-scheme(map.get($theme-color-link, 'primary'),
-    map.get($theme-color-link, 'on-primary'),
-    map.get($theme-color-link, 'primary-container'),
-    map.get($theme-color-link, 'on-primary-container')),
-  secondary: fab-menu-scheme(map.get($theme-color-link, 'secondary'),
-    map.get($theme-color-link, 'on-secondary'),
-    map.get($theme-color-link, 'secondary-container'),
-    map.get($theme-color-link, 'on-secondary-container')),
-  tertiary: fab-menu-scheme(map.get($theme-color-link, 'tertiary'),
-    map.get($theme-color-link, 'on-tertiary'),
-    map.get($theme-color-link, 'tertiary-container'),
-    map.get($theme-color-link, 'on-tertiary-container')),
-  error: fab-menu-scheme(map.get($theme-color-link, 'error'),
-    map.get($theme-color-link, 'on-error'),
-    map.get($theme-color-link, 'error-container'),
-    map.get($theme-color-link, 'on-error-container')),
+  primary: fab-menu-scheme('primary'),
+  secondary: fab-menu-scheme('secondary'),
+  tertiary: fab-menu-scheme('tertiary'),
+  error: fab-menu-scheme('error'),
 
   // Durations are system tokens, so reduced motion shortens them as it does
-  // everywhere else. The FAB morph is a spring (see the component).
+  // everywhere else. The FAB morph is a spring (see the component). The
+  // actions open nearest-first and close farthest-first, `stagger` apart.
   motion: (
     item: (
       duration: var(--sys-motion-duration-medium-2),

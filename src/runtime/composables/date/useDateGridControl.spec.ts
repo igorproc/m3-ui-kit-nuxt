@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { computed, defineComponent, h, nextTick, ref } from 'vue'
-import { createCalendar } from './createCalendar'
+import { createCalendar } from '#kit/utils/date/createCalendar'
 import { useDateGridControl } from './useDateGridControl'
 import type { DateGridControlOptions } from './useDateGridControl'
 
@@ -88,6 +88,28 @@ describe('useDateGridControl', () => {
     today.value = new Date(2026, 9, 7)
     await nextTick()
     expect(wrapper.find('[aria-current="date"]').attributes('aria-label')).toBe('Wednesday, October 7, 2026')
+  })
+
+  it('rests the tab stop on today once today is known, until the user moves it', async () => {
+    const today = ref<Date | null>(null)
+    const { component } = createHarness({ selected: () => null, today: () => today.value })
+    const wrapper = await mountSuspended(component)
+
+    expect(wrapper.find('[tabindex="0"]').attributes('aria-label')).toBe('Thursday, October 1, 2026')
+    today.value = new Date(2026, 9, 18)
+    await nextTick()
+    expect(wrapper.find('[tabindex="0"]').attributes('aria-label')).toBe('Sunday, October 18, 2026')
+  })
+
+  it('leaves a tab stop the user placed where it is when today arrives', async () => {
+    const today = ref<Date | null>(null)
+    const { component } = createHarness({ selected: () => null, today: () => today.value })
+    const wrapper = await mountSuspended(component)
+
+    await wrapper.find('[role="grid"]').trigger('keydown', { key: 'ArrowRight' })
+    today.value = new Date(2026, 9, 18)
+    await nextTick()
+    expect(wrapper.find('[tabindex="0"]').attributes('aria-label')).toBe('Friday, October 2, 2026')
   })
 
   it('produces no classes and no data attributes — presentation stays with the consumer', async () => {

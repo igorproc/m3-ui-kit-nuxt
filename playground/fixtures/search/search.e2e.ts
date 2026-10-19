@@ -104,3 +104,43 @@ test.describe('MSearch', () => {
     expect(outline).toBe('solid')
   })
 })
+
+test.describe('MSearch · keys, names and forced colours (M3-polish)', () => {
+  test('forced colors: a focused bar keeps the full focus ring, not the 1px edge', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' })
+    await openFixture(page, 'search/matrix')
+    await page.keyboard.press('Shift')
+    await page.getByTestId('empty').focus()
+    await waitForMotion(page)
+
+    const ring = await bar(page.getByTestId('empty')).evaluate(el => Number.parseFloat(getComputedStyle(el).outlineWidth))
+    expect(ring).toBeGreaterThanOrEqual(2)
+  })
+
+  test('the id of the app stays on the input, so its label names the bar', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+
+    await expect(page.getByTestId('with-id')).toHaveAttribute('id', 'consumer-search')
+    const labelled = await page.locator('label[for="consumer-search"]').evaluate(label => (label as HTMLLabelElement).control?.getAttribute('data-test'))
+    expect(labelled).toBe('with-id')
+  })
+
+  test('Escape empties the query and says so through clear', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('with-id')
+    await input.focus()
+
+    await page.keyboard.press('Escape')
+    await expect(input).toHaveValue('')
+    await expect(page.getByTestId('clears')).toHaveText('1')
+  })
+
+  test('the Enter that confirms an IME candidate is not a search', async ({ page }) => {
+    await openFixture(page, 'search/matrix')
+    const input = page.getByTestId('populated')
+    await input.focus()
+    await input.evaluate(el => el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true, cancelable: true })))
+
+    await expect(page.getByTestId('submitted')).toHaveText('')
+  })
+})

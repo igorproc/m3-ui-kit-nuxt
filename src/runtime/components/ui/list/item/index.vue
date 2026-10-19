@@ -54,14 +54,14 @@
       </div>
 
       <div
-        v-if="$slots.trailing || trailingIcon || trailingSupportingText || $slots.trailingSupporting"
+        v-if="$slots.trailing || trailingIcon || trailingSupportingText || $slots['trailing-supporting']"
         class="ui-list-item__trailing"
       >
         <div
-          v-if="trailingSupportingText || $slots.trailingSupporting"
+          v-if="trailingSupportingText || $slots['trailing-supporting']"
           class="ui-list-item__trailing-supporting"
         >
-          <slot name="trailingSupporting">
+          <slot name="trailing-supporting">
             {{ trailingSupportingText }}
           </slot>
         </div>
@@ -77,12 +77,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs, useSlots } from 'vue'
+import { computed, useAttrs } from 'vue'
 import { mListItemProps } from './props'
+import type { MListItemSlots } from './props'
 import { ListRow } from './ListRow'
 import { useListItemControl } from '#kit/composables/list/useListItemControl'
 import { LIST_CONTEXT_FALLBACK, provideListContext, useListContext } from '../context'
-import { useRetiredPropWarning } from '#kit/composables/button/useRetiredValueWarning'
 import MIcon from '#kit/components/ui/icon/index.vue'
 
 // Consumer attributes belong to the row element, which is not the root when an
@@ -91,9 +91,7 @@ defineOptions({ inheritAttrs: false })
 
 const props = defineProps(mListItemProps)
 const attrs = useAttrs()
-const slots = useSlots()
-
-useRetiredPropWarning('m-list-item', 'loading', () => props.loading, 'a progress indicator in the `#trailing` slot')
+const slots = defineSlots<MListItemSlots>()
 
 // The row's own prop wins; absent, the enclosing `<MList>` decides. A row with
 // no list ancestor gets the context's fallback.
@@ -244,24 +242,22 @@ const rowClasses = computed(() => ({
     color: g($t, 'leading.icon.color');
     font-size: g($t, 'leading.icon.size');
 
-    img {
+    // Bare media in the slot takes the row's image and video anatomy. A kit
+    // component placed here (`MAvatar`) sizes itself by its own density and
+    // shape, so its image is left out. `:where()` keeps the weight at the
+    // block alone: a consumer's class can resize the media.
+    :where(img:not(.ui-avatar__image)) {
       width: g($t, 'leading.image.width');
       height: g($t, 'leading.image.height');
       border-radius: g($t, 'leading.image.shape');
       object-fit: cover;
     }
 
-    video {
+    :where(video) {
       width: g($t, 'leading.video.width');
       height: g($t, 'leading.video.height');
       border-radius: g($t, 'leading.video.shape');
       object-fit: cover;
-    }
-
-    .ui-avatar {
-      width: g($t, 'leading.avatar.size');
-      height: g($t, 'leading.avatar.size');
-      border-radius: g($t, 'leading.avatar.shape');
     }
   }
 
@@ -301,8 +297,10 @@ const rowClasses = computed(() => ({
     font-size: g($t, 'trailing.icon.size');
   }
 
+  // Counts and times line up from row to row.
   &__trailing-supporting {
     color: g($t, 'trailing.supporting.text.color');
+    font-variant-numeric: tabular-nums;
 
     @include apply-typography(g($t, 'trailing.supporting.text.typography'));
   }

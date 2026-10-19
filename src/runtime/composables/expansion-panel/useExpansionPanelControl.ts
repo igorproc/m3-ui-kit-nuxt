@@ -24,8 +24,8 @@
  */
 import { computed, onScopeDispose, useId, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
-import { useExpansionPanelGroupContext } from './useExpansionPanelGroup'
-import type { PanelValue } from './useExpansionPanelGroup'
+import { useExpansionPanelGroupContext } from '#kit/components/ui/expansion-panels/context'
+import type { PanelValue } from '#kit/components/ui/expansion-panel/props'
 import type { MHeadingLevel } from '#kit/shared/types/props'
 
 export interface ExpansionPanelControlProps {
@@ -45,6 +45,8 @@ export interface UseExpansionPanelControlReturn {
   isOpen: ComputedRef<boolean>
   /** Open in an exclusive `mandatory` group: the button cannot collapse it. */
   isLocked: ComputedRef<boolean>
+  /** Inside `<MExpansionPanels>`: the group, not the panel's own model, decides the open state. */
+  isGrouped: boolean
   toggle: () => void
   /** Native heading element for `headingLevel` (`h2`–`h6`), `undefined` without one. */
   headingTag: ComputedRef<`h${MHeadingLevel}` | undefined>
@@ -124,5 +126,5 @@ export function useExpansionPanelControl(
     'inert': !isOpen.value,
   }))
 
-  return { isOpen, isLocked, toggle, headingTag, headingAttrs, buttonAttrs, regionAttrs }
+  return { isOpen, isLocked, isGrouped: Boolean(group), toggle, headingTag, headingAttrs, buttonAttrs, regionAttrs }
 }

@@ -15,6 +15,7 @@ $primary: map.get($theme-color-link, primary);
 $on-primary: map.get($theme-color-link, on-primary);
 $cell: 48rem;
 $day: 40rem;
+$hairline: max(1px, 1rem);
 $tokens: (
   container: (
     color: map.get($theme-color-link, surface-container-high),
@@ -35,15 +36,17 @@ $tokens: (
   header: (
     min-height: 120rem,
     padding: (top: spacing(16), inline-start: spacing(24), inline-end: spacing(12), bottom: spacing(12)),
+    gap: spacing(8),
   ),
   title: (typography: 'label-large', color: $on-surface-variant),
   headline: (typography: 'headline-large', color: $on-surface-variant),
-  divider: (color: map.get($theme-color-link, outline-variant), width: 1rem),
+  divider: (color: map.get($theme-color-link, outline-variant), width: $hairline),
   nav: (
     height: 56rem,
     padding: (inline: spacing(12)),
     color: $on-surface-variant,
     typography: 'label-large',
+    toggle: (padding: spacing(12)),
   ),
   weekday: (typography: 'body-large', color: $on-surface, height: $cell),
   grid: (cell: $cell, rows: 6),
@@ -52,7 +55,7 @@ $tokens: (
     shape: map.get($theme-shape-link, full),
     typography: 'body-large',
     color: $on-surface,
-    today: (color: $primary, outline: (color: $primary, width: 1rem)),
+    today: (color: $primary, outline: (color: $primary, width: $hairline)),
     selected: (container: $primary, color: $on-primary),
     disabled: (opacity: state-opacity(disabled-content)),
   ),
@@ -64,10 +67,13 @@ $tokens: (
     shape: map.get($theme-shape-link, full),
     typography: 'body-large',
     color: $on-surface-variant,
-    current: (color: $primary, outline: (color: $primary, width: 1rem)),
+    current: (color: $primary, outline: (color: $primary, width: $hairline)),
     selected: (container: $primary, color: $on-primary),
-    // The list is as tall as the day grid, so switching views keeps the height.
-    height-total: calc(#{$cell * 7} - 1rem),
+    // The list is as tall as the day grid (weekdays and six weeks), so
+    // switching views keeps the height.
+    height-total: $cell * 7,
+    // Room for the focus ring of the first and the last row.
+    list: (padding-block: calc(#{map.get($theme-focus-link, 'offset')} + #{map.get($theme-focus-link, 'width')})),
   ),
   input: (
     padding: (inline: spacing(24), top: calc(#{spacing(8)} + #{spacing(2)}), bottom: spacing(16)),

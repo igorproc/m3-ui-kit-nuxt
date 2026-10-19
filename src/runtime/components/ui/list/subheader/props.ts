@@ -24,3 +24,9 @@ export const mListSubheaderProps = {
 }
 
 export type MListSubheaderProps = ExtractPublicPropTypes<typeof mListSubheaderProps>
+
+/** Slots of `<MListSubheader>`. */
+export interface MListSubheaderSlots {
+  /** The label; a heading placed here (`<h3>`) keeps heading navigation and takes the label's type. */
+  default?: () => unknown
+}

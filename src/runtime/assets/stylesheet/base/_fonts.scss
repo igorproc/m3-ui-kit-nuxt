@@ -1,13 +1,15 @@
-/* font faces */
+@use 'sass:map';
+@use '~material-kit-config' as cfg;
 
-@import 'https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap';
-@import 'https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&display=swap';
+// Font files are linked from the document head (`plugins/fonts`), not `@import`ed here:
+// an import is only discovered once this stylesheet has downloaded.
+$typeface: cfg.$material-kit-typeface;
 
 :root {
   /* Typefaces */
-  --md-ref-typeface-brand: 'Google Sans', sans-serif;
-  --md-ref-typeface-plain: 'Google Sans Text', sans-serif;
-  --md-ref-typeface-monospace: 'Google Sans', monospace;
+  --md-ref-typeface-brand: #{map.get($typeface, 'brand')};
+  --md-ref-typeface-plain: #{map.get($typeface, 'plain')};
+  --md-ref-typeface-monospace: #{map.get($typeface, 'mono')};
 
   /* Display */
   --md-sys-typescale-display-large-font: var(--md-ref-typeface-brand);

@@ -3,11 +3,12 @@
 // ==========================================
 // TEXT FIELD · SHAPES AND STATES
 // ==========================================
-// Included inside `.ui-text-field`. Each shape walks its states in ascending
+// Included inside `.ui-text-field`. Each edge walks its states in ascending
 // order — base → hover → focused → error → error + hover → error + focused →
-// disabled — and every rule within a shape carries the same weight, so the
+// disabled — and every rule within an edge carries the same weight, so the
 // later one wins. Hover is wrapped in `:where()` and weighs nothing: it can
-// never outrank focus, and a disabled field never answers it.
+// never outrank focus, and a disabled field never answers it. A read-only
+// field answers it like any other (Compose: `readOnly` changes no colour).
 
 // Focus outranks error on the edge (color-and-state.md): an invalid field in
 // focus takes the focus colour, and the label, the glyph and the message keep
@@ -17,14 +18,13 @@
 // label above it or the message below.
 $hovered: ':where(:not(.ui-text-field--disabled):has(.ui-text-field__control:hover))';
 
+// The filled indicator and the underline rule are one part with one set of
+// states. In `:where()` for hover, so hover keeps the weight of a rest rule.
+$indicator: ':is(.ui-text-field--filled, .ui-text-field--underline)';
+$indicator-hovered: ':where(.ui-text-field--filled, .ui-text-field--underline)';
+
 @mixin states($t) {
   // ── content roles shared by every shape ──
-  @include can-hover {
-    &--outlined#{$hovered} .ui-text-field__label {
-      color: g($t, 'outlined.hover.label.color');
-    }
-  }
-
   &--focused .ui-text-field__label {
     color: g($t, 'focused.label.color');
   }
@@ -40,148 +40,128 @@ $hovered: ':where(:not(.ui-text-field--disabled):has(.ui-text-field__control:hov
     }
   }
 
+  &--error.ui-text-field--focused .ui-text-field__label {
+    color: g($t, 'error.color');
+  }
+
+  // ── filled · a container tone, and a state layer over it ──
+  &--filled .ui-text-field__control {
+    border-bottom-color: g($t, 'indicator.color');
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    background-color: g($t, 'filled.container.color');
+
+    // MD3 state layer: the content's own ink over the container, under the
+    // value — not a premixed background (craft.md, «The background swap»).
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: g($t, 'layer.color');
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+    }
+  }
+
+  &--filled.ui-text-field--disabled .ui-text-field__control {
+    background-color: g($t, 'filled.disabled.container.color');
+  }
+
+  // ── underline · a single bottom rule, no container ──
+  &--underline {
+    --ui-text-field-inset: #{g($t, 'underline.inset')};
+
+    .ui-text-field__control {
+      border: none;
+      border-bottom: g($t, 'container.border.width') solid g($t, 'underline.indicator.color');
+      border-radius: 0;
+    }
+
+    &.ui-text-field--prepend .ui-text-field__control {
+      padding-inline-start: 0;
+    }
+
+    &.ui-text-field--append .ui-text-field__control {
+      padding-inline-end: 0;
+    }
+
+    .ui-text-field__support {
+      padding-inline: g($t, 'underline.support.padding.inline');
+    }
+  }
+
+  // ── indicator · filled and underline ──
+  &--focused#{$indicator} .ui-text-field__control {
+    border-bottom-color: g($t, 'indicator.focused.color');
+  }
+
+  &--error#{$indicator} .ui-text-field__control {
+    border-bottom-color: g($t, 'indicator.error.color');
+  }
+
+  &--error.ui-text-field--focused#{$indicator} .ui-text-field__control {
+    border-bottom-color: g($t, 'indicator.focused.color');
+  }
+
+  &--disabled#{$indicator} .ui-text-field__control {
+    border-bottom-color: g($t, 'indicator.disabled.color');
+  }
+
+  // ── outlined · the control's own border stays transparent, the outline
+  // carries the colour ──
+  &--outlined.ui-text-field--focused .ui-text-field__outline {
+    border-color: g($t, 'outlined.outline.focused.color');
+  }
+
+  &--outlined.ui-text-field--error .ui-text-field__outline {
+    border-color: g($t, 'outlined.outline.error.color');
+  }
+
+  &--outlined.ui-text-field--error.ui-text-field--focused .ui-text-field__outline {
+    border-color: g($t, 'outlined.outline.focused.color');
+  }
+
+  &--outlined.ui-text-field--disabled .ui-text-field__outline {
+    border-color: g($t, 'outlined.outline.disabled.color');
+  }
+
+  // ── hover · weightless, so focus, error + focus and disabled outrank it ──
   @include can-hover {
+    &#{$indicator-hovered}#{$hovered} .ui-text-field__control {
+      border-bottom-color: g($t, 'indicator.hover.color');
+    }
+
+    &--filled#{$hovered} .ui-text-field__control::before {
+      opacity: g($t, 'layer.hover');
+    }
+
+    &--outlined#{$hovered} {
+      .ui-text-field__outline {
+        border-color: g($t, 'outlined.outline.hover.color');
+      }
+
+      // Weighs no more than the label's own rule, so focus and error keep it.
+      :where(.ui-text-field__label) {
+        color: g($t, 'outlined.hover.label.color');
+      }
+    }
+
     &--error#{$hovered} {
       .ui-text-field__label,
       .ui-text-field__icon--append {
         color: g($t, 'error.hover.color');
       }
     }
-  }
 
-  &--error.ui-text-field--focused .ui-text-field__label {
-    color: g($t, 'error.color');
-  }
-
-  // ── filled · a container tone and an indicator under it ──
-  &--filled {
-    .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.color');
-      border-end-start-radius: 0;
-      border-end-end-radius: 0;
-      background-color: g($t, 'filled.container.color');
-
-      // MD3 state layer: the content's own ink over the container, under the
-      // value — not a premixed background (craft.md, «Подмена фона»).
-      &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        border-radius: inherit;
-        background-color: g($t, 'layer.color');
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity g($t, 'state.duration') g($t, 'state.easing');
-      }
+    &--error#{$indicator}#{$hovered} .ui-text-field__control {
+      border-bottom-color: g($t, 'error.hover.color');
     }
 
-    @include can-hover {
-      &#{$hovered} .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.indicator.hover.color');
-
-        &::before {
-          opacity: g($t, 'layer.hover');
-        }
-      }
-    }
-
-    &.ui-text-field--focused .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.focused.color');
-    }
-
-    &.ui-text-field--error .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.error.color');
-    }
-
-    @include can-hover {
-      &.ui-text-field--error#{$hovered} .ui-text-field__control {
-        border-bottom-color: g($t, 'error.hover.color');
-      }
-    }
-
-    &.ui-text-field--error.ui-text-field--focused .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.focused.color');
-    }
-
-    &.ui-text-field--disabled .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.disabled.color');
-      background-color: g($t, 'filled.disabled.container.color');
-    }
-  }
-
-  // ── outlined · the control's own border stays transparent, the outline
-  // carries the colour ──
-  &--outlined {
-    @include can-hover {
-      &#{$hovered} .ui-text-field__outline {
-        border-color: g($t, 'outlined.outline.hover.color');
-      }
-    }
-
-    &.ui-text-field--focused .ui-text-field__outline {
-      border-color: g($t, 'outlined.outline.focused.color');
-    }
-
-    &.ui-text-field--error .ui-text-field__outline {
-      border-color: g($t, 'outlined.outline.error.color');
-    }
-
-    @include can-hover {
-      &.ui-text-field--error#{$hovered} .ui-text-field__outline {
-        border-color: g($t, 'error.hover.color');
-      }
-    }
-
-    &.ui-text-field--error.ui-text-field--focused .ui-text-field__outline {
-      border-color: g($t, 'outlined.outline.focused.color');
-    }
-
-    &.ui-text-field--disabled .ui-text-field__outline {
-      border-color: g($t, 'outlined.outline.disabled.color');
-    }
-  }
-
-  // ── underline · a single bottom rule, no container. The rule is an
-  // indicator, so its states are the filled indicator's ──
-  &--underline {
-    .ui-text-field__control {
-      padding-inline: 0;
-      border: none;
-      border-bottom: g($t, 'container.border.width') solid g($t, 'underline.indicator.color');
-      border-radius: 0;
-    }
-
-    .ui-text-field__support {
-      padding-inline: g($t, 'underline.support.padding.inline');
-    }
-
-    @include can-hover {
-      &#{$hovered} .ui-text-field__control {
-        border-bottom-color: g($t, 'filled.indicator.hover.color');
-      }
-    }
-
-    &.ui-text-field--focused .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.focused.color');
-    }
-
-    &.ui-text-field--error .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.error.color');
-    }
-
-    @include can-hover {
-      &.ui-text-field--error#{$hovered} .ui-text-field__control {
-        border-bottom-color: g($t, 'error.hover.color');
-      }
-    }
-
-    &.ui-text-field--error.ui-text-field--focused .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.focused.color');
-    }
-
-    &.ui-text-field--disabled .ui-text-field__control {
-      border-bottom-color: g($t, 'filled.indicator.disabled.color');
+    &--outlined.ui-text-field--error#{$hovered} .ui-text-field__outline {
+      border-color: g($t, 'error.hover.color');
     }
   }
 
@@ -217,8 +197,7 @@ $hovered: ':where(:not(.ui-text-field--disabled):has(.ui-text-field__control:hov
     // dashed edge: a system colour for it (Mark) can vanish on a light
     // contrast theme, a line style cannot.
     &.ui-text-field--error {
-      &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control {
+      &#{$indicator} .ui-text-field__control {
         border-bottom-style: dashed;
         border-bottom-color: CanvasText;
       }
@@ -230,8 +209,7 @@ $hovered: ':where(:not(.ui-text-field--disabled):has(.ui-text-field__control:hov
     }
 
     &.ui-text-field--focused {
-      &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control {
+      &#{$indicator} .ui-text-field__control {
         border-bottom-color: Highlight;
       }
 
@@ -241,8 +219,7 @@ $hovered: ':where(:not(.ui-text-field--disabled):has(.ui-text-field__control:hov
     }
 
     &.ui-text-field--disabled {
-      &.ui-text-field--filled .ui-text-field__control,
-      &.ui-text-field--underline .ui-text-field__control,
+      &#{$indicator} .ui-text-field__control,
       &.ui-text-field--outlined .ui-text-field__outline {
         border-color: GrayText;
       }

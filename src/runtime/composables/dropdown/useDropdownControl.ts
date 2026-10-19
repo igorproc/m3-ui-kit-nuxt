@@ -17,18 +17,18 @@
 import { computed, nextTick, useId, watch } from 'vue'
 import type { StyleValue } from 'vue'
 import { useListbox } from '#kit/composables/listbox/useListbox'
-import { useDropdownChips } from './useDropdownChips'
-import { useDropdownEntries } from './useDropdownEntries'
-import { useDropdownKeyboard } from './useDropdownKeyboard'
-import type { PanelLanding } from './useDropdownKeyboard'
-import { useDropdownSelection } from './useDropdownSelection'
+import { useDropdownChips } from '#kit/utils/dropdown/useDropdownChips'
+import { useDropdownEntries } from '#kit/utils/dropdown/useDropdownEntries'
+import { useDropdownKeyboard } from '#kit/utils/dropdown/useDropdownKeyboard'
+import type { PanelLanding } from '#kit/utils/dropdown/useDropdownKeyboard'
+import { useDropdownSelection } from '#kit/utils/dropdown/useDropdownSelection'
 import type {
   DropdownContext,
-  DropdownControlConfig,
   DropdownEntry,
   DropdownItemBase,
   DropdownListboxAttrs,
   DropdownOptionAttrs,
+  DropdownResolvedItem,
   DropdownResolver,
   UseDropdownControlOptions,
   UseDropdownControlReturn,
@@ -127,6 +127,8 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
 
   function openAt(target?: PanelLanding) {
     if (props.disabled || props.readonly || open.value) return
+    // An empty surface tells the user nothing: no rows, no state to show.
+    if (options.canOpen && !options.canOpen()) return
     landing = target
     open.value = true
   }
@@ -165,7 +167,7 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
     nextTick(() => {
       if (target === 'first' || target === 'last') return move(target)
       if (target !== undefined) return setActive(target)
-      if (editable()) return
+      if (!(options.landOnValue?.() ?? !editable())) return
 
       const index = entries.value.findIndex(entry => entry.selected && !entry.disabled)
       if (index >= 0) setActive(index)
@@ -241,7 +243,29 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
     return open.value ? activeDescendant.value : undefined
   })
 
+  // A select-only field takes no text, but a native `readonly` would make a
+  // screen reader announce a working select as read-only. Typing is refused
+  // instead; an IME composition cannot be cancelled, so its result is put back.
+  function keepTitle(event: Event) {
+    const input = event.target as HTMLInputElement
+    if (input.value !== displayTitle.value) input.value = displayTitle.value
+  }
+
+  const selectOnlyAttrs = {
+    inputmode: 'none',
+    autocomplete: 'off',
+    spellcheck: 'false',
+    onBeforeinput: (event: InputEvent) => {
+      if (event.cancelable) event.preventDefault()
+    },
+    onInput: (event: InputEvent) => {
+      if (!event.isComposing) keepTitle(event)
+    },
+    onCompositionend: keepTitle,
+  }
+
   const inputAttrs = computed<Record<string, unknown>>(() => ({
+    ...(editable() ? {} : selectOnlyAttrs),
     'role': 'combobox',
     'aria-autocomplete': editable() ? 'list' : 'none',
     'aria-haspopup': 'listbox',
@@ -272,9 +296,12 @@ export function useDropdownControl<TItem extends DropdownItemBase, TValue = TIte
       event.stopPropagation()
       selectEntry(entry)
     },
+    // The row is already under the pointer: activating it must not scroll the
+    // list, or a half-visible row slides out from under the cursor.
     'onPointermove': () => {
+      if (activeDescendant.value === entry.id) return
       const index = entries.value.findIndex(row => row.id === entry.id)
-      if (index >= 0) setActive(index)
+      if (index >= 0) setActive(index, { scroll: false })
     },
   })
 

@@ -11,6 +11,9 @@
  * a modifier pressed halfway through rescales the whole gesture instead of
  * leaving a seam at the point it was pressed.
  *
+ * The direction is logical: dragging towards the end of the line increases
+ * the value — rightwards in LTR, leftwards in RTL — as the kit's slider keys do.
+ *
  * Accessibility: this composable adds no keyboard path of its own, and must not.
  * The handle is a `<label>` pointing at the input, so it is not a tab stop and
  * clicking it focuses the field; the keyboard equivalent of the gesture is the
@@ -77,6 +80,7 @@ export function useNumberScrub(
   const disabled = computed(() => props.controls !== 'scrub' || Boolean(props.disabled || props.readonly))
 
   let base = 0
+  let direction = 1
 
   function multiplierFor(event: PointerEvent) {
     if (event.shiftKey) return COARSE_MULTIPLIER
@@ -90,9 +94,10 @@ export function useNumberScrub(
     disabled,
     onStart: () => {
       base = value.currentValue.value
+      direction = handle.value && getComputedStyle(handle.value).direction === 'rtl' ? -1 : 1
     },
     onMove: (state) => {
-      const steps = Math.trunc(state.dx / PIXELS_PER_STEP)
+      const steps = Math.trunc(direction * state.dx / PIXELS_PER_STEP)
       const distance = steps * value.safeStep.value * multiplierFor(state.event)
 
       value.set(base + distance)

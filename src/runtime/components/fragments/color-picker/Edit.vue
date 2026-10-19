@@ -1,5 +1,8 @@
 <template>
-  <div class="ui-color-edit">
+  <div
+    class="ui-color-edit"
+    :class="{ 'ui-color-edit--channels': !isHex }"
+  >
     <MTextField
       v-if="isHex"
       v-model="draft"
@@ -7,8 +10,7 @@
       :label="ctx.messages.value.value"
       :disabled="ctx.disabled.value"
       :readonly="ctx.readonly.value"
-      :error="!ctx.valid.value"
-      :error-message="ctx.valid.value ? undefined : ctx.messages.value.formatHint"
+      v-bind="fieldError()"
       variant="outlined"
       density="compact"
       autocomplete="off"
@@ -21,6 +23,7 @@
     <div
       v-else-if="isRgb"
       class="ui-color-edit__channels"
+      :class="{ 'ui-color-edit__channels--pairs': includesAlpha }"
       role="group"
       :aria-label="ctx.messages.value.channels"
     >
@@ -46,6 +49,7 @@
     <div
       v-else
       class="ui-color-edit__channels"
+      :class="{ 'ui-color-edit__channels--pairs': includesAlpha }"
       role="group"
       :aria-label="ctx.messages.value.channels"
     >
@@ -73,7 +77,7 @@
 <script setup lang="ts">
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import MNumberInput from '#kit/components/ui/number-input/index.vue'
-import { useColorPickerContext } from '#kit/composables/color-picker/context'
+import { useColorPickerContext } from '#kit/utils/color-picker/context'
 import { hslaToRgba, rgbaToHsla } from '#kit/shared/utils/color'
 import type { HSLA, RGBA } from '#kit/shared/utils/color'
 
@@ -81,6 +85,10 @@ type RgbChannel = keyof Pick<RGBA, 'r' | 'g' | 'b' | 'a'>
 type HslChannel = keyof Pick<HSLA, 'h' | 's' | 'l' | 'a'>
 
 const ctx = useColorPickerContext()
+
+// The value field reserves its support line only while it has an error to show
+// (decision 2026-10-19): passed only for an unreadable value.
+const fieldError = () => (ctx.valid.value ? {} : { error: true, errorMessage: ctx.messages.value.formatHint })
 const draft = ref(ctx.value.value ?? '')
 const isHex = computed(() => ctx.format.value === 'hex' || ctx.format.value === 'hexa')
 const isRgb = computed(() => ctx.format.value === 'rgb' || ctx.format.value === 'rgba')
@@ -158,10 +166,26 @@ function setHslChannel(channel: HslChannel, value: number | null) {
 .ui-color-edit {
   $t: material-map(t.$tokens, 'm-color-picker');
 
+  // Beside the preview and the format, a hex value takes the rest of the row
+  // (in a narrow picker it wraps under them); channel fields take a row of
+  // their own.
+  flex: 1 1 g($t, 'edit.value.basis');
+  min-width: 0;
+
+  &--channels {
+    flex-basis: 100%;
+  }
+
+  // Three channels in a row; four (with alpha) in two pairs, so no value is
+  // cut short in a narrow picker.
   &__channels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(g($t, 'edit.channel.min.width'), 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: g($t, 'edit.gap');
+
+    &--pairs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 }
 </style>

@@ -11,14 +11,15 @@ const items: City[] = [
   { id: 3, name: 'Gamma' },
 ]
 
-const base = { items, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off' } as const
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
+const base = { items, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off', messages } as const
 
 let host: HTMLElement
 let current: { unmount: () => void } | null = null
 
-async function mount(props: Record<string, unknown>) {
+async function mount(props: Record<string, unknown>, attach = false) {
   if (current) current.unmount()
-  current = await mountSuspended(MAutocomplete, { props })
+  current = await mountSuspended(MAutocomplete, { props, ...(attach ? { attachTo: document.body } : {}) })
   return current as Awaited<ReturnType<typeof mountSuspended>>
 }
 
@@ -34,7 +35,7 @@ afterEach(() => {
   host.remove()
 })
 
-const optionEls = () => [...document.querySelectorAll<HTMLElement>('.ui-autocomplete__option')]
+const optionEls = () => [...document.querySelectorAll<HTMLElement>('.ui-dropdown-panel__option')]
 const optionByText = (text: string) => optionEls().find(option => option.textContent?.includes(text))
 
 async function openMenu(wrapper: Awaited<ReturnType<typeof mountSuspended>>) {
@@ -161,6 +162,45 @@ describe('m-autocomplete · interaction', () => {
     expect(wrapper.emitted('update:open')?.at(-1)).toEqual([true])
   })
 
+  it('reopens a field with a value on the whole list, landing on the value', async () => {
+    const wrapper = await mount({ ...base, modelValue: 3 })
+    await openMenu(wrapper)
+
+    expect(optionEls()).toHaveLength(3)
+    const active = wrapper.find('input.ui-text-field__input').attributes('aria-activedescendant')
+    expect(optionByText('Gamma')!.id).toBe(active)
+  })
+
+  it('does not turn a chosen title into a query', async () => {
+    const wrapper = await mount(base)
+    await openMenu(wrapper)
+
+    optionByText('Gamma')!.click()
+    await nextTick()
+
+    expect((wrapper.find('input.ui-text-field__input').element as HTMLInputElement).value).toBe('Gamma')
+    expect(wrapper.emitted('update:search')?.at(-1) ?? ['']).toEqual([''])
+    await openMenu(wrapper)
+    expect(optionEls()).toHaveLength(3)
+  })
+
+  it('opens on a press into a field that already has focus', async () => {
+    const wrapper = await mount(base, true)
+    const input = wrapper.find('input.ui-text-field__input')
+    ;(input.element as HTMLInputElement).focus()
+    await nextTick()
+
+    await input.trigger('click')
+    expect(wrapper.emitted('update:open')?.at(-1)).toEqual([true])
+  })
+
+  it('does not open the toggle onto nothing below the minimum length', async () => {
+    const wrapper = await mount({ ...base, minSearchLength: 2 })
+
+    await wrapper.find('.ui-autocomplete__toggle').trigger('click')
+    expect(wrapper.emitted('update:open')).toBeFalsy()
+  })
+
   it('shows the selected title from the first render, without reporting a query', async () => {
     const wrapper = await mount({ ...base, modelValue: 3 })
 
@@ -194,14 +234,14 @@ describe('m-autocomplete · interaction', () => {
     await wrapper.setProps({ loading: true })
     expect(optionEls()).toHaveLength(3)
     expect(document.querySelector('[role="progressbar"]')).not.toBeNull()
-    expect(document.querySelector('.ui-autocomplete__state')).toBeNull()
+    expect(document.querySelector('.ui-dropdown-panel__state')).toBeNull()
   })
 
   it('shows the loading state in place of rows only when there are none', async () => {
     const wrapper = await mount({ ...base, items: [], loading: true })
     await openMenu(wrapper)
 
-    expect(document.querySelector('.ui-autocomplete__state')?.textContent).toContain('Loading options')
+    expect(document.querySelector('.ui-dropdown-panel__state')?.textContent).toContain('Loading options')
   })
 
   it('does not react to keyboard or clicks when disabled', async () => {
@@ -211,6 +251,6 @@ describe('m-autocomplete · interaction', () => {
     await nextTick()
 
     expect(wrapper.emitted('update:open')).toBeFalsy()
-    expect(document.querySelector('.ui-autocomplete__option')).toBeNull()
+    expect(document.querySelector('.ui-dropdown-panel__option')).toBeNull()
   })
 })

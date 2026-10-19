@@ -1,4 +1,5 @@
 @use '../../abstracts/forward.scss' as *;
+@use 'family';
 
 // ==========================================
 // TEXT FIELD · LABEL PLACEMENT AND NOTCH
@@ -7,9 +8,11 @@
 // independent of the shape: base is `top`, every other placement overrides it,
 // so a placement can never be half-applied by a missing branch.
 
-// The label never moves (color-and-state.md, «Лейблы не двигаются»): `float`
+// The label never moves (color-and-state.md, «Labels do not move»): `float`
 // and `inset` are positions held from the first frame, not transitions. Only
 // its colour follows the state.
+
+$overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
 
 @mixin label($t) {
   &__label {
@@ -24,8 +27,8 @@
   }
 
   // Overlay placements: out of flow and onto the container, raised by a static
-  // transform. Scaled around the vertical centre, so the raise is pure height
-  // math and the label's centre never drifts with its size.
+  // transform. Scaled around its vertical centre, so `top` is where the
+  // centre sits whatever the size.
   &--label-float,
   &--label-inset {
     .ui-text-field__label {
@@ -33,15 +36,20 @@
       top: var(--ui-text-field-label-top);
       inset-inline-start: var(--ui-text-field-inset);
       z-index: 1;
-      max-width: g($t, 'label.max-width');
+      max-width: g($t, 'label.room.base');
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       pointer-events: none;
-      transform: var(--ui-text-field-label-raised-inside);
-      transform-origin: var(--ui-text-field-start) center;
+      transform: g($t, 'label.transform');
+      transform-origin: left center;
 
       @include typescale(g($t, 'typography.label.overlay'));
+
+      // The scale origin is physical, so the writing direction picks its side.
+      &:dir(rtl) {
+        transform-origin: right center;
+      }
     }
   }
 
@@ -50,44 +58,56 @@
     @include sr-only;
   }
 
-  // A resting overlaid label beside a prepend starts where the value does.
-  &--prepend {
-    --ui-text-field-label-notch-shift: #{g($t, 'label.prepend.notch.shift')};
-
-    .ui-text-field__label {
-      inset-inline-start: g($t, 'label.prepend.left');
-    }
+  // Beside an icon an overlaid label starts and stops where the value does.
+  // The placement sits in `:where()`, so these weigh what a plain modifier
+  // does and the notch rule below still wins for `float` on outlined.
+  &--prepend#{$overlay} .ui-text-field__label {
+    inset-inline-start: g($t, 'label.start.prepend');
   }
 
-  // translateX is physical: the shift back to the start edge flips with it.
-  &--prepend:dir(rtl) {
-    --ui-text-field-label-notch-shift: calc(-1 * #{g($t, 'label.prepend.notch.shift')});
+  &:where(.ui-text-field--prepend, .ui-text-field--append)#{$overlay} .ui-text-field__label {
+    max-width: g($t, 'label.room.one');
   }
 
-  &--underline .ui-text-field__label {
-    inset-inline-start: 0;
+  &--prepend.ui-text-field--append#{$overlay} .ui-text-field__label {
+    max-width: g($t, 'label.room.both');
   }
 
-  // `float` on outlined lands on the top border, in the gap the legend opens.
-  // `inset` stays inside the box on every shape, the notch closed.
+  &--underline.ui-text-field--prepend#{$overlay} .ui-text-field__label {
+    inset-inline-start: g($t, 'label.start.underline-prepend');
+  }
+
+  &--underline:where(.ui-text-field--prepend, .ui-text-field--append)#{$overlay} .ui-text-field__label {
+    max-width: g($t, 'label.room.underline-one');
+  }
+
+  &--underline.ui-text-field--prepend.ui-text-field--append#{$overlay} .ui-text-field__label {
+    max-width: g($t, 'label.room.underline-both');
+  }
+
+  // `float` on outlined lands on the top border, in the gap the legend opens,
+  // at the content start whatever stands beside it. `inset` stays inside the
+  // box on every shape, the notch closed.
   &--label-float.ui-text-field--outlined {
     .ui-text-field__label {
-      transform: translateX(var(--ui-text-field-label-notch-shift, 0)) var(--ui-text-field-label-raised-notch);
+      top: 0;
+      inset-inline-start: var(--ui-text-field-inset);
+      max-width: g($t, 'label.room.base');
     }
 
     .ui-text-field__notch {
-      max-width: 100%;
+      max-width: g($t, 'outlined.notch.open');
     }
   }
 
   // The value gives a label sitting inside the box room above it. Applied to
   // the row the label sits over (`__row`): the bare input, or — when a
   // composite fills `leading-content` — the row that holds the chips *and*
-  // the input, so the chips do not stay centred under the label. `underline`
-  // has no box to centre in, and a label on the notch takes no room.
+  // the input, so the chips do not stay centred under the label. A label on
+  // the notch takes no room.
   &--label-float.ui-text-field--filled,
-  &--label-inset.ui-text-field--filled,
-  &--label-inset.ui-text-field--outlined {
+  &--label-float.ui-text-field--underline,
+  &--label-inset {
     .ui-text-field__row {
       padding-top: var(--ui-text-field-input-padding-top);
       padding-bottom: var(--ui-text-field-input-padding-bottom);
@@ -113,24 +133,5 @@
     transition: border-color g($t, 'state.duration') g($t, 'state.easing');
   }
 
-  // As tall as the border it sits on, so the fieldset never shifts its top edge
-  // to centre a taller legend. Its width is the only thing that matters.
-  &__notch {
-    display: block;
-    width: auto;
-    max-width: 0.01rem;
-    height: g($t, 'container.border.width');
-    padding: 0;
-    overflow: hidden;
-    visibility: hidden;
-    white-space: nowrap;
-
-    @include typescale(g($t, 'typography.label.overlay'));
-  }
-
-  &__notch-text {
-    display: inline-block;
-    padding-inline: g($t, 'outlined.notch.padding.inline');
-    font-size: g($t, 'outlined.notch.font-size');
-  }
+  @include family.notch($t);
 }

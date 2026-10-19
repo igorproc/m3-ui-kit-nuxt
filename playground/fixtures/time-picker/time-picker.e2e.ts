@@ -202,4 +202,97 @@ test.describe('MTimePicker', () => {
     await waitForMotion(page)
     await expect(dial).toHaveAttribute('aria-valuenow', '22')
   })
+
+  test('hours to minutes cross-fades: the dial is never empty', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const dial = page.getByTestId('h23-evening').getByRole('slider')
+    const box = (await dial.boundingBox())!
+
+    await page.evaluate(() => {
+      const seen: number[] = []
+      const until = performance.now() + 700
+      const sample = () => {
+        const layers = [...document.querySelectorAll('[data-test="h23-evening"] .ui-time-picker__numbers')]
+        seen.push(Math.max(0, ...layers.map(layer => Number(getComputedStyle(layer).opacity))))
+        if (performance.now() < until) requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+      Object.assign(window, { __faces: seen })
+    })
+    await page.mouse.click(box.x + box.width * 0.85, box.y + box.height / 2)
+    await page.waitForTimeout(800)
+
+    const seen = await page.evaluate(() => (window as unknown as { __faces: number[] }).__faces)
+    expect(Math.min(...seen)).toBeGreaterThan(0.4)
+  })
+
+  test('a pointer press on the dial draws no focus ring', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const dial = page.getByTestId('h23-evening').getByRole('slider')
+    const box = (await dial.boundingBox())!
+
+    await page.mouse.click(box.x + box.width * 0.85, box.y + box.height / 2)
+    await expect(dial).toBeFocused()
+    expect(await dial.evaluate(el => el.matches(':focus-visible'))).toBe(false)
+  })
+
+  test('the hand stands under a dragging pointer', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const picker = page.getByTestId('h23-evening')
+    const dial = picker.getByRole('slider')
+    const box = (await dial.boundingBox())!
+    const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    const radius = box.width * 0.4
+    const at = (degrees: number) => ({ x: centre.x + Math.sin(degrees * Math.PI / 180) * radius, y: centre.y - Math.cos(degrees * Math.PI / 180) * radius })
+    const drawn = () => picker.locator('.ui-time-picker__hand').evaluate((el) => {
+      const [a, b] = new DOMMatrix(getComputedStyle(el).transform).toFloat64Array()
+      return (Math.atan2(b!, a!) * 180 / Math.PI + 360) % 360
+    })
+
+    await page.mouse.move(at(300).x, at(300).y)
+    await page.mouse.down()
+    await page.mouse.move(at(318).x, at(318).y)
+    expect(await drawn()).toBeCloseTo(318, 0)
+    await page.mouse.move(at(17).x, at(17).y)
+    expect(await drawn()).toBeCloseTo(17, 0)
+    await page.mouse.up()
+    await waitForMotion(page)
+    expect(await drawn() % 30).toBeCloseTo(0, 0)
+  })
+
+  test('a refused minute does not grow the picker', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    for (const name of ['input-h12', 'input-h23']) {
+      const picker = page.getByTestId(name)
+      const before = (await picker.boundingBox())!.height
+
+      await picker.locator('input[id$="minutes-field"]').fill('75')
+      await page.keyboard.press('Tab')
+      await expect(picker.getByRole('alert')).not.toBeEmpty()
+      expect((await picker.boundingBox())!.height).toBeCloseTo(before, 1)
+    }
+  })
+
+  test('a typed field in focus shows focus, not the error, on its edge', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const field = page.getByTestId('input-error').locator('input[id$="hours-field"]')
+    const edge = () => field.evaluate(el => getComputedStyle(el).borderTopColor)
+    const resting = await edge()
+
+    await field.focus()
+    await waitForMotion(page)
+    expect(await edge()).not.toBe(resting)
+  })
+
+  test('the mode switch, when offered, flips between the dial and the fields', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const picker = page.getByTestId('toggle')
+    const toggle = picker.getByRole('button', { name: 'Switch to typing the time' })
+
+    await toggle.click()
+    await expect(picker.getByRole('textbox')).toHaveCount(2)
+    await picker.getByRole('button', { name: 'Switch to the dial' }).click()
+    await expect(picker.getByRole('slider')).toBeVisible()
+    await expect(page.getByTestId('h23-evening').locator('.ui-time-picker__actions')).toHaveCount(0)
+  })
 })

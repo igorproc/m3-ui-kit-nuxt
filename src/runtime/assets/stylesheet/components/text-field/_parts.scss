@@ -1,0 +1,110 @@
+@use '../../abstracts/forward.scss' as *;
+@use 'family';
+
+// ==========================================
+// TEXT FIELD · VALUE ROW, ICONS, SUPPORT LINE
+// ==========================================
+// Included inside `.ui-text-field`; split out so the component file stays
+// readable. Values come from the text field's own `$tokens`.
+
+@mixin parts($t) {
+  // Composite input row: inline content (chips), affixes and the native input
+  // on one scrolling row. Spacing is per part, not a flex gap: an affix hugs
+  // the value closer than the chips do.
+  &__field {
+    display: flex;
+    flex: 1;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .ui-text-field__input {
+      flex: 1 0 g($t, 'container.field.input-min-width');
+      width: auto;
+    }
+
+    // Chips must never widen the field: the row is sized as if it held only
+    // the input's minimum, and scrolls past it. The container decides the
+    // width (css-layout: a size container ignores its children's sizes).
+    &--leading {
+      contain: inline-size;
+      contain-intrinsic-inline-size: g($t, 'container.field.input-min-width');
+    }
+  }
+
+  // Holds the consumer's inline content (chips) at its natural width, so it
+  // never shrinks under the input. Its height is an input chip's whether or
+  // not one is there yet, so the first chip does not grow the box.
+  &__leading {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: g($t, 'container.field.gap');
+    min-height: g($t, 'container.field.leading.min-height');
+    margin-inline-end: g($t, 'container.field.gap');
+
+    &:empty {
+      margin-inline-end: 0;
+    }
+  }
+
+  &__affix {
+    flex: 0 0 auto;
+    color: g($t, 'affix.color');
+    white-space: nowrap;
+
+    @include typescale(g($t, 'typography.affix'));
+
+    &--prefix {
+      margin-inline-end: g($t, 'affix.gap');
+    }
+
+    &--suffix {
+      margin-inline-start: g($t, 'affix.gap');
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: g($t, 'icon.width');
+    color: g($t, 'icon.color');
+    font-size: g($t, 'icon.size');
+    transition: color g($t, 'state.duration') g($t, 'state.easing');
+
+    &--prepend {
+      margin-inline-end: g($t, 'icon.prepend.margin');
+    }
+
+    &--append {
+      margin-inline-start: g($t, 'icon.append.margin');
+    }
+  }
+
+  // ── support line · reserved height so valid ⇄ invalid never reflows ──
+  &__support {
+    display: flex;
+    align-items: center;
+
+    @include family.support-line($t);
+  }
+
+  &--error .ui-text-field__support {
+    color: g($t, 'error.color');
+  }
+
+  &__support-icon {
+    @include family.support-glyph($t);
+  }
+
+  &__alert {
+    min-width: 0;
+  }
+}

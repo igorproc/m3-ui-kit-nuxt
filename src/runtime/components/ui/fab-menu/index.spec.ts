@@ -28,24 +28,12 @@ describe('m-fab-menu', () => {
     expect(wrapper.classes()).toContain('ui-fab-menu--start')
   })
 
-  it('still honours the retired left / right as start / end', async () => {
-    const wrapper = await mountSuspended(MFabMenu, { props: { items, align: 'left' } })
-
-    expect(wrapper.classes()).toContain('ui-fab-menu--start')
-  })
-
   it('renders the default FAB on its container colour with the density step', async () => {
     const wrapper = await mountSuspended(MFabMenu, { props: { items, density: 'comfortable', ariaLabel: 'Create' } })
     const fab = wrapper.find('button.ui-fab')
 
     expect(fab.classes()).toEqual(expect.arrayContaining(['ui-fab--tonal', 'ui-fab--comfortable']))
     expect(fab.attributes('aria-label')).toBe('Create')
-  })
-
-  it('still honours the retired size as a density step', async () => {
-    const wrapper = await mountSuspended(MFabMenu, { props: { items, size: 'sm' } })
-
-    expect(wrapper.find('button.ui-fab').classes()).toContain('ui-fab--compact')
   })
 
   it('is a disclosure: aria-expanded follows the menu, aria-controls names the actions', async () => {
@@ -104,6 +92,42 @@ describe('m-fab-menu', () => {
 
     await activator(wrapper).trigger('click')
     expect(wrapper.emitted('update:open')?.at(-1)).toEqual([true])
+  })
+
+  // FM.B-3/B-4: the drawer stays mounted while the actions leave, and the open
+  // class drives both ways, so a reversal continues instead of rebuilding.
+  it('keeps the actions mounted through a close and reopen, moving them by class', async () => {
+    const wrapper = await mountSuspended(MFabMenu, { props: { items } })
+
+    await activator(wrapper).trigger('click')
+    await nextTick()
+    const drawer = wrapper.find('.ui-fab-menu__drawer')
+    expect(drawer.classes()).toContain('ui-fab-menu__drawer--open')
+    const first = wrapper.find('.ui-fab-menu__entry').element
+
+    await activator(wrapper).trigger('click')
+    expect(wrapper.find('.ui-fab-menu__drawer').classes()).not.toContain('ui-fab-menu__drawer--open')
+    await activator(wrapper).trigger('click')
+    await nextTick()
+    expect(wrapper.find('.ui-fab-menu__entry').element).toBe(first)
+  })
+
+  it('cascades the actions nearest-first in and farthest-first out', async () => {
+    const wrapper = await mountSuspended(MFabMenu, { props: { items } })
+
+    await activator(wrapper).trigger('click')
+    const entries = wrapper.findAll('.ui-fab-menu__entry')
+
+    expect(entries.map(entry => (entry.element as HTMLElement).style.getPropertyValue('--ui-fab-enter'))).toEqual(['1', '0'])
+    expect(entries.map(entry => (entry.element as HTMLElement).style.getPropertyValue('--ui-fab-leave'))).toEqual(['0', '1'])
+  })
+
+  it('keeps both glyphs mounted and crosses them by state', async () => {
+    const wrapper = await mountSuspended(MFabMenu, { props: { items } })
+
+    expect(wrapper.findAll('.ui-fab-menu__icon')).toHaveLength(2)
+    await activator(wrapper).trigger('click')
+    expect(wrapper.findAll('.ui-fab-menu__icon')).toHaveLength(2)
   })
 
   it('does not open when disabled or when there is nothing to show', async () => {

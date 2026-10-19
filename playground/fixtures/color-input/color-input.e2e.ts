@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Locator } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, waitForMotion } from '../../e2e/support'
 
 /** `data-test` falls through to the field's input; the field root is its ancestor. */
 const root = (input: Locator) => input.locator('xpath=ancestor::div[contains(@class, "ui-text-field ")][1]')
@@ -75,5 +75,20 @@ test.describe('MColorInput', () => {
     const swatch = root(page.getByTestId('value-filled')).locator('.ui-color-input__swatch')
 
     expect(await swatch.evaluate(el => getComputedStyle(el).borderTopStyle)).toBe('solid')
+  })
+
+  test('the picker opens with the focus inside it, on a surface of its popover alone', async ({ page }) => {
+    await openFixture(page, 'color-input/swatches')
+    const trigger = page.locator('.ui-text-field:has([data-test="plain"])').getByRole('button', { name: 'Pick a colour' })
+
+    await trigger.click()
+    await waitForMotion(page)
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.ui-color-input__picker')))).toBe(true)
+
+    const surface = await page.locator('.ui-color-input__picker .ui-color-picker').evaluate(el => ({
+      background: getComputedStyle(el).backgroundColor,
+      shadow: getComputedStyle(el).boxShadow,
+    }))
+    expect(surface).toEqual({ background: 'rgba(0, 0, 0, 0)', shadow: 'none' })
   })
 })

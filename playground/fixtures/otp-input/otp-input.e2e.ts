@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, waitForMotion } from '../../e2e/support'
 
 const field = (page: Page, id: string) => page.getByTestId(id)
 const input = (page: Page, id: string) => field(page, id).locator('input')
@@ -276,5 +276,42 @@ test.describe('MOtpInput', () => {
     await openFixture(page, 'otp-input/matrix')
 
     expect(await cells(page, 'error-message').first().evaluate(el => getComputedStyle(el).borderTopStyle)).toBe('dashed')
+  })
+
+  test('the active ring grows by a shadow, so the edge width and the glyph never move', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+    await input(page, 'empty').focus()
+    await waitForMotion(page)
+    const [active, resting] = await cells(page, 'empty').evaluateAll(list => list.slice(0, 2).map(cell => ({
+      width: getComputedStyle(cell).borderTopWidth,
+      shadow: getComputedStyle(cell).boxShadow,
+    })))
+
+    expect(active!.width).toBe(resting!.width)
+    expect(active!.shadow).not.toBe(resting!.shadow)
+  })
+
+  test('a code typed to the end shows the focus on every edge until it is left', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+    const edges = () => cells(page, 'empty').evaluateAll(list => list.map(cell => getComputedStyle(cell).borderTopColor))
+
+    await input(page, 'empty').focus()
+    await waitForMotion(page)
+    const focusColour = (await edges())[0]
+    await page.keyboard.type('123456')
+    await expect.poll(async () => new Set(await edges()).size).toBe(1)
+    expect((await edges())[0]).toBe(focusColour)
+
+    await input(page, 'empty').blur()
+    await expect.poll(async () => (await edges())[0]).not.toBe(focusColour)
+  })
+
+  test('a character typed inside a full code replaces the one under the caret', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+    await clickCell(page, 'filled', 2)
+    await page.keyboard.type('9')
+
+    await expect(input(page, 'filled')).toHaveValue('129456')
+    await expectActive(page, 'filled', 3)
   })
 })

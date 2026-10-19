@@ -163,8 +163,50 @@ Read `theme.canCustomizePalette` to hide your color picker accordingly.
 ## `typography`
 
 ```ts
-typography: { fontFamily: 'Roboto, sans-serif' }
+typography: {
+  typeface: {
+    brand: '\'Google Sans\', sans-serif',
+    plain: '\'Google Sans Text\', sans-serif',
+  },
+  fonts: [
+    'https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&family=Google+Sans+Text:wght@400..700&display=swap',
+  ],
+}
 ```
 
-Base font family for the generated type scale. See
-[architecture.md](architecture.md#1-the-token-layer) for how sizes are scaled.
+Without a `typography` key the kit uses the MD3 baseline: Roboto, loaded from Google Fonts.
+
+### `typography.typeface`
+
+CSS `font-family` stacks of the MD3 reference typefaces. They become
+`--md-ref-typeface-*`, which every `--md-sys-typescale-*-font` token reads. Roles you leave
+out keep their default.
+
+| Role | Default | Used by |
+| :--- | :--- | :--- |
+| `brand` | `Roboto, sans-serif` | display, headline, title-large |
+| `plain` | `Roboto, sans-serif` | title-medium/small, label, body |
+| `mono` | `ui-monospace, monospace` | `--md-ref-typeface-monospace` |
+
+The stacks are compiled into the stylesheet, so changing them needs a rebuild.
+
+### `typography.fonts`
+
+Stylesheet URLs with the `@font-face` rules to load. They are linked from the document
+head, so the browser finds them while parsing the HTML, before the kit's own CSS arrives.
+
+- **Google Fonts or another CDN** — an absolute URL. The kit adds the matching
+  `<link rel="preconnect">`s.
+- **An S3 bucket** — an absolute URL. The bucket origin is preconnected for the stylesheet
+  and for the font files it references; the bucket must send CORS headers for the fonts.
+- **`public/`** — a path such as `/fonts/inter.css`, used as is: no preconnect, and
+  `app.baseURL` is not prepended.
+
+The list **replaces** the default Roboto rather than adding to it. `false` (or `[]`) loads
+nothing, for fonts you ship some other way.
+
+The list is read at runtime from `runtimeConfig.public.materialKit.typography.fonts`, so a
+font host that differs per environment can be set through
+`NUXT_PUBLIC_MATERIAL_KIT_TYPOGRAPHY_FONTS` without a rebuild. `typeface` cannot.
+
+See [architecture.md](architecture.md#1-the-token-layer) for how sizes are scaled.

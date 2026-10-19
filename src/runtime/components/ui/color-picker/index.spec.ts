@@ -4,7 +4,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import MColorPicker from './index.vue'
 import type { ColorFormat } from '#kit/shared/utils/color'
 
-function mountPicker(pickerProps: Record<string, unknown> = {}) {
+function mountPicker(pickerProps: Record<string, unknown> = {}, slots: Record<string, unknown> = {}) {
   const model = ref<string | null>((pickerProps.modelValue as string) ?? null)
   const format = ref<ColorFormat>((pickerProps.format as ColorFormat) ?? 'hex')
   const changes: Array<string | null> = []
@@ -16,7 +16,7 @@ function mountPicker(pickerProps: Record<string, unknown> = {}) {
       'format': format.value,
       'onUpdate:format': (v: ColorFormat) => { format.value = v },
       'onChange': (v: string | null) => { changes.push(v) },
-    }),
+    }, slots),
   })
   return { model, format, changes, mount: () => mountSuspended(Harness) }
 }
@@ -27,7 +27,8 @@ describe('m-color-picker', () => {
     const wrapper = await mount()
 
     expect(wrapper.find('.ui-color-canvas').exists()).toBe(true)
-    expect(wrapper.find('.ui-color-preview__value').text()).toBe('#6750a4')
+    expect(wrapper.find('.ui-color-preview').exists()).toBe(true)
+    expect((wrapper.find('.ui-color-edit input').element as HTMLInputElement).value).toBe('#6750a4')
     expect(wrapper.find('.ui-color-edit').exists()).toBe(true)
   })
 
@@ -174,7 +175,8 @@ describe('m-color-picker', () => {
     await nextTick()
 
     expect((field.element as HTMLInputElement).value).toBe('#ff0000')
-    expect(wrapper.find('.ui-color-edit [role="alert"]').text()).toBe('')
+    // A readable value has nothing to say: the line goes with the error (decision 2026-10-19).
+    expect(wrapper.find('.ui-color-edit [role="alert"]').exists()).toBe(false)
   })
 
   it('takes no change while read-only', async () => {
@@ -213,5 +215,37 @@ describe('m-color-picker', () => {
     const channels = wrapper.findAll('.ui-color-edit__channel')
     expect(channels).toHaveLength(3)
     expect(channels.map(channel => channel.find('label').text())).toEqual(['R', 'G', 'B'])
+  })
+
+  it('sets the preview, the format and a hex value in one row, with no value said twice', async () => {
+    const { mount } = mountPicker({ modelValue: '#6750a4', format: 'hex' })
+    const wrapper = await mount()
+    const row = wrapper.find('.ui-color-picker__value-row')
+
+    expect(row.find('.ui-color-preview').exists()).toBe(true)
+    expect(row.find('.ui-color-picker__format').exists()).toBe(true)
+    expect(row.find('.ui-color-edit').classes()).not.toContain('ui-color-edit--channels')
+    expect(row.find('.ui-color-preview').text()).toBe('')
+  })
+
+  it('puts four channels in two pairs, so no value is cut short', async () => {
+    const { mount } = mountPicker({ modelValue: 'rgba(103, 80, 164, 1)', format: 'rgba' })
+    const wrapper = await mount()
+
+    expect(wrapper.find('.ui-color-edit').classes()).toContain('ui-color-edit--channels')
+    expect(wrapper.find('.ui-color-edit__channels').classes()).toContain('ui-color-edit__channels--pairs')
+  })
+
+  it('takes a preview, swatch content and actions from slots', async () => {
+    const { mount } = mountPicker({ modelValue: '#6750a4', swatches: ['#6750a4', '#ffffff'] }, {
+      preview: ({ value }: { value: string }) => h('i', { class: 'own-preview' }, value),
+      swatch: ({ selected }: { selected: boolean }) => h('b', { class: 'own-swatch' }, selected ? 'yes' : 'no'),
+      actions: () => h('button', { class: 'own-action' }, 'Apply'),
+    })
+    const wrapper = await mount()
+
+    expect(wrapper.find('.own-preview').text()).toBe('#6750a4')
+    expect(wrapper.findAll('.own-swatch').map(item => item.text())).toEqual(['yes', 'no'])
+    expect(wrapper.find('.ui-color-picker__actions .own-action').exists()).toBe(true)
   })
 })

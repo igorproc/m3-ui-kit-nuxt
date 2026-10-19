@@ -5,6 +5,7 @@
     :class="{
       'ui-expansion-panel--expanded': isOpen,
       'ui-expansion-panel--disabled': disabled,
+      'ui-expansion-panel--grouped': isGrouped,
     }"
   >
     <OptionalHeading
@@ -56,30 +57,28 @@
 </template>
 
 <script setup lang="ts">
-import { useAttrs, useSlots, watchEffect } from 'vue'
+import { useAttrs, watchEffect } from 'vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 import { useExpansionPanelControl } from '#kit/composables/expansion-panel/useExpansionPanelControl'
-import { useRetiredPropWarning } from '#kit/composables/button/useRetiredValueWarning'
 import { OptionalHeading } from './heading'
 import { mExpansionPanelProps } from './props'
+import type { MExpansionPanelSlots } from './props'
 
 // The root is a container; `id`, `aria-*` and listeners belong on the header button.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mExpansionPanelProps)
-const slots = useSlots()
+const slots = defineSlots<MExpansionPanelSlots>()
 const attrs = useAttrs()
 
 const modelValue = defineModel<boolean>({ default: false })
 
-const { isOpen, isLocked, headingTag, buttonAttrs, regionAttrs } = useExpansionPanelControl(modelValue, props, {
+const { isOpen, isLocked, isGrouped, headingTag, buttonAttrs, regionAttrs } = useExpansionPanelControl(modelValue, props, {
   id: typeof attrs.id === 'string' ? attrs.id : undefined,
 })
-
-useRetiredPropWarning('m-expansion-panel', 'loading', () => props.loading, 'a progress indicator of your own in `#trailing`')
 
 // No default name: copy the kit would invent cannot be in the app's language.
 if (import.meta.dev) {
@@ -267,6 +266,23 @@ $t: panel.$tokens;
       &-wrapper {
         grid-template-rows: 1fr;
       }
+    }
+  }
+
+  // Static corners: neighbours meet small and the group is rounded at its ends,
+  // with no shape change as panels open or close. The modifier, not a child
+  // combinator: the panel knows it is grouped from the group's context.
+  &--grouped {
+    border-radius: g($t, 'group.shape.inner');
+
+    &:first-child {
+      border-start-start-radius: g($t, 'group.shape.outer');
+      border-start-end-radius: g($t, 'group.shape.outer');
+    }
+
+    &:last-child {
+      border-end-start-radius: g($t, 'group.shape.outer');
+      border-end-end-radius: g($t, 'group.shape.outer');
     }
   }
 

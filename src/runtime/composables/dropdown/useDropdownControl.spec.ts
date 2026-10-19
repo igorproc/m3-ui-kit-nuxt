@@ -9,7 +9,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, h, ref } from 'vue'
 import { useDropdownControl } from './useDropdownControl'
 import type { DropdownControlConfig } from './types'
-import { compareByIdentity } from './useDropdownSelection'
+import { compareByIdentity } from '#kit/utils/dropdown/useDropdownSelection'
 
 interface Row { id: number, label: string, disabled?: boolean }
 

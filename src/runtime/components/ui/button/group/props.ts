@@ -7,19 +7,13 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps } from '#kit/shared/utils/props'
 import type { MVariant } from '#kit/shared/types/props'
+import type { SegmentedItem, SegmentedValue } from '#kit/composables/button/useSegmentedButton'
 import type { MButtonDensity } from '../props'
 
-export interface MButtonGroupItem {
-  value: string | number
-  label?: string
-  /** Leading icon; alone, the button is an icon button and needs `ariaLabel`. */
-  icon?: string
-  /** Accessible name for a button that shows an icon and no label. */
-  ariaLabel?: string
-  disabled?: boolean
-}
+/** One button of the group: the choice shared with `MSegmentedItem`. */
+export type MButtonGroupItem = SegmentedItem
 
-export type MButtonGroupModelValue = string | number | (string | number)[]
+export type MButtonGroupModelValue = SegmentedValue
 
 /** Connected groups are built from toggle buttons, which M3 has in every variant but `text`. */
 export type MButtonGroupVariant = Extract<MVariant, 'filled' | 'tonal' | 'elevated' | 'outlined'>
@@ -33,8 +27,6 @@ export const mButtonGroupProps = {
   disabled: { type: Boolean, default: false },
   /** Buttons of the group, in reading order. */
   items: { type: Array as PropType<MButtonGroupItem[]>, default: () => [] },
-  /** Selected value, or values with `multiple`. */
-  modelValue: { type: [String, Number, Array] as PropType<MButtonGroupModelValue>, default: undefined },
   /** Lets more than one button be selected. */
   multiple: { type: Boolean, default: false },
 }

@@ -1,4 +1,5 @@
 @use '../../abstracts/forward.scss' as *;
+@use '../text-field/family';
 
 // ==========================================
 // NUMBER INPUT · AXES, SUPPORT LINE
@@ -12,8 +13,6 @@
     &--density-#{$d} {
       --ui-number-input-height: #{g($t, 'density.#{$d}.height')};
       --ui-number-input-label-top: #{g($t, 'density.#{$d}.label.top')};
-      --ui-number-input-label-raised-inside: #{g($t, 'density.#{$d}.label.transform.inside')};
-      --ui-number-input-label-raised-notch: #{g($t, 'density.#{$d}.label.transform.notch')};
       --ui-number-input-input-padding-top: #{g($t, 'density.#{$d}.input.padding.top')};
       --ui-number-input-input-padding-bottom: #{g($t, 'density.#{$d}.input.padding.bottom')};
       --ui-number-input-stepper-size: #{g($t, 'density.#{$d}.stepper.split')};
@@ -47,23 +46,13 @@
   &__support {
     display: flex;
     align-items: center;
-    min-height: g($t, 'support.min-height');
-    padding-inline: g($t, 'support.padding.inline');
-    margin: g($t, 'support.margin.top') 0 0;
-    overflow-wrap: anywhere;
-    color: g($t, 'support.color');
     transition: color g($t, 'state.duration') g($t, 'state.easing');
 
-    @include typescale(g($t, 'typography.support'));
+    @include family.support-line($t);
   }
 
-  // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
-  // message has nothing but this glyph to say it. A margin, not a flex gap: the
-  // alert region beside it is empty whenever the helper is shown.
   &__support-icon {
-    flex: 0 0 auto;
-    margin-inline-end: g($t, 'support.icon.gap');
-    font-size: g($t, 'support.icon.size');
+    @include family.support-glyph($t);
   }
 
   &__alert {

@@ -33,15 +33,6 @@ describe('m-divider', () => {
     expect(wrapper.classes()).toContain(`ui-divider--inset-${inset}`)
   })
 
-  it('reads the retired boolean inset as start', async () => {
-    const wrapper = await mountSuspended(MDivider, { props: { inset: true } })
-
-    expect(wrapper.classes()).toContain('ui-divider--inset-start')
-
-    await wrapper.setProps({ inset: false })
-    expect(wrapper.classes().some(name => name.startsWith('ui-divider--inset'))).toBe(false)
-  })
-
   it('runs the full length without an inset', async () => {
     const wrapper = await mountSuspended(MDivider)
 

@@ -1,0 +1,36 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SELECTION-FAMILY FIELD
+// ==========================================
+// What `<MDropdown>` and `<MAutocomplete>` add to the field they wrap: the chip
+// under the keyboard, the indicator and the live region. Included inside each
+// component's block, so the BEM prefix stays the component's own.
+
+@mixin selection-field($t) {
+  // The chip Backspace would delete. Real focus stays in the input, so this is
+  // the chip's own focus ring drawn by hand — inset, so the field's scrolling
+  // row cannot clip it.
+  &__chip--active.ui-chip {
+    @include focus-ring(inset);
+
+    @include forced-colors {
+      outline-color: Highlight;
+    }
+  }
+
+  // The indicator takes its colour from the field's trailing zone, which
+  // carries the roles (rest, error, error + hover, disabled).
+  &__arrow {
+    font-size: g($t, 'arrow.size');
+    transition: transform g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  &--open &__arrow {
+    transform: rotate(g($t, 'arrow.open.rotate'));
+  }
+
+  &__status {
+    @include sr-only;
+  }
+}

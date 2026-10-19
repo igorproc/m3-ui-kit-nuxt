@@ -1,12 +1,16 @@
 import { expect, test } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
 import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, waitForMotion } from '../../e2e/support'
+import { traceMotion } from '../../e2e/probe'
+import { drawnRadii, traceCorner } from './motion'
 
 const VARIANTS = ['elevated', 'filled', 'tonal', 'outlined', 'text']
 
 const activeTestId = (page: Page) => page.evaluate(() => document.activeElement?.closest('[data-test]')?.getAttribute('data-test') ?? '')
 const outlineWidth = (locator: Locator) => locator.evaluate(el => Number.parseFloat(getComputedStyle(el).outlineWidth))
 const width = async (locator: Locator) => (await locator.boundingBox())!.width
+// A split's attributes land on its main button (`inheritAttrs: false`); the root is found through it.
+const splitRoot = (page: Page, id: string) => page.locator(`.ui-split-button:has([data-test="${id}"])`)
 
 test.describe('MButton', () => {
   for (const theme of THEMES) {
@@ -47,6 +51,23 @@ test.describe('MButton', () => {
     expect(reached.filter(id => id.startsWith('enabled-'))).toEqual(VARIANTS.map(v => `enabled-${v}`))
     expect(reached.filter(id => id.startsWith('loading-'))).toEqual(VARIANTS.map(v => `loading-${v}`))
     expect(reached.some(id => id.startsWith('disabled-') || id.startsWith('selected-disabled-'))).toBe(false)
+  })
+
+  // Q-12 (kit-wide): a disabled link has no destination, so nothing can follow
+  // it, and an `<a>` without href leaves the Tab order by itself.
+  test('a disabled link button has no destination and no Tab stop', async ({ page }) => {
+    await openFixture(page, 'button/matrix')
+    const enabled = page.getByTestId('link-enabled')
+    const disabled = page.getByTestId('link-disabled')
+
+    await expect(enabled).toHaveAttribute('href', '/button/family')
+    await expect(disabled).not.toHaveAttribute('href')
+    await expect(disabled).toHaveAttribute('role', 'link')
+    await expect(disabled).toHaveAttribute('aria-disabled', 'true')
+
+    await enabled.focus()
+    await page.keyboard.press('Tab')
+    await expect(disabled).not.toBeFocused()
   })
 
   test('a focused button keeps focus when it starts loading', async ({ page }) => {
@@ -169,6 +190,44 @@ test.describe('MButton', () => {
 
     const transition = await button.evaluate(el => getComputedStyle(el).transitionProperty)
     expect(transition).not.toContain('border-radius')
+  })
+
+  // Q-1: `full = 999rem` drew a spring that stood still ~130 ms and arrived in
+  // two frames, and snapped back to round in one. The round is now the step's
+  // half height, so the drawn corner moves with the colour, frame by frame.
+  test('the drawn corner of a toggle moves with its colour and never snaps', async ({ page }) => {
+    for (const [url, id] of [['button/matrix', 'toggle-filled'], ['button/matrix', 'toggle-outlined'], ['button/family', 'icon-toggle-round-filled'], ['button/family', 'icon-toggle-square-filled']] as const) {
+      await openFixture(page, url)
+      const button = page.getByTestId(id)
+      await button.scrollIntoViewIfNeeded()
+
+      for (const step of ['select', 'deselect']) {
+        const motion = await traceCorner(page, `[data-test="${id}"]`, () => button.click())
+        const label = `${id} ${step}`
+
+        expect(Math.abs(motion.toRem - motion.fromRem), label).toBeGreaterThan(3)
+        expect(motion.lagMs, label).not.toBeNull()
+        expect(motion.lagMs!, label).toBeLessThanOrEqual(34)
+        expect(motion.largestStepShare, label).toBeLessThan(0.5)
+        await page.mouse.move(0, 0)
+      }
+    }
+  })
+
+  // A selected fill is the state: forced colors flattened it and drew the
+  // label's Canvas backplate over Highlight, hiding the text.
+  test('a selected button keeps a readable label in forced colors', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' })
+    await openFixture(page, 'button/matrix')
+
+    for (const id of ['selected-filled', 'selected-outlined', 'selected-text']) {
+      const style = await page.getByTestId(id).evaluate((el) => {
+        const computed = getComputedStyle(el)
+        return { adjust: computed.forcedColorAdjust, color: computed.color, background: computed.backgroundColor }
+      })
+      expect(style.adjust, id).toBe('none')
+      expect(style.color, id).not.toBe(style.background)
+    }
   })
 
   // Owner's decision: a toggle reaches its selected shape on an M3 spring.
@@ -377,32 +436,67 @@ test.describe('Button family', () => {
 
       await fab.click()
       await expect(fab).toHaveClass(/ui-extended-fab--collapsed/)
+      // Within a CSS pixel: subpixel layout can land on -0.3, which rounds to -0.
       await expect.poll(async () => {
         const box = (await fab.boundingBox())!
-        return Math.round(box.width - box.height)
-      }).toBe(0)
+        return Math.abs(box.width - box.height)
+      }).toBeLessThan(1)
       await expect(fab).toHaveAccessibleName('Compose')
     })
   })
 
   // ST-02: focus is its own layer, not the pressed one.
-  test('a focused FAB does not look pressed', async ({ page }) => {
+  // EXT.B-1/B-2: the width snapped in one frame and then rocked 56 → 48 → 56;
+  // unfolding, the label wrapped and the icon jumped. Now the label closes and
+  // opens, and the button follows it.
+  test('folding and unfolding an extended FAB moves only its width, smoothly', async ({ page }) => {
+    await openFixture(page, 'button/family')
+    const fab = page.getByTestId('extended-fold')
+    await fab.scrollIntoViewIfNeeded()
+
+    for (const step of ['fold', 'unfold']) {
+      const trace = await traceMotion(page, {
+        targets: { root: '[data-test="extended-fold"]', icon: '[data-test="extended-fold"] .ui-extended-fab__icon' },
+        duration: 900,
+        act: () => fab.click(),
+      })
+      const rem = trace.remPx
+      const widths = trace.frames.map(frame => frame.rects.root!.width / rem)
+      const heights = trace.frames.map(frame => frame.rects.root!.height / rem)
+      const iconX = trace.frames.map(frame => frame.rects.icon!.x / rem)
+      const steps = widths.slice(1).map((value, index) => value - widths[index]!)
+      const total = widths.at(-1)! - widths[0]!
+      const backwards = steps.filter(change => Math.abs(change) > 0.5 && Math.sign(change) !== Math.sign(total))
+
+      expect(Math.abs(total), step).toBeGreaterThan(30)
+      expect(Math.max(...steps.map(Math.abs)) / Math.abs(total), step).toBeLessThan(0.5)
+      expect(backwards, step).toEqual([])
+      expect(Math.max(...heights) - Math.min(...heights), step).toBeLessThan(1)
+      expect(Math.max(...iconX) - Math.min(...iconX), step).toBeLessThan(1)
+      await page.mouse.move(0, 0)
+    }
+  })
+
+  // ST-02 + Q-2: focus is its own layer in the content colour; the container
+  // itself never changes colour for a state (pressed is the ripple's alone).
+  test('a focused FAB wears the focus layer over an unchanged container', async ({ page }) => {
     await openFixture(page, 'button/family')
     const fab = page.getByTestId('fab-enabled-filled')
-    const background = () => fab.evaluate(el => getComputedStyle(el).backgroundColor)
+    const look = () => fab.evaluate(el => ({
+      background: getComputedStyle(el).backgroundColor,
+      layer: Number.parseFloat(getComputedStyle(el, '::before').opacity),
+    }))
 
+    const rest = await look()
     await fab.focus()
     await page.keyboard.press('Shift+Tab')
     await page.keyboard.press('Tab')
     await waitForMotion(page)
-    const focused = await background()
+    const focused = await look()
 
-    await page.keyboard.down('Space')
-    await waitForMotion(page)
-    const pressed = await background()
-    await page.keyboard.up('Space')
-
-    expect(pressed).not.toBe(focused)
+    expect(rest.layer).toBe(0)
+    expect(focused.layer).toBeCloseTo(0.1, 2)
+    expect(focused.background).toBe(rest.background)
   })
 
   test.describe('segmented, single choice', () => {
@@ -481,16 +575,42 @@ test.describe('Button family', () => {
     expect((await segment.boundingBox())!.width / rem).toBeGreaterThanOrEqual(57.5)
   })
 
+  // Q-2: the focus state is a layer in the content colour, not a swapped background.
   test('a focused segment carries a focus layer', async ({ page }) => {
     await openFixture(page, 'button/family')
     const segment = page.getByTestId('segmented-multiple').getByRole('button', { name: 'Unread' })
-    const background = () => segment.evaluate(el => getComputedStyle(el).backgroundColor)
+    const layer = () => segment.evaluate(el => Number.parseFloat(getComputedStyle(el, '::before').opacity))
 
-    const rest = await background()
+    expect(await layer()).toBe(0)
     await segment.focus()
     await page.keyboard.press('Shift+Tab')
     await page.keyboard.press('Tab')
-    expect(await background()).not.toBe(rest)
+    await expect.poll(layer).toBeGreaterThan(0)
+  })
+
+  // Q-3: the check used to widen its segment by 26 and push the neighbours in
+  // one frame. Segments are equal and keep the check's room.
+  test('choosing a segment moves nothing outside it', async ({ page }) => {
+    await openFixture(page, 'button/family')
+
+    for (const [id, names] of [['segmented-single', ['Day', 'Year']], ['segmented-multiple', ['Unread', 'Starred']]] as const) {
+      const group = page.getByTestId(id)
+      const boxes = () => group.locator('.ui-segmented-button__segment').evaluateAll(nodes => nodes.map((node) => {
+        const box = node.getBoundingClientRect()
+        return [Math.round(box.x), Math.round(box.width)]
+      }))
+      const groupWidth = async () => Math.round((await group.boundingBox())!.width)
+
+      const before = await boxes()
+      const width = await groupWidth()
+      for (const name of names) {
+        await group.getByRole(id === 'segmented-single' ? 'radio' : 'button', { name }).click()
+        await waitForMotion(page)
+        expect(await boxes(), `${id} ${name}`).toEqual(before)
+        expect(await groupWidth(), `${id} ${name}`).toBe(width)
+      }
+      expect(new Set(before.map(([, w]) => w)).size, id).toBe(1)
+    }
   })
 
   // A narrow group wraps a label between words, never inside one.
@@ -533,7 +653,7 @@ test.describe('Button family', () => {
   test.describe('split', () => {
     test('the trailing button is a named menu button', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const dropdown = page.getByTestId('split-filled').getByRole('button', { name: 'More save options' })
+      const dropdown = splitRoot(page, 'split-filled').getByRole('button', { name: 'More save options' })
 
       await expect(dropdown).toHaveAttribute('aria-haspopup', 'menu')
       await expect(dropdown).toHaveAttribute('aria-expanded', 'false')
@@ -546,7 +666,7 @@ test.describe('Button family', () => {
 
     test('picking an item reports it, closes the menu and returns focus', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const dropdown = page.getByTestId('split-filled').getByRole('button', { name: 'More save options' })
+      const dropdown = splitRoot(page, 'split-filled').getByRole('button', { name: 'More save options' })
 
       await dropdown.focus()
       await page.keyboard.press('Enter')
@@ -560,7 +680,7 @@ test.describe('Button family', () => {
 
     test('Escape closes the menu and returns focus', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const dropdown = page.getByTestId('split-filled').getByRole('button', { name: 'More save options' })
+      const dropdown = splitRoot(page, 'split-filled').getByRole('button', { name: 'More save options' })
 
       await dropdown.click()
       await page.keyboard.press('Escape')
@@ -571,21 +691,22 @@ test.describe('Button family', () => {
 
     test('the focus ring of either half is not clipped', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const split = page.getByTestId('split-filled')
+      const split = splitRoot(page, 'split-filled')
       const wrapper = split.locator('.ui-split-button__wrapper')
 
       expect(await wrapper.evaluate(el => getComputedStyle(el).overflow)).toBe('visible')
 
       await split.getByRole('button', { name: 'Save', exact: true }).focus()
       await page.keyboard.press('Tab')
-      expect(await activeTestId(page)).toBe('split-filled')
-      expect(await outlineWidth(split.getByRole('button', { name: 'More save options' }))).toBeGreaterThanOrEqual(2)
+      const trailing = split.getByRole('button', { name: 'More save options' })
+      await expect(trailing).toBeFocused()
+      expect(await outlineWidth(trailing)).toBeGreaterThanOrEqual(2)
     })
 
     test('the buttons are a 2 gap apart and meet with small static corners', async ({ page }) => {
       await openFixture(page, 'button/family')
       const rem = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).fontSize))
-      const split = page.getByTestId('split-outlined')
+      const split = splitRoot(page, 'split-outlined')
       const action = split.locator('.ui-split-button__action')
       const trailing = split.locator('.ui-split-button__trailing')
       const inner = () => trailing.evaluate(el => getComputedStyle(el).borderTopLeftRadius)
@@ -603,7 +724,7 @@ test.describe('Button family', () => {
 
     test('the chevron points up while the menu is open', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const trailing = page.getByTestId('split-filled').getByRole('button', { name: 'More save options' })
+      const trailing = splitRoot(page, 'split-filled').getByRole('button', { name: 'More save options' })
       const glyph = () => trailing.locator('.ui-icon').innerHTML()
 
       const closed = await glyph()
@@ -616,7 +737,7 @@ test.describe('Button family', () => {
       const rem = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).fontSize))
 
       for (const [density, height, width] of [['compact', 32, 48], ['default', 40, 48], ['comfortable', 56, 56]] as const) {
-        const box = (await page.getByTestId(`split-density-${density}`).locator('.ui-split-button__trailing').boundingBox())!
+        const box = (await splitRoot(page, `split-density-${density}`).locator('.ui-split-button__trailing').boundingBox())!
         expect(box.height / rem, density).toBeCloseTo(height, 0)
         expect(box.width / rem, density).toBeCloseTo(width, 0)
       }
@@ -624,7 +745,7 @@ test.describe('Button family', () => {
 
     test('without a menu the trailing button is a plain action', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const trailing = page.getByTestId('split-action').getByRole('button', { name: 'Edit before sending' })
+      const trailing = splitRoot(page, 'split-action').getByRole('button', { name: 'Edit before sending' })
 
       await expect(trailing).not.toHaveAttribute('aria-haspopup')
       await trailing.click()
@@ -633,10 +754,52 @@ test.describe('Button family', () => {
 
     test('a loading split holds both buttons', async ({ page }) => {
       await openFixture(page, 'button/family')
-      const split = page.getByTestId('split-loading')
+      const split = splitRoot(page, 'split-loading')
 
       await expect(split.getByRole('button', { name: 'Save', exact: true })).toHaveAttribute('aria-busy', 'true')
-      await expect(split.getByRole('button', { name: 'More save options' })).toBeDisabled()
+      await expect(split.getByRole('button', { name: 'More save options' })).toHaveAttribute('aria-disabled', 'true')
+    })
+
+    // В-6: loading holds the trailing button the way it holds the main one — a
+    // native disabled used to throw its focus to <body>.
+    test('a split that starts loading keeps focus on either half', async ({ page }) => {
+      await openFixture(page, 'button/dynamic')
+      const split = splitRoot(page, 'split')
+      const toggleLoading = () => page.evaluate(() => (document.querySelector('[data-test="toggle-loading"]') as HTMLButtonElement).click())
+
+      for (const name of ['Save', 'More save options']) {
+        const half = split.getByRole('button', { name, exact: true })
+        await half.focus()
+        await toggleLoading()
+        await expect(half).toHaveAttribute('aria-disabled', 'true')
+        await expect(half).toBeFocused()
+        await toggleLoading()
+        await expect(half).toBeFocused()
+      }
+    })
+
+    // Q-1: next to a 4 corner, a 999rem end scaled the whole corner set down to
+    // nothing; the ends are now the step's half height.
+    test('the halves meet with drawn 4 corners and round outer ends', async ({ page }) => {
+      await openFixture(page, 'button/family')
+
+      for (const [density, half] of [['compact', 16], ['default', 20], ['comfortable', 28]] as const) {
+        const split = splitRoot(page, `split-density-${density}`)
+        const action = await drawnRadii(split.locator('.ui-split-button__action'))
+        const trailing = await drawnRadii(split.locator('.ui-split-button__trailing'))
+
+        expect(action.tr, density).toBeCloseTo(4, 0)
+        expect(action.br, density).toBeCloseTo(4, 0)
+        expect(action.tl, density).toBeCloseTo(half, 0)
+        expect(trailing.tl, density).toBeCloseTo(4, 0)
+        expect(trailing.tr, density).toBeCloseTo(half, 0)
+      }
+    })
+
+    test('attributes given to the split land on its main button', async ({ page }) => {
+      await openFixture(page, 'button/family')
+
+      await expect(page.getByTestId('split-filled')).toHaveClass(/ui-split-button__action/)
     })
   })
 })

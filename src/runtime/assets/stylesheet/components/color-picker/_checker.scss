@@ -1,0 +1,15 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// COLOR PICKER · CHECKERBOARD
+// ==========================================
+// The transparency checkerboard under a colour that may be see-through — the
+// alpha band, the preview, the colour input's swatch. `$color` is the layer
+// painted over it (a gradient, or `linear-gradient(c, c)` for a flat colour),
+// `$box` the box both layers are painted on. `$t` needs `checker.a|b|size`.
+
+@mixin checker($t, $color, $box: border-box) {
+  background:
+    $color $box,
+    conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')} $box;
+}

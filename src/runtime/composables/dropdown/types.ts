@@ -152,6 +152,13 @@ export interface UseDropdownControlOptions<TItem extends DropdownItemBase, TValu
   ) => DropdownResolvedItem<TItem, TValue>[]
   /** Land the virtual focus on the first row whenever the rows change. */
   autoSelectFirst?: () => boolean
+  /** Whether the panel has anything to show; it does not open onto nothing. */
+  canOpen?: () => boolean
+  /**
+   * Whether opening lands on the selected row. Defaults to the select's
+   * behaviour; a combobox lands there only while no query is typed.
+   */
+  landOnValue?: () => boolean
   /** The validation adapter is checking the value: the combobox reports itself busy. */
   pending?: () => boolean
   onSelect?: (entry: DropdownResolvedItem<TItem, TValue>) => void

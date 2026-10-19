@@ -12,6 +12,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { fieldDensityProp, mFieldProps } from '#kit/components/ui/text-field/props'
+import { formatFileSize } from '#kit/shared/utils/file'
 import type { FileRejectReason } from '#kit/shared/utils/file'
 
 export type MFileInputCapture = boolean | 'user' | 'environment'
@@ -19,8 +20,11 @@ export type MFileInputCapture = boolean | 'user' | 'environment'
 /** Why a file was refused, per reason — what the support line says about it. */
 export type MFileRejectMessages = Partial<Record<FileRejectReason, string>>
 
+// Browser autofill has nothing to offer a file field.
+const { autocomplete: _autocomplete, ...fileFieldProps } = mFieldProps
+
 export const mFileInputProps = {
-  ...mFieldProps,
+  ...fileFieldProps,
   ...fieldDensityProp,
   accept: { type: String, default: undefined },
   multiple: { type: Boolean, default: false },
@@ -28,6 +32,11 @@ export const mFileInputProps = {
   maxFiles: { type: Number, default: undefined },
   maxSize: { type: Number, default: undefined },
   showSize: { type: Boolean, default: false },
+  /**
+   * How a size reads with `showSize`. The default writes the unit symbols
+   * `B`, `KB`, `MB`, `GB` with a dot; pass a formatter for the app's locale.
+   */
+  formatSize: { type: Function as PropType<(bytes: number) => string>, default: formatFileSize },
   clearable: { type: Boolean, default: true },
   /**
    * Visible text of the browse button. Without it the button is an icon named

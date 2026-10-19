@@ -28,10 +28,12 @@ describe('m-date-picker', () => {
     expect((wrapper.emitted('update:modelValue')!.at(-1)![0] as Date).getDate()).toBe(15)
   })
 
-  it('still shows a retired headline prop as the title for one release', async () => {
-    const wrapper = await mountSuspended(MDatePicker, { props: { headline: 'Choose a day' } })
+  it('writes a chosen day back in the type the model came in', async () => {
+    const wrapper = await mountSuspended(MDatePicker, { props: { modelValue: '2026-10-14' } })
 
-    expect(wrapper.find('.ui-date-picker__title').text()).toBe('Choose a day')
+    expect(wrapper.find('.ui-date-picker__headline').text()).toBe('Oct 14, 2026')
+    await cell(wrapper, 'Tuesday, October 20, 2026').trigger('click')
+    expect(wrapper.emitted('update:modelValue')!.at(-1)![0]).toBe('2026-10-20')
   })
 
   it('draws six weeks with no day of a neighbouring month', async () => {
@@ -177,5 +179,50 @@ describe('m-date-picker', () => {
     const wrapper = await mountSuspended(MDatePicker, { slots: { actions: () => 'Done' } })
 
     expect(wrapper.find('.ui-date-picker__actions').text()).toBe('Done')
+  })
+
+  it('keeps no support line while it is not a form control', async () => {
+    const wrapper = await mountSuspended(MDatePicker)
+
+    expect(wrapper.find('.ui-picker-support').exists()).toBe(false)
+    expect(wrapper.find('.ui-date-picker').attributes('aria-describedby')).toBeUndefined()
+  })
+
+  it('reserves its support line in a form; an error takes the place of the helper, with a glyph', async () => {
+    const wrapper = await mountSuspended(MDatePicker, { props: { helperText: 'Working days only', name: 'delivery' } })
+    const group = wrapper.find('.ui-date-picker')
+
+    expect(wrapper.find(`#${group.attributes('aria-describedby')}`).text()).toBe('Working days only')
+    expect(wrapper.find('[role="alert"]').text()).toBe('')
+
+    await wrapper.setProps({ error: true, errorMessage: 'Pick a working day' })
+    expect(wrapper.find('[role="alert"]').text()).toBe('Pick a working day')
+    expect(wrapper.find('[role="alert"] .ui-icon').exists()).toBe(true)
+    expect(wrapper.find('.ui-picker-support').text()).not.toContain('Working days only')
+    expect(group.attributes('aria-describedby')).toBe(wrapper.find('[role="alert"]').attributes('id'))
+  })
+
+  it('submits the chosen day with a form', async () => {
+    const wrapper = await mountSuspended(MDatePicker, { props: { modelValue: new Date(2026, 9, 4), name: 'delivery' } })
+    const hidden = wrapper.find('input[type="hidden"]')
+
+    expect(hidden.attributes('name')).toBe('delivery')
+    expect((hidden.element as HTMLInputElement).value).toBe('2026-10-04')
+  })
+
+  it('refuses an empty required picker on validate()', async () => {
+    const wrapper = await mountSuspended(MDatePicker, { props: { required: true } })
+    const picker = wrapper.vm as unknown as { validate: () => boolean }
+
+    expect(picker.validate()).toBe(false)
+    await wrapper.setProps({ modelValue: new Date(2026, 9, 4) })
+    expect(picker.validate()).toBe(true)
+  })
+
+  it('flips only the arrow glyphs for right-to-left, never the buttons', async () => {
+    const wrapper = await mountSuspended(MDatePicker)
+
+    expect(wrapper.findAll('.ui-date-picker__arrow-icon')).toHaveLength(2)
+    expect(wrapper.findAll('.ui-date-picker__arrow .ui-date-picker__arrow-icon')).toHaveLength(2)
   })
 })

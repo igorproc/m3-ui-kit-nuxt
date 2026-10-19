@@ -175,6 +175,46 @@ describe('m-button', () => {
     expect((plain.element as HTMLElement).style.transition).toBe('')
   })
 
+  // Q-7: a selected text toggle differs in colour alone unless its glyph changes.
+  it('hands the toggle state to its slots, so a glyph can follow it', async () => {
+    const wrapper = await mountSuspended(MButton, {
+      props: { selected: true, variant: 'text' },
+      slots: {
+        prepend: ({ selected }: { selected: boolean }) => (selected ? 'filled-star' : 'star'),
+        default: ({ selected }: { selected: boolean }) => (selected ? 'Starred' : 'Star'),
+      },
+    })
+
+    expect(wrapper.find('.ui-button__icon--prepend').text()).toBe('filled-star')
+    expect(wrapper.find('.ui-button__label').text()).toBe('Starred')
+
+    await wrapper.setProps({ selected: false })
+    expect(wrapper.find('.ui-button__label').text()).toBe('Star')
+  })
+
+  it('is a Nuxt link with its destination while enabled', async () => {
+    const wrapper = await mountSuspended(MButton, { props: { tag: 'link', to: '/orders' }, slots: { default: () => 'Orders' } })
+
+    expect(wrapper.find('a').attributes('href')).toBe('/orders')
+    expect(wrapper.find('a').attributes('aria-disabled')).toBeUndefined()
+  })
+
+  // Q-12 (kit-wide): a disabled link keeps no destination, not even an `href`
+  // the consumer passed, so a middle click or "open in new tab" goes nowhere.
+  it('drops every destination of a disabled link', async () => {
+    const wrapper = await mountSuspended(MButton, {
+      props: { tag: 'link', to: '/orders', disabled: true },
+      attrs: { href: '/elsewhere' },
+      slots: { default: () => 'Orders' },
+    })
+    const link = wrapper.find('a')
+
+    expect(link.attributes('href')).toBeUndefined()
+    expect(link.attributes()).toMatchObject({ 'role': 'link', 'aria-disabled': 'true' })
+    expect(link.attributes('tabindex')).toBeUndefined()
+    expect(link.classes()).toContain('ui-button--disabled')
+  })
+
   it('does not toggle while disabled', async () => {
     const wrapper = await mountSuspended(MButton, { props: { selected: false, disabled: true } })
 

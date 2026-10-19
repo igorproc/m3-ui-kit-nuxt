@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита — поле M3 (`MTextField`) + кнопка-образец + всплывающий `MColorPicker` · Токены Compose: через `MTextField` · Код: `src/runtime/components/ui/color-input/` · Аудит: `data/color-input.json` · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: шаги 2–5 (документация — в docs). Шаг 1 (всплывающий диалог вместо `MMenu`) заблокирован планом меню; временно пикер гасит навигационные клавиши до `MMenu`, фокус возвращается на кнопку при закрытии.</implementation-status>
+<implementation-status state="done" updated="2026-10-18">Реализовано: шаги 2–5 (документация — в docs). Шаг 1 (всплывающий диалог вместо `MMenu`) заблокирован планом меню; временно пикер гасит навигационные клавиши до `MMenu`, фокус возвращается на кнопку при закрытии. M3-polish (2026-10-18, w5): пикер в поповере без своей поверхности, фокус при открытии — на первый контрол пикера, проброшены слоты поля (`#prepend`, `#leading-content`, `#helper`, `#error`), без пропов `autocomplete` и `loading`, `shape` напрямую (шим `rounded` снят w3), мёртвый padding триггера удалён. Шаг 1 (диалог вместо `MMenu`) по-прежнему заблокирован.</implementation-status>
 
 ## Вердикт
 

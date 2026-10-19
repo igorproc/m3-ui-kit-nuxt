@@ -36,7 +36,7 @@
       :aria-valuetext="`${axis.value}%`"
       :aria-disabled="ctx.disabled.value || undefined"
       :aria-readonly="ctx.readonly.value || undefined"
-      @focus="focusedAxis = axis.name"
+      @focus="onAxisFocus(axis.name, $event)"
       @blur="focusedAxis = null"
       @keydown="axis.onKeydown"
     />
@@ -50,7 +50,7 @@
  * with the pointer captured for the drag alone; the keyboard drives the two
  * axis sliders.
  */
-import { useColorPickerContext } from '#kit/composables/color-picker/context'
+import { useColorPickerContext } from '#kit/utils/color-picker/context'
 import { createRangeKeyboardController } from '#kit/composables/slider/createRangeKeyboardController'
 import { hsvaToRgba, toCssColor } from '#kit/shared/utils/color'
 
@@ -60,8 +60,9 @@ const ctx = useColorPickerContext()
 const canvasRef = ref<HTMLElement | null>(null)
 const focusedAxis = ref<Axis | null>(null)
 const dragging = ref(false)
-// Measured once per drag, not on every move.
+// Measured once per drag, not on every move: the box and the writing direction.
 let rect: DOMRect | null = null
+let rtl = false
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const percent = (value: number) => Math.round(value * 100)
@@ -89,8 +90,15 @@ function axisController(read: () => number, write: (value: number) => void) {
 const saturation = axisController(() => ctx.hsva.value.s, value => ctx.setSaturation(value))
 const brightness = axisController(() => ctx.hsva.value.v, value => ctx.setValue(value))
 
-function keydownFor(controller: ReturnType<typeof axisController>) {
+// The field shows an axis's focus the way a native control would: from the
+// keyboard, not after a pointer opened the picker and moved the focus in.
+function onAxisFocus(axis: Axis, event: FocusEvent) {
+  focusedAxis.value = (event.target as Element).matches(':focus-visible') ? axis : null
+}
+
+function keydownFor(axis: Axis, controller: ReturnType<typeof axisController>) {
   return (event: KeyboardEvent) => {
+    focusedAxis.value = axis
     if (ctx.locked.value) return
     if (controller.onKeydown(event)) ctx.commit('keyboard')
   }
@@ -102,21 +110,21 @@ const axes = computed(() => [
     label: ctx.messages.value.saturation,
     orientation: 'horizontal' as const,
     value: percent(ctx.hsva.value.s),
-    onKeydown: keydownFor(saturation),
+    onKeydown: keydownFor('saturation', saturation),
   },
   {
     name: 'brightness' as const,
     label: ctx.messages.value.brightness,
     orientation: 'vertical' as const,
     value: percent(ctx.hsva.value.v),
-    onKeydown: keydownFor(brightness),
+    onKeydown: keydownFor('brightness', brightness),
   },
 ])
 
 function setFromPoint(clientX: number, clientY: number) {
   if (!rect) return
   const x = clamp((clientX - rect.left) / rect.width, 0, 1)
-  const s = isRtl() ? 1 - x : x
+  const s = rtl ? 1 - x : x
   const v = clamp(1 - (clientY - rect.top) / rect.height, 0, 1)
   ctx.setHSVA({ ...ctx.hsva.value, s, v })
 }
@@ -127,6 +135,7 @@ function onPointerDown(event: PointerEvent) {
 
   dragging.value = true
   rect = el.getBoundingClientRect()
+  rtl = isRtl()
   // Captured to the field for the drag only: no listener on the window
   // outlives it.
   el.setPointerCapture?.(event.pointerId)
@@ -176,11 +185,9 @@ function onPointerUp(event: PointerEvent) {
   }
 
   // Saturation grows toward the inline end, so the white edge is the start.
-  &__saturation {
-    background: linear-gradient(to right, #{g($t, 'canvas.saturation-color')}, transparent);
-
-    &:dir(rtl) {
-      background: linear-gradient(to left, #{g($t, 'canvas.saturation-color')}, transparent);
+  @each $dir, $side in (ltr: right, rtl: left) {
+    &__saturation:dir(#{$dir}) {
+      background: linear-gradient(to #{$side}, #{g($t, 'canvas.saturation-color')}, transparent);
     }
   }
 

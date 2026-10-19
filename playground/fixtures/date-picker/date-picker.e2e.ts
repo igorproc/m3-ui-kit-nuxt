@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { Locator } from '@playwright/test'
 import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx, waitForMotion } from '../../e2e/support'
 
 test.describe('MDatePicker', () => {
@@ -161,5 +162,102 @@ test.describe('MDatePicker', () => {
     await page.getByTestId('open-dialog').click()
     await waitForMotion(page)
     await expectNoAxeViolations(page)
+  })
+
+  test('the year list opens on the shown year, already scrolled, and keeps the focused year in view', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const picker = page.getByTestId('selected')
+    const insideList = (cell: Locator) => cell.evaluate((el) => {
+      const own = el.getBoundingClientRect()
+      const list = el.closest('[role="grid"]')!.getBoundingClientRect()
+      return own.top >= list.top && own.bottom <= list.bottom
+    })
+
+    await picker.locator('.ui-date-picker__view-toggle').click()
+    // While the list fades in it already shows its year, never the top of the century.
+    await picker.locator('.ui-date-picker__years').waitFor()
+    expect(await picker.locator('.ui-date-picker__years').evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+
+    const year = picker.getByRole('gridcell', { name: '2026' })
+    await expect(year).toBeFocused()
+    await waitForMotion(page)
+    expect(await insideList(year)).toBe(true)
+
+    await page.keyboard.press('Home')
+    expect(await insideList(picker.locator('.ui-date-picker__year').first())).toBe(true)
+    await page.keyboard.press('End')
+    expect(await insideList(picker.locator('.ui-date-picker__year').last())).toBe(true)
+  })
+
+  test('switching to the year list keeps the card height', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const picker = page.getByTestId('selected')
+    const before = (await picker.boundingBox())!.height
+
+    await picker.locator('.ui-date-picker__view-toggle').click()
+    await waitForMotion(page)
+    expect((await picker.boundingBox())!.height).toBeCloseTo(before, 0)
+  })
+
+  test('an empty picker holds its tab stop on today', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const picker = page.getByTestId('empty')
+    const today = await picker.locator('[aria-current="date"]').getAttribute('aria-label')
+
+    await expect(picker.locator('[role="gridcell"][tabindex="0"]')).toHaveAttribute('aria-label', today!)
+  })
+
+  test('a month arrow keeps its ripple under the pointer right to left', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix', { dir: 'rtl' })
+    const arrow = page.getByTestId('selected').locator('.ui-date-picker__arrow').last()
+
+    expect(await arrow.evaluate(el => getComputedStyle(el).transform)).toBe('none')
+    expect(await arrow.locator('.ui-date-picker__arrow-icon').evaluate(el => getComputedStyle(el).transform)).not.toBe('none')
+  })
+
+  test.describe('dialog, west of Greenwich', () => {
+    test.use({ timezoneId: 'America/Los_Angeles' })
+
+    test('a day string opens on its own day and comes back as a day string', async ({ page }) => {
+      await openFixture(page, 'date-picker/dialog')
+      await page.getByTestId('open-iso').click()
+      const dialog = page.getByRole('dialog')
+      await waitForMotion(page)
+
+      await expect(dialog.locator('[role="gridcell"][aria-selected="true"]')).toHaveAttribute('aria-label', 'Wednesday, October 14, 2026')
+      await dialog.getByRole('gridcell', { name: 'Tuesday, October 20, 2026' }).click()
+      await dialog.getByRole('button', { name: 'OK' }).click()
+      await waitForMotion(page)
+
+      await expect(page.getByTestId('iso-value')).toHaveText('string 2026-10-20')
+      await expect(page.getByTestId('iso-payload')).toHaveText('Date Tue Oct 20 2026')
+    })
+  })
+
+  test('OK hands over the day just chosen, with a one-way date too', async ({ page }) => {
+    await openFixture(page, 'date-picker/dialog')
+    await page.getByTestId('open-oneway').click()
+    const dialog = page.getByRole('dialog')
+    await waitForMotion(page)
+
+    await dialog.getByRole('gridcell', { name: 'Tuesday, October 20, 2026' }).click()
+    await dialog.getByRole('button', { name: 'OK' }).click()
+    await waitForMotion(page)
+    await expect(page.getByTestId('oneway-payload')).toHaveText('Date Tue Oct 20 2026')
+  })
+
+  test('an empty dialog focuses today; a typed one focuses its field', async ({ page }) => {
+    await openFixture(page, 'date-picker/dialog')
+    await page.getByTestId('open-empty').click()
+    await waitForMotion(page)
+    const dialog = page.getByRole('dialog')
+    const today = await dialog.locator('[aria-current="date"]').getAttribute('aria-label')
+    await expect(page.locator(':focus')).toHaveAttribute('aria-label', today!)
+
+    await page.keyboard.press('Escape')
+    await waitForMotion(page)
+    await page.getByTestId('open-typed').click()
+    await waitForMotion(page)
+    await expect(page.getByRole('dialog').getByRole('textbox')).toBeFocused()
   })
 })

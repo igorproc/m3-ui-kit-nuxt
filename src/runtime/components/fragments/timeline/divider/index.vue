@@ -46,7 +46,7 @@ defineProps({
 @use '#kit/assets/stylesheet/components/timeline/index' as t;
 
 .ui-timeline-divider {
-  $t: material-map(t.$tokens, 'md-timeline');
+  $t: t.$tokens;
 
   display: flex;
   justify-content: center;
@@ -58,7 +58,7 @@ defineProps({
     justify-content: center;
     width: g($t, 'dot.size');
     height: g($t, 'dot.size');
-    margin-block-start: g($t, 'dot.offset');
+    margin-block-start: g($t, 'first-line.titled.dot');
     border-radius: g($t, 'dot.shape');
 
     @each $role in ('primary', 'secondary', 'tertiary', 'error') {

@@ -3,42 +3,9 @@
 // ==========================================
 // DATE PICKER · HEADER, DAY GRID, YEAR LIST
 // ==========================================
-// Included inside `.ui-date-picker`. Days and years carry the MD3 state layer
-// in their own ink (`::before`), so a selected cell hovers in `on-primary`
-// over `primary` without a premixed colour. Focus is the kit's ring around
-// the cell's own shape.
-
-@mixin state-layer($t) {
-  position: relative;
-  isolation: isolate;
-  cursor: pointer;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background-color: currentcolor;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
-  }
-
-  @include can-hover {
-    &:hover::before {
-      opacity: g($t, 'layer.hover');
-    }
-  }
-
-  &:active::before {
-    opacity: g($t, 'layer.pressed');
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
+// Included inside `.ui-date-picker`. The month button, days and years carry
+// the state layer of `_state-layer.scss`, included once for all three by the
+// block.
 
 @mixin header($t) {
   &__header {
@@ -64,7 +31,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: spacing(8);
+    gap: g($t, 'header.gap');
   }
 
   &__headline {
@@ -97,14 +64,13 @@
     display: inline-flex;
     align-items: center;
     min-height: g($t, 'nav.height');
-    padding-inline: spacing(12);
+    padding-inline: g($t, 'nav.toggle.padding');
     border: none;
     border-radius: g($t, 'day.shape');
     background: none;
     color: inherit;
 
     @include typescale(g($t, 'nav.typography'));
-    @include state-layer($t);
 
     &:disabled {
       cursor: default;
@@ -124,8 +90,9 @@
     display: flex;
   }
 
-  // The chevrons point the way time runs, which turns with the writing.
-  &__arrow:dir(rtl) {
+  // The chevrons point the way time runs, which turns with the writing. Only
+  // the glyph turns: a mirrored button would mirror its ripple too.
+  &__arrow-icon:dir(rtl) {
     transform: scaleX(-1);
   }
 }
@@ -163,7 +130,6 @@
     color: g($t, 'day.color');
 
     @include typescale(g($t, 'day.typography'));
-    @include state-layer($t);
 
     &--today {
       border-color: g($t, 'day.today.outline.color');
@@ -222,6 +188,7 @@
     row-gap: g($t, 'year.row-gap');
     place-items: center;
     height: g($t, 'year.height-total');
+    padding-block: g($t, 'year.list.padding-block');
     overflow-y: auto;
     overscroll-behavior: contain;
 
@@ -239,7 +206,6 @@
     color: g($t, 'year.color');
 
     @include typescale(g($t, 'year.typography'));
-    @include state-layer($t);
 
     &--current {
       border-color: g($t, 'year.current.outline.color');

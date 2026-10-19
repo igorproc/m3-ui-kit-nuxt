@@ -4,35 +4,40 @@
 // ==========================================
 // TEXTAREA COMPONENT TOKENS
 // ==========================================
-// Anatomy: a static top label, a container that owns the border/surface, and a
-// support row that carries the message on the left and the counter on the
-// right. The label never animates and never overlays the value — a multi-line
-// control has no free first line to float into.
-// State chrome mirrors `<MTextField>` on purpose (border tone on hover, border
-// width on focus) so the two fields read as one family.
+// Anatomy: a label (above the box by default, or raised inside / on the
+// notch), a container that owns the border and the surface, and a support row
+// that carries the message on the start side and the counter on the end side.
+// The label never animates. State chrome mirrors `<MTextField>` on purpose —
+// focus moves the edge's hue and nothing else — so the two read as one family.
 // ==========================================
 
 // Spacing reads the 4-unit scale through `spacing()`. Values off it stay
 // literal on purpose: sizes (adornment, grip, hit box, support line), the 6rem
-// glyph gap, the footer's 10/7 padding and the 3rem under an inset label.
+// glyph gap and the footer's 10/7 padding.
 
-// Shared by the box, the label and the outline notch, which has to reproduce the
-// raised label's footprint in layout terms.
-$border-width: 1rem;
+// Never thinner than one device pixel (decisions.md, hairline). Every vertical
+// sum it is part of is a calc.
+$hairline: max(1px, 1rem);
 $padding-inline: spacing(16);
 $padding-block: spacing(12);
 $input-typescale: 'body-large';
 $line-height: var(--md-sys-typescale-#{$input-typescale}-line-height);
 $rows: 3;
 $grip-band: spacing(20);
-$label-typescale: 'body-medium';
 $label-raised-scale: 0.75;
 $notch-padding-inline: spacing(4);
+$adornment-size: 20rem;
+$adornment-gap: spacing(8);
 
-// An inset label sits this far into the box, and the value starts below its
-// raised line plus a small gap.
-$label-inset-top: spacing(8);
-$label-inset-gap: 3rem;
+// A raised label inside the box sits right on the value, as in the text field:
+// the value starts 24 below the outer top edge, the label's centre half a
+// raised line above it.
+$value-top: spacing(24);
+$label-overlay-typescale: 'body-large';
+$label-overlay-line: var(--md-sys-typescale-#{$label-overlay-typescale}-line-height);
+
+// Beside an adornment the overlaid label starts where the value does.
+$label-adornment-clearance: $adornment-size + $adornment-gap;
 $on-surface: map.get($theme-color-link, on-surface);
 $disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
 
@@ -42,38 +47,43 @@ $radius-cap: calc((#{$rows} * #{$line-height} + #{2 * $padding-block}) / 2);
 $tokens: (
   container: (
     gap: spacing(4),
-    border: (width: $border-width, color: map.get($theme-color-link, outline)),
+    border: (width: $hairline, color: map.get($theme-color-link, outline)),
     surface: transparent,
     padding: (inline: $padding-inline, block: $padding-block),
   ),
   typography: (
-    label: $label-typescale,
+    // Above the box the label is a heading for the value; over the box it is
+    // body-large raised to three quarters (12, as in the rest of the family).
+    label: (top: 'body-medium', overlay: $label-overlay-typescale),
     input: $input-typescale,
     support: 'body-small',
   ),
   label: (
-    gap: spacing(16),
     color: map.get($theme-color-link, on-surface-variant),
     required: (color: map.get($theme-color-link, error)),
-    max-width: calc(100% - #{2 * $padding-inline}),
-    active: (scale: $label-raised-scale),
-    // Overlay placements: where the label sits inside the box, and how much
-    // room the value gives up for it.
-    inset: (top: $label-inset-top,
-      body-padding: calc(#{$label-inset-top} + var(--md-sys-typescale-#{$label-typescale}-line-height) * #{$label-raised-scale} + #{$label-inset-gap}),
+    transform: translateY(-50%) scale($label-raised-scale),
+    overlay: (
+      top: calc(#{$value-top} - #{$label-overlay-line} * #{$label-raised-scale * 0.5}),
+      body-padding: calc(#{$value-top} - #{$hairline}),
+    ),
+    start: (prepend: calc(var(--ui-textarea-inset) + #{$label-adornment-clearance})),
+    room: (
+      base: calc((100% - 2 * var(--ui-textarea-inset)) / #{$label-raised-scale}),
+      // An adornment on one side: start or end, the same sum.
+      one: calc((100% - 2 * var(--ui-textarea-inset) - #{$label-adornment-clearance}) / #{$label-raised-scale}),
+      both: calc((100% - 2 * var(--ui-textarea-inset) - #{2 * $label-adornment-clearance}) / #{$label-raised-scale}),
     ),
   ),
   input: (
     color: $on-surface,
     line-height: $line-height,
-    rows: $rows,
     placeholder: (color: map.get($theme-color-link, on-surface-variant)),
     caret: (color: map.get($theme-color-link, primary)),
   ),
   adornment: (
-    gap: spacing(8),
+    gap: $adornment-gap,
     color: map.get($theme-color-link, on-surface-variant),
-    size: 20rem,
+    size: $adornment-size,
   ),
   support: (
     gap: spacing(16),
@@ -81,7 +91,6 @@ $tokens: (
     icon: (gap: 6rem, size: 16rem),
     // One line of body-small: the reserved height is the line itself.
     min-height: var(--md-sys-typescale-body-small-line-height),
-    margin: (top: spacing(4)),
     padding: (inline: spacing(16)),
     color: map.get($theme-color-link, on-surface-variant),
   ),
@@ -110,21 +119,21 @@ $tokens: (
     height: 5rem,
     inset: 6rem,
     // Vertical space reserved under the value so the two never collide.
-    band: $grip-band,
     body: (padding: (bottom: $padding-block + $grip-band)),
     // WCAG 2.5.8: at least 24 high.
     hit: (width: 72rem, height: 24rem),
-    color: map.get($theme-color-link, outline-variant),
+    // `outline`, not `outline-variant`: the bar is the only sign the box can
+    // be resized, so it keeps 3:1 against the surface (WCAG 1.4.11).
+    color: map.get($theme-color-link, outline),
     hover: (color: map.get($theme-color-link, on-surface-variant)),
     focus: (color: map.get($theme-color-link, primary)),
   ),
   // MD3 state layer: an overlay in the element's own ink, never a background
   // swap — whatever tone sits underneath has to keep showing through.
-  layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
+  layer: (hover: state-opacity(hover), pressed: state-opacity(pressed), dragged: state-opacity(dragged)),
   state: (
     duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
-    grow: (duration: var(--sys-motion-duration-short-2), easing: var(--sys-motion-easing-standard-decelerate)),
   ),
   // Focus moves the border hue and nothing else: a width change would have to be
   // paid back in padding, and neither of the two can transition smoothly.
@@ -169,14 +178,18 @@ $tokens: (
     // The control trades its own border for padding of the same width, so its
     // `overflow: hidden` clips at the outer edge and the outline drawn inside
     // that ring is never cut.
-    frame: $border-width,
+    frame: $hairline,
     // The `<fieldset>` that draws the border. Its start padding puts the legend
     // where the raised label's padding box begins.
-    outline: (padding: (start: calc(var(--ui-textarea-inset) - #{$notch-padding-inline + $border-width}))),
+    outline: (padding: (start: calc(var(--ui-textarea-inset) - #{$notch-padding-inline} - #{$hairline}))),
     // The gap cut into the top border behind the raised label: the label text
-    // at its raised size, plus breathing room on either side.
-    notch: (padding: (inline: $notch-padding-inline),
-      font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
+    // at its raised size, plus breathing room on either side; open, it stops
+    // where the label's own room ends.
+    notch: (
+      padding: (inline: $notch-padding-inline),
+      font-size: calc(var(--md-sys-typescale-#{$label-overlay-typescale}-size) * #{$label-raised-scale}),
+      collapsed: 0.01rem,
+      open: calc(100% - var(--ui-textarea-inset) + #{$notch-padding-inline} + #{$hairline}),
     ),
     // `HoverLabelColor`: outlined lifts its label with its edge on hover.
     hover: (border: (color: $on-surface), label: (color: $on-surface)),

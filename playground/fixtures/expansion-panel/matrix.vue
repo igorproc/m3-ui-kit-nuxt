@@ -43,57 +43,63 @@
     </MExpansionPanel>
 
     <h2>Exclusive group</h2>
-    <MExpansionPanels
-      v-model="exclusive"
-      data-test="group-exclusive"
-    >
-      <MExpansionPanel
-        v-for="item in items"
-        :key="item.value"
-        :value="item.value"
-        :title="`${item.title}, exclusive`"
-        :heading-level="3"
-        :data-test="`exclusive-${item.value}`"
+    <div class="fixture-expansion-panel__surface">
+      <MExpansionPanels
+        v-model="exclusive"
+        data-test="group-exclusive"
       >
-        <p>{{ item.body }}</p>
-      </MExpansionPanel>
-    </MExpansionPanels>
+        <MExpansionPanel
+          v-for="item in items"
+          :key="item.value"
+          :value="item.value"
+          :title="`${item.title}, exclusive`"
+          :heading-level="3"
+          :data-test="`exclusive-${item.value}`"
+        >
+          <p>{{ item.body }}</p>
+        </MExpansionPanel>
+      </MExpansionPanels>
+    </div>
     <output data-test="exclusive-model">{{ exclusive }}</output>
 
     <h2>Multiple group</h2>
-    <MExpansionPanels
-      v-model="several"
-      multiple
-      data-test="group-multiple"
-    >
-      <MExpansionPanel
-        v-for="item in items"
-        :key="item.value"
-        :value="item.value"
-        :title="`${item.title}, multiple`"
-        :data-test="`multiple-${item.value}`"
+    <div class="fixture-expansion-panel__surface">
+      <MExpansionPanels
+        v-model="several"
+        multiple
+        data-test="group-multiple"
       >
-        <p>{{ item.body }}</p>
-      </MExpansionPanel>
-    </MExpansionPanels>
+        <MExpansionPanel
+          v-for="item in items"
+          :key="item.value"
+          :value="item.value"
+          :title="`${item.title}, multiple`"
+          :data-test="`multiple-${item.value}`"
+        >
+          <p>{{ item.body }}</p>
+        </MExpansionPanel>
+      </MExpansionPanels>
+    </div>
     <output data-test="multiple-model">{{ several.join(',') }}</output>
 
     <h2>Mandatory group</h2>
-    <MExpansionPanels
-      v-model="required"
-      mandatory
-      data-test="group-mandatory"
-    >
-      <MExpansionPanel
-        v-for="item in items"
-        :key="item.value"
-        :value="item.value"
-        :title="`${item.title}, mandatory`"
-        :data-test="`mandatory-${item.value}`"
+    <div class="fixture-expansion-panel__surface">
+      <MExpansionPanels
+        v-model="required"
+        mandatory
+        data-test="group-mandatory"
       >
-        <p>{{ item.body }}</p>
-      </MExpansionPanel>
-    </MExpansionPanels>
+        <MExpansionPanel
+          v-for="item in items"
+          :key="item.value"
+          :value="item.value"
+          :title="`${item.title}, mandatory`"
+          :data-test="`mandatory-${item.value}`"
+        >
+          <p>{{ item.body }}</p>
+        </MExpansionPanel>
+      </MExpansionPanels>
+    </div>
     <output data-test="mandatory-model">{{ required }}</output>
   </section>
 </template>
@@ -102,7 +108,7 @@
 import { reactive, ref } from 'vue'
 import MExpansionPanel from '#kit/components/ui/expansion-panel/index.vue'
 import MExpansionPanels from '#kit/components/ui/expansion-panels/index.vue'
-import type { PanelValue } from '#kit/composables/expansion-panel/useExpansionPanelGroup'
+import type { PanelValue } from '#kit/components/ui/expansion-panel/props'
 
 type PanelContent = 'title' | 'description' | 'header' | 'trailing'
 
@@ -140,6 +146,14 @@ const required = ref<PanelValue | undefined>('a')
   display: grid;
   gap: 16rem;
   max-width: 720rem;
+
+  // A group of panels sits on a container, as the concept shows: the collapsed
+  // panel is `surface`, the tone of the page itself.
+  &__surface {
+    padding: 16rem;
+    border-radius: 16rem;
+    background-color: var(--md-sys-color-surface-container-low);
+  }
 
   &__grid {
     display: grid;

@@ -39,6 +39,19 @@ describe('MTable — structure', () => {
     expect(withSlot.find('caption strong').text()).toBe('Recent orders')
   })
 
+  // T-1 (M3-polish): the refresh indicator steps below a caption.
+  it('marks a captioned frame, so the refresh indicator clears the caption', async () => {
+    expect((await mountTable({ caption: 'Orders' })).find('.ui-table-container').classes()).toContain('ui-table-container--captioned')
+    expect((await mountTable()).find('.ui-table-container').classes()).not.toContain('ui-table-container--captioned')
+  })
+
+  // Q-6 (M3-polish): a hover layer only where a row does something.
+  it('makes rows interactive only when they are selectable or have a row-click listener', async () => {
+    expect((await mountTable()).find('table').classes()).not.toContain('ui-table--interactive')
+    expect((await mountTable({ selectable: true })).find('table').classes()).toContain('ui-table--interactive')
+    expect((await mountTable({ onRowClick: () => {} })).find('table').classes()).toContain('ui-table--interactive')
+  })
+
   it('applies the density step to the frame', async () => {
     const wrapper = await mountTable({ density: 'compact' })
     expect(wrapper.find('.ui-table-container').classes()).toContain('ui-table-container--density-compact')

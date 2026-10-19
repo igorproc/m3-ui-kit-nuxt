@@ -1,6 +1,6 @@
 import { computed, reactive, useId, watch } from 'vue'
 import type { ComputedRef } from 'vue'
-import type { Clock, ClockTime, TimeField } from './createClock'
+import type { Clock, ClockTime, TimeField } from '#kit/utils/time/createClock'
 import type { TimePickerControl } from './useTimePickerControl'
 
 export interface TimeFieldsLabels {
@@ -21,6 +21,38 @@ export interface TimeFieldsControlOptions {
   describedBy: () => string | undefined
 }
 
+export interface TimeFieldAttrs {
+  'id': string
+  'type': 'text'
+  'inputmode': 'numeric'
+  'maxlength': number
+  'autocomplete': 'off'
+  'value': string
+  'aria-labelledby': string
+  'aria-invalid': true | undefined
+  'aria-describedby': string | undefined
+  'aria-required': true | undefined
+  'disabled': true | undefined
+  'readonly': true | undefined
+  'onInput': (event: Event) => void
+  'onFocus': () => void
+  'onBlur': () => void
+  'onKeydown': (event: KeyboardEvent) => void
+  'onPaste': ((event: ClipboardEvent) => void) | undefined
+}
+
+export interface UseTimeFieldsControlReturn {
+  /** Which typed part is refused right now. */
+  errors: Record<TimeField, boolean>
+  errorId: string
+  /** The error to show: the app's own, else the refused part's. Empty when there is none. */
+  errorText: ComputedRef<string>
+  labelId: (part: TimeField) => string
+  getFieldAttrs: (part: TimeField) => TimeFieldAttrs
+  /** Reads what is typed; `false` when it is refused and the error shows. */
+  validate: () => boolean
+}
+
 /** "14:30", "1430", "9.30", "9:30 pm" — a time pasted in one go. */
 const PASTED = /^(\d{1,2})\D?(\d{2}) ?(?:([ap])\.?m?\.?)?$/i
 const pad2 = (value: number) => String(value).padStart(2, '0')
@@ -32,7 +64,7 @@ const focusById = (id: string) => document.getElementById(id)?.focus()
  * not an error. A refused part shows an error and is not clamped. Returns
  * attribute bags only — no class, no `data-*`.
  */
-export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: string = useId()) {
+export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: string = useId()): UseTimeFieldsControlReturn {
   const { control } = options
   const text = reactive<Record<TimeField, string>>({ hours: '', minutes: '' })
   const errors = reactive<Record<TimeField, boolean>>({ hours: false, minutes: false })
@@ -51,7 +83,7 @@ export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: stri
   const labelId = (part: TimeField) => `${id}-${part}-label`
   const errorId = `${id}-error`
 
-  const errorText = computed(() => options.externalError()
+  const errorText = computed<string>(() => options.externalError()
     || (errors.hours ? options.labels().hourError : errors.minutes ? options.labels().minuteError : ''))
 
   /**
@@ -111,12 +143,12 @@ export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: stri
     settle(false)
   }
 
-  function getFieldAttrs(part: TimeField) {
+  function getFieldAttrs(part: TimeField): TimeFieldAttrs {
     const describedBy = [errorText.value ? errorId : undefined, options.describedBy()].filter(Boolean).join(' ')
     return {
       'id': fieldId(part),
       'type': 'text',
-      'inputmode': 'numeric' as const,
+      'inputmode': 'numeric',
       'maxlength': 2,
       'autocomplete': 'off',
       'value': text[part],
@@ -144,7 +176,6 @@ export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: stri
     errorText,
     labelId,
     getFieldAttrs,
-    /** Reads what is typed; `false` when it is refused and the error shows. */
     validate: () => settle(true),
   }
 }

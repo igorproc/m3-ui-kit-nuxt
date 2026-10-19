@@ -2,7 +2,7 @@
 
 <identity>M3: Loading indicator (Expressive: морфинг фигур, plain и contained; для ожидания до ~5 с) · Токены Compose: `LoadingIndicatorTokens` + `LoadingIndicator.kt`, `MaterialShapes.kt` · Код: `src/runtime/components/ui/loading/`, морф — `components/ui/shape/` + `composables/useShapeMorph.ts` · Аудит: `data/loading.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Есть `type: circular` (CSS-спиннер) и `expressive` (последовательность `MShape` с морфом на JS-пружинах), `size: small | medium | large`, `inline`. Нет contained-варианта, токенов 48/38, reduced motion у спиннера, доступного объявления. На рендере inline-вариант даёт hydration mismatch.</implementation-status>
+<implementation-status state="planned" updated="2026-10-19">Есть `type: circular` (CSS-спиннер) и `expressive` (последовательность `MShape` с морфом на JS-пружинах), `size: small | medium | large`, `inline`. Нет contained-варианта, токенов 48/38, reduced motion у спиннера, доступного объявления. На рендере inline-вариант даёт hydration mismatch. M3-polish (2026-10-19): только поведение (API — Q-9 у владельца): цикл стартует после монтирования (не на сервере), под reduce морф calm без поворота и цикл вдвое реже, поворот только в одну сторону (Q-5), прерывание от живой формы и угла; константы дуги в карте (Q-10); inline центрируется по высоте прописных; фикстура `loading/{matrix,stress}` + e2e.</implementation-status>
 
 ## Вердикт
 

@@ -4,15 +4,14 @@
  * Resolved here (not in the SFC) so `defineProps` receives a plain imported
  * object — the canonical pattern for the kit's `propsFactory`-based components.
  *
- * `disabled` comes from the shared `makeStateProps` (single source of truth).
  * No phrase has a default: the kit ships no copy it cannot translate, so the
  * hint and the clear button's name come from the app.
  */
 import type { ExtractPublicPropTypes } from 'vue'
-import { makeStateProps } from '#kit/shared/utils/props'
 
 export const mSearchProps = {
-  ...makeStateProps(),
+  /** No query can be typed or cleared; the bar recedes. */
+  disabled: { type: Boolean, default: false },
   /** Hint shown in the empty bar. Not a name: a hint disappears as soon as there is a query. */
   placeholder: { type: String, default: undefined },
   /** Accessible name of the field. A search bar has no visible label, so it needs this (or `aria-labelledby`). */

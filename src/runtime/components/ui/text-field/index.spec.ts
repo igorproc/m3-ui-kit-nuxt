@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import { provideValidationAdapter } from '#kit/composables/validation/context'
 import type { ValidationAdapter } from '#kit/composables/validation/types'
 import MTextField from './index.vue'
+import MDropdown from '#kit/components/ui/dropdown/index.vue'
 
 describe('m-text-field', () => {
   it('renders the root, default filled variant and a native input', async () => {
@@ -103,7 +104,7 @@ describe('m-text-field', () => {
     const input = wrapper.find('input.ui-text-field__input')
 
     expect(support.exists()).toBe(true)
-    expect(support.classes()).toContain('ui-text-field__support--helper')
+    expect(wrapper.classes()).not.toContain('ui-text-field--error')
     expect(support.text()).toBe('Some hint')
     expect(input.attributes('aria-describedby')).toBe(support.attributes('id'))
   })
@@ -117,7 +118,6 @@ describe('m-text-field', () => {
     const input = wrapper.find('input.ui-text-field__input')
 
     expect(support.exists()).toBe(true)
-    expect(support.classes()).toContain('ui-text-field__support--error')
     expect(support.text()).toBe('Required')
     expect(support.find('[role="alert"]').text()).toBe('Required')
     expect(input.attributes('aria-invalid')).toBe('true')
@@ -125,11 +125,52 @@ describe('m-text-field', () => {
     expect(wrapper.classes()).toContain('ui-text-field--error')
   })
 
-  it('reserves the support line even with nothing to say, so an error never shifts the form', async () => {
-    const wrapper = await mountSuspended(MTextField)
+  // Decision 2026-10-19: the line is reserved only when something can appear in it.
+  it('renders no support line when nothing can appear in it', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { label: 'Name' } })
+
+    expect(wrapper.find('.ui-text-field__support').exists()).toBe(false)
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+  })
+
+  it.each([
+    ['a helper text', { helperText: 'Hint' }],
+    ['an adapter path', { path: 'name' }],
+    ['a required mark', { required: true }],
+    ['an error message bound while empty', { errorMessage: undefined }],
+    ['an error flag bound while off', { error: false }],
+  ])('reserves the line for %s', async (_, props) => {
+    const wrapper = await mountSuspended(MTextField, { props })
 
     expect(wrapper.find('.ui-text-field__support').exists()).toBe(true)
-    expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+  })
+
+  it('reserves the line for a helper or an error slot', async () => {
+    const helper = await mountSuspended(MTextField, { slots: { helper: () => 'Hint' } })
+    const error = await mountSuspended(MTextField, { slots: { error: () => 'Oops' } })
+
+    expect(helper.find('.ui-text-field__support').exists()).toBe(true)
+    expect(error.find('.ui-text-field__support').exists()).toBe(true)
+  })
+
+  it('a composite passes no error it was not given: no line, until its consumer binds one', async () => {
+    const bare = await mountSuspended(MDropdown, { props: { label: 'Fruit', items: [] } })
+    const bound = await mountSuspended(MDropdown, { props: { label: 'Fruit', items: [], errorMessage: undefined } })
+
+    expect(bare.find('.ui-text-field__support').exists()).toBe(false)
+    expect(bound.find('.ui-text-field__support').exists()).toBe(true)
+  })
+
+  it('keeps the reserved line in place when the bound error arrives', async () => {
+    const wrapper = await mountSuspended(MTextField, { props: { errorMessage: undefined } })
+    const line = wrapper.find('.ui-text-field__support').element
+
+    await wrapper.setProps({ errorMessage: 'Too short' })
+
+    expect(wrapper.find('.ui-text-field__support').element).toBe(line)
+    expect(wrapper.find('[role="alert"]').text()).toBe('Too short')
   })
 
   it('keeps one alert region mounted and writes the error into it', async () => {
@@ -292,20 +333,6 @@ describe('m-text-field', () => {
     expect(wrapper.classes()).toContain('ui-text-field--shape-extra-small')
   })
 
-  // `import.meta.dev` is false under Vitest, so the retirement warning itself
-  // is not observable here — only that the old value still renders.
-  it.each([
-    ['sharp', 'none'],
-    ['small', 'extra-small'],
-    ['medium', 'medium'],
-    ['large', 'large'],
-    ['pill', 'full'],
-  ] as const)('still applies a retired rounded="%s" as shape %s for one release', async (rounded, shape) => {
-    const wrapper = await mountSuspended(MTextField, { props: { rounded } })
-
-    expect(wrapper.classes()).toContain(`ui-text-field--shape-${shape}`)
-  })
-
   it('renders a prefix and a suffix around the value and describes the input with them', async () => {
     const wrapper = await mountSuspended(MTextField, {
       props: { label: 'Price', prefix: '$', suffix: 'USD' },
@@ -346,6 +373,51 @@ describe('m-text-field', () => {
     expect(wrapper.find('.ui-text-field__icon--append').exists()).toBe(true)
     expect(wrapper.classes()).toContain('ui-text-field--prepend')
     expect(wrapper.classes()).toContain('ui-text-field--append')
+  })
+
+  it('makes the whole box act as the input: a press focuses it, a click reaches it', async () => {
+    const onClick = vi.fn()
+    const wrapper = await mountSuspended(MTextField, {
+      attachTo: document.body,
+      attrs: { onClick },
+      slots: { prepend: () => h('i', 'P') },
+    })
+    const input = wrapper.find('input').element
+
+    await wrapper.find('.ui-text-field__icon--prepend i').trigger('pointerdown', { button: 0 })
+    expect(document.activeElement).toBe(input)
+
+    await wrapper.find('.ui-text-field__control').trigger('click')
+    expect(onClick).toHaveBeenCalledTimes(1)
+
+    await wrapper.find('input').trigger('click')
+    expect(onClick).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
+  // A composite's chips and clear button come and go with its value: the slots
+  // are added and removed after mount, not decided once.
+  it('follows slots that appear and disappear after mount', async () => {
+    const shown = ref(false)
+    const Host = defineComponent({
+      setup: () => () => h(MTextField, null, shown.value
+        ? { 'leading-content': () => 'chip', 'prepend': () => 'P', 'append': () => 'A' }
+        : {}),
+    })
+    const wrapper = await mountSuspended(Host)
+    const field = () => wrapper.find('.ui-text-field')
+
+    expect(field().find('.ui-text-field__leading').exists()).toBe(false)
+
+    shown.value = true
+    await nextTick()
+    expect(field().find('.ui-text-field__leading').text()).toBe('chip')
+    expect(field().classes()).toEqual(expect.arrayContaining(['ui-text-field--prepend', 'ui-text-field--append']))
+
+    shown.value = false
+    await nextTick()
+    expect(field().find('.ui-text-field__leading').exists()).toBe(false)
+    expect(field().classes()).not.toContain('ui-text-field--prepend')
   })
 })
 

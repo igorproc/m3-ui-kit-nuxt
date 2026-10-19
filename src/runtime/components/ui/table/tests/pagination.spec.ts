@@ -20,6 +20,13 @@ describe('MTable — footer', () => {
     expect(wrapper.find('.ui-table__pagination-info').text()).toBe('11–20 of 42')
   })
 
+  // T-2 (M3-polish): the chevrons carry the class that turns them in RTL.
+  it('marks both chevrons as direction-dependent icons', async () => {
+    const wrapper = await mountTable({ pagination: true, totalItems: 20, previousPageLabel: 'Previous page', nextPageLabel: 'Next page' })
+
+    expect(wrapper.findAll('.ui-table__pagination-actions .ui-table__page-icon')).toHaveLength(2)
+  })
+
   it('names the navigation buttons from the table props', async () => {
     const wrapper = await mountTable({ pagination: true, totalItems: 42, previousPageLabel: 'Назад', nextPageLabel: 'Вперёд' })
 

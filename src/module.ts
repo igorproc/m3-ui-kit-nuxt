@@ -9,9 +9,10 @@ import {
 } from '@nuxt/kit'
 
 import { COOKIE_THEME_KEYS } from './runtime/shared/constants/cookie'
-import { findLegacyThemeOptions, formatLegacyThemeOptions } from './options/legacy'
 import { findUndeclaredDefaultPalette } from './options/validate'
 import { resolveBreakpoints } from './runtime/utils/viewport/resolveBreakpoints'
+import { resolveTypography, typefaceToScss } from './runtime/utils/typography/resolveTypography'
+import type { ResolvedTypography } from './runtime/utils/typography/resolveTypography'
 import type { ModuleDependencies, Nuxt, NuxtModule } from 'nuxt/schema'
 import type { MaterialKitOptions } from './runtime/shared/types/kit'
 
@@ -36,7 +37,7 @@ function injectScssPrelude(nuxt: any, additionalScss: string) {
 }
 
 /**
- * Emits the breakpoints config SCSS as a build template and keeps the
+ * Emits the breakpoints and typeface config SCSS as a build template and keeps the
  * `~material-kit-config` / `~material-kit-themes` aliases the stylesheet consumes.
  *
  * Dynamic palette CSS is no longer generated at build time: `<MApp>` renders only
@@ -44,7 +45,7 @@ function injectScssPrelude(nuxt: any, additionalScss: string) {
  * so the `@use '~material-kit-themes'` import keeps resolving; static themes
  * (`definedInScss`) live in `assets/stylesheet/themes/base`.
  */
-function registerThemePipeline(options: MaterialKitOptions, nuxt: any) {
+function registerThemePipeline(options: MaterialKitOptions, typography: ResolvedTypography, nuxt: any) {
   // Emit the resolved map, not just the consumer's overrides: the SCSS side keeps its
   // own copy of the defaults, and shipping the full map makes that copy a fallback
   // instead of a second source of truth.
@@ -59,7 +60,7 @@ function registerThemePipeline(options: MaterialKitOptions, nuxt: any) {
 
   const configTemplate = addTemplate({
     filename: 'material-kit-config.scss',
-    getContents: () => `\n$material-kit-breakpoints: (\n${breakpointsScss}\n);\n`,
+    getContents: () => `\n$material-kit-breakpoints: (\n${breakpointsScss}\n);\n${typefaceToScss(typography.typeface)}`,
     write: true,
   })
   nuxt.options.alias['~material-kit-config'] = configTemplate.dst
@@ -118,20 +119,8 @@ const materialKitModule: NuxtModule<MaterialKitOptions> = defineNuxtModule<Mater
         },
       ],
     },
-    typography: {
-      fontFamily: 'Roboto, sans-serif',
-    },
   },
   async setup(options, nuxt) {
-    const legacyOptions = findLegacyThemeOptions(options as Record<string, unknown>)
-    if (legacyOptions.length) {
-      throw new Error(
-        '[@pr0s1k/primetime-kit] `materialKit` uses options that moved under `theme`:\n'
-        + `${formatLegacyThemeOptions(legacyOptions)}\n`
-        + 'The old keys are no longer read — leaving them would silently drop your palettes.',
-      )
-    }
-
     const undeclared = findUndeclaredDefaultPalette(options)
     if (undeclared) {
       throw new Error(
@@ -197,14 +186,19 @@ const materialKitModule: NuxtModule<MaterialKitOptions> = defineNuxtModule<Mater
     addPlugin(runtime('plugins/material'), { append: true })
     addPlugin(runtime('plugins/theme-css'), { append: true })
     addPlugin(runtime('plugins/directives'), { append: true })
+    addPlugin(runtime('plugins/fonts'), { append: true })
     addPlugin({ src: runtime('plugins/viewport.client'), mode: 'client' }, { append: true })
 
-    registerThemePipeline(options, nuxt)
+    const typography = resolveTypography(options.typography)
+
+    registerThemePipeline(options, typography, nuxt)
 
     // Nuxt generates runtime-config types from the resolved values (an empty
     // `themes` becomes `{}[]`), so the declared option type is not assignable back.
+    // Typography goes in resolved, so the fonts plugin reads a plain list — and a
+    // per-environment font host (an S3 bucket) can still be swapped via `NUXT_PUBLIC_*`.
     const publicConfig = nuxt.options.runtimeConfig.public as Record<string, unknown>
-    publicConfig.materialKit = options
+    publicConfig.materialKit = { ...options, typography }
   },
 })
 

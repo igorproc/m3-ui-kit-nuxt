@@ -48,6 +48,17 @@ describe('MTable — data states', () => {
     expect(wrapper.find('.ui-table-container__status').text()).toBe('Could not load orders')
   })
 
+  // Q-7 (M3-polish): the error is announced over statusText while it lasts.
+  it('announces the error instead of statusText while there is one', async () => {
+    const wrapper = await mountTable({ statusText: 'Page 2', error: 'Page 2 failed' })
+    const region = wrapper.find('.ui-table-container__status')
+
+    expect(region.text()).toBe('Page 2 failed')
+
+    await wrapper.setProps({ error: false })
+    expect(region.text()).toBe('Page 2')
+  })
+
   it('reports a failure after the rows that did load', async () => {
     const wrapper = await mountTable({ error: 'Page 3 failed' })
 

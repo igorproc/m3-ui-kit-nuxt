@@ -10,7 +10,7 @@
  * It renders nothing and assumes no markup.
  *
  * The textarea is layered the same way the slider is:
- * - {@link useTextField} — validation binding and focus, shared with `<MTextField>`
+ * - `useFieldValidation` (`utils/text-field`) — the family's validity rule
  * - {@link useTextareaResize} — height, growth and the resize grip
  * - `useTextareaControl` — both of those plus ids and ARIA, markup-agnostic
  * - `<MTextarea>` — one possible markup on top of this composable
@@ -41,7 +41,7 @@
  */
 import { computed, nextTick, shallowRef, useId, watch } from 'vue'
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue'
-import { useTextField } from '#kit/composables/text-field/useTextField'
+import { useFieldValidation } from '#kit/utils/text-field/useFieldValidation'
 import { useTextareaResize } from '#kit/composables/textarea/useTextareaResize'
 import type { TextareaGripAttrs, TextareaResizeProps, UseTextareaResizeReturn } from '#kit/composables/textarea/useTextareaResize'
 
@@ -186,18 +186,11 @@ export function useTextareaControl(
   const counterId = `${fieldId}-counter`
   const labelId = `${fieldId}-label`
 
-  const field = useTextField({
-    path: props.path,
-    model,
-    focused,
-    error: () => Boolean(props.error),
-    externalError: () => props.errorMessage,
-  })
+  const { isError, message, meta } = useFieldValidation(model, props)
 
   const resize = useTextareaResize(element, props)
 
   const isPopulated = computed(() => model.value.length > 0)
-  const message = computed(() => field.errorMessage.value || props.helperText)
 
   const fieldState = computed<TextareaFieldState>(() => ({
     disabled: Boolean(props.disabled),
@@ -246,13 +239,17 @@ export function useTextareaControl(
     'autocomplete': props.autocomplete,
     'spellcheck': props.spellcheck,
     'wrap': props.wrap,
-    'aria-invalid': field.isError.value ? 'true' : undefined,
-    'aria-busy': field.meta.pending ? 'true' : undefined,
+    'aria-invalid': isError.value ? 'true' : undefined,
+    'aria-busy': meta.pending ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
     'aria-describedby': describedBy.value,
     'style': resize.style.value,
-    'onFocus': field.onFocus,
-    'onBlur': field.onBlur,
+    'onFocus': () => {
+      focused.value = true
+    },
+    'onBlur': () => {
+      focused.value = false
+    },
   }))
 
   const labelAttrs = computed<TextareaLabelAttrs>(() => ({
@@ -281,7 +278,7 @@ export function useTextareaControl(
     element,
     isFocused: computed(() => focused.value),
     isPopulated,
-    isError: field.isError,
+    isError,
     message,
     counter,
     counterAnnouncement,

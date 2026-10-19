@@ -23,8 +23,7 @@
 
 <script setup lang="ts">
 import UiButton from '#kit/components/ui/button/index.vue'
-import { useButtonNameWarning } from '#kit/composables/button/useButtonNameWarning'
-import { useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
+import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
 import { mIconButtonProps } from '../props'
 
 const props = defineProps(mIconButtonProps)
@@ -33,7 +32,6 @@ const emit = defineEmits<{
 }>()
 
 useButtonNameWarning('m-button-icon', () => props.ariaLabel)
-useRetiredValueWarning('m-button-icon', 'variant', () => props.variant, { elevated: '`filled` or `tonal`' })
 </script>
 
 <style lang="scss">
@@ -44,8 +42,8 @@ $densities: ('compact', 'default', 'comfortable');
 $widths: ('narrow', 'default', 'wide');
 
 // Doubled class: an icon button is a fixed box, so it outranks the pill padding
-// of `.ui-button` without `!important`. Height, square corner and selected
-// round corner come from MButton's density step.
+// of `.ui-button` without `!important`. Height, corners and the selected
+// shapes come from MButton's density step.
 .ui-button.ui-icon-button {
   padding-inline: 0;
   flex-shrink: 0;
@@ -66,11 +64,13 @@ $widths: ('narrow', 'default', 'wide');
       .ui-button__spinner {
         font-size: g($t, '#{$d}.icon');
       }
-    }
-  }
 
-  &.ui-button--square.ui-button--selected {
-    border-radius: g($t, 'icon-button.selected.square');
+      // A selected square button turns round: the step's half height, so the
+      // spring runs the whole way (see MButton's toggle).
+      &.ui-button--square.ui-button--selected {
+        border-radius: g($t, 'density.#{$step}.round');
+      }
+    }
   }
 }
 

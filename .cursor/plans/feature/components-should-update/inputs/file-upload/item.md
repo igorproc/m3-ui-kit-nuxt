@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MFileUpload](index.md)) · Код: `src/runtime/components/fragments/file-upload/Item.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: среднее многоточие имени с видимым расширением, статус текстом и иконкой, действия с именем файла, фокус передаётся соседу.</implementation-status>
+<implementation-status state="done" updated="2026-10-19">M3-polish (2026-10-19): полоса прогресса поверх нижнего отступа строки — высота строки не меняется при загрузке.</implementation-status>
 
 ## Вердикт
 

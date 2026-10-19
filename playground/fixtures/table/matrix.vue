@@ -71,6 +71,14 @@
       />
       <MTable
         class="fixture-table__small"
+        caption="Refreshing, captioned"
+        :columns="shortColumns"
+        :data="products.slice(0, 3)"
+        loading
+        data-test="state-refreshing-caption"
+      />
+      <MTable
+        class="fixture-table__small"
         aria-label="Empty"
         :columns="shortColumns"
         :data="[]"

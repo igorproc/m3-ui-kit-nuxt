@@ -5,6 +5,7 @@
     <div class="fixture-stress__narrow">
       <MAutocomplete
         v-model="longValue"
+        :messages="messages"
         :items="long"
         item-title="name"
         item-value="id"
@@ -16,6 +17,7 @@
     <div class="fixture-stress__narrow">
       <MAutocomplete
         v-model="chips"
+        :messages="messages"
         :items="many"
         item-title="name"
         item-value="id"
@@ -28,6 +30,7 @@
 
     <div class="fixture-stress__narrow">
       <MAutocomplete
+        :messages="messages"
         :items="many"
         item-title="name"
         item-value="id"
@@ -38,6 +41,7 @@
 
     <div class="fixture-stress__narrow">
       <MAutocomplete
+        :messages="messages"
         :items="[]"
         label="Nothing to search"
         data-test="empty"
@@ -46,6 +50,7 @@
 
     <div class="fixture-stress__narrow">
       <MAutocomplete
+        :messages="messages"
         :items="[]"
         loading
         label="Still loading"
@@ -55,6 +60,7 @@
 
     <div class="fixture-stress__narrow">
       <MAutocomplete
+        :messages="messages"
         :items="scripts"
         item-title="name"
         item-value="id"
@@ -69,6 +75,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MAutocomplete from '#kit/components/ui/autocomplete/index.vue'
+
+// The kit ships no copy of its own: the app names the controls and states.
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
 
 const long = [
   { id: 1, name: 'averyveryverylongemailaddresswithoutanybreak@example-domain-that-is-long.com' },

@@ -98,6 +98,8 @@ $tokens: (
     // Compose's 7 above a field's label.
     gap: spacing(8) - 1rem,
   ),
+  // The row under the picker that holds the mode switch: M3's dial → actions 24.
+  actions: (gap: spacing(24)),
   layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
   disabled: (opacity: state-opacity(disabled-content)),
   motion: (

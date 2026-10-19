@@ -25,9 +25,10 @@ const prelude = '@use "additional" as *;\n'
 // The kit's own stylesheets stay on the spacing scale; a consumer may use any gap.
 const kitPrelude = '@use "additional" as * with ($spacing-strict: true);\n'
 
-/** Breakpoints normally come from the consumer's `materialKit.breakpoints`. */
+/** Breakpoints and typefaces normally come from the consumer's `materialKit` options. */
 const STUBS = {
-  '~material-kit-config': '$material-kit-breakpoints: (mobile: 600px, tablet: 905px, desktop: 1240px);',
+  '~material-kit-config': '$material-kit-breakpoints: (mobile: 600px, tablet: 905px, desktop: 1240px);\n'
+    + '$material-kit-typeface: (brand: "Roboto, sans-serif", plain: "Roboto, sans-serif", mono: "monospace");',
   '~material-kit-themes': '',
 }
 

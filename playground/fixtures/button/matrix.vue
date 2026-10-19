@@ -94,6 +94,10 @@
               :variant="variant"
               :data-test="`toggle-${variant}`"
             >
+              <!-- The glyph follows the state: a text toggle is otherwise told apart by colour alone. -->
+              <template #prepend="{ selected }">
+                <MIcon :name="selected ? ICONS.check : ICONS.add" />
+              </template>
               {{ variant }}
             </MButton>
             <MButton
@@ -119,6 +123,25 @@
         :data-test="`color-${color}`"
       >
         {{ color }}
+      </MButton>
+    </div>
+
+    <h2>Link</h2>
+    <div class="fixture-row">
+      <MButton
+        tag="link"
+        to="/button/family"
+        data-test="link-enabled"
+      >
+        Family
+      </MButton>
+      <MButton
+        tag="link"
+        to="/button/family"
+        disabled
+        data-test="link-disabled"
+      >
+        Family, disabled
       </MButton>
     </div>
 

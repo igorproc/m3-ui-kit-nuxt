@@ -4,7 +4,7 @@
     class="ui-time-picker"
     :class="[
       `ui-time-picker--${layout}`,
-      `ui-time-picker--${currentMode}`,
+      `ui-time-picker--${mode}`,
       `ui-time-picker--${clock.cycle}`,
       {
         'ui-time-picker--disabled': disabled,
@@ -32,7 +32,7 @@
       </p>
 
       <TimePickerSelectors
-        v-if="currentMode === 'picker'"
+        v-if="mode === 'picker'"
         :control="control"
       />
       <TimePickerFields
@@ -50,45 +50,60 @@
       />
 
       <TimePickerDial
-        v-if="currentMode === 'picker'"
+        v-if="mode === 'picker'"
         :dial="dial"
         :view="control.view.value"
         :ring="clock.ring"
       />
 
-      <div class="ui-time-picker__support">
-        <p
-          v-if="helperText || $slots.helper"
-          :id="helperId"
-          class="ui-time-picker__helper"
+      <PickerSupport
+        v-if="supportShown"
+        class="ui-time-picker__support"
+        :helper-id="helperId"
+        :error-id="fields.errorId"
+        :helper-text="helperText"
+        :error="hasError"
+        :error-text="fields.errorText.value"
+      >
+        <template
+          v-if="$slots.helper"
+          #helper
         >
-          <slot name="helper">
-            {{ helperText }}
-          </slot>
-        </p>
-        <p
-          :id="fields.errorId"
-          class="ui-time-picker__error"
-          role="alert"
+          <slot name="helper" />
+        </template>
+      </PickerSupport>
+
+      <div
+        v-if="modeToggle"
+        class="ui-time-picker__actions"
+      >
+        <MButtonIcon
+          type="button"
+          :aria-label="mode === 'picker' ? switchToInputLabel : switchToPickerLabel"
+          :disabled="disabled"
+          @click="toggleMode"
         >
-          {{ fields.errorText.value }}
-        </p>
+          <MIcon :name="mode === 'picker' ? ICONS.keyboard : ICONS.schedule" />
+        </MButtonIcon>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
+import MIcon from '#kit/components/ui/icon/index.vue'
+import PickerSupport from '#kit/components/fragments/picker-support/index.vue'
 import TimePickerDial from '#kit/components/fragments/time-picker/dial/index.vue'
 import TimePickerFields from '#kit/components/fragments/time-picker/fields/index.vue'
 import TimePickerPeriod from '#kit/components/fragments/time-picker/period/index.vue'
 import TimePickerSelectors from '#kit/components/fragments/time-picker/selectors/index.vue'
-import { useRetiredPropWarning, useRetiredValueWarning } from '#kit/composables/button/useRetiredValueWarning'
-import { createClock } from '#kit/composables/time/createClock'
 import { useTimeDialControl } from '#kit/composables/time/useTimeDialControl'
 import { useTimeFieldsControl } from '#kit/composables/time/useTimeFieldsControl'
 import { useTimePickerControl } from '#kit/composables/time/useTimePickerControl'
-import { RETIRED_TIME_PICKER_MODES, mTimePickerProps } from './props'
+import { ICONS } from '#kit/shared/constants/icons'
+import { createClock } from '#kit/utils/time/createClock'
+import { mTimePickerProps } from './props'
 import type { MTimePickerMode } from './props'
 
 const props = defineProps(mTimePickerProps)
@@ -98,18 +113,21 @@ const modelValue = defineModel<string>({ default: '' })
 /** `'picker'` turns a dial; `'input'` types the time. */
 const mode = defineModel<MTimePickerMode>('mode', { default: 'picker' })
 
-defineSlots<{
+const slots = defineSlots<{
   /** The headline. Content only: the element names the group. */
   label?: () => unknown
   helper?: () => unknown
 }>()
 
-useRetiredValueWarning('m-time-picker', 'mode', () => mode.value, { dial: '`\'picker\'`', keyboard: '`\'input\'`' })
-useRetiredPropWarning('m-time-picker', 'is24h', () => props.is24h, '`hour-cycle` (`\'h23\'` or `\'h12\'`)')
+if (import.meta.dev) {
+  watchEffect(() => {
+    if (props.modeToggle && !(props.switchToInputLabel && props.switchToPickerLabel)) {
+      console.warn('[m-time-picker] `mode-toggle` needs `switch-to-input-label` and `switch-to-picker-label`: the kit ships no words for the switch.')
+    }
+  })
+}
 
-const currentMode = computed(() => RETIRED_TIME_PICKER_MODES[mode.value] ?? mode.value)
-const hourCycle = computed(() => props.is24h === undefined ? props.hourCycle : (props.is24h ? 'h23' : 'h12'))
-const clock = computed(() => createClock(props.locale, hourCycle.value))
+const clock = computed(() => createClock(props.locale, props.hourCycle))
 const periodLabels = computed(() => ({
   am: props.amLabel ?? clock.value.periods.am,
   pm: props.pmLabel ?? clock.value.periods.pm,
@@ -117,9 +135,9 @@ const periodLabels = computed(() => ({
 
 const headlineId = useId()
 const helperId = useId()
-const slots = useSlots()
 const labels = () => ({ hour: props.hourLabel, minute: props.minuteLabel, period: props.periodLabel })
 const state = { disabled: () => props.disabled, readonly: () => props.readonly }
+const hasHelper = () => Boolean(props.helperText || slots.helper)
 
 const control = useTimePickerControl({
   model: modelValue,
@@ -139,15 +157,27 @@ const fields = useTimeFieldsControl({
   required: () => props.required,
   labels: () => ({ hourError: props.hourError, minuteError: props.minuteError }),
   externalError: () => props.error ? props.errorMessage : undefined,
-  describedBy: () => props.helperText || slots.helper ? helperId : undefined,
+  // The error takes the helper's place, so the helper describes only while it shows.
+  describedBy: () => hasHelper() && !hasError.value ? helperId : undefined,
 })
+
+const hasError = computed(() => props.error || Boolean(fields.errorText.value))
+
+// Typed fields can be refused at any moment, and a form control can be told
+// it is wrong: either way the support line is kept, so an error never moves
+// what is under the picker.
+const supportShown = computed(() => mode.value === 'input' || hasHelper() || props.error || Boolean(props.errorMessage) || props.required || Boolean(props.name))
+
+function toggleMode() {
+  mode.value = mode.value === 'picker' ? 'input' : 'picker'
+}
 
 /**
  * Reads a typed time that has not been committed yet. `false` when it is
  * refused, or when a required picker is empty.
  */
 function validate(): boolean {
-  if (currentMode.value === 'input') return fields.validate()
+  if (mode.value === 'input') return fields.validate()
   return !(props.required && !control.time.value)
 }
 
@@ -194,7 +224,8 @@ defineExpose({ validate })
       'headline headline'
       'display period'
       'dial dial'
-      'support support';
+      'support support'
+      'actions actions';
 
     // The period column is as wide as the period and never more: a long
     // headline spanning both columns would otherwise widen it and squeeze the
@@ -211,7 +242,8 @@ defineExpose({ validate })
       'headline'
       'display'
       'dial'
-      'support';
+      'support'
+      'actions';
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -231,22 +263,15 @@ defineExpose({ validate })
   &__support {
     grid-area: support;
     justify-self: stretch;
-    color: g($t, 'support.color');
-
-    @include typescale(g($t, 'support.typography'));
   }
 
-  &__helper,
-  &__error {
-    margin: g($t, 'support.gap') 0 0;
-  }
-
-  &__error {
-    color: g($t, 'support.error');
-
-    &:empty {
-      display: none;
-    }
+  // The mode switch stands at the start of the row under the picker, as in
+  // the M3 dialog's action row.
+  &__actions {
+    display: flex;
+    grid-area: actions;
+    justify-self: start;
+    margin-block-start: g($t, 'actions.gap');
   }
 
   // Side by side only when both columns fit.
@@ -256,7 +281,8 @@ defineExpose({ validate })
         'headline headline' auto
         'display dial' auto
         'period dial' auto
-        'support dial' 1fr / minmax(0, max-content) auto;
+        'support dial' 1fr
+        'actions actions' auto / minmax(0, max-content) auto;
     }
 
     &--horizontal#{&}--picker &__period {
@@ -292,20 +318,21 @@ defineExpose({ validate })
     }
   }
 
+  // The numbers cross-fade between hours and minutes, both faces at once (as
+  // Compose's Crossfade): the dial is never empty. Reduced motion is
+  // shortened globally.
+  .ui-time-picker-face-enter-active,
+  .ui-time-picker-face-leave-active {
+    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
+  }
+
+  .ui-time-picker-face-enter-from,
+  .ui-time-picker-face-leave-to {
+    opacity: 0;
+  }
+
   @include forced-colors {
     border: 1px solid CanvasText;
   }
-}
-
-// The numbers cross-fade between hours and minutes on the motion tokens;
-// reduced motion is shortened globally.
-.ui-time-picker-face-enter-active,
-.ui-time-picker-face-leave-active {
-  transition: opacity var(--sys-motion-duration-short-4) var(--sys-motion-easing-standard);
-}
-
-.ui-time-picker-face-enter-from,
-.ui-time-picker-face-leave-to {
-  opacity: 0;
 }
 </style>

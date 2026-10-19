@@ -7,7 +7,7 @@
     :placeholder="placeholder"
     :helper-text="helperText"
     :variant="variant"
-    :shape="shape"
+    :shape="props.shape"
     :label-placement="labelPlacement"
     :density="density"
     :name="name"
@@ -15,14 +15,38 @@
     :readonly="readonly"
     :required="required"
     :autofocus="autofocus"
-    :error="error || invalid"
-    :error-message="displayError"
+    v-bind="fieldError()"
     :path="path"
     autocomplete="off"
     :input-attrs="colorInputAttrs"
     @keydown.enter.prevent="commitDraft"
     @keydown.esc="onEscape"
   >
+    <template
+      v-if="$slots.prepend"
+      #prepend
+    >
+      <slot name="prepend" />
+    </template>
+    <template
+      v-if="$slots['leading-content']"
+      #leading-content
+    >
+      <slot name="leading-content" />
+    </template>
+    <template
+      v-if="$slots.helper"
+      #helper
+    >
+      <slot name="helper" />
+    </template>
+    <template
+      v-if="$slots.error"
+      #error
+    >
+      <slot name="error" />
+    </template>
+
     <template #append>
       <span class="ui-color-input__trigger-wrap">
         <MButtonIcon
@@ -37,7 +61,7 @@
         >
           <span
             class="ui-color-input__swatch"
-            :style="{ '--swatch-color': swatchCss }"
+            :style="{ '--m-color-input-swatch': swatchCss }"
           />
         </MButtonIcon>
 
@@ -51,6 +75,7 @@
                End belong to its sliders and fields, so they stop here instead
                of reaching the menu's item navigation. -->
           <div
+            ref="pickerRoot"
             class="ui-color-input__picker"
             @keydown="isolateKeys"
           >
@@ -79,10 +104,22 @@ import MColorPicker from '#kit/components/ui/color-picker/index.vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import { formatColor, parseColor, toCssColor } from '#kit/shared/utils/color'
 import type { ColorFormat, ColorParseError } from '#kit/shared/utils/color'
+import { provideColorPickerHosted } from '#kit/components/ui/color-picker/context'
+import { useRaf } from '#kit/composables/useRaf'
 import { mColorInputProps } from './props'
-import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
+import { useBoundProp } from '#kit/utils/text-field/supportLine'
 
 const props = defineProps(mColorInputProps)
+
+defineSlots<{
+  'prepend'?: () => unknown
+  'leading-content'?: () => unknown
+  'helper'?: () => unknown
+  'error'?: () => unknown
+}>()
+
+// The popover is the surface; the picker inside draws none of its own.
+provideColorPickerHosted(true)
 
 const model = defineModel<string | null>({ default: null })
 const open = defineModel<boolean>('open', { default: false })
@@ -112,8 +149,16 @@ const swatchCss = computed(() => {
   return parsed.ok ? toCssColor(parsed.rgba) : 'transparent'
 })
 
-const shape = useFieldShape('m-color-input', props)
 const displayError = computed(() => props.errorMessage ?? (invalid.value ? props.formatHint : undefined))
+
+// The field reserves its support line only when an error can reach it
+// (decision 2026-10-19): the consumer bound one, or the typed colour is
+// unreadable right now. Otherwise
+// the error props are not passed at all.
+const isBound = useBoundProp()
+const fieldError = () => (isBound('error') || isBound('errorMessage') || invalid.value
+  ? { error: props.error || invalid.value, errorMessage: displayError.value }
+  : {})
 const colorInputAttrs = {
   spellcheck: false,
   autocapitalize: 'none',
@@ -241,44 +286,72 @@ function togglePicker() {
   open.value = !open.value
 }
 
+const pickerRoot = ref<HTMLElement | null>(null)
+const FOCUSABLE = 'input:not([type="hidden"]):not(:disabled), [tabindex="0"], button:not(:disabled)'
+
+// Closing returns focus to the swatch button that opened the picker. The
+// popover's focus trap hands the focus back into the leaving picker a few
+// milliseconds after it closes, and the page gets it once the picker is gone,
+// so the check runs on the next frames rather than at once. A focus the user
+// has already put elsewhere is left alone.
+const RETURN_FOCUS_FRAMES = 2
+let returnFramesLeft = 0
+// The picker element as it was while open: Vue clears the template ref as soon
+// as the closing starts, while the element still holds the focus until its
+// exit transition ends.
+let openedPicker: HTMLElement | null = null
+const returnFocus = useRaf(() => {
+  const el = trigger.value?.$el as HTMLElement | undefined
+  if (!el || open.value) return
+  const active = document.activeElement
+  const stranded = !active || active === document.body || !active.isConnected || Boolean(openedPicker?.contains(active))
+  if (stranded) {
+    el.focus()
+    return
+  }
+  returnFramesLeft -= 1
+  if (returnFramesLeft > 0) returnFocus()
+})
+
 watch(open, (isOpen) => {
   emit(isOpen ? 'open' : 'close')
-  if (isOpen) return
+  // Opening moves the focus into the picker, onto its first control, as a
+  // popup of controls should (the panel's own fallback lands on its surface).
+  if (isOpen) {
+    nextTick(() => {
+      openedPicker = pickerRoot.value
+      openedPicker?.querySelector<HTMLElement>(FOCUSABLE)?.focus()
+    })
+    return
+  }
 
-  // Closing returns focus to the swatch button that opened the picker — not to
-  // the wrapper the menu falls back to, and not to the page.
-  nextTick(() => {
-    const el = trigger.value?.$el
-    const active = document.activeElement
-    if (el && (!active || active === document.body || el.parentElement?.contains(active))) el.focus()
-  })
+  returnFramesLeft = RETURN_FOCUS_FRAMES
+  returnFocus()
 })
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/color-input' as t;
+@use '#kit/assets/stylesheet/components/color-picker' as picker;
+@use '#kit/assets/stylesheet/components/color-picker/checker' as *;
 
 .ui-color-input {
   $t: material-map(t.$tokens, 'm-color-input');
+  $picker: material-map(picker.$tokens, 'm-color-picker');
 
   &__trigger-wrap {
     position: relative;
     display: inline-flex;
   }
 
-  &__trigger {
-    padding: g($t, 'trigger.padding');
-  }
-
   &__swatch {
     display: block;
     width: g($t, 'swatch.size');
     height: g($t, 'swatch.size');
-    border-radius: g($t, 'swatch.shape');
     border: g($t, 'swatch.outline-width') solid g($t, 'swatch.outline');
-    background:
-      linear-gradient(var(--swatch-color), var(--swatch-color)),
-      conic-gradient(g($t, 'checker.a') 0 25%, g($t, 'checker.b') 0 50%, g($t, 'checker.a') 0 75%, g($t, 'checker.b') 0) 0 0 / #{g($t, 'checker.size')} #{g($t, 'checker.size')};
+    border-radius: g($t, 'swatch.shape');
+
+    @include checker($picker, linear-gradient(var(--m-color-input-swatch), var(--m-color-input-swatch)));
 
     // The swatch is the value itself: forcing would paint every colour Canvas.
     // Its edge takes the system text colour, so it stays visible.

@@ -33,11 +33,11 @@
  * The typed time: an hour and a minute field, each named by the label under
  * it. Reading, checking and committing live in `useTimeFieldsControl`.
  */
-import type { TimeField } from '#kit/composables/time/createClock'
-import type { useTimeFieldsControl } from '#kit/composables/time/useTimeFieldsControl'
+import type { TimeField } from '#kit/utils/time/createClock'
+import type { UseTimeFieldsControlReturn } from '#kit/composables/time/useTimeFieldsControl'
 
 defineProps<{
-  fields: ReturnType<typeof useTimeFieldsControl>
+  fields: UseTimeFieldsControlReturn
   hourLabel: string
   minuteLabel: string
   error?: boolean

@@ -17,7 +17,8 @@ export default defineVitestConfig({
       },
     },
 
-    exclude: [...configDefaults.exclude, '.claude/**', 'playground/.nuxt/**', 'playground/.output/**'],
+    // `playground/probes` holds temporary Playwright diagnostics outside git, not unit specs.
+    exclude: [...configDefaults.exclude, '.claude/**', 'playground/.nuxt/**', 'playground/.output/**', 'playground/probes/**'],
 
     // Each spec file boots its own Nuxt environment; under the full suite's load the cold start
     // outgrows the 10 s default and unrelated files fail in `beforeAll`.

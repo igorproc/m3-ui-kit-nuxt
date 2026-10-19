@@ -46,7 +46,7 @@ export function destroyHost() {
 }
 
 export const input = (wrapper: Wrapper) => wrapper.find('input.ui-text-field__input')
-export const options = () => [...document.querySelectorAll<HTMLElement>('.ui-dropdown__option')]
+export const options = () => [...document.querySelectorAll<HTMLElement>('.ui-dropdown-panel__option')]
 export const optionByText = (text: string) => options().find(option => option.textContent?.includes(text))
 // Chips live in the field itself, not in the teleported panel.
 export const chips = (wrapper: Wrapper) => wrapper.findAll('.ui-dropdown__chip')

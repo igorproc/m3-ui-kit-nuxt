@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { effectScope, nextTick } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MFileUpload from './index.vue'
+import { useFileUploadQueue } from '#kit/composables/file-upload/useFileUploadQueue'
 
 const file = (name: string, type = 'text/plain') => new File(['data'], name, { type, lastModified: 1 })
 const flush = async () => {
@@ -21,13 +22,20 @@ const messages = {
 }
 
 describe('m-file-upload', () => {
-  it('renders one picker, hidden, and names the whole control as a group', async () => {
-    const wrapper = await mountSuspended(MFileUpload, { props: { label: 'Attachments', hint: 'PDF, up to 5 MB' } })
+  it('renders one picker, out of sight but focusable, and names the whole control as a group', async () => {
+    const wrapper = await mountSuspended(MFileUpload, { props: { label: 'Attachments', hint: 'PDF, up to 5 MB', required: true } })
     const group = wrapper.find('[role="group"]')
+    const picker = wrapper.find('input[type="file"]')
 
     expect(wrapper.findAll('input[type="file"]')).toHaveLength(1)
-    expect(wrapper.find('.ui-file-input').element.closest('[hidden]')).not.toBeNull()
-    expect(wrapper.find(`#${group.attributes('aria-labelledby')}`).text()).toBe('Attachments')
+    // A bare native input: a required one inside `hidden` could never be
+    // focused, and the form would refuse to submit without saying why.
+    expect(picker.classes()).toContain('ui-file-upload__picker')
+    expect(picker.element.closest('[hidden]')).toBeNull()
+    expect(picker.attributes('tabindex')).toBe('-1')
+    expect(picker.attributes('required')).toBeDefined()
+    expect(wrapper.find('.ui-file-input').exists()).toBe(false)
+    expect(wrapper.find(`#${group.attributes('aria-labelledby')}`).text()).toMatch(/^Attachments/)
     expect(wrapper.find(`#${group.attributes('aria-describedby')}`).text()).toBe('PDF, up to 5 MB')
   })
 
@@ -122,6 +130,50 @@ describe('m-file-upload', () => {
 
     expect(wrapper.find('.ui-file-upload__item-name').attributes('title')).toBe(name)
     expect(wrapper.find('.ui-file-upload__item-extension').text()).toBe('.pdf')
+  })
+
+  it('removes a file that never started without calling it cancelled', async () => {
+    const upload = vi.fn(() => new Promise<void>(() => {}))
+    const wrapper = await mountSuspended(MFileUpload, { props: { modelValue: [file('a.txt')], upload, messages } })
+
+    await wrapper.find('[aria-label="Remove a.txt"]').trigger('click')
+    await flush()
+
+    expect(wrapper.emitted('remove')).toHaveLength(1)
+    expect(wrapper.emitted('cancel')).toBeFalsy()
+    expect(wrapper.find('.ui-file-upload__status').text()).not.toContain('Cancelled')
+  })
+
+  it('keeps the start-all action while rows remain, off when nothing waits', async () => {
+    const wrapper = await mountSuspended(MFileUpload, {
+      props: { modelValue: [file('a.txt')], upload: () => Promise.resolve(), messages: { ...messages, startAll: 'Start uploads' } },
+    })
+    const start = () => wrapper.find('.ui-file-upload__start')
+
+    expect(start().attributes('disabled')).toBeUndefined()
+    await start().trigger('click')
+    await flush()
+    await flush()
+
+    expect(start().exists()).toBe(true)
+    expect(start().attributes('disabled')).toBeDefined()
+  })
+
+  it('takes the statuses from a queue the app keeps, so mounting again sends nothing twice', async () => {
+    const upload = vi.fn(() => new Promise<void>(() => {}))
+    const scope = effectScope()
+    const queue = scope.run(() => useFileUploadQueue({ upload, concurrency: () => 3 }))!
+    const props = { modelValue: [file('a.txt')], queue, autoStart: true, messages }
+
+    const first = await mountSuspended(MFileUpload, { props })
+    expect(upload).toHaveBeenCalledTimes(1)
+    first.unmount()
+
+    const second = await mountSuspended(MFileUpload, { props })
+    expect(upload).toHaveBeenCalledTimes(1)
+    expect(second.find('.ui-file-upload__item-meta').text()).toContain('Uploading')
+    second.unmount()
+    scope.stop()
   })
 
   it('moves focus to the next row when a row is removed', async () => {

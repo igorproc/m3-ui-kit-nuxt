@@ -1,3 +1,4 @@
+import { computed, nextTick, ref, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 
 export interface ListboxEntry {
@@ -5,11 +6,29 @@ export interface ListboxEntry {
   disabled: boolean
 }
 
+export interface UseListboxReturn<TEntry extends ListboxEntry> {
+  activeIndex: Ref<number>
+  activeEntry: ComputedRef<TEntry | undefined>
+  /** DOM id of the active row — the target of `aria-activedescendant`. */
+  activeDescendant: ComputedRef<string | undefined>
+  /**
+   * Makes a row active. `scroll: false` is for the pointer: the row is already
+   * under it, and scrolling would move the list out from under the cursor.
+   */
+  setActive: (index: number, options?: { scroll?: boolean }) => void
+  move: (target: 'next' | 'previous' | 'first' | 'last') => void
+}
+
+/**
+ * Virtual focus over a list of rows (`aria-activedescendant`): which row is
+ * active, walking it with the disabled rows skipped, and keeping the active row
+ * in view while the keyboard moves it.
+ */
 export function useListbox<TEntry extends ListboxEntry>(
   entries: ComputedRef<readonly TEntry[]>,
   open: Ref<boolean>,
   autoSelectFirst: () => boolean,
-) {
+): UseListboxReturn<TEntry> {
   const activeIndex = ref(-1)
   const activeEntry = computed(() => entries.value[activeIndex.value])
   const activeDescendant = computed(() => activeEntry.value?.id)
@@ -18,11 +37,13 @@ export function useListbox<TEntry extends ListboxEntry>(
     .map((entry, index) => entry.disabled ? -1 : index)
     .filter(index => index >= 0)
 
-  function setActive(index: number) {
+  function setActive(index: number, { scroll = true }: { scroll?: boolean } = {}) {
     if (entries.value[index]?.disabled) return
     activeIndex.value = index
-    nextTick(() => document.getElementById(entries.value[index]?.id ?? '')
-      ?.scrollIntoView({ block: 'nearest' }))
+    if (scroll) {
+      nextTick(() => document.getElementById(entries.value[index]?.id ?? '')
+        ?.scrollIntoView({ block: 'nearest' }))
+    }
   }
 
   function move(target: 'next' | 'previous' | 'first' | 'last') {

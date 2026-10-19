@@ -1,35 +1,23 @@
 <template>
   <div
-    :id="id"
-    ref="list"
+    v-bind="control.gridAttrs.value"
     class="ui-date-picker__years"
-    role="grid"
-    :aria-labelledby="labelledBy"
-    :aria-disabled="disabled || undefined"
-    @keydown="onKeydown"
   >
     <div
-      v-for="(row, rowIndex) in rows"
+      v-for="(row, rowIndex) in control.rows.value"
       :key="rowIndex"
       class="ui-date-picker__row"
       role="row"
     >
       <div
         v-for="year in row"
-        :id="`${id}-${year}`"
         :key="year"
+        v-bind="control.getCellAttrs(year)"
         class="ui-date-picker__year"
         :class="{
           'ui-date-picker__year--selected': year === selectedYear,
           'ui-date-picker__year--current': year === currentYear,
         }"
-        role="gridcell"
-        :tabindex="year === focusedYear && !disabled ? 0 : -1"
-        :aria-selected="year === selectedYear"
-        :aria-current="year === currentYear ? 'date' : undefined"
-        :aria-disabled="disabled || undefined"
-        @click="choose(year)"
-        @focus="focusedYear = year"
       >
         <slot
           name="year"
@@ -44,10 +32,11 @@
 
 <script setup lang="ts">
 /**
- * The year list. It opens on the year on screen, scrolled into view inside
- * itself (never scrolling the page), and holds one tab stop that the arrows
- * move by one and by a row of three.
+ * The year list. Behavior comes whole from `useYearGridControl`; the list is
+ * centred on the year on screen as it mounts, before its first frame, so it
+ * never shows the top of the century while it fades in.
  */
+import { useYearGridControl } from '#kit/composables/date/useYearGridControl'
 import { mDatePickerYearGridProps } from './props'
 
 const props = defineProps(mDatePickerYearGridProps)
@@ -55,52 +44,19 @@ const emit = defineEmits<{ (e: 'select', year: number): void }>()
 
 defineSlots<{ year?: (props: { year: number }) => unknown }>()
 
-const COLUMNS = 3
-const list = ref<HTMLElement | null>(null)
-const focusedYear = ref(props.shownYear)
+const control = useYearGridControl({
+  calendar: () => props.calendar,
+  years: () => props.years,
+  shownYear: () => props.shownYear,
+  selectedYear: () => props.selectedYear,
+  currentYear: () => props.currentYear,
+  disabled: () => props.disabled,
+  labelledBy: () => props.labelledBy,
+  columns: 3,
+  onSelect: year => emit('select', year),
+}, props.id)
 
-const rows = computed(() => Array.from(
-  { length: Math.ceil(props.years.length / COLUMNS) },
-  (_, row) => props.years.slice(row * COLUMNS, row * COLUMNS + COLUMNS),
-))
+onMounted(() => control.centerYear(props.shownYear))
 
-function cellOf(year: number) {
-  return list.value?.querySelector<HTMLElement>(`[id="${props.id}-${year}"]`) ?? null
-}
-
-/** Scrolls the list (only the list) so a year sits in its middle, and focuses it. */
-function focusYear(year = focusedYear.value) {
-  const host = list.value
-  const cell = cellOf(year)
-  if (!host || !cell) return
-
-  focusedYear.value = year
-  host.scrollTop = cell.offsetTop - (host.clientHeight - cell.offsetHeight) / 2
-  cell.focus({ preventScroll: true })
-}
-
-function choose(year: number) {
-  if (props.disabled) return
-  emit('select', year)
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (props.disabled) return
-
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault()
-    choose(focusedYear.value)
-    return
-  }
-
-  const index = props.years.indexOf(focusedYear.value)
-  const rtl = getComputedStyle(event.currentTarget as Element).direction === 'rtl'
-  const next = props.calendar.gridStep(index, event.key, props.years.length, COLUMNS, rtl)
-  if (next === null) return
-
-  event.preventDefault()
-  focusYear(props.years[next])
-}
-
-defineExpose({ focusYear })
+defineExpose({ focusYear: control.focusYear })
 </script>

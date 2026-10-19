@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
+import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx, waitForMotion } from '../../e2e/support'
 
 const picker = (page: Page, id: string) => page.locator(`[data-test="${id}"]`)
 
@@ -46,7 +46,7 @@ test.describe('MColorPicker', () => {
     await expect(list).not.toBeFocused()
   })
 
-  test('the hue slider shows a focus ring', async ({ page }) => {
+  test('the hue slider takes keyboard focus; the ring circles the thumb, not the whole target', async ({ page }) => {
     await openFixture(page, 'color-picker/matrix')
     const hue = picker(page, 'enabled').getByRole('slider', { name: 'Hue' })
 
@@ -54,8 +54,8 @@ test.describe('MColorPicker', () => {
     await picker(page, 'enabled').getByRole('slider', { name: 'Brightness' }).focus()
     await page.keyboard.press('Tab')
     await expect(hue).toBeFocused()
-    const style = await hue.evaluate(el => getComputedStyle(el).outlineStyle)
-    expect(style).toBe('solid')
+    expect(await hue.evaluate(el => el.matches(':focus-visible'))).toBe(true)
+    expect(await hue.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('none')
   })
 
   test('the 2-D field is two sliders, and the field shows their focus', async ({ page }) => {
@@ -85,8 +85,8 @@ test.describe('MColorPicker', () => {
 
     await field.fill('#zz')
     await field.press('Enter')
-    // Every field keeps an always-mounted alert region (the format list has one
-    // too); the message lands in the value field's.
+    // The value field's support line appears with its error (decision 2026-10-19);
+    // the message lands in its alert region.
     await expect(picker(page, 'alpha').locator('.ui-color-edit').getByRole('alert')).toHaveText('Use #RRGGBB, rgb() or hsl()')
 
     await field.press('Escape')
@@ -108,7 +108,8 @@ test.describe('MColorPicker', () => {
     await openFixture(page, 'color-picker/matrix', { dir: 'rtl' })
     const gradient = await picker(page, 'enabled').locator('.ui-color-picker__hue').evaluate(el => getComputedStyle(el).backgroundImage)
 
-    expect(gradient).toContain('to left')
+    // A production build minifies `to left` into the same angle.
+    expect(gradient).toMatch(/to left|270deg/)
   })
 
   test('forced colors: the chosen swatch keeps a Highlight ring', async ({ page }) => {
@@ -117,5 +118,68 @@ test.describe('MColorPicker', () => {
     const chosen = picker(page, 'enabled').getByRole('option', { name: 'Primary' })
 
     expect(await chosen.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid')
+  })
+
+  test('four channels keep their values whole', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    const root = picker(page, 'enabled')
+
+    await root.getByRole('combobox', { name: 'Format' }).focus()
+    await page.keyboard.press('ArrowDown')
+    await page.getByRole('option', { name: 'RGBA', exact: true }).click()
+    const channels = root.locator('.ui-color-edit__channels input')
+    await expect(channels).toHaveCount(4)
+    for (const channel of await channels.all()) {
+      expect(await channel.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+    }
+  })
+
+  test('the hue and alpha targets do not overlap, so each keeps its whole 40', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    const unit = await remInPx(page)
+    const hue = (await picker(page, 'alpha').locator('.ui-color-picker__hue').boundingBox())!
+    const alpha = (await picker(page, 'alpha').locator('.ui-color-picker__alpha').boundingBox())!
+
+    expect(alpha.y).toBeGreaterThanOrEqual(hue.y + hue.height - 0.5)
+    expect(hue.height / unit).toBeCloseTo(40, 0)
+  })
+
+  test('a focused chosen swatch shows the focus ring and its selection ring', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    await page.keyboard.press('Shift')
+    await picker(page, 'enabled').locator('.ui-color-swatches').focus()
+    const chosen = picker(page, 'enabled').getByRole('option', { name: 'Primary' })
+
+    expect(await chosen.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid')
+    expect(await chosen.evaluate(el => getComputedStyle(el).boxShadow)).not.toBe('none')
+  })
+
+  test('swatches do not lift under the pointer while read-only or disabled', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    for (const id of ['readonly', 'disabled']) {
+      const swatch = picker(page, id).getByRole('option', { name: 'Error' })
+      await swatch.hover({ force: true })
+      await waitForMotion(page)
+      expect(await swatch.evaluate(el => getComputedStyle(el).transform)).toBe('none')
+    }
+  })
+
+  test('preview and format share a row; the hex value, whole, beside them or under them', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    const root = picker(page, 'readonly')
+    const top = async (selector: string) => (await root.locator(selector).first().boundingBox())!.y
+
+    const row = await top('.ui-color-picker__value-row')
+    expect(await top('.ui-color-preview')).toBeCloseTo(row, 0)
+    expect(await top('.ui-color-picker__format')).toBeCloseTo(row, 0)
+    expect(await root.locator('.ui-color-edit input').evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+    expect(await root.locator('.ui-color-picker__format input').evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+  })
+
+  test('in a narrow picker the hex value wraps under the format rather than being cut', async ({ page }) => {
+    await openFixture(page, 'color-picker/stress')
+    const value = picker(page, 'narrow').locator('.ui-color-edit input')
+
+    expect(await value.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
   })
 })

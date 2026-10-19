@@ -49,12 +49,8 @@ export const mOtpInputProps = {
   separator: { type: String, default: '' },
   /** Cell drawing. `outlined` has no fill: a filled cell is `variant="filled"`. */
   variant: { type: String as PropType<MOtpInputVariant>, default: 'outlined' },
-  /**
-   * Hide typed characters (`false` shows them). `true` and a glyph string are
-   * retired — `true` is `'always'`, a glyph goes into `#mask` — and still work
-   * for one release with a dev warning.
-   */
-  mask: { type: [Boolean, String] as PropType<MOtpInputMask | boolean | string>, default: false },
+  /** Hide typed characters (`false` shows them); the glyph is the `#mask` slot. */
+  mask: { type: [Boolean, String] as PropType<MOtpInputMask>, default: false },
   /**
    * A per-cell pattern drawn in empty cells: cell `i` shows `placeholder[i]`,
    * or the first character when the pattern is shorter. Never part of the

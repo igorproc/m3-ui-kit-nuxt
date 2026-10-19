@@ -210,6 +210,60 @@ test.describe('MExpansionPanel', () => {
     expect(await px(standalone, 'border-bottom-left-radius') / size).toBeCloseTo(12, 0)
   })
 
+  // E-1 (M3-polish): a preset v-model used to open its panel only after
+  // hydration — a 300 ms height transition that pushed the page down.
+  test('a preset group is open in the server HTML and nothing shifts at load', async ({ page }) => {
+    const html = await (await page.request.get('/expansion-panel/matrix?theme=light&dir=ltr')).text()
+    const expandedOf = (id: string) => html.match(new RegExp(`<button[^>]*data-test="${id}"[^>]*>`))?.[0].match(/aria-expanded="(\w+)"/)?.[1]
+    expect(['exclusive-b', 'multiple-a', 'mandatory-a'].map(expandedOf)).toEqual(['true', 'true', 'true'])
+
+    // Tall enough for every group to sit in the viewport, where layout shifts are recorded.
+    await page.setViewportSize({ width: 1280, height: 3200 })
+    await page.addInitScript(() => {
+      const shifts: string[] = []
+      Object.assign(window, { __shifts: shifts })
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries() as Array<PerformanceEntry & { sources?: Array<{ node: Node | null }> }>) {
+          for (const source of entry.sources ?? []) {
+            if (source.node instanceof Element && source.node.closest('.ui-expansion-panels')) shifts.push(source.node.className)
+          }
+        }
+      }).observe({ type: 'layout-shift', buffered: true })
+    })
+    await openFixture(page, 'expansion-panel/matrix')
+    await page.waitForTimeout(600)
+
+    expect(await page.evaluate(() => (window as unknown as { __shifts: string[] }).__shifts)).toEqual([])
+    const region = await regionOf(page, header(page, 'exclusive-b'))
+    expect((await region.boundingBox())!.height).toBeGreaterThan(0)
+  })
+
+  // Q-2 (M3-polish, accepted): in an exclusive group the clicked header may
+  // travel inside the group while the panel above it closes, but nothing
+  // outside the group moves when the two contents are the same height.
+  test('opening another panel in an exclusive group moves nothing outside the group', async ({ page }) => {
+    await openFixture(page, 'expansion-panel/matrix')
+    const after = page.getByRole('heading', { name: 'Multiple group' })
+    await after.scrollIntoViewIfNeeded()
+    await waitForMotion(page)
+
+    const positions = await page.evaluate(async () => {
+      const next = [...document.querySelectorAll('h2')].find(heading => heading.textContent === 'Multiple group')!
+      const ys: number[] = []
+      document.querySelector<HTMLElement>('[data-test="exclusive-c"]')!.click()
+      const start = performance.now()
+      while (performance.now() - start < 500) {
+        ys.push(Math.round(next.getBoundingClientRect().y * 100) / 100)
+        await new Promise(resolve => requestAnimationFrame(resolve))
+      }
+      return ys
+    })
+
+    // One panel shrinks while the other grows by the same amount: only
+    // sub-pixel rounding of the two grid rows may differ from frame to frame.
+    expect((Math.max(...positions) - Math.min(...positions)) / await rem(page)).toBeLessThan(1)
+  })
+
   test('reduced motion shortens the height animation rather than removing it', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await openFixture(page, 'expansion-panel/stress')

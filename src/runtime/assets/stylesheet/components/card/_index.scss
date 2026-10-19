@@ -9,18 +9,23 @@
 // typography or inner spacing for a card; those are the kit's own.
 
 $on-surface: map.get($theme-color-link, 'on-surface');
+$-padding: spacing(16);
 $tokens: (
   container: (
     shape: map.get($theme-shape-link, 'medium'),
-    padding: spacing(16),
+    padding: $-padding,
     gap: spacing(12),
-    outline: (width: 1rem),
+    // Hairline: with the root font size in vw, 1rem drops under a device
+    // pixel on a narrow screen; the line never gets thinner than one pixel.
+    outline: (width: max(1px, 1rem)),
   ),
   content: (color: $on-surface),
 
   media: (
     // Shows while the image loads, and instead of a broken one.
     placeholder: map.get($theme-color-link, 'surface-container-highest'),
+    // Full-bleed: the media runs over the card's padding to its edges.
+    margin: calc(-1 * #{$-padding}),
     // How far a focus ring drawn inside the media reaches past its target.
     ring: map.get($theme-focus-link, 'width') + map.get($theme-focus-link, 'offset'),
   ),
@@ -48,13 +53,13 @@ $tokens: (
     content: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent)),
   ),
 
-  // Focus keeps the resting elevation in all three variants, so it has no step.
+  // Focus keeps the resting elevation in all three variants, so it has no
+  // step; a disabled card keeps it too (Compose `Disabled*Elevation` equals rest).
   elevated: (
     container: (color: map.get($theme-color-link, 'surface-container-low')),
     elevation: (rest: elevation(1), hover: elevation(2), pressed: elevation(1)),
     disabled: (
       container: (color: map.get($theme-color-link, 'surface')),
-      elevation: elevation(1),
     ),
   ),
   filled: (
@@ -65,7 +70,6 @@ $tokens: (
       // translucent. The kit retired that role for `surface-container-highest`;
       // 0.38 is the disabled-content step, not a separate opacity.
       container: (color: color-mix(in srgb, #{map.get($theme-color-link, 'surface-container-highest')} state-opacity(disabled-content), transparent)),
-      elevation: elevation(0),
     ),
   ),
   outlined: (
@@ -80,7 +84,6 @@ $tokens: (
     disabled: (
       container: (color: map.get($theme-color-link, 'surface')),
       outline: (color: color-mix(in srgb, #{map.get($theme-color-link, 'outline')} state-opacity(disabled-container), transparent)),
-      elevation: elevation(0),
     ),
   ),
 );

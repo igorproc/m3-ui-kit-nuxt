@@ -40,24 +40,24 @@
 
     <MDialogDate
       v-model="fromOpen"
-      v-model:date="fromDate"
+      v-model:date="from"
       label="Начало периода"
       input-title="Введите дату начала"
       locale="ru-RU"
-      :min-date="bounds.earliest"
-      :max-date="toDate"
+      :min-date="earliest"
+      :max-date="to"
       cancel-label="Отмена"
       confirm-label="Готово"
     />
 
     <MDialogDate
       v-model="toOpen"
-      v-model:date="toDate"
+      v-model:date="to"
       label="Конец периода"
       input-title="Введите дату окончания"
       locale="ru-RU"
-      :min-date="fromDate"
-      :max-date="bounds.latest"
+      :min-date="from"
+      :max-date="latest"
       cancel-label="Отмена"
       confirm-label="Готово"
     />
@@ -65,40 +65,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { fromPickerDate, toPickerDate } from './data/calendar'
+import { ref } from 'vue'
 import { formatShortDay } from './data/format'
 
-const props = defineProps<{
+defineProps<{
   /** Earliest and latest days the data covers. */
   earliest: string
   latest: string
 }>()
 
+// The filters keep day keys (`YYYY-MM-DD`); the date dialog writes a day key
+// back into a model that holds one, so they are bound directly.
 const from = defineModel<string>('from', { required: true })
 const to = defineModel<string>('to', { required: true })
-
-// The pickers take local `Date`s; the filters keep day keys. Bound both ways:
-// MDialogDate's `confirm` payload reads the `date` model back, so a one-way
-// `:date` would hand over the previous day.
-const fromDate = computed({
-  get: () => toPickerDate(from.value),
-  set: (value: Date | string | number | null) => {
-    from.value = fromPickerDate(value) ?? from.value
-  },
-})
-
-const toDate = computed({
-  get: () => toPickerDate(to.value),
-  set: (value: Date | string | number | null) => {
-    to.value = fromPickerDate(value) ?? to.value
-  },
-})
-
-const bounds = computed(() => ({
-  earliest: toPickerDate(props.earliest),
-  latest: toPickerDate(props.latest),
-}))
 
 const fromOpen = ref(false)
 const toOpen = ref(false)

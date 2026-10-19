@@ -1,4 +1,5 @@
 @use '../../abstracts/forward.scss' as *;
+@use '../date-picker/state-layer' as *;
 
 // ==========================================
 // TIME PICKER · DISPLAY, PERIOD, DIAL
@@ -7,38 +8,6 @@
 // MD3 state layer in their own ink (`::before`); focus is the kit's ring on
 // buttons and the dial, and a colour change on the typed fields. The time
 // reads left to right in any writing direction, as in Compose.
-
-@mixin state-layer($t) {
-  position: relative;
-  isolation: isolate;
-  cursor: pointer;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background-color: currentcolor;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity g($t, 'motion.duration') g($t, 'motion.easing');
-  }
-
-  @include can-hover {
-    &:hover::before {
-      opacity: g($t, 'layer.hover');
-    }
-  }
-
-  &:active::before {
-    opacity: g($t, 'layer.pressed');
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
 
 @mixin display($t) {
   // A grid of `part separator part`: each part grows up to its spec width and
@@ -117,18 +86,20 @@
 
     @include typescale(g($t, 'field.typography'));
 
-    &:focus {
-      border-color: g($t, 'field.focus.outline');
-      background-color: g($t, 'field.focus.container');
-      color: g($t, 'field.focus.label');
-    }
-
-    &--error,
-    &--error:focus {
+    &--error {
       border-color: g($t, 'field.error.outline');
       background-color: g($t, 'field.error.container');
       color: g($t, 'field.error.label');
       caret-color: g($t, 'field.error.outline');
+    }
+
+    // Focus outranks the error on the field: the error stays in the label under
+    // it and in the support line (color-and-state.md).
+    &:focus {
+      border-color: g($t, 'field.focus.outline');
+      background-color: g($t, 'field.focus.container');
+      color: g($t, 'field.focus.label');
+      caret-color: g($t, 'field.focus.outline');
     }
   }
 
@@ -222,6 +193,11 @@
     transition:
       transform g($t, 'motion.duration') g($t, 'motion.easing'),
       height g($t, 'motion.duration') g($t, 'motion.easing');
+
+    // Under a dragging pointer the hand follows it; only the release eases.
+    &--dragging {
+      transition: none;
+    }
   }
 
   &__handle {
@@ -260,6 +236,10 @@
     color: g($t, 'dial.number.color');
     transform: translate(-50%, -50%);
     pointer-events: none;
+
+    // In step with the hand: the chosen number turns light as the handle
+    // arrives, not before it.
+    transition: color g($t, 'motion.duration') g($t, 'motion.easing');
 
     @include typescale(g($t, 'dial.number.typography'));
 

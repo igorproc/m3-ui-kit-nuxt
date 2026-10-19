@@ -1,4 +1,5 @@
 @use '../../abstracts/forward.scss' as *;
+@use '../text-field/family';
 
 // ==========================================
 // TEXTAREA · DRAG HANDLE, SUPPORT ROW, GROWTH
@@ -40,24 +41,35 @@
       transform: translateX(-50%);
       transition: opacity g($t, 'state.duration') g($t, 'state.easing');
     }
+  }
 
-    @include can-hover {
-      &:hover {
-        background-color: g($t, 'grip.hover.color');
+  // The grip answers only while it can do something: a read-only or disabled
+  // field keeps the bar, never the invitation.
+  @include can-hover {
+    &--interactive .ui-textarea__grip:hover {
+      background-color: g($t, 'grip.hover.color');
 
-        &::before {
-          opacity: g($t, 'layer.hover');
-        }
+      &::before {
+        opacity: g($t, 'layer.hover');
       }
     }
+  }
 
-    // Focus is colour here, as everywhere else in this family. On a bar that
-    // wide the hue carries on its own, so the ring the corner mark needed is
-    // gone with it.
-    &:focus-visible {
-      outline: none;
-      background-color: g($t, 'grip.focus.color');
-    }
+  &--interactive .ui-textarea__grip:active::before {
+    opacity: g($t, 'layer.pressed');
+  }
+
+  &--resizing .ui-textarea__grip::before {
+    opacity: g($t, 'layer.dragged');
+  }
+
+  // Focus is colour here, as everywhere else in this family. On a bar that
+  // wide the hue carries on its own, so the ring the corner mark needed is
+  // gone with it. After hover, at its weight, so focus keeps its hue under
+  // the pointer.
+  &--interactive .ui-textarea__grip:focus-visible {
+    outline: none;
+    background-color: g($t, 'grip.focus.color');
   }
 
   // ── support row · message at the start, counter at the end, height reserved ──
@@ -66,12 +78,8 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: g($t, 'support.gap');
-    min-height: g($t, 'support.min-height');
-    padding-inline: g($t, 'support.padding.inline');
-    margin-top: g($t, 'support.margin.top');
-    color: g($t, 'support.color');
 
-    @include typescale(g($t, 'typography.support'));
+    @include family.support-line($t);
   }
 
   &__message {
@@ -79,18 +87,10 @@
     align-items: center;
     min-width: 0;
     margin: 0;
-
-    // A URL or an address in a message has no break opportunity of its own.
-    overflow-wrap: anywhere;
   }
 
-  // Validity has to survive without colour (WCAG 1.4.1), and an `error` with no
-  // message has nothing but this glyph to say it. A margin, not a flex gap: the
-  // alert region beside it is empty whenever the helper is shown.
   &__message-icon {
-    flex: 0 0 auto;
-    margin-inline-end: g($t, 'support.icon.gap');
-    font-size: g($t, 'support.icon.size');
+    @include family.support-glyph($t);
   }
 
   &__alert {
@@ -112,19 +112,17 @@
   }
 
   // ── growth · one mechanism per browser, never two ──
+  // The height changes at once in every path: with `field-sizing` the
+  // computed height stays `auto`, so a transition could never run on typing,
+  // and growth in the flow must not drag the content below it along.
   &--auto-grow &__input {
     field-sizing: content;
     min-height: g($t, 'growth.min-height');
-    transition: height g($t, 'state.grow.duration') g($t, 'state.grow.easing');
   }
 
   &--capped &__input {
     max-height: g($t, 'growth.max-height');
     overflow-y: auto;
     scrollbar-gutter: stable;
-  }
-
-  &--resizing &__input {
-    transition: none;
   }
 }

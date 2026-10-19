@@ -34,7 +34,10 @@
         :disabled="disabled || !canGoPrev"
         @click="emit('prev')"
       >
-        <MIcon :name="ICONS.chevronLeft" />
+        <MIcon
+          :name="ICONS.chevronLeft"
+          class="ui-date-picker__arrow-icon"
+        />
       </MButtonIcon>
 
       <MButtonIcon
@@ -44,7 +47,10 @@
         :disabled="disabled || !canGoNext"
         @click="emit('next')"
       >
-        <MIcon :name="ICONS.chevronRight" />
+        <MIcon
+          :name="ICONS.chevronRight"
+          class="ui-date-picker__arrow-icon"
+        />
       </MButtonIcon>
     </div>
   </div>

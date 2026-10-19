@@ -2,13 +2,13 @@
   <div
     v-bind="rootAttrs()"
     class="ui-autocomplete"
-    :class="{ 'ui-autocomplete--open': open, 'ui-autocomplete--multiple': multiple }"
-    @keydown.capture="keyboardCursor = true"
-    @pointerdown="keyboardCursor = false"
-    @keydown="onFieldKeydown"
+    :class="{ 'ui-autocomplete--open': open }"
+    @click="onFieldClick"
+    @keydown.capture="onKeyboard"
+    @pointerdown="onPointer"
   >
     <MTextField
-      v-bind="controlAttrs()"
+      v-bind="{ ...controlAttrs(), ...fieldError() }"
       ref="fieldRef"
       v-model:focused="control.focused.value"
       class="ui-autocomplete__field"
@@ -16,10 +16,8 @@
       :label="label"
       :placeholder="control.hasSelection.value ? undefined : placeholder"
       :helper-text="helperText"
-      :error="isError"
-      :error-message="displayError"
       :variant="variant"
-      :shape="fieldShape"
+      :shape="shape"
       :label-placement="labelPlacement"
       :density="density"
       :name="name ?? path"
@@ -38,8 +36,10 @@
         <slot name="prepend" />
       </template>
 
+      <!-- Always there in multiple, empty without chips: the field keeps the
+           chips' height from the first frame, so the first chip moves nothing. -->
       <template
-        v-if="hasChips"
+        v-if="multiple"
         #leading-content
       >
         <slot
@@ -47,31 +47,26 @@
           :entries="control.selectedEntries.value"
           :remove="control.removeEntry"
         >
-          <MChip
-            v-for="(entry, index) in control.selectedEntries.value"
-            :id="control.chipId(index)"
-            :key="entry.key"
-            type="input"
-            class="ui-autocomplete__chip"
-            :class="{ 'ui-autocomplete__chip--active': control.chipFocus.value === index }"
-            :disabled="disabled || readonly || entry.itemDisabled"
-            @mousedown.prevent
-            @click.stop="control.removeEntry(entry)"
+          <DropdownChips
+            v-if="control.selectedEntries.value.length"
+            :entries="control.selectedEntries.value"
+            block="ui-autocomplete"
+            :chip-id="control.chipId"
+            :focus="control.chipFocus.value"
+            :disabled="disabled"
+            :readonly="readonly"
+            @remove="control.removeEntry"
           >
-            <slot
-              name="chip"
-              :item="entry.item"
-              :value="entry.value"
-              :title="entry.title"
-              :index="index"
-              :remove="() => control.removeEntry(entry)"
+            <template
+              v-if="$slots.chip"
+              #default="chip"
             >
-              {{ entry.title }}
-            </slot>
-            <template #trailing>
-              <MIcon :name="ICONS.close" />
+              <slot
+                name="chip"
+                v-bind="chip as DropdownChipSlotProps<TItem, TValue>"
+              />
             </template>
-          </MChip>
+          </DropdownChips>
         </slot>
       </template>
 
@@ -82,10 +77,10 @@
           v-if="control.canClear.value"
           type="button"
           class="ui-autocomplete__clear"
-          :aria-label="MESSAGES.dropdownClear"
+          :aria-label="messages?.clear"
           :disabled="disabled || readonly"
           @mousedown.prevent
-          @click="control.clearQuery"
+          @click="clear"
         >
           <MIcon :name="ICONS.close" />
         </MButtonIcon>
@@ -96,14 +91,17 @@
           type="button"
           class="ui-autocomplete__toggle"
           tabindex="-1"
-          :aria-label="MESSAGES.dropdownToggle"
+          :aria-label="messages?.toggle"
           :aria-expanded="String(open)"
           :aria-controls="control.listboxId"
           :disabled="disabled || readonly"
           @mousedown.prevent
           @click="control.togglePanel"
         >
-          <MIcon :name="open ? ICONS.arrowDropUp : ICONS.arrowDropDown" />
+          <MIcon
+            :name="ICONS.arrowDropDown"
+            class="ui-autocomplete__arrow"
+          />
         </MButtonIcon>
       </template>
     </MTextField>
@@ -123,116 +121,72 @@
         :get-option-attrs="control.getOptionAttrs"
         :panel-style="control.panelStyle.value"
         :active-id="control.activeId.value"
+        :limit-reached="control.limitReached.value"
         :query="search"
         :loading="loading"
         :select="control.selectEntry"
         :close="control.closePanel"
       >
-        <!-- Progress and the state messages sit beside the listbox, not in it:
-             a listbox may only own options. -->
-        <div
-          class="ui-autocomplete__panel"
-          @mousedown.prevent
-          @pointermove="keyboardCursor = false"
+        <!-- Rows stay while a new query loads: a refresh keeps what the user
+             was reading, and the active row survives the round trip. -->
+        <DropdownPanel
+          ref="panelRef"
+          :entries="control.entries.value"
+          :listbox-attrs="control.listboxAttrs.value"
+          :get-option-attrs="control.getOptionAttrs"
+          :panel-style="control.panelStyle.value"
+          :active-id="control.activeId.value"
+          :keyboard="keyboardCursor"
+          :density="density"
+          :multiple="multiple"
+          :loading="loading"
+          :state="state"
+          :messages="messages"
+          :query="search"
+          :missing="minSearchLength - search.length"
+          :reset-query="control.resetQuery"
+          @pointer="onPointer"
         >
-          <MProgressLinear
-            v-if="loading"
-            class="ui-autocomplete__progress"
-            indeterminate
-            :aria-label="MESSAGES.dropdownLoading"
-          />
-
-          <!-- Rows stay while a new query loads: a refresh keeps what the user
-               was reading, and the active row survives the round trip. -->
-          <MList
-            v-bind="control.listboxAttrs.value"
-            class="ui-autocomplete__list"
-            :class="`ui-autocomplete__list--${density}`"
-            :density="density"
-            :style="control.panelStyle.value"
+          <template
+            v-if="$slots.item"
+            #item="row"
           >
-            <MListItem
-              v-for="(entry, index) in control.entries.value"
-              :key="entry.key"
-              v-bind="control.getOptionAttrs(entry)"
-              class="ui-autocomplete__option"
-              :class="optionClasses(entry)"
-              :interactive="true"
-              :selected="entry.selected"
-              :disabled="entry.disabled"
-              :lines="1"
-            >
-              <!-- At the end, and only on the chosen row: the row text then
-                   starts where the query does in the field above it. -->
-              <template
-                v-if="entry.selected"
-                #trailing
-              >
-                <MIcon
-                  :name="ICONS.check"
-                  class="ui-autocomplete__check"
-                />
-              </template>
-
-              <slot
-                name="item"
-                :item="entry.item"
-                :index="index"
-                :value="entry.value"
-                :title="entry.title"
-                :selected="entry.selected"
-                :disabled="entry.disabled"
-                :blocked="entry.blocked"
-                :active="control.activeId.value === entry.id"
-              >
-                <span class="ui-autocomplete__option-title">{{ entry.title }}</span>
-              </slot>
-            </MListItem>
-          </MList>
-
-          <div ref="stateRef">
-            <template v-if="!control.entries.value.length">
-              <!-- Below `minSearchLength` no search has run yet, so "no results"
-                   would be a claim about a query nobody made. No default text:
-                   the kit ships no copy it cannot translate. -->
-              <slot
-                v-if="!control.queryReady.value"
-                name="hint"
-                :query="search"
-                :missing="minSearchLength - search.length"
-              />
-
-              <slot
-                v-else-if="loading"
-                name="loading"
-              >
-                <div class="ui-autocomplete__state">
-                  {{ MESSAGES.dropdownLoading }}
-                </div>
-              </slot>
-
-              <slot
-                v-else-if="!items.length"
-                name="empty"
-              >
-                <div class="ui-autocomplete__state">
-                  {{ MESSAGES.dropdownEmpty }}
-                </div>
-              </slot>
-
-              <slot
-                v-else
-                name="no-results"
-                :query="search"
-                :clear="control.resetQuery"
-              >
-                <div class="ui-autocomplete__state">
-                  {{ MESSAGES.dropdownNoResults }}
-                </div>
-              </slot>
-            </template>
-          </div>
-        </div>
+            <slot
+              name="item"
+              v-bind="row as DropdownItemSlotProps<TItem, TValue>"
+            />
+          </template>
+          <template
+            v-if="$slots.hint"
+            #hint="hint"
+          >
+            <slot
+              name="hint"
+              v-bind="hint as AutocompleteHintSlotProps"
+            />
+          </template>
+          <template
+            v-if="$slots.loading"
+            #loading
+          >
+            <slot name="loading" />
+          </template>
+          <template
+            v-if="$slots.empty"
+            #empty
+          >
+            <slot name="empty" />
+          </template>
+          <template
+            v-if="$slots['no-results']"
+            #no-results="result"
+          >
+            <slot
+              name="no-results"
+              v-bind="result as AutocompleteNoResultsSlotProps"
+            />
+          </template>
+        </DropdownPanel>
       </slot>
     </MMenu>
 
@@ -244,101 +198,99 @@
 </template>
 
 <script setup lang="ts" generic="TItem extends DropdownItemBase, TValue = TItem">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { mAutocompleteProps } from './props'
-import type { MFieldParts } from '#kit/components/ui/text-field/props'
+import type { AutocompleteHintSlotProps, AutocompleteNoResultsSlotProps, MAutocompleteSlots } from './props'
+import type { DropdownChipSlotProps, DropdownItemSlotProps, MDropdownEmits } from '#kit/components/ui/dropdown/props'
 import { useAutocomplete } from '#kit/composables/autocomplete/useAutocomplete'
-import type { AutocompleteControlConfig } from '#kit/composables/autocomplete/useAutocomplete'
+import type { AutocompleteControlConfig, UseAutocompleteReturn } from '#kit/composables/autocomplete/useAutocomplete'
 import { provideDropdownContext } from '#kit/components/ui/dropdown/context'
-import { usePanelStatus } from '#kit/composables/dropdown/usePanelStatus'
-import type { DropdownContext, DropdownEntry, DropdownItemBase } from '#kit/composables/dropdown/types'
+import type { DropdownContext, DropdownItemBase } from '#kit/composables/dropdown/types'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
-import { useFieldShape } from '#kit/components/ui/text-field/useFieldShape'
-import { useField } from '#kit/composables/useField'
+import { panelHasContent, panelState } from '#kit/utils/dropdown/panelState'
+import type { DropdownPanelState } from '#kit/utils/dropdown/panelState'
+import { usePanelStatus } from '#kit/utils/dropdown/usePanelStatus'
+import { useSelectionShell, useUnnamedControlWarning } from '#kit/utils/dropdown/useSelectionShell'
+import { useBoundProp } from '#kit/utils/text-field/supportLine'
 import { ICONS } from '#kit/shared/constants/icons'
-import { MESSAGES } from '#kit/shared/constants/messages'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
-import MChip from '#kit/components/ui/chip/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
-import MList from '#kit/components/ui/list/index.vue'
-import MListItem from '#kit/components/ui/list/item/index.vue'
 import MMenu from '#kit/components/ui/menu/index.vue'
-import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
+import DropdownChips from '#kit/components/fragments/dropdown/Chips.vue'
+import DropdownPanel from '#kit/components/fragments/dropdown/Panel.vue'
 
 // The root is a wrapper; aria-*, inputmode and listeners belong on the combobox.
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mAutocompleteProps)
+const emit = defineEmits<MDropdownEmits<TItem>>()
+const slots = defineSlots<MAutocompleteSlots<TItem, TValue>>()
 
 const model = defineModel<TValue | TValue[] | undefined>()
 const search = defineModel<string>('search', { default: '' })
 const open = defineModel<boolean>('open', { default: false })
 
-const emit = defineEmits<{
-  (event: 'select' | 'remove', item: TItem): void
-  (event: 'clear' | 'open' | 'close'): void
-}>()
+const panelRef = ref<{ stateEl: HTMLElement | null } | null>(null)
 
-const fieldRef = ref<MFieldParts | null>(null)
+const { fieldRef, fieldControl, field, isError, displayError, keyboardCursor, onKeyboard, onPointer, focusInput, isFieldFrame }
+  = useSelectionShell<TValue>({ props, model, open })
 
-// Anchor to the drawn container: the root's box also holds the support line,
-// and the menu would otherwise open below the helper text.
-const fieldControl = computed(() => fieldRef.value?.control ?? null)
+// The field reserves its support line only when an error can reach it
+// (decision 2026-10-19): the consumer bound one, or an adapter path can
+// produce one. Otherwise
+// the error props are not passed at all.
+const isBound = useBoundProp()
+const fieldError = () => (isBound('error') || isBound('errorMessage') || props.path
+  ? { error: isError.value, errorMessage: displayError.value }
+  : {})
 
-// Keystrokes starting on the input are handled by its own bag; a chip that
-// took focus bubbles here instead.
-function onFieldKeydown(event: KeyboardEvent) {
-  if (event.target === fieldRef.value?.input) return
-  control.onKeydown(event)
-}
+const state = computed<DropdownPanelState>(() => panelState({
+  rows: control.entries.value.length,
+  loading: props.loading,
+  items: props.items.length,
+  queryReady: control.queryReady.value,
+}))
 
-// Validation binds the selection, not the text being typed into the box.
-const field = useField<TValue | TValue[] | undefined>({ path: props.path, model })
-
-const isError = computed(() => props.error || Boolean(props.errorMessage) || field.hasError.value)
-const displayError = computed(() => field.errorMessage.value ?? props.errorMessage)
-
-const control = useAutocomplete<TItem, TValue>({
+const control: UseAutocompleteReturn<TItem, TValue> = useAutocomplete<TItem, TValue>({
   props: props as AutocompleteControlConfig,
   model,
   search,
   open,
   emit,
   pending: () => field.meta.pending,
+  canOpen: (): boolean => Boolean(slots.default) || panelHasContent(state.value, name => Boolean(slots[name as keyof typeof slots]), props.messages),
 })
 
-const hasChips = computed(() => props.multiple && control.selectedEntries.value.length > 0)
-const fieldShape = useFieldShape('m-autocomplete', props)
+useUnnamedControlWarning('m-autocomplete', () => props.messages, () => [
+  'toggle' as const,
+  ...(control.canClear.value ? ['clear' as const] : []),
+  ...(props.loading && open.value ? ['loading' as const] : []),
+])
 
-// Hovering a row also makes it active, so the ring that marks keyboard focus
-// is drawn only while the keyboard drives.
-const keyboardCursor = ref(false)
-
-const optionClasses = (entry: DropdownEntry<TItem, TValue>) => {
-  const active = control.activeId.value === entry.id
-  return {
-    'ui-autocomplete__option--active': active,
-    'ui-autocomplete__option--keyboard': active && keyboardCursor.value,
-  }
-}
-
-const stateRef = ref<HTMLElement | null>(null)
 const status = usePanelStatus({
   open: () => open.value,
   loading: () => props.loading,
   hasRows: () => control.entries.value.length > 0,
-  loadingText: MESSAGES.dropdownLoading,
-  state: () => stateRef.value,
+  loadingText: () => props.messages?.loading,
+  state: () => panelRef.value?.stateEl,
   sources: () => [props.items.length, control.queryReady.value],
 })
 
-// Opening from the toggle button leaves focus nowhere useful; the combobox
-// needs DOM focus for `aria-activedescendant` to point from anything.
-watch(open, (value) => {
-  if (value) nextTick(() => fieldRef.value?.input?.focus())
-})
+// A press in the box reaches the input through the field; the field's frame
+// between the box and its support line passes nothing on, so it opens here.
+function onFieldClick(event: MouseEvent) {
+  if (!isFieldFrame(event.target)) return
+  focusInput()
+  control.openPanel()
+}
+
+// The button leaves with the value; the field is where the user goes next.
+function clear() {
+  control.clearQuery()
+  focusInput()
+}
 
 provideDropdownContext(control.context as unknown as DropdownContext)
 
@@ -347,7 +299,7 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/autocomplete' as t;
-@use '#kit/assets/stylesheet/components/dropdown/panel' as panel;
+@use '#kit/assets/stylesheet/components/dropdown/field' as field;
 
 .ui-autocomplete {
   $t: t.$tokens;
@@ -360,6 +312,6 @@ defineExpose({ open: control.openPanel, close: control.closeAndRestore, clear: c
   // without one takes its container's content colour, and the field's trailing
   // zone gives it every role — rest, error, error + hover, disabled.
 
-  @include panel.selection-panel($t);
+  @include field.selection-field($t);
 }
 </style>

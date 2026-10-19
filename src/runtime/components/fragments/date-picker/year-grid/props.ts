@@ -1,5 +1,5 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import type { Calendar } from '#kit/composables/date/createCalendar'
+import type { Calendar } from '#kit/utils/date/createCalendar'
 
 /** Props of the year list shown in place of the day grid. */
 export const mDatePickerYearGridProps = {

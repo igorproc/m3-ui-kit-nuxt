@@ -1,35 +1,22 @@
 @use 'sass:map';
 @use '../../../abstracts/forward.scss' as *;
 
-// Material 3 State Opacities
-$hover-state-layer-opacity: state-opacity(hover);
-$focus-state-layer-opacity: state-opacity(focus);
-$pressed-state-layer-opacity: state-opacity(pressed);
-$disabled-container-opacity: state-opacity(disabled-container);
-$disabled-content-opacity: state-opacity(disabled-content);
-
-// M3 Standard Colors
 $on-surface: map.get($theme-color-link, 'on-surface');
-$outline: map.get($theme-color-link, 'outline');
+$icon-size: 18rem;
+$graphic-gap: spacing(8);
 
-// Selected-segment scheme for one MD3 role (`<role>-container` fill).
-@function segmented-selected($container, $on-container) {
-  @return (container: (color: $container,
-      hover: (color: color-mix(in srgb, $on-container $hover-state-layer-opacity, $container)),
-      focus: (color: color-mix(in srgb, $on-container $focus-state-layer-opacity, $container)),
-      pressed: (color: color-mix(in srgb, $on-container $pressed-state-layer-opacity, $container)),
-    ),
-    content: (color: $on-container));
-}
-
+// M3 `OutlinedSegmentedButtonTokens`. States are a layer in the content colour
+// over the segment (hover 8, focus 10); pressed is the ripple's alone.
 $tokens: (
   container: (
     height: 40rem,
     shape: map.get($theme-shape-link, 'full'),
     outline: (
-      color: $outline,
-      disabled: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent)),
-    )
+      // The kit's hairline: `1rem` fades below a device pixel on a narrow screen.
+      width: max(1px, 1rem),
+      color: map.get($theme-color-link, 'outline'),
+      disabled: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
+    ),
   ),
 
   segment: (
@@ -41,44 +28,44 @@ $tokens: (
       // Only matters once a label wraps: a single line is centred in the height.
       block: spacing(4),
     ),
-    gap: spacing(8),
     typography: 'label-large',
   ),
 
-  unselected: (
-    container: (
-      color: transparent,
-      hover: (color: color-mix(in srgb, $on-surface $hover-state-layer-opacity, transparent)),
-      focus: (color: color-mix(in srgb, $on-surface $focus-state-layer-opacity, transparent)),
-      pressed: (color: color-mix(in srgb, $on-surface $pressed-state-layer-opacity, transparent)),
-    ),
-    content: (
-      color: $on-surface,
-      disabled: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-    )
+  // The check (or the item's icon) and its gap to the label. A label segment
+  // keeps the room for the check while unselected, so choosing it moves the
+  // label inside the segment by half that room and nothing outside it.
+  graphic: (
+    size: $icon-size,
+    gap: $graphic-gap,
+    room: calc($icon-size + $graphic-gap),
+    shift: calc(($icon-size + $graphic-gap) / 2),
   ),
 
-  // Selected scheme per MD3 color role
+  state: (
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+  ),
+
+  unselected: (
+    content: (
+      color: $on-surface,
+      disabled: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
+    ),
+  ),
+
+  // Selected segment per MD3 role: its container.
   selected: (
-    primary: segmented-selected(map.get($theme-color-link, 'primary-container'),
-      map.get($theme-color-link, 'on-primary-container')),
-    secondary: segmented-selected(map.get($theme-color-link, 'secondary-container'),
-      map.get($theme-color-link, 'on-secondary-container')),
-    tertiary: segmented-selected(map.get($theme-color-link, 'tertiary-container'),
-      map.get($theme-color-link, 'on-tertiary-container')),
-    error: segmented-selected(map.get($theme-color-link, 'error-container'),
-      map.get($theme-color-link, 'on-error-container')),
+    primary: (container: map.get($theme-color-link, 'primary-container'), content: map.get($theme-color-link, 'on-primary-container')),
+    secondary: (container: map.get($theme-color-link, 'secondary-container'), content: map.get($theme-color-link, 'on-secondary-container')),
+    tertiary: (container: map.get($theme-color-link, 'tertiary-container'), content: map.get($theme-color-link, 'on-tertiary-container')),
+    error: (container: map.get($theme-color-link, 'error-container'), content: map.get($theme-color-link, 'on-error-container')),
   ),
 
   // A disabled segment that is also selected keeps its check mark but loses the
   // role colour, so it cannot pass for an active choice.
   disabled: (
-    selected: (container: (color: color-mix(in srgb, $on-surface $disabled-container-opacity, transparent))),
-    content: (color: color-mix(in srgb, $on-surface $disabled-content-opacity, transparent)),
-  ),
-
-  icon: (
-    size: 18rem
+    selected: (container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent))),
+    content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
   ),
 
   motion: (

@@ -1,0 +1,132 @@
+@use 'sass:list';
+@use '../../abstracts/forward.scss' as *;
+
+// Colours of MButton: every role × variant, the toggle states, the
+// container-colour fallback of a role-less icon button, disabled and forced
+// colors. Included last inside `.ui-button`, so the later rules win ties.
+
+$variants: ('filled', 'elevated', 'tonal', 'outlined', 'text');
+$variant-classes: ();
+
+@each $v in $variants {
+  $variant-classes: list.append($variant-classes, '.ui-button--#{$v}', $separator: comma);
+}
+
+@function -colors($t, $path) {
+  @return (container: g($t, '#{$path}.container.color'), content: g($t, '#{$path}.content.color'));
+}
+
+@mixin -paint($t, $path) {
+  background-color: g($t, '#{$path}.container.color');
+  color: g($t, '#{$path}.content.color');
+}
+
+// One role for every variant. A toggle state that wears the resting colours
+// emits no rule of its own.
+@mixin -apply-scheme($t, $scheme) {
+  @each $v in $variants {
+    &.ui-button--#{$v} {
+      $base: '#{$scheme}.#{$v}';
+
+      @include -paint($t, $base);
+
+      @if $v == 'outlined' {
+        border-color: g($t, '#{$base}.outline.color');
+      }
+
+      @if -colors($t, '#{$base}.unselected') != -colors($t, $base) {
+        &.ui-button--unselected {
+          @include -paint($t, '#{$base}.unselected');
+        }
+      }
+
+      @if -colors($t, '#{$base}.selected') != -colors($t, $base) {
+        &.ui-button--selected {
+          @include -paint($t, '#{$base}.selected');
+
+          @if $v == 'outlined' {
+            border-color: transparent;
+          }
+        }
+      }
+    }
+  }
+}
+
+@mixin schemes($t) {
+  @include -apply-scheme($t, 'primary');
+
+  &--secondary {
+    @include -apply-scheme($t, 'secondary');
+  }
+
+  &--tertiary {
+    @include -apply-scheme($t, 'tertiary');
+  }
+
+  &--error {
+    @include -apply-scheme($t, 'error');
+  }
+
+  // No role (set by MButtonIcon when it has no `color`): a standard or outlined
+  // button takes its container's content colour (Compose LocalContentColor)
+  // until it is selected, which needs one. Kept at the role schemes'
+  // specificity, so a host that recolours the button still wins.
+  &--current {
+    &.ui-button--text,
+    &.ui-button--outlined {
+      color: inherit;
+
+      &.ui-button--unselected:not(.ui-button--disabled) {
+        color: inherit;
+      }
+    }
+  }
+
+  // Every role disables to the same tints, so this comes once per variant,
+  // after the roles: their selected specificity, later in the sheet.
+  @each $v in $variants {
+    &.ui-button--#{$v}.ui-button--disabled {
+      color: g($t, 'disabled.content.color');
+
+      @if $v == 'outlined' or $v == 'text' {
+        background-color: transparent;
+      } @else {
+        background-color: g($t, 'disabled.container.color');
+      }
+
+      @if $v == 'outlined' {
+        border-color: g($t, 'disabled.outline.color');
+
+        &.ui-button--selected {
+          background-color: g($t, 'disabled.container.color');
+          border-color: transparent;
+        }
+      }
+    }
+  }
+
+  // Disabled reads in GrayText at the selected colours' specificity (`:is()`
+  // of the variants). A selected fill is the state itself: forcing would
+  // flatten it to Canvas and paint the label's Canvas backplate over
+  // Highlight, hiding the text, so a selected button opts out of forcing and
+  // states every colour it paints in system colours.
+  @include forced-colors {
+    &.ui-button--disabled:is(#{$variant-classes}) {
+      border-color: GrayText;
+      color: GrayText;
+    }
+
+    &.ui-button--selected:not(.ui-button--disabled) {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+      box-shadow: none;
+
+      &:focus-visible {
+        outline-color: CanvasText;
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import MMenu from '#kit/components/ui/menu/index.vue'
 import { base, chips, createHost, destroyHost, input, mount, open, optionByText, options, press } from './helpers'
@@ -7,13 +7,27 @@ beforeEach(createHost)
 afterEach(destroyHost)
 
 describe('m-dropdown · interaction', () => {
-  it('toggles the panel when the field is clicked', async () => {
+  it('toggles the panel when the box is clicked', async () => {
     const wrapper = await mount(base)
 
-    await wrapper.find('.ui-dropdown').trigger('click')
+    await wrapper.find('.ui-text-field__control').trigger('click')
     expect(wrapper.find('.ui-dropdown--open').exists()).toBe(true)
 
-    await wrapper.find('.ui-dropdown').trigger('click')
+    await wrapper.find('.ui-text-field__control').trigger('click')
+    expect(wrapper.find('.ui-dropdown--open').exists()).toBe(false)
+  })
+
+  it('opens once from the field frame between the box and its support line', async () => {
+    const wrapper = await mount(base)
+
+    await wrapper.find('.ui-dropdown__field').trigger('click')
+    expect(wrapper.find('.ui-dropdown--open').exists()).toBe(true)
+  })
+
+  it('does not toggle from the support line under the box', async () => {
+    const wrapper = await mount({ ...base, helperText: 'Picked fresh every morning' })
+
+    await wrapper.find('.ui-text-field__support').trigger('click')
     expect(wrapper.find('.ui-dropdown--open').exists()).toBe(false)
   })
 
@@ -129,11 +143,11 @@ describe('m-dropdown · interaction', () => {
 
   it('does not open when disabled or readonly', async () => {
     const disabled = await mount({ ...base, disabled: true })
-    await disabled.find('.ui-dropdown').trigger('click')
+    await disabled.find('.ui-text-field__control').trigger('click')
     expect(disabled.find('.ui-dropdown--open').exists()).toBe(false)
 
     const readonly = await mount({ ...base, readonly: true })
-    await readonly.find('.ui-dropdown').trigger('click')
+    await readonly.find('.ui-text-field__control').trigger('click')
     expect(readonly.find('.ui-dropdown--open').exists()).toBe(false)
   })
 
@@ -205,7 +219,7 @@ describe('m-dropdown · interaction', () => {
     // The click can land on the box, the label or the arrow — none focusable.
     const wrapper = await mount(base, true)
 
-    await wrapper.find('.ui-dropdown').trigger('click')
+    await wrapper.find('.ui-text-field__control').trigger('click')
     await nextTick()
     await nextTick()
 
@@ -249,6 +263,41 @@ describe('m-dropdown · interaction', () => {
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([[1]])
   })
 
+  it('keeps a read-only selection readable and untouchable', async () => {
+    const wrapper = await mount({ ...base, multiple: true, clearable: true, readonly: true, modelValue: [1, 3], messages: { clear: 'Clear' } })
+
+    // The value is read in full ink: no chip is dimmed, none offers removal.
+    expect(chips(wrapper).every((chip: { classes: () => string[] }) => !chip.classes().includes('ui-chip--disabled'))).toBe(true)
+    expect(wrapper.findAll('.ui-dropdown__chip .ui-chip__trailing')).toHaveLength(0)
+    await chips(wrapper)[0]!.trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+    // The clear control stays where it is, off, as in MFileUpload.
+    expect(wrapper.find('.ui-dropdown__clear').attributes('disabled')).toBeDefined()
+  })
+
+  it('moves the virtual focus under the pointer without scrolling the list', async () => {
+    const scrolled = vi.fn()
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = scrolled
+    try {
+      const wrapper = await mount(base)
+      await open(wrapper)
+      await nextTick()
+      scrolled.mockClear()
+
+      optionByText('Gamma')!.dispatchEvent(new Event('pointermove'))
+      await nextTick()
+      expect(input(wrapper).attributes('aria-activedescendant')).toBe(optionByText('Gamma')!.id)
+      expect(scrolled).not.toHaveBeenCalled()
+
+      await press(wrapper, 'Home')
+      await nextTick()
+      expect(scrolled).toHaveBeenCalled()
+    } finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
   it('emits open and close alongside the panel model', async () => {
     const wrapper = await mount(base)
 
@@ -259,13 +308,24 @@ describe('m-dropdown · interaction', () => {
     expect(wrapper.emitted('close')).toBeTruthy()
   })
 
-  it('keeps the keyboard working after a chip takes focus', async () => {
-    // A chip is a real button, so Tab can land on it. The keystroke then starts
-    // outside the input, which is exactly the case that used to do nothing.
+  it('keeps the chips out of the tab order: the arrows reach them from the input', async () => {
     const wrapper = await mount({ ...base, multiple: true, modelValue: [1, 3] })
 
-    await chips(wrapper)[1]!.trigger('keydown', { key: 'Backspace' })
-    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([[1]])
+    expect(chips(wrapper).map((chip: { attributes: (name: string) => string | undefined }) => chip.attributes('tabindex'))).toEqual(['-1', '-1'])
+  })
+
+  it('leaves keys on the clear control to the button: Enter clears, it does not open', async () => {
+    const wrapper = await mount({ ...base, clearable: true, modelValue: 1, messages: { clear: 'Clear' } }, true)
+    const clear = wrapper.find('.ui-dropdown__clear')
+
+    await clear.trigger('keydown', { key: 'Enter' })
+    expect(wrapper.find('.ui-dropdown--open').exists()).toBe(false)
+
+    await clear.trigger('click')
+    await nextTick()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([undefined])
+    // The button leaves with the value; focus goes back to the field.
+    expect(document.activeElement).toBe(input(wrapper).element)
   })
 
   it('does not handle a keystroke twice when it starts on the input', async () => {
@@ -290,10 +350,17 @@ describe('m-dropdown · interaction', () => {
   })
 
   it('renders nothing but the empty state when there are no items', async () => {
-    const wrapper = await mount({ items: [] })
+    const wrapper = await mount({ items: [], messages: { empty: 'Nothing to choose' } })
     await open(wrapper)
 
     expect(options()).toHaveLength(0)
-    expect(document.querySelector('.ui-dropdown__state')?.textContent).toContain('No options')
+    expect(document.querySelector('.ui-dropdown-panel__state')?.textContent).toContain('Nothing to choose')
+  })
+
+  it('does not open onto nothing: no rows, no message, no slot', async () => {
+    const wrapper = await mount({ items: [] })
+    await open(wrapper)
+
+    expect(wrapper.find('.ui-dropdown--open').exists()).toBe(false)
   })
 })
