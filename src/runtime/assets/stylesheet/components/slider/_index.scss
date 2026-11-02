@@ -1,0 +1,79 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SLIDER M3 EXPRESSIVE TOKENS
+// ==========================================
+// Compose `SliderTokens` and the Expressive sizes. One map for the slider and
+// its private parts (track, thumb). The track is cut into segments around the
+// handle: each segment edge stands half a handle plus the gap from its centre.
+
+$on-surface: map.get($theme-color-link, 'on-surface');
+$handle-width: 4rem;
+$gap: 6rem;
+$target: spacing(48);
+$disabled-strong: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$disabled-faint: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
+$tokens: (
+  // W1-А: `default` is M3 XS (the slider's look before the axis), `comfortable` M3 M.
+  density: (
+    default: (track: spacing(16), corner: 8rem, handle: 44rem, block: $target),
+    comfortable: (track: spacing(40), corner: 12rem, handle: 52rem, block: 52rem),
+  ),
+  track: (
+    active: map.get($theme-color-link, 'primary'),
+    inactive: map.get($theme-color-link, 'secondary-container'),
+    // `TrackInsideCornerSize`: the corners that face the handle.
+    inner-corner: 2rem,
+    // Half the handle plus `ActiveHandleLeadingSpace`: where a segment stops.
+    cut: calc(#{$handle-width} / 2 + #{$gap}),
+  ),
+  handle: (
+    width: $handle-width,
+    // Focused, pressed or dragged, the handle narrows (`*HandleWidth`).
+    narrow: 2rem,
+    color: map.get($theme-color-link, 'primary'),
+  ),
+  stop: (size: 4rem, color: map.get($theme-color-link, 'primary')),
+  tick: (
+    size: 4rem,
+    active: map.get($theme-color-link, 'secondary-container'),
+    inactive: map.get($theme-color-link, 'primary'),
+  ),
+  value: (
+    color: map.get($theme-color-link, 'inverse-surface'),
+    text: map.get($theme-color-link, 'inverse-on-surface'),
+    typography: 'label-large',
+    height: 44rem,
+    min-width: $target,
+    padding: spacing(16),
+    // `ValueIndicatorActiveBottomSpace`: the air between the handle and the value.
+    offset: spacing(12),
+  ),
+  icon: (
+    size: spacing(24),
+    inset: 12rem,
+    active: map.get($theme-color-link, 'on-primary'),
+    inactive: map.get($theme-color-link, 'on-secondary-container'),
+  ),
+  target: $target,
+  vertical: (length: 200rem),
+  label: (
+    gap: spacing(4),
+    typography: 'body-medium',
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    required: map.get($theme-color-link, 'error'),
+  ),
+  disabled: (
+    active: $disabled-strong,
+    inactive: $disabled-faint,
+    handle: $disabled-strong,
+    tick: (active: $disabled-faint, inactive: $disabled-strong),
+    label: $disabled-strong,
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+    value: (duration: var(--sys-motion-duration-short-4), easing: var(--sys-motion-easing-emphasized-decelerate)),
+  ),
+);

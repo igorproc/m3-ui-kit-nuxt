@@ -7,7 +7,8 @@ const FILLS = ['outline', 'filled']
 
 const box = async (locator: Locator) => (await locator.boundingBox())!
 const fontSize = (locator: Locator) => locator.evaluate(el => Number.parseFloat(getComputedStyle(el).fontSize))
-const glyphWidth = (locator: Locator) => locator.locator('.iconify').evaluate(el => el.getBoundingClientRect().width)
+// A CSS-mode glyph paints its shape as a mask once the icon data has arrived.
+const glyphMask = (locator: Locator) => locator.locator('.ui-icon__glyph').evaluate(el => getComputedStyle(el).maskImage)
 
 test.describe('MIcon', () => {
   for (const theme of THEMES) {
@@ -109,7 +110,7 @@ test.describe('MIcon', () => {
     const text = page.getByTestId('late-text')
     await expect(text).toBeVisible()
 
-    expect(await glyphWidth(icon)).toBe(0)
+    expect(await glyphMask(icon)).toBe('none')
 
     const em = await fontSize(icon)
     const reserved = await box(icon)
@@ -119,7 +120,7 @@ test.describe('MIcon', () => {
     expect(reserved.height).toBeCloseTo(em, 0)
 
     release()
-    await expect.poll(() => glyphWidth(icon)).toBeGreaterThan(0)
+    await expect.poll(() => glyphMask(icon)).not.toBe('none')
 
     const after = await box(text)
     expect(after.x).toBeCloseTo(before.x, 0)

@@ -20,6 +20,3 @@ export function useMaterialTheme(): MaterialThemeController {
 
   return $material.theme
 }
-
-/** @deprecated Renamed to `useMaterialTheme`. Kept for one minor for compatibility. */
-export const useThemeStore = useMaterialTheme

@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="root"
     class="ui-split-button"
     :class="`ui-split-button--${density}`"
     v-bind="rootAttrs()"
@@ -27,18 +28,38 @@
         <slot />
       </UiButton>
 
+      <UiMenu
+        v-if="hasMenu"
+        v-model="isMenuOpen"
+        placement="bottom"
+        class="ui-split-button__menu-container"
+        :anchor="root"
+        @click-outside="closeMenu"
+      >
+        <template #activator="{ props: menuTrigger }">
+          <UiButton
+            v-bind="{ ...trailingAttrs, ...menuTrigger, onClick: onTrailing, onKeydown: guardKeys(menuTrigger.onKeydown) }"
+          >
+            <template #prepend>
+              <slot
+                name="trailing"
+                :open="isMenuOpen"
+              >
+                <UiIcon :name="isMenuOpen ? ICONS.keyboardArrowUp : ICONS.keyboardArrowDown" />
+              </slot>
+            </template>
+          </UiButton>
+        </template>
+
+        <slot
+          name="menu"
+          :close="closeMenu"
+        />
+      </UiMenu>
+
       <UiButton
-        ref="trailing"
-        class="ui-split-button__trailing"
-        :class="{ 'ui-button--disabled': loading && !disabled }"
-        :variant="variant"
-        :color="color"
-        :density="density"
-        :disabled="disabled"
-        :aria-disabled="loading && !disabled ? 'true' : undefined"
-        :aria-label="trailingAriaLabel"
-        :aria-haspopup="hasMenu ? 'menu' : undefined"
-        :aria-expanded="hasMenu ? String(isMenuOpen) : undefined"
+        v-else
+        v-bind="trailingAttrs"
         @click="onTrailing"
       >
         <template #prepend>
@@ -46,30 +67,16 @@
             name="trailing"
             :open="isMenuOpen"
           >
-            <UiIcon :name="isMenuOpen ? ICONS.keyboardArrowUp : ICONS.keyboardArrowDown" />
+            <UiIcon :name="ICONS.keyboardArrowDown" />
           </slot>
         </template>
       </UiButton>
     </div>
-
-    <UiMenu
-      v-if="hasMenu"
-      v-model="isMenuOpen"
-      absolute
-      origin="top"
-      class="ui-split-button__menu-container"
-      @click-outside="closeMenu"
-    >
-      <slot
-        name="menu"
-        :close="closeMenu"
-      />
-    </UiMenu>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useSlots, useTemplateRef, watch } from 'vue'
+import { computed, ref, useSlots, useTemplateRef } from 'vue'
 
 import UiButton from '#kit/components/ui/button/index.vue'
 import UiIcon from '#kit/components/ui/icon/index.vue'
@@ -89,9 +96,20 @@ const emit = defineEmits<{
 
 const slots = useSlots()
 const { rootAttrs, controlAttrs } = useControlAttrs()
+const root = useTemplateRef<HTMLElement>('root')
 const isMenuOpen = ref(false)
 const hasMenu = computed(() => !!slots.menu)
-const trailing = useTemplateRef<{ $el: HTMLElement }>('trailing')
+const isInert = computed(() => props.disabled || props.loading)
+
+const trailingAttrs = computed(() => ({
+  'class': ['ui-split-button__trailing', { 'ui-button--disabled': props.loading && !props.disabled }],
+  'variant': props.variant,
+  'color': props.color,
+  'density': props.density,
+  'disabled': props.disabled,
+  'aria-disabled': props.loading && !props.disabled ? 'true' as const : undefined,
+  'aria-label': props.trailingAriaLabel,
+}))
 
 useButtonNameWarning('m-button-split', () => props.trailingAriaLabel)
 
@@ -99,27 +117,19 @@ useButtonNameWarning('m-button-split', () => props.trailingAriaLabel)
 // focus through `aria-disabled` instead of a native `disabled` that would
 // throw focus to <body>, and its click is ignored here.
 function onTrailing() {
-  if (props.disabled || props.loading) return
+  if (isInert.value) return
 
   if (hasMenu.value) isMenuOpen.value = !isMenuOpen.value
   emit('trailing')
 }
 
+const guardKeys = (onKeydown: (event: KeyboardEvent) => void) => (event: KeyboardEvent) => {
+  if (!isInert.value) onKeydown(event)
+}
+
 function closeMenu() {
   isMenuOpen.value = false
 }
-
-// The menu returns focus to its parent element, which here is the wrapper div
-// and cannot take it. When the menu closes with focus left nowhere (an item
-// picked, Escape), it goes back to the trailing button that opened it; a click
-// that moved focus elsewhere is left alone.
-watch(isMenuOpen, async (open) => {
-  if (open) return
-
-  await nextTick()
-  const active = document.activeElement
-  if (!active || active === document.body) trailing.value?.$el.focus()
-})
 </script>
 
 <style lang="scss">

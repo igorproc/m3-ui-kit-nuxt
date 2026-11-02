@@ -56,6 +56,30 @@ describe('useFileUploadQueue', () => {
     scope.stop()
   })
 
+  // B7.3f: a row started again by id is a fresh attempt, as with retry — also
+  // while it waits for a free slot.
+  it('drops the error and the progress of a row started again by id', async () => {
+    const scope = effectScope()
+    const queue = scope.run(() => useFileUploadQueue({
+      upload: target => target.name === 'a.txt' ? Promise.reject(new Error('500')) : new Promise(() => {}),
+      concurrency: () => 1,
+    }))!
+    const [failed, busy] = queue.add([file('a.txt'), file('b.txt')])
+    queue.start(failed!.id)
+    await settle()
+    await settle()
+    expect(failed!.status).toBe('error')
+    failed!.progress = 40
+    queue.start(busy!.id)
+
+    queue.start(failed!.id)
+
+    expect(failed!.status).toBe('queued')
+    expect(failed!.error).toBeUndefined()
+    expect(failed!.progress).toBeNull()
+    scope.stop()
+  })
+
   it('sends nothing that was only added', () => {
     const { queue, upload, stop } = createQueue()
     queue.add([file('a.txt'), file('b.txt')])

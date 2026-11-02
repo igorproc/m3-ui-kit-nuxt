@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет (системная статусная строка Android — часть ОС, а не приложения) · Токены Compose: нет · Код: `src/runtime/components/ui/system-bar/` · Аудит: `data/system-bar.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Шаги 1–3 и 5 сделаны: точечные пути и `spacing()`, `min-height`, слоты `prepend`/`append` с `font-size` иконок и текст в `__text` с многоточием, спеки регистрации, фикстуры и e2e; safe-area и документация перенесены.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Шаги 1–3 и 5 сделаны; шаг 4 (safe-area) закрыт через layout Ш2 (вырез забирает бар, проба аудита 2026-10-30). Шаг 6 (документация) отменён: docs_v2 вне репо.</implementation-status>
 
 ## Вердикт
 

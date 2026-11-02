@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Canvas.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: две скрытые оси `role="slider"` (насыщенность, яркость) на `createRangeKeyboardController`, pointer capture на время драга, RTL.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: две скрытые оси `role="slider"` (насыщенность, яркость) на `createRangeKeyboardController`, pointer capture на время драга, RTL. Фаза 2 (2026-10-30): Shift + стрелка шагает на 10 (локально в `Canvas.vue`, снап — общего контроллера); кольцо фокуса — на бегунке, а не на поле.</implementation-status>
 
 ## Вердикт
 

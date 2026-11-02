@@ -1,53 +1,46 @@
 <template>
   <nav
-    ref="navEl"
     class="ui-navigation-bar"
-    :class="{ 'ui-navigation-bar--anchored': isLayoutChild }"
+    :class="[
+      `ui-navigation-bar--${iconPlacement}`,
+      {
+        'ui-navigation-bar--anchored': isLayoutChild,
+        'ui-navigation-bar--safe-area': clearsCutouts,
+        [`ui-navigation-bar--centered-${centeredStep}`]: iconPlacement === 'start',
+      },
+    ]"
     :aria-label="ariaLabel"
     v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
-    @keydown="onKeydown"
   >
-    <button
-      v-for="(item, index) in items"
+    <NavigationItem
+      v-for="item in items"
       :key="item.id"
-      type="button"
       class="ui-navigation-bar__item"
-      :class="{ 'ui-navigation-bar__item--active': item.id === selectedValue }"
-      :aria-current="item.id === selectedValue ? 'page' : undefined"
-      :tabindex="rovingIndex === index ? 0 : -1"
-      @click="onSelect(item.id)"
-      @focus="rovingIndex = index"
-    >
-      <span class="ui-navigation-bar__icon-wrapper">
-        <m-icon
-          class="ui-navigation-bar__icon"
-          :name="item.icon"
-          aria-hidden="true"
-        />
-
-        <m-badge
-          v-if="item.badge != null && item.badge > 0"
-          class="ui-navigation-bar__badge"
-          :value="item.badge"
-        />
-      </span>
-
-      <span class="ui-navigation-bar__label">
-        {{ item.label }}
-      </span>
-    </button>
+      host="bar"
+      :placement="iconPlacement"
+      :label="item.label"
+      :icon="item.icon"
+      :active-icon="item.activeIcon"
+      :badge="item.badge"
+      :badge-label="item.badgeLabel"
+      :disabled="item.disabled"
+      :active="item.id === selectedValue"
+      @select="onSelect(item.id, $event)"
+    />
   </nav>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
-import { createSingle } from '#kit/composables/registry/createSingle'
+import { computed, watchEffect } from 'vue'
+import NavigationItem from '#kit/components/fragments/navigation-item/index.vue'
 import { provideNavigationBarContext } from '#kit/composables/navigation/useNavigationBar'
-import type { ID } from '#kit/shared/types/registry'
+import { useNavigationModel } from '#kit/utils/navigation/useNavigationModel'
 import { mNavigationBarProps } from './props'
+import type { MNavigationBarEmits, MNavigationBarIconPlacement } from './props'
 
 const props = defineProps(mNavigationBarProps)
+const emit = defineEmits<MNavigationBarEmits>()
 
 // Первый уровень m-layout → bottom-зона (прибит к низу, M3 nav bar всегда виден);
 // высота — токеном, иначе sticky-низу нечем зарезервировать строку грида
@@ -57,53 +50,11 @@ const { layoutItemStyles, layoutItemAttrs, isLayoutChild } = useLayoutItem({
   sticky: true,
 })
 
+const clearsCutouts = !useLayoutZone()
+
 const modelValue = defineModel<string | null>({ default: null })
 
-// Single-select, non-mandatory: clicking a different destination selects it,
-// matching the previous `item.id === modelValue` behavior.
-const single = createSingle<{ value: string }>({ mandatory: false })
-
-// The flat `items[]` path drives the registry directly: each entry is a ticket
-// keyed by its `id`. Tickets are kept in sync as `items` changes.
-const ticketIds = new Map<string, ID>()
-
-function syncTickets() {
-  const wanted = new Set(props.items.map(item => item.id))
-
-  for (const item of props.items) {
-    if (ticketIds.has(item.id)) continue
-    const ticket = single.register({ value: item.id })
-    ticketIds.set(item.id, ticket.id)
-  }
-
-  for (const [value, id] of ticketIds) {
-    if (wanted.has(value)) continue
-    single.unregister(id)
-    ticketIds.delete(value)
-  }
-}
-
-watch(() => props.items, syncTickets, { immediate: true, deep: true })
-
-// Keep the registry in sync with the bound model.
-watch(
-  [() => modelValue.value, () => single.size],
-  ([value]) => {
-    if (value === null || value === undefined) {
-      if (single.selectedValue.value !== undefined) single.apply([])
-      return
-    }
-    if (single.selectedValue.value !== value) single.apply([value])
-  },
-  { immediate: true },
-)
-
-// Reflect registry selection back to the model.
-watch(single.selectedValue, (value) => {
-  if (value !== modelValue.value) modelValue.value = (value ?? null)
-})
-
-const selectedValue = computed(() => single.selectedValue.value ?? null)
+const { single, selectedValue, select } = useNavigationModel(() => props.items, modelValue)
 
 provideNavigationBarContext({
   register: ticket => single.register(ticket),
@@ -112,146 +63,88 @@ provideNavigationBarContext({
   selectedValue: single.selectedValue,
 })
 
-function onSelect(id: string) {
-  const ticketId = ticketIds.get(id)
-  if (ticketId !== undefined) single.select(ticketId)
+// M3 sets the centred margin for 3 to 6 destinations; fewer take the widest, more the narrowest.
+const centeredStep = computed(() => Math.min(6, Math.max(3, props.items.length)))
+
+const DESTINATION_RANGE: Record<MNavigationBarIconPlacement, { min: number, max: number }> = {
+  top: { min: 3, max: 5 },
+  start: { min: 3, max: 6 },
 }
 
-// --- Roving focus (APG: arrow keys move between destinations) -------------
-const navEl = ref<HTMLElement | null>(null)
-const rovingIndex = ref(0)
-
-// Keep the tabbable item in sync with the selected destination.
-watch(
-  selectedValue,
-  (value) => {
-    const idx = props.items.findIndex(item => item.id === value)
-    if (idx >= 0) rovingIndex.value = idx
-  },
-  { immediate: true },
-)
-
-function focusItem(index: number) {
-  rovingIndex.value = index
-  nextTick(() => {
-    const buttons = navEl.value?.querySelectorAll<HTMLButtonElement>('.ui-navigation-bar__item')
-    buttons?.[index]?.focus()
+if (import.meta.dev) {
+  watchEffect(() => {
+    const count = props.items.length
+    const { min, max } = DESTINATION_RANGE[props.iconPlacement]
+    if (count && (count < min || count > max)) {
+      console.warn(`[m-navigation-bar] ${count} destinations: M3 sets ${min} to ${max} in a bar with \`iconPlacement="${props.iconPlacement}"\`; move the rest to a navigation drawer or rail.`)
+    }
   })
 }
 
-function onKeydown(event: KeyboardEvent) {
-  const count = props.items.length
-  if (count === 0) return
-
-  let next = rovingIndex.value
-  switch (event.key) {
-    case 'ArrowRight':
-    case 'ArrowDown':
-      next = (rovingIndex.value + 1) % count
-      break
-    case 'ArrowLeft':
-    case 'ArrowUp':
-      next = (rovingIndex.value - 1 + count) % count
-      break
-    case 'Home':
-      next = 0
-      break
-    case 'End':
-      next = count - 1
-      break
-    default:
-      return
-  }
-
-  event.preventDefault()
-  focusItem(next)
+// Every activation is reported, the active destination's too: pressing it
+// again is how an app scrolls a section back to its top or resets it.
+function onSelect(id: string, event: MouseEvent) {
+  select(id)
+  emit('select', id, event)
 }
 </script>
 
 <style lang="scss">
+@use 'sass:map';
 @use '#kit/assets/stylesheet/components/navigation-bar/index' as t;
 
 .ui-navigation-bar {
   $t: material-map(t.$tokens, 'md-navigation-bar');
 
   @at-root :root {
-    --ui-navigation-bar-height: #{g($t, 'container-height')};
+    --ui-navigation-bar-height: #{g($t, 'container.height')};
   }
 
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: var(--ui-navigation-bar-height);
-  padding-inline: g($t, 'container-padding-inline');
-  padding-block: g($t, 'container-padding-block');
-  border-radius: g($t, 'container-shape');
-  background-color: g($t, 'container-color');
-  box-shadow: g($t, 'container-shadow');
-  color: g($t, 'container-text-color');
+  align-items: stretch;
+  min-height: var(--ui-navigation-bar-height);
+  background-color: g($t, 'container.color');
+  color: g($t, 'container.text.color');
 
-  &__item {
-    position: relative;
+  // Vertical destinations share the width equally (M3 `EqualWeight`).
+  &--top &__item.ui-navigation-item {
     flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: g($t, 'item-gap');
-    padding-block: g($t, 'item-padding-block');
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: g($t, 'item-color');
-
-    @include typescale(g($t, 'item-typography'));
   }
 
-  &__icon-wrapper {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
+  &--start {
     justify-content: center;
   }
 
-  &__icon {
-    font-size: g($t, 'icon-size');
+  &--start &__item.ui-navigation-item {
+    flex: 1;
   }
 
-  &__badge {
-    position: absolute;
-    top: g($t, 'badge-top');
-    right: g($t, 'badge-right');
+  &--safe-area {
+    min-height: g($t, 'container.safe-area.min-height');
+    padding-block-end: g($t, 'container.safe-area.bottom');
+    padding-left: g($t, 'container.safe-area.left');
+    padding-right: g($t, 'container.safe-area.right');
   }
 
-  &__label {
-    max-width: g($t, 'label-max-width');
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  @each $count, $centered in map.get(t.$tokens, 'centered') {
+    &--centered-#{$count} {
+      padding-inline: map.get($centered, 'margin');
+    }
 
-  &__item--active {
-    color: g($t, 'item-active-color');
+    &--centered-#{$count}#{&}--safe-area {
+      padding-left: map.get($centered, 'safe-area', 'left');
+      padding-right: map.get($centered, 'safe-area', 'right');
+    }
   }
 
   &--anchored {
     z-index: z(header);
   }
 
-  // Forced colors drop the elevation shadow, and the active destination has no
-  // indicator of its own — only a colour, which is forced away too.
+  // The container is set apart by its tone alone, which forced colors drop.
   @include forced-colors {
     outline: 1px solid CanvasText;
     outline-offset: -1px;
-
-    &__item--active {
-      outline: 1px solid Highlight;
-      outline-offset: -1px;
-    }
   }
-}
-
-.ui-navigation-bar__item:focus-visible {
-  @include focus-ring;
 }
 </style>

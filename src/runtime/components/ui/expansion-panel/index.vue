@@ -189,17 +189,24 @@ $t: panel.$tokens;
     flex-direction: column;
     gap: g($t, 'header.content.gap');
     min-width: 0;
-    overflow-wrap: anywhere;
+
+    // `break-word` for `#header`: `anywhere` would be inherited by the slot and
+    // cut a row of equal columns there to one glyph per word.
+    overflow-wrap: break-word;
   }
 
+  // The kit's own header text keeps `anywhere`: a long title must not widen
+  // the panel where its width comes from its content (a grid's auto column).
   &__title {
     color: g($t, 'title.color');
+    overflow-wrap: anywhere;
 
     @include typescale(g($t, 'title.typescale'));
   }
 
   &__description {
     color: g($t, 'description.color');
+    overflow-wrap: anywhere;
 
     @include typescale(g($t, 'description.typescale'));
   }

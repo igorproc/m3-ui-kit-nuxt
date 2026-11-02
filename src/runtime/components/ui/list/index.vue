@@ -73,7 +73,8 @@ provideListContext({
   isolation: isolate;
 
   // Tab must not park a row under a sticky subheader.
-  &:has(> .ui-list-subheader--sticky) .ui-list-item {
+  .ui-list-subheader--sticky ~ .ui-list-item,
+  .ui-list-subheader--sticky ~ .ui-list__row .ui-list-item {
     scroll-margin-block-start: g($t, 'sticky.scroll-margin');
   }
 }

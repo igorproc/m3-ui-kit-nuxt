@@ -2,7 +2,7 @@
 
 <identity>M3: Toolbars (Expressive: docked toolbar — замена bottom app bar; floating toolbar — horizontal / vertical, standard / vibrant, в паре с FAB) · Токены Compose: `DockedToolbarTokens`, `FloatingToolbarTokens`, `BottomAppBarTokens` (baseline) + `FloatingToolbar.kt`, `AppBar.kt` · Код: `src/runtime/components/ui/toolbar/`, `src/runtime/composables/useToolbar.ts` · Аудит: `data/toolbar.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Есть `type: standard` (floating: 64, full, level 3) и `baseline` (docked, но с высотой bottom app bar 80), `layout: horizontal | vertical`, выбор через `v-model` с `multiple`. Нет vibrant-схемы, пары с FAB, паттерна APG Toolbar, переполнения. На текущем рендере выбор не виден.</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Выбор виден и объявлен (`aria-pressed`), режим модели реактивен (v-model, привязанный позже или с `undefined`, включает выбор), токены docked/floating, строгий `MToolbarItem` + `#item`, `type: floating | docked` без алиасов, vibrant + `#fab`, переполнение в меню, forced colors выбранного; проп `layout` переименован в `orientation` (S9-А, ломающее, без алиаса). Остались клавиатура APG (B5.6d, отложено Q56-А) и документация (вне репо).</implementation-status>
 
 ## Вердикт
 
@@ -117,13 +117,13 @@
    - цвет выбранного через `item.selected.*`;
    - `icon.color` применить;
    - убрать `transition: all` (TK-02, TK-04, TK-06, LY-04, MO-02, MO-05).
-3. **M — APG Toolbar** (A11-08, A11-06, A11-02, FM-07).
+3. **отложено** (B5.6d, Q56-А). **M — APG Toolbar** (A11-08, A11-06, A11-02, FM-07).
 4. **S — строгий `MToolbarItem` и слот `#item`** (EN-01).
-5. **S — переименование значений `type` с алиасами.**
+5. **S — переименование значений `type` с алиасами.** Алиасы **отменены**: кит 0.x без шимов (Конфликт №3, `decisions.md`).
 6. **S — vibrant** (после вопроса 1) **и слот `#fab`.**
 7. **M — переполнение в меню** (после вопроса 2).
-8. **S — safe-area у docked** (RS-09), forced colors для выбранного (TH-04).
-9. **S — тесты** (TS-07) **и документация** (DC-02…05).
+8. **S — safe-area у docked** (RS-09, **отменено**: вырез отдаёт зона layout, `decisions.md`), forced colors для выбранного (TH-04).
+9. **S — тесты** (TS-07) **и документация** (DC-02…05). Документация **отложена**: вне репо кита.
 
 ## Тесты
 

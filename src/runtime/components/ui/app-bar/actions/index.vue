@@ -21,6 +21,6 @@ useAppBarContext()
   align-items: center;
   justify-content: flex-end;
   gap: g($actions, 'gap');
-  margin-inline-start: g($actions, 'margin');
+  color: g($actions, 'color');
 }
 </style>

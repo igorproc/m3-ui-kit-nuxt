@@ -3,22 +3,25 @@
 
 // Zero-runtime M3 tokens for `<MHotkey>`. Supporting-information styling, not a
 // physical-keyboard skin: keycaps use surface/on-surface-variant/outline roles.
+
+// At least one device pixel: `1rem` fades below it on a narrow screen (decisions.md).
+$hairline: max(1px, 1rem);
 $tokens: (
   container: (gap: spacing(4)),
   key: (
     min-size: spacing(20),
     padding: (inline: spacing(4)),
     radius: map.get($theme-shape-link, 'extra-small'),
-    typography: 'label-small',
-    border: (width: 1rem),
+    typography: 'label-medium',
+    border: (width: $hairline),
     enabled: (
       color: map.get($theme-color-link, 'on-surface-variant'),
       bg: map.get($theme-color-link, 'surface-container-high'),
       border: map.get($theme-color-link, 'outline-variant'),
     ),
     pressed: (
-      layer: map.get($theme-color-link, 'on-surface-variant'),
-      opacity: state-opacity(pressed),
+      color: map.get($theme-color-link, 'on-secondary-container'),
+      bg: map.get($theme-color-link, 'secondary-container'),
     ),
     disabled: (
       color: color-mix(in srgb, map.get($theme-color-link, 'on-surface') state-opacity(disabled-content), transparent),

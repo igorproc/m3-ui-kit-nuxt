@@ -20,7 +20,6 @@
       :shape="shape"
       :label-placement="labelPlacement"
       :density="density"
-      :name="name ?? path"
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
@@ -55,6 +54,7 @@
             :focus="control.chipFocus.value"
             :disabled="disabled"
             :readonly="readonly"
+            :remove-label="messages?.remove"
             @remove="control.removeEntry"
           >
             <template
@@ -106,13 +106,14 @@
       </template>
     </MTextField>
 
-    <MMenu
+    <!-- A listbox is not a menu: the panel carries no role and no keys, and
+         focus stays in the combobox, which drives the list. -->
+    <Popover
       v-model="open"
       class="ui-autocomplete__menu"
-      absolute
       match-width
       :anchor="fieldControl"
-      :origin="menuPlacement"
+      :placement="menuPlacement"
       @click-outside="control.closeAndRestore"
     >
       <slot
@@ -188,7 +189,17 @@
           </template>
         </DropdownPanel>
       </slot>
-    </MMenu>
+    </Popover>
+
+    <!-- The form gets the value, not the title in the box: one per choice, as a select. -->
+    <input
+      v-for="(value, index) in formValues"
+      :key="index"
+      type="hidden"
+      :name="formName"
+      :value="value"
+      :disabled="disabled || undefined"
+    >
 
     <span
       class="ui-autocomplete__status"
@@ -200,7 +211,7 @@
 <script setup lang="ts" generic="TItem extends DropdownItemBase, TValue = TItem">
 import { computed, ref } from 'vue'
 import { mAutocompleteProps } from './props'
-import type { AutocompleteHintSlotProps, AutocompleteNoResultsSlotProps, MAutocompleteSlots } from './props'
+import type { AutocompleteHintSlotProps, AutocompleteNoResultsSlotProps, MAutocompletePropsOptions, MAutocompleteSlots } from './props'
 import type { DropdownChipSlotProps, DropdownItemSlotProps, MDropdownEmits } from '#kit/components/ui/dropdown/props'
 import { useAutocomplete } from '#kit/composables/autocomplete/useAutocomplete'
 import type { AutocompleteControlConfig, UseAutocompleteReturn } from '#kit/composables/autocomplete/useAutocomplete'
@@ -212,10 +223,11 @@ import type { DropdownPanelState } from '#kit/utils/dropdown/panelState'
 import { usePanelStatus } from '#kit/utils/dropdown/usePanelStatus'
 import { useSelectionShell, useUnnamedControlWarning } from '#kit/utils/dropdown/useSelectionShell'
 import { useBoundProp } from '#kit/utils/text-field/supportLine'
+import { toFormValues } from '#kit/utils/dropdown/formValues'
 import { ICONS } from '#kit/shared/constants/icons'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
-import MMenu from '#kit/components/ui/menu/index.vue'
+import Popover from '#kit/components/fragments/popover/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import DropdownChips from '#kit/components/fragments/dropdown/Chips.vue'
 import DropdownPanel from '#kit/components/fragments/dropdown/Panel.vue'
@@ -224,7 +236,7 @@ import DropdownPanel from '#kit/components/fragments/dropdown/Panel.vue'
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
-const props = defineProps(mAutocompleteProps)
+const props = defineProps(mAutocompleteProps as MAutocompletePropsOptions<TItem, TValue>)
 const emit = defineEmits<MDropdownEmits<TItem>>()
 const slots = defineSlots<MAutocompleteSlots<TItem, TValue>>()
 
@@ -251,6 +263,7 @@ const state = computed<DropdownPanelState>(() => panelState({
   loading: props.loading,
   items: props.items.length,
   queryReady: control.queryReady.value,
+  queried: search.value.length > 0,
 }))
 
 const control: UseAutocompleteReturn<TItem, TValue> = useAutocomplete<TItem, TValue>({
@@ -277,6 +290,9 @@ const status = usePanelStatus({
   state: () => panelRef.value?.stateEl,
   sources: () => [props.items.length, control.queryReady.value],
 })
+
+const formName = computed(() => props.name ?? props.path)
+const formValues = computed(() => formName.value ? toFormValues(control.selectedEntries.value.map(entry => entry.value)) : [])
 
 // A press in the box reaches the input through the field; the field's frame
 // between the box and its support line passes nothing on, so it opens here.

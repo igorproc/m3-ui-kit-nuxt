@@ -4,8 +4,8 @@ import type { Clock, ClockTime, TimeField } from '#kit/utils/time/createClock'
 import type { TimePickerControl } from './useTimePickerControl'
 
 export interface TimeFieldsLabels {
-  hourError: string
-  minuteError: string
+  hourError?: string
+  minuteError?: string
 }
 
 export interface TimeFieldsControlOptions {
@@ -17,6 +17,8 @@ export interface TimeFieldsControlOptions {
   labels: () => TimeFieldsLabels
   /** An error the app sets; shown in place of the fields' own. */
   externalError: () => string | undefined
+  /** The app says the time is wrong, with words or without; both fields are marked invalid. */
+  invalid?: () => boolean
   /** Ids of text that describes both fields, such as a helper line. */
   describedBy: () => string | undefined
 }
@@ -44,6 +46,8 @@ export interface TimeFieldAttrs {
 export interface UseTimeFieldsControlReturn {
   /** Which typed part is refused right now. */
   errors: Record<TimeField, boolean>
+  /** A typed part is refused right now — said by the error state even without words for it. */
+  refused: ComputedRef<boolean>
   errorId: string
   /** The error to show: the app's own, else the refused part's. Empty when there is none. */
   errorText: ComputedRef<string>
@@ -83,8 +87,10 @@ export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: stri
   const labelId = (part: TimeField) => `${id}-${part}-label`
   const errorId = `${id}-error`
 
-  const errorText = computed<string>(() => options.externalError()
-    || (errors.hours ? options.labels().hourError : errors.minutes ? options.labels().minuteError : ''))
+  const refused = computed(() => errors.hours || errors.minutes)
+  const refusalText = () => (errors.hours ? options.labels().hourError : errors.minutes ? options.labels().minuteError : undefined)
+  const errorText = computed<string>(() => options.externalError() || refusalText() || '')
+  const appInvalid = () => options.invalid?.() ?? Boolean(options.externalError())
 
   /**
    * Reads both parts and commits them when they make a time. `strict` also
@@ -153,7 +159,7 @@ export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: stri
       'autocomplete': 'off',
       'value': text[part],
       'aria-labelledby': labelId(part),
-      'aria-invalid': errors[part] || !!options.externalError() || undefined,
+      'aria-invalid': errors[part] || appInvalid() || undefined,
       'aria-describedby': describedBy || undefined,
       'aria-required': options.required() || undefined,
       'disabled': options.disabled() || undefined,
@@ -172,6 +178,7 @@ export function useTimeFieldsControl(options: TimeFieldsControlOptions, id: stri
 
   return {
     errors,
+    refused,
     errorId,
     errorText,
     labelId,

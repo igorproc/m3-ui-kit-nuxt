@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 (авторский компонент кита; хром поля выводится из Text fields) · Токены Compose: `FilledTextFieldTokens.kt`, `OutlinedTextFieldTokens.kt` (контейнер, лейбл, роли состояний); системно — непрозрачности слоя состояний, `StandardMenuTokens.kt` (меню единиц) · Код: `src/runtime/components/ui/number-input/` (`index.vue`, `unit.vue`, `props.ts`) + `composables/number-input/{useNumberInputControl,useNumberValue,useNumberScrub}.ts`, `shared/utils/number`, токены `assets/stylesheet/components/number-input/_index.scss` · Аудит: `data/number-input.json` · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-19">Реализовано: шаги 1–8, 10 (шаг 9 не нужен: вопрос 1 → 1). Геометрия filled 56 со смещением зон, inset на outlined, строка поддержки семейства с отдельным `role="alert"`, `aria-busy` по `meta.pending`, выбранная единица с галочкой и контейнером. M3-polish 2026-10-19: половинки stacked больше не сжимаются смещением зон, единица на строке цифр, read-only показывает фокус лейблом и отвечает на hover, скраб логический (к концу строки — больше, в RTL зеркально), лейбл на строке значения, лейбл рядом с prepend от начала значения, вырез на notch по видимой ширине лейбла, поддержка в 4, hairline (шов stacked ≥ 1px), `:autofill` общей механикой, `defineSlots`, `defineExpose({ control, input })`, коробка — цель нажатия; общая логика ошибки `useFieldValidation`; мёртвые токены удалены.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–8, 10 (шаг 9 не нужен: вопрос 1 → 1). Геометрия filled 56 со смещением зон, inset на outlined, строка поддержки семейства с отдельным `role="alert"`, `aria-busy` по `meta.pending`, выбранная единица с галочкой и контейнером. M3-polish 2026-10-19: половинки stacked больше не сжимаются смещением зон, единица на строке цифр, read-only показывает фокус лейблом и отвечает на hover, скраб логический (к концу строки — больше, в RTL зеркально), лейбл на строке значения, лейбл рядом с prepend от начала значения, вырез на notch по видимой ширине лейбла, поддержка в 4, hairline (шов stacked ≥ 1px), `:autofill` общей механикой, `defineSlots`, `defineExpose({ control, input })`, коробка — цель нажатия; общая логика ошибки `useFieldValidation`; мёртвые токены удалены. Фаза 2 (2026-10-30): пунктов кода нет; открыт только рендер не переснят — инфраструктура съёмки вне git (`common.md` §4).</implementation-status>
 
 ## Вердикт
 
@@ -173,7 +173,7 @@ body-large tabular, слой зон 8% / 12% (`layer.hover`, `layer.pressed`).
 7. **S — Выбранная единица** — галочка + контейнер выбранного пункта (после плана MMenu / S9).
 8. **M — Лейбл не движется** (после Q1 text-field): убрать переходы `transform` и `max-width`
    выреза (`index.vue:352-354`, `:494`).
-9. **S — Статичная форма нажатия зоны** — только если в Q1 выбран вариант 2; без перехода
+9. **Отменено** (Q1 → 1). **S — Статичная форма нажатия зоны** — только если в Q1 выбран вариант 2; без перехода
    (S3 и S4 отклонены владельцем 2026-10-07).
 10. **S — Кегль лейбла `top`** (после Q3 text-field).
 

@@ -4,6 +4,7 @@
 
     <div class="fixture-stress__narrow">
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="12"
         label="Maximum number of concurrent connections allowed per worker process"
         helper-text="Applies to every worker in the pool, including the ones started after a configuration reload"
@@ -13,6 +14,7 @@
 
     <div class="fixture-stress__narrow">
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="12"
         variant="outlined"
         label="Maximum number of concurrent connections allowed per worker process"
@@ -22,6 +24,7 @@
 
     <div class="fixture-stress__narrow">
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="240"
         controls="scrub"
         label="Horizontal offset from the containing block"
@@ -31,6 +34,7 @@
 
     <div class="fixture-stress__medium">
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="3"
         :units="['requests-per-second-per-tenant', 'rps']"
         unit="requests-per-second-per-tenant"
@@ -41,6 +45,7 @@
 
     <div class="fixture-stress__narrow">
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="1"
         label="Callback"
         error-message="https://example.com/a/very/long/path/without/any/spaces/at/all"
@@ -49,18 +54,21 @@
     </div>
 
     <MNumberInput
+      v-bind="NUMBER_LABELS"
       :model-value="null"
       label="Empty"
       data-test="empty"
     />
 
     <MNumberInput
+      v-bind="NUMBER_LABELS"
       :model-value="999999999999999"
       label="Huge"
       data-test="huge"
     />
 
     <MNumberInput
+      v-bind="NUMBER_LABELS"
       :model-value="-1234.5678"
       :precision="4"
       label="Negative fraction"
@@ -68,6 +76,7 @@
     />
 
     <MNumberInput
+      v-bind="NUMBER_LABELS"
       :model-value="1234567.89"
       :step="0.01"
       locale="de-DE"
@@ -76,6 +85,7 @@
     />
 
     <MNumberInput
+      v-bind="NUMBER_LABELS"
       :model-value="7"
       label="Сохранить 保存 حفظ 🙂"
       unit="шт."
@@ -86,6 +96,7 @@
 
 <script setup lang="ts">
 import MNumberInput from '#kit/components/ui/number-input/index.vue'
+import { NUMBER_LABELS } from './labels'
 </script>
 
 <style lang="scss">

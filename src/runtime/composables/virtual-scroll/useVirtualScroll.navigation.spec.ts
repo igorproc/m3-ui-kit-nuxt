@@ -286,4 +286,82 @@ describe('useVirtualScroll · navigation and lifecycle', () => {
       expect(vi.getTimerCount()).toBe(0)
     })
   })
+
+  describe('initial offset', () => {
+    it('moves a container that arrives at its start to initialOffset at once', () => {
+      const scroller = createScroller()
+      const { result, stop } = run({ container: scroller.element, count: 100, itemSize: 20, initialOffset: 400 })
+
+      expect(scroller.scrollTo).toHaveBeenCalledWith({ top: 400, behavior: 'instant' })
+      expect(result.scrollOffset.value).toBe(400)
+      expect(result.range.value.startIndex).toBe(16)
+      stop()
+    })
+
+    it('leaves a container that is already scrolled where it is', () => {
+      const scroller = createScroller()
+      scroller.element.scrollTop = 100
+      const { result, stop } = run({ container: scroller.element, count: 100, itemSize: 20, initialOffset: 400 })
+
+      expect(scroller.scrollTo).not.toHaveBeenCalled()
+      expect(result.scrollOffset.value).toBe(100)
+      stop()
+    })
+  })
+
+  describe('edge keys on a horizontal lane', () => {
+    function createLane() {
+      const element = document.createElement('div')
+      const row = document.createElement('div')
+      element.append(row)
+      document.body.append(element)
+      let left = 0
+      Object.defineProperty(element, 'scrollLeft', {
+        configurable: true,
+        get: () => left,
+        set: (value: number) => {
+          left = value
+        },
+      })
+      Object.defineProperty(element, 'clientWidth', { configurable: true, get: () => 100 })
+      element.scrollTo = ((options: ScrollToOptions) => {
+        if (options.left !== undefined) left = options.left
+      }) as HTMLElement['scrollTo']
+      return { element, row }
+    }
+
+    const press = (target: HTMLElement, key: string) => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+      target.dispatchEvent(event)
+      return event
+    }
+
+    it('takes End and Home on the focused lane itself', async () => {
+      const lane = createLane()
+      const { result, stop } = run({ container: lane.element, count: 100, itemSize: 20, horizontal: true })
+
+      expect(press(lane.element, 'End').defaultPrevented).toBe(true)
+      frame()
+      expect(lane.element.scrollLeft).toBe(1900)
+      expect(result.isAtEnd.value).toBe(true)
+
+      press(lane.element, 'Home')
+      frame()
+      expect(lane.element.scrollLeft).toBe(0)
+      expect(result.isAtStart.value).toBe(true)
+      stop()
+    })
+
+    it('leaves the keys of a row and of a modified press to the consumer', () => {
+      const lane = createLane()
+      const { stop } = run({ container: lane.element, count: 100, itemSize: 20, horizontal: true })
+
+      expect(press(lane.row, 'End').defaultPrevented).toBe(false)
+      const modified = new KeyboardEvent('keydown', { key: 'End', ctrlKey: true, bubbles: true, cancelable: true })
+      lane.element.dispatchEvent(modified)
+      expect(modified.defaultPrevented).toBe(false)
+      expect(lane.element.scrollLeft).toBe(0)
+      stop()
+    })
+  })
 })

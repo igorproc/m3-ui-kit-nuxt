@@ -2,22 +2,15 @@
  * Props for `<MSplitButton>` — the shared colour and state props, the family's
  * `density`, the main button's `type` / `tag` / `to`, and the name of the
  * trailing button. What the trailing button does is the consumer's: it emits
- * `trailing`, and with a `#menu` slot it opens that menu. Attributes other than
- * `class` and `style` land on the main button.
+ * `trailing`, and with a `#menu` slot (rows of `MMenuItem`) it opens that menu.
+ * Attributes other than `class` and `style` land on the main button.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { makeColorProps, makeStateProps } from '#kit/shared/utils/props'
 import type { MVariant } from '#kit/shared/types/props'
 import { makeMButtonProps } from '../props'
 import type { MButtonDensity } from '../props'
-import type { MIconName } from '#kit/components/ui/icon/props'
 
-export interface UiSplitMenuItem {
-  label: string
-  icon?: MIconName
-  value?: string | number
-  action?: () => void
-}
 /** M3 split buttons come in every button variant but `text`. */
 export type MSplitButtonVariant = Extract<MVariant, 'filled' | 'tonal' | 'elevated' | 'outlined'>
 

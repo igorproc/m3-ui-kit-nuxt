@@ -13,8 +13,10 @@ import { isString, isUndefined } from '#kit/shared/utils/guards/guards'
 
 /** Resolves the base yup schema for a field kind before rules are applied. */
 function baseSchemaFor(field: FieldDescriptor): AnySchema {
+  // An empty number field holds `null` (see `useFormSchema`); `required()`
+  // still rejects it, so only optional numbers may stay empty.
   if (field.kind === 'number') {
-    return yup.number()
+    return yup.number().nullable()
   }
 
   if (field.kind === 'boolean') {

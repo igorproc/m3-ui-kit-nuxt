@@ -188,8 +188,6 @@ defineExpose({ stateEl })
   // Outranks MList's own `padding-block` (the same value today, from another
   // token): in a production build its sheet may load later.
   & &__list {
-    --ui-scrollbar-inset-block: #{g($t, 'panel.scrollbar-inset')};
-
     padding-block: g($t, 'panel.padding-block');
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -197,6 +195,8 @@ defineExpose({ stateEl })
     // Filtering adds and removes the scrollbar; a stable gutter keeps the
     // rows from changing width under the user's eyes.
     scrollbar-gutter: stable;
+
+    @include scrollbar-inset($block: g($t, 'panel.scrollbar-inset'));
 
     // Each density stops halfway through a row of its own height.
     @each $density in compact, default, comfortable {

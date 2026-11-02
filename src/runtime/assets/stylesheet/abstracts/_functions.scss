@@ -2,7 +2,7 @@
 @use "sass:meta";
 @use "sass:string";
 
-/* functions */
+// functions
 @use 'sass:map';
 @use 'sass:math';
 @use 'variables' as *;
@@ -84,22 +84,16 @@
   @return $result;
 }
 
-/// Поиск значения в глубоко вложенной мапе по строковому пути через точку (или через дефис для обратной совместимости)
+/// Поиск значения в глубоко вложенной мапе по строковому пути через точку.
+/// Дефис — часть ключа, а не разделитель.
 /// @example g($t, 'label.text.color') -> map.get($t, label, text, color)
 /// @example g($t, 'height.center-aligned') -> map.get($t, height, center-aligned)
-/// @example g($t, 'label-text-color') -> map.get($t, label, text, color)
 @function g($map, $path) {
   $keys: ();
-  $separator: '-';
-
-  @if string.index($path, '.') {
-    $separator: '.';
-  }
-
   $remaining: $path;
 
-  @while string.index($remaining, $separator) {
-    $index: string.index($remaining, $separator);
+  @while string.index($remaining, '.') {
+    $index: string.index($remaining, '.');
     $keys: list.append($keys, string.slice($remaining, 1, $index - 1));
     $remaining: string.slice($remaining, $index + 1);
   }
@@ -113,38 +107,17 @@
   $cursor: $map;
   $walked: '';
 
-  // A miss is reported differently per separator, and the reason is not taste.
-  // The legacy dash form cannot address a key that itself contains a dash
-  // (`grid-name`, `min-height`, `hover-color`) — it splits the key apart — so
-  // it has been resolving to null, and Sass has been dropping those
-  // declarations, since long before this check existed. Failing on the
-  // canonical dot form makes new code strict; warning on the dash form surfaces
-  // that backlog on every build without bricking it.
   @each $key in $keys {
     $where: if(sass($walked == ''): '(root)'; else: $walked);
 
     @if meta.type-of($cursor) != 'map' {
-      $detail: 'Token path `#{$path}` continues past a leaf value at `#{$where}`.';
-
-      @if $separator == '.' {
-        @error $detail;
-      }
-
-      @warn $detail;
-      @return null;
+      @error 'Token path `#{$path}` continues past a leaf value at `#{$where}`.';
     }
 
     $next: map.get($cursor, $key);
 
     @if not $next {
-      $detail: 'Unknown token segment `#{$key}` in path `#{$path}`. Available under `#{$where}`: #{map.keys($cursor)}.';
-
-      @if $separator == '.' {
-        @error $detail;
-      }
-
-      @warn $detail;
-      @return null;
+      @error 'Unknown token segment `#{$key}` in path `#{$path}`. Available under `#{$where}`: #{map.keys($cursor)}.';
     }
 
     $walked: if(sass($walked == ''): $key; else: '#{$walked}.#{$key}');

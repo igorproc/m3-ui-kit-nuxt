@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import type { VueWrapper } from '@vue/test-utils'
 import MNumberInput from '../index.vue'
@@ -32,6 +32,13 @@ afterEach(() => {
 })
 
 describe('m-number-input · unit', () => {
+  // B6.4d: the zone is a private part of the field, not a public `<MNumberInputUnit>`.
+  it('is not a public component of its own', () => {
+    const publicFiles = Object.keys(import.meta.glob('../*.vue')).map(path => path.split('/').at(-1))
+
+    expect(publicFiles).toEqual(['index.vue'])
+  })
+
   describe('static suffix', () => {
     it('renders a plain zone when there is nothing to choose between', async () => {
       const wrapper = await mount({ unit: 'MiB', modelValue: 512 })
@@ -47,6 +54,19 @@ describe('m-number-input · unit', () => {
 
       expect(wrapper.find('.ui-number-input__control').element
         .contains(wrapper.find('.ui-number-input__unit').element)).toBe(true)
+    })
+
+    // B6.4a: a suffix only seen is not heard; the spinbutton says it with the value.
+    it('says the unit with the value', async () => {
+      const wrapper = await mount({ unit: 'kg', modelValue: 42 })
+
+      expect(wrapper.find('input').attributes('aria-valuetext')).toBe('42 kg')
+    })
+
+    it('says no value text for an empty field, unit or not', async () => {
+      const wrapper = await mount({ unit: 'kg' })
+
+      expect(wrapper.find('input').attributes('aria-valuetext')).toBeUndefined()
     })
 
     it('renders no zone at all without a unit', async () => {
@@ -115,6 +135,25 @@ describe('m-number-input · unit', () => {
       expect(wrapper.find('.ui-number-input__unit-trigger').text()).toContain('MiB')
     })
 
+    // Q31-А: the model is what the screen shows.
+    it('writes the first choice into an empty unit model', async () => {
+      const wrapper = await mount({ units: [{ value: 'mib', label: 'MiB' }, 'GiB'], unit: null })
+
+      expect(wrapper.emitted('update:unit')?.at(-1)).toEqual(['mib'])
+    })
+
+    it('leaves a unit model that is already set alone', async () => {
+      const wrapper = await mount({ units: ['MiB', 'GiB'], unit: 'GiB' })
+
+      expect(wrapper.emitted('update:unit')).toBeUndefined()
+    })
+
+    it('says the chosen unit by its label with the value', async () => {
+      const wrapper = await mount({ units: [{ value: 'mib', label: 'MiB' }, 'GiB'], unit: 'mib', modelValue: 512 })
+
+      expect(wrapper.find('input').attributes('aria-valuetext')).toBe('512 MiB')
+    })
+
     it('closes without a pick when the surface is dismissed', async () => {
       const wrapper = await mount({ units: ['MiB', 'GiB'], unit: 'MiB' })
       const trigger = wrapper.find('.ui-number-input__unit-trigger')
@@ -161,6 +200,43 @@ describe('m-number-input · unit', () => {
 
       expect(options().map(option => option.getAttribute('role'))).toEqual(['menuitemradio', 'menuitemradio'])
       expect(options().map(option => option.getAttribute('aria-checked'))).toEqual(['false', 'true'])
+    })
+
+    // Q14-А: the choices are `MMenuItem`s of one `MMenuGroup`, a radio set.
+    it('gathers the choices in one group of the menu', async () => {
+      const wrapper = await mount({ units: ['MiB', 'GiB'], unit: 'GiB' })
+
+      await wrapper.find('.ui-number-input__unit-trigger').trigger('click')
+
+      const group = host.querySelector('[role="menu"] [role="group"]')!
+      expect([...group.querySelectorAll('[role="menuitemradio"]')].map(option => option.getAttribute('aria-checked'))).toEqual(['false', 'true'])
+    })
+
+    it('marks the chosen unit by a check, not by colour alone', async () => {
+      const wrapper = await mount({ units: ['MiB', 'GiB'], unit: 'GiB' })
+
+      await wrapper.find('.ui-number-input__unit-trigger').trigger('click')
+
+      expect(options()[1]!.querySelector('.ui-menu__item-leading .ui-icon')).not.toBeNull()
+      expect(options()[0]!.querySelector('.ui-menu__item-leading')).toBeNull()
+    })
+
+    it.each([
+      ['a choice', () => options()[1]!.click()],
+      ['Escape', () => options()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))],
+    ])('gives the focus back to the trigger after %s', async (_, act) => {
+      if (current) current.unmount()
+      current = await mountSuspended(MNumberInput, { props: { units: ['MiB', 'GiB'], unit: 'MiB' }, attachTo: document.body })
+      const wrapper = current as VueWrapper
+      const trigger = wrapper.find('.ui-number-input__unit-trigger')
+
+      ;(trigger.element as HTMLElement).focus()
+      await trigger.trigger('click')
+      await vi.waitFor(() => expect(host.contains(document.activeElement)).toBe(true))
+
+      act()
+
+      await vi.waitFor(() => expect(document.activeElement).toBe(trigger.element))
     })
 
     it('goes dead with the field, and takes an open menu with it', async () => {

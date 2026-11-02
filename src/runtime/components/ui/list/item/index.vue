@@ -155,7 +155,6 @@ const rowClasses = computed(() => ({
   isolation: isolate;
   width: 100%;
   margin: 0;
-  padding-block: g($t, 'padding.top') g($t, 'padding.bottom');
   padding-inline: g($t, 'padding.leading') g($t, 'padding.trailing');
   border: none;
   border-radius: g($t, 'container.shape');
@@ -164,7 +163,11 @@ const rowClasses = computed(() => ({
   color: g($t, 'label.text.color');
   text-align: start;
   text-decoration: none;
-  overflow-wrap: anywhere;
+
+  // Inherited by every slot: `break-word` wraps a long string at the row's
+  // edge but leaves each word's min-content whole, so a row of equal columns
+  // inside (segmented labels, a chip row) scrolls instead of breaking words.
+  overflow-wrap: break-word;
 
   // The corner is left out: a selected row takes its shape at once (S3).
   transition:
@@ -188,6 +191,14 @@ const rowClasses = computed(() => ({
   // shape is drawn. Emitted as one matrix so a density can never be
   // half-applied by a branch someone forgot to add.
   @each $d in compact, default, comfortable {
+    &--density-#{$d} {
+      padding-block: g($t, 'density.#{$d}.padding.block');
+
+      .ui-list-item__supporting {
+        margin-block-start: g($t, 'density.#{$d}.supporting.gap');
+      }
+    }
+
     @each $line, $key in (1: one, 2: two, 3: three) {
       &--density-#{$d}.ui-list-item--lines-#{$line} {
         min-height: g($t, 'density.#{$d}.height.#{$key}');
@@ -250,6 +261,7 @@ const rowClasses = computed(() => ({
       width: g($t, 'leading.image.width');
       height: g($t, 'leading.image.height');
       border-radius: g($t, 'leading.image.shape');
+      background-color: g($t, 'leading.image.placeholder');
       object-fit: cover;
     }
 
@@ -257,6 +269,7 @@ const rowClasses = computed(() => ({
       width: g($t, 'leading.video.width');
       height: g($t, 'leading.video.height');
       border-radius: g($t, 'leading.video.shape');
+      background-color: g($t, 'leading.video.placeholder');
       object-fit: cover;
     }
   }
@@ -281,7 +294,6 @@ const rowClasses = computed(() => ({
   }
 
   &__supporting {
-    margin-block-start: g($t, 'supporting.gap');
     color: g($t, 'supporting.text.color');
 
     @include apply-typography(g($t, 'supporting.text.typography'));

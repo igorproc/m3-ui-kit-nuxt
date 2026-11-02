@@ -28,9 +28,9 @@ $overlay: ':where(.ui-textarea--label-float, .ui-textarea--label-inset)';
     .ui-textarea__label {
       position: absolute;
       top: g($t, 'label.overlay.top');
-      inset-inline-start: var(--ui-textarea-inset);
+      inset-inline-start: g($t, 'box.filled.inset');
       z-index: 1;
-      max-width: g($t, 'label.room.base');
+      max-width: g($t, 'box.filled.label.room.base');
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -44,21 +44,38 @@ $overlay: ':where(.ui-textarea--label-float, .ui-textarea--label-inset)';
       &:dir(rtl) {
         transform-origin: right center;
       }
+
+      @include family.outlined-boxes('textarea', $density: false) using ($box) {
+        inset-inline-start: g($t, '#{$box}.inset');
+        max-width: g($t, '#{$box}.label.room.base');
+      }
     }
   }
 
   // Beside an adornment an overlaid label starts and stops where the value
   // does. The placement sits in `:where()`, so the notch rule still wins.
   &--prepend#{$overlay} .ui-textarea__label {
-    inset-inline-start: g($t, 'label.start.prepend');
+    inset-inline-start: g($t, 'box.filled.label.start.prepend');
+
+    @include family.outlined-boxes('textarea', $density: false) using ($box) {
+      inset-inline-start: g($t, '#{$box}.label.start.prepend');
+    }
   }
 
   &:where(.ui-textarea--prepend, .ui-textarea--append)#{$overlay} .ui-textarea__label {
-    max-width: g($t, 'label.room.one');
+    max-width: g($t, 'box.filled.label.room.one');
+
+    @include family.outlined-boxes('textarea', $density: false) using ($box) {
+      max-width: g($t, '#{$box}.label.room.one');
+    }
   }
 
   &--prepend.ui-textarea--append#{$overlay} .ui-textarea__label {
-    max-width: g($t, 'label.room.both');
+    max-width: g($t, 'box.filled.label.room.both');
+
+    @include family.outlined-boxes('textarea', $density: false) using ($box) {
+      max-width: g($t, '#{$box}.label.room.both');
+    }
   }
 
   // Notch: on `outlined` the raised label lands on the top border, into the gap
@@ -66,12 +83,17 @@ $overlay: ':where(.ui-textarea--label-float, .ui-textarea--label-inset)';
   &--label-float.ui-textarea--outlined {
     .ui-textarea__label {
       top: 0;
-      inset-inline-start: var(--ui-textarea-inset);
-      max-width: g($t, 'label.room.base');
+
+      @include family.outlined-boxes('textarea', $density: false) using ($box) {
+        inset-inline-start: g($t, '#{$box}.inset');
+        max-width: g($t, '#{$box}.label.room.base');
+      }
     }
 
     .ui-textarea__notch {
-      max-width: g($t, 'outlined.notch.open');
+      @include family.outlined-boxes('textarea', $density: false) using ($box) {
+        max-width: g($t, '#{$box}.notch.open');
+      }
     }
   }
 
@@ -95,7 +117,6 @@ $overlay: ':where(.ui-textarea--label-float, .ui-textarea--label-inset)';
     inset: 0;
     min-width: 0;
     padding-block: 0;
-    padding-inline: g($t, 'outlined.outline.padding.start') 0;
     margin: 0;
     border-width: g($t, 'container.border.width');
     border-style: solid;
@@ -103,6 +124,10 @@ $overlay: ':where(.ui-textarea--label-float, .ui-textarea--label-inset)';
     border-radius: inherit;
     pointer-events: none;
     transition: border-color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include family.outlined-boxes('textarea', $density: false) using ($box) {
+      padding-inline: g($t, '#{$box}.outline.start') 0;
+    }
   }
 
   @include family.notch($t);

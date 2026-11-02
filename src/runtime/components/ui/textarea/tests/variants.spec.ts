@@ -37,10 +37,10 @@ describe('m-textarea · variants', () => {
       expect(wrapper.classes()).toContain('ui-textarea--shape-extra-small')
     })
 
-    it('maps the shape prop onto its own modifier', async () => {
-      const wrapper = await mount({ shape: 'large' })
+    it.each(['none', 'extra-small', 'medium', 'large', 'full'] as const)('maps the %s shape onto its own modifier', async (shape) => {
+      const wrapper = await mount({ shape })
 
-      expect(wrapper.classes()).toContain('ui-textarea--shape-large')
+      expect(wrapper.classes()).toContain(`ui-textarea--shape-${shape}`)
     })
 
     it('drops the shapes a multi-line box has no use for', async () => {

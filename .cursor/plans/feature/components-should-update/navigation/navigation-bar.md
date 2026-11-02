@@ -2,7 +2,7 @@
 
 <identity>M3: Navigation bar (Expressive: short navigation bar 64) · Токены Compose: `NavigationBarTokens`, `NavigationBarVerticalItemTokens`, `NavigationBarHorizontalItemTokens`, `BadgeTokens`; поведение — `ShortNavigationBar.kt`, `NavigationItem.kt`, baseline `NavigationBar.kt` · Код: `src/runtime/components/ui/navigation-bar/` · Аудит: `data/navigation-bar.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Код не менялся: компонент собран до появления M3 Expressive и до фазы C (кольцо фокуса и forced colors уже добавлены, остальное нет).</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Общий пункт (W59-В), таблетка 64×32 (B5.3a), слой состояния, forced colors, `iconPlacement: start` с полями Centered, `activeIcon`/залитый глиф, `spacing()` в карте пункта, safe-area у бара вне `m-layout` (модификатор `--safe-area`, без двойного счёта в раскладке), dev-предупреждение при числе пунктов вне 3–5 (`start` — 3–6), фикстура `navigation/stress.vue` и e2e forced colors / safe area. Остались ссылки `to` (B5.1a, отложено Q56-А) и документация (вне репо).</implementation-status>
 
 ## Вердикт
 
@@ -153,7 +153,7 @@ playground + e2e.
    Закрывает TH-06, CT-05.
 4. **Safe area и подписи** (S). Insets, перенос подписи на 2 строки, бейдж по формуле и логическим
    свойствам. Закрывает RS-09, CT-02, LY-10 (бейдж).
-5. **Ссылки и a11y пункта** (M). `to`, `badgeLabel`, `aria-hidden` у бейджа, `ariaLabel` без
+5. **частично, `to` отложено** (B5.1a, Q56-А; `badgeLabel` и имя landmark сделаны, roving убран по W56-А). **Ссылки и a11y пункта** (M). `to`, `badgeLabel`, `aria-hidden` у бейджа, `ariaLabel` без
    дефолта; клавиатура — по ответу на вопрос 2, общий композабл с рейлом
    (`composables/navigation/useNavigationControl.ts`, бэги атрибутов без классов — `behavior.md`).
    Закрывает A11-01, A11-04, A11-08, LY-10 (стрелки).
@@ -166,7 +166,7 @@ playground + e2e.
    зависимостей нет. Зависимость: S7.
 9. **Слот / общий пункт** (M). По ответу на вопрос 5; общий примитив пункта с рейлом
    (`components/fragments/navigation-item/`). Закрывает EN-03.
-10. **Документация** (S). `docs/server/data/en/navigation-bar.json`: убрать несуществующий
+10. **отложено**: документация вне репо кита (docs_v2/v3, `plans-audit-2/report.md` §6). **Документация** (S). `docs/server/data/en/navigation-bar.json`: убрать несуществующий
     `labelVisibility`, описать `items`, клавиатуру, кастомизацию (DC-02…05).
 
 ## Тесты

@@ -81,11 +81,15 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
   // Guards the external→internal sync from re-triggering on our own writes.
   let writingModel = false
 
+  // A format without alpha draws the colour opaque, whatever alpha the model
+  // string happens to carry ("#ff000080" read as hex).
+  const opaqueUnlessAlpha = (next: HSVA): HSVA => (formatSupportsAlpha(format.value) ? next : { ...next, a: 1 })
+
   function applyModel() {
     if (writingModel) return
     const parsed = parseColor(model.value)
     if (parsed.ok) {
-      hsva.value = rgbaToHsva(parsed.rgba)
+      hsva.value = opaqueUnlessAlpha(rgbaToHsva(parsed.rgba))
       parseError.value = null
     } else if (parsed.error === 'empty') {
       parseError.value = null
@@ -96,7 +100,10 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
 
   watch(() => model.value, applyModel, { immediate: true })
   // Re-project the model when the format changes (selector or external v-model).
-  watch(() => format.value, () => syncModel())
+  watch(() => format.value, () => {
+    hsva.value = opaqueUnlessAlpha(hsva.value)
+    syncModel()
+  })
 
   const rgba = computed(() => hsvaToRgba(hsva.value))
   const cssColor = computed(() => toCssColor(rgba.value))
@@ -109,8 +116,10 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
   const locked = computed(() => disabledRef.value || readonlyRef.value)
   const messagesRef = computed(() => messages())
 
-  function syncModel() {
-    const formatted = formatColor(rgba.value, format.value)
+  // The format is passed in when it was just written: a `defineModel` bound by
+  // the parent reads back the old value until the parent renders again.
+  function syncModel(target: ColorFormat = format.value) {
+    const formatted = formatColor(rgba.value, target)
     if (model.value === formatted) return
     writingModel = true
     model.value = formatted
@@ -154,7 +163,11 @@ export function createColorPickerState(options: ColorPickerStateOptions): MColor
       }
       hsva.value = { ...hsva.value, a: 1 }
     }
-    syncModel()
+    // The user chose the format and the value is rewritten in it: a commit.
+    const formatted = formatColor(rgba.value, next)
+    const rewritten = model.value !== null && model.value !== formatted
+    syncModel(next)
+    if (rewritten) onChange(formatted)
   }
 
   function selectColor(input: string): boolean {

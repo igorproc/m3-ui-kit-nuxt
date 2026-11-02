@@ -1,9 +1,10 @@
 /**
  * Transition of a toggle button — an `MButton` / `MButtonIcon` with `selected`,
  * or a connected `MButtonGroup` button. Its selected shape and colours move on
- * M3 Expressive springs as in Compose's `ToggleButton` (shape: fast spatial,
- * colour: default effects), sampled to CSS `linear()` so no frame loop ships
- * (owner's decision, docs/system decisions). A plain button never gets it: its
+ * the M3 standard motion-scheme springs (shape: fast spatial, colour: default
+ * effects) — not the Expressive ones, whose overshoot a static state shape does
+ * not need — as in Compose's `ToggleButton`, sampled to CSS `linear()` so no
+ * frame loop ships (owner's decision, docs/system decisions). A plain button never gets it: its
  * shape does not change, and its transitions stay on the stylesheet tokens.
  */
 import { M3_SPRING, springTiming, transitionList } from '#kit/utils/motion'

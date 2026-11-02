@@ -34,11 +34,12 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
 import type { CrmSection } from '../data/crmTypes'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export interface CrmNavEntry {
   id: CrmSection
   label: string
-  icon: string
+  icon: MIconName
   badge?: number
   /** Spoken form of the badge, which itself is hidden from assistive tech. */
   badgeLabel?: string

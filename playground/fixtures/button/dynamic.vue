@@ -59,13 +59,10 @@
       >
         Save
         <template #menu="{ close }">
-          <button
-            type="button"
-            class="ui-menu__item"
-            @click="close()"
-          >
-            Save as draft
-          </button>
+          <MMenuItem
+            label="Save as draft"
+            @select="close()"
+          />
         </template>
       </MButtonSplit>
       <MButtonFab
@@ -124,6 +121,7 @@ import MButtonFab from '#kit/components/ui/button/fab/index.vue'
 import MButtonExtendedFab from '#kit/components/ui/button/extended-fab/index.vue'
 import MButtonGroup from '#kit/components/ui/button/group/index.vue'
 import MButtonSegmented from '#kit/components/ui/button/segmented/index.vue'
+import MMenuItem from '#kit/components/ui/menu/item/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import type { MButtonDensity } from '#kit/components/ui/button/props'

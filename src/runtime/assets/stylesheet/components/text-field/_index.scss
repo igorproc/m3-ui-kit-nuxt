@@ -1,5 +1,6 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use 'family';
 
 // ==========================================
 // TEXT FIELD M3 COMPONENT TOKENS
@@ -14,8 +15,8 @@
 // an input chip), the 6rem glyph gap — and the density steps' value offsets
 // (18 and 28), which place a 24rem value line in 44/64 boxes.
 
-// The default height, named once for the `default` density step.
-$field-height: 56rem;
+// The box height of each density step; `default` is the family's 56.
+$heights: (compact: 44rem, default: 56rem, comfortable: 64rem);
 
 // Never thinner than one device pixel: below it `1rem` fades on a narrow
 // screen (decisions.md, hairline). Every vertical sum it is part of is a calc.
@@ -30,6 +31,7 @@ $notch-padding-inline: spacing(4);
 
 // Beside an icon the label starts where the value does: past the container's
 // padding, the icon box and the icon's margin. `underline` has no padding.
+$padding-inline: spacing(16);
 $padding-prepend: spacing(12);
 $padding-append: spacing(12);
 $icon-width: 24rem;
@@ -68,10 +70,51 @@ $value-line: var(--md-sys-typescale-body-large-line-height);
   );
 }
 
+// A box is where content starts and what is measured from it: the room of an
+// overlaid label, the outline's start padding, the open notch.
+@function box($inset) {
+  @return (
+    inset: $inset,
+    label: (room: (
+      base: calc((100% - 2 * #{$inset}) / #{$label-raised-scale}),
+      // An icon on one side: the box is symmetric, so start or end is the same sum.
+      one: label-room($label-prepend-start, $inset),
+    )),
+    // The `<fieldset>`'s start padding puts the legend where the raised
+    // label's padding box begins.
+    outline: (start: calc(#{$inset} - #{$notch-padding-inline} - #{$hairline})),
+    // Open, the notch is capped where the label's own room ends, so a
+    // truncated label never takes the edge with it.
+    notch: (open: calc(100% - #{$inset} + #{$notch-padding-inline} + #{$hairline})),
+  );
+}
+
+// An outlined box per corner and height. A large or full corner curves past the
+// default start, and a notch cut into that curve reads as a broken corner — so
+// the content (and with it the notch) starts past the effective radius. A
+// `full` radius is capped by the box to half its height.
+@function outlined-boxes() {
+  $boxes: ();
+
+  @each $shape in family.$shapes {
+    $row: ();
+
+    @each $density, $height in $heights {
+      $radius: map.get($theme-shape-link, $shape);
+      $inset: max(#{$padding-inline}, min(#{$radius}, #{$height} / 2) + #{$notch-padding-inline});
+      $row: map.set($row, $density, box($inset));
+    }
+
+    $boxes: map.set($boxes, $shape, $row);
+  }
+
+  @return $boxes;
+}
+
 $tokens: (
   container: (
     gap: spacing(4),
-    padding: (inline: spacing(16), prepend: $padding-prepend, append: $padding-append),
+    padding: (inline: $padding-inline, prepend: $padding-prepend, append: $padding-append),
     border: (width: $hairline),
     field: (
       gap: spacing(8),
@@ -96,11 +139,9 @@ $tokens: (
     // Where an overlaid label starts and how far it may run, per what stands
     // beside it. On the notch it always returns to the content start: nothing
     // bounds what a prepend holds, and the gap in the border must not depend on it.
+    // The room beside nothing or one icon depends on the box: `box.*.label.room`.
     start: (prepend: $label-prepend-start, underline-prepend: $label-icon-clearance),
     room: (
-      base: calc((100% - 2 * var(--ui-text-field-inset)) / #{$label-raised-scale}),
-      // An icon on one side: the box is symmetric, so start or end is the same sum.
-      one: label-room($label-prepend-start, var(--ui-text-field-inset)),
       both: label-room($label-prepend-start, $label-append-end),
       underline-one: label-room($label-icon-clearance, 0rem),
       underline-both: label-room($label-icon-clearance, $label-icon-clearance),
@@ -134,9 +175,17 @@ $tokens: (
   // Vertical scale. Height and padding only — type size never changes, so a
   // compact field and a comfortable one still align their values.
   density: (
-    compact: density-step(44rem, 18rem),
-    default: density-step($field-height, spacing(24)),
-    comfortable: density-step(64rem, 28rem),
+    compact: density-step(map.get($heights, compact), 18rem),
+    default: density-step(map.get($heights, default), spacing(24)),
+    comfortable: density-step(map.get($heights, comfortable), 28rem),
+  ),
+  // Where content starts, per variant — and on outlined per corner and height.
+  box: (
+    filled: box($padding-inline),
+    // `underline` has no container: content starts at the edge. A unit, not
+    // `0`: the start is summed in `calc()`.
+    underline: box(0rem),
+    outlined: outlined-boxes(),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
@@ -176,16 +225,10 @@ $tokens: (
     disabled: (container: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container-subtle), transparent))),
   ),
   outlined: (
-    // Where content starts. A large or full corner curves past the default
-    // start, and a notch cut into that curve reads as a broken corner — so the
-    // content (and with it the notch) starts past the effective radius. A `full`
-    // radius is capped by the box to half its height.
-    inset: max(#{spacing(16)}, min(var(--ui-text-field-radius), var(--ui-text-field-height) / 2) + #{$notch-padding-inline}),
-    // The `<fieldset>` that draws the border, laid over the control's own. Its
-    // start padding puts the legend where the raised label's padding box begins.
+    // The `<fieldset>` that draws the border, laid over the control's own; its
+    // start padding is the box's (`box.outlined.*.outline.start`).
     outline: (
       inset: calc(-1 * #{$hairline}),
-      padding: (start: calc(var(--ui-text-field-inset) - #{$notch-padding-inline} - #{$hairline})),
       color: map.get($theme-color-link, outline),
       hover: (color: $on-surface),
       focused: (color: map.get($theme-color-link, primary)),
@@ -194,13 +237,11 @@ $tokens: (
     ),
     // The gap cut into the top border behind a raised label: the label text at
     // its raised size (a real font size — only layout size widens the gap),
-    // plus breathing room on either side. Open, it is capped where the label's
-    // own room ends, so a truncated label never takes the edge with it.
+    // plus breathing room on either side. Open, its width is the box's.
     notch: (
       padding: (inline: $notch-padding-inline),
       font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
       collapsed: 0.01rem,
-      open: calc(100% - var(--ui-text-field-inset) + #{$notch-padding-inline} + #{$hairline}),
     ),
     // `HoverLabelColor`: outlined lifts its label with its edge on hover.
     hover: (label: (color: $on-surface)),
@@ -209,8 +250,6 @@ $tokens: (
   // the value's edge rather than at a container inset. Its rule rests at
   // `outline`, the lowest ink of the family; every other state is the indicator's.
   underline: (
-    // Content starts at the edge. A unit, not `0`: the start is summed in `calc()`.
-    inset: 0rem,
     indicator: (color: map.get($theme-color-link, outline)),
     support: (padding: (inline: spacing(0))),
   ),

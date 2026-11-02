@@ -5,9 +5,10 @@
         v-if="selectable"
         class="ui-table__head-cell ui-table__head-cell--checkbox"
       >
-        <!-- A partial selection is not shown as mixed yet: MCheckbox has no indeterminate state. -->
+        <!-- A partly selected page shows as mixed; activating it completes the page. -->
         <MCheckbox
           :model-value="isAllSelected"
+          :indeterminate="isMixed"
           :aria-label="selectAllLabel"
           @update:model-value="emit('toggle-all', $event)"
         />

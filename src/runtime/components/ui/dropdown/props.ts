@@ -10,7 +10,7 @@
 import type { ExtractPublicPropTypes, PropType, StyleValue } from 'vue'
 import { fieldDensityProp, mFieldProps } from '#kit/components/ui/text-field/props'
 import type { MTextFieldVariant } from '#kit/components/ui/text-field/props'
-import type { UiMenuOrigin } from '#kit/components/ui/menu/types'
+import type { MMenuPlacement } from '#kit/components/ui/menu/types'
 import type {
   DropdownEntry,
   DropdownItemBase,
@@ -35,8 +35,10 @@ export type MDropdownVariant = Extract<MTextFieldVariant, 'filled' | 'outlined'>
 
 /**
  * Every phrase the field shows or announces. None has a default: the kit ships
- * no copy it cannot translate. A slot (`#empty`, `#no-results`, `#loading`)
- * outranks its phrase; a control left without its name warns in dev.
+ * no copy it cannot translate, so pass `clear` (and `toggle` on the
+ * autocomplete) or those buttons stay nameless. A slot (`#empty`,
+ * `#no-results`, `#loading`) outranks its phrase; a control left without its
+ * name warns in dev.
  */
 export interface MDropdownMessages {
   /** Accessible name of the clear button. */
@@ -49,6 +51,8 @@ export interface MDropdownMessages {
   empty?: string
   /** Shown when a query matches nothing (autocomplete). */
   noResults?: string
+  /** Name of a chip's removal in multiple; `{title}` is replaced with the value's title ("Remove {title}"). */
+  remove?: string
 }
 
 // The field family's browser-autofill hint means nothing on a select whose
@@ -64,6 +68,12 @@ const { autocomplete: _autocomplete, ...selectionFieldProps } = mFieldProps
 export const mDropdownProps = {
   ...selectionFieldProps,
   ...fieldDensityProp,
+  /**
+   * Submits the selection with a form, one hidden field per chosen value (a
+   * whole item by its `id`), as a `<select multiple>` does. Falls back to
+   * `path`. The visible input submits nothing: it holds a title.
+   */
+  name: { type: String, default: undefined },
   variant: { type: String as PropType<MDropdownVariant>, default: 'filled' },
   /** Options are being fetched: a progress bar runs over the panel's top edge. */
   loading: { type: Boolean, default: false },
@@ -97,8 +107,8 @@ export const mDropdownProps = {
   /** Show a control that empties the selection. */
   clearable: { type: Boolean, default: false },
 
-  /** Where the panel opens relative to the field. */
-  menuPlacement: { type: String as PropType<UiMenuOrigin>, default: 'top left' },
+  /** Where the panel opens against the field; `start` / `end` follow the writing direction. */
+  menuPlacement: { type: String as PropType<MMenuPlacement>, default: 'bottom-start' },
   /**
    * Cap on the scrolling area of the panel. A number is read as `rem` (the
    * kit's 1rem = 1px-of-the-mockup convention), a string is passed through.
@@ -128,9 +138,20 @@ export interface MDropdownProps<TItem extends DropdownItemBase, TValue = TItem> 
   mandatory?: boolean
   max?: number
   clearable?: boolean
-  menuPlacement?: UiMenuOrigin
+  menuPlacement?: MMenuPlacement
   maxHeight?: number | string
 }
+
+/** A runtime props object whose `type`s come from a typed contract; the defaults stay in the runtime object. */
+export type TypedPropsOptions<TRuntime, TTyped> = {
+  [K in keyof TRuntime]: K extends keyof TTyped
+    ? Omit<TRuntime[K], 'type'> & { type: PropType<Exclude<TTyped[K], undefined>> }
+    : TRuntime[K]
+}
+
+/** {@link mDropdownProps} typed by {@link MDropdownProps}: an instance infers `TItem` from `items`. */
+export type MDropdownPropsOptions<TItem extends DropdownItemBase, TValue = TItem>
+  = TypedPropsOptions<typeof mDropdownProps, MDropdownProps<TItem, TValue>>
 
 export interface MDropdownEmits<TItem extends DropdownItemBase> {
   (event: 'select' | 'remove', item: TItem): void

@@ -20,6 +20,7 @@
   >
     <component
       :is="isModal ? 'dialog' : 'div'"
+      :id="rootId"
       ref="root"
       class="ui-overlay"
       :class="`ui-overlay--${mode}`"
@@ -27,7 +28,7 @@
       :aria-modal="isInertModal ? 'true' : undefined"
       :style="{ zIndex: ticket.zIndex.value }"
       v-bind="$attrs"
-      @cancel="onCancel"
+      @cancel="dismiss.onCancel"
       @close="onNativeClose"
     >
       <transition
@@ -41,7 +42,7 @@
           class="ui-overlay__scrim"
           :class="[{ 'ui-overlay__scrim--muted': isScrimMuted }, overlayClass]"
           aria-hidden="true"
-          @click="onScrimClick"
+          @click="dismiss.onScrimClick"
         >
           <slot name="scrim" />
         </div>
@@ -56,7 +57,7 @@
           v-show="lifecycle.isVisible.value"
           ref="panel"
           class="ui-overlay__panel"
-          :class="[`ui-overlay__panel--${mode}`, contentClass]"
+          :class="[`ui-overlay__panel--${mode}`, { 'ui-overlay__panel--scrollable': isPanelScrollable }, panelSwipeClass, contentClass]"
           :style="swipeStyle"
         >
           <div
@@ -75,6 +76,9 @@
         </div>
       </transition>
 
+      <!-- Under an open modal the page is inert: announcements of surfaces inside it go here. -->
+      <LiveRegion v-if="isModal" />
+
       <template v-if="preventNavigationGestures">
         <div class="ui-overlay__gesture-guard ui-overlay__gesture-guard--start" />
         <div class="ui-overlay__gesture-guard ui-overlay__gesture-guard--end" />
@@ -84,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onScopeDispose, shallowRef, useId, watch } from 'vue'
+import { computed, nextTick, onScopeDispose, shallowRef, useAttrs, useId, watch } from 'vue'
 import type { TransitionProps } from 'vue'
 import { useNuxtApp } from '#app'
 import { useStack } from '#kit/composables/useStack'
@@ -93,13 +97,13 @@ import { useFocusTrap } from '#kit/composables/overlay/useFocusTrap'
 import { useOverlayLifecycle } from '#kit/composables/overlay/useOverlayLifecycle'
 import { useOverlaySwipe } from '#kit/composables/overlay/useOverlaySwipe'
 import { useTopLayer } from '#kit/composables/overlay/useTopLayer'
+import LiveRegion from '#kit/components/fragments/live-region/index.vue'
 import { provideOverlayTarget, useOverlayTeleportTarget } from '#kit/composables/overlay/useOverlayTarget'
-import { closeModalChildren, useModalContext } from '#kit/composables/modal/useModalContext'
-import { useClickOutside } from '#kit/composables/useClickOutside'
-import { useGlobalListener } from '#kit/composables/useGlobalListener'
+import { claimModalOwner, closeModalChildren, useModalContext } from '#kit/composables/modal/useModalContext'
+import { useOverlayDismiss } from '#kit/composables/overlay/useOverlayDismiss'
 import { supportsPopover } from '#kit/shared/utils/support'
 import { mOverlayProps } from './props'
-import type { MOverlayDismissReason, MOverlayEmits, MOverlayTransition } from './props'
+import type { MOverlayEmits, MOverlayTransition } from './props'
 
 // Two roots (activator slot + teleport): attrs go to the overlay root explicitly.
 defineOptions({ inheritAttrs: false })
@@ -110,6 +114,9 @@ const emit = defineEmits<MOverlayEmits>()
 const modelValue = defineModel<boolean>({ default: false })
 
 const overlayId = useId()
+const attrs = useAttrs()
+// The activator's `aria-controls` names the root: the consumer's id if it gave one.
+const rootId = computed(() => (attrs.id as string | undefined) ?? overlayId)
 const root = shallowRef<HTMLElement | null>(null)
 const panel = shallowRef<HTMLElement | null>(null)
 const swipeBanner = shallowRef<HTMLElement | null>(null)
@@ -125,7 +132,7 @@ const resolvedTarget = useOverlayTeleportTarget()
 provideOverlayTarget(root)
 
 const stack = useStack()
-const ticket = stack.register({ blocking: props.persistent, modal: isModal.value, onDismiss: () => requestUserDismiss('outside') })
+const ticket = stack.register({ blocking: props.persistent, modal: isModal.value, onDismiss: () => dismiss.request('outside') })
 const isTop = computed(() => ticket.globalTop.value)
 const isScrimMuted = computed(() => props.overlayBehavior === 'auto' && ticket.isSelected.value && stack.topModal.value !== ticket)
 
@@ -198,70 +205,67 @@ function toggle() {
 const context = useModalContext({ id: overlayId, status: lifecycle.status, close, parent: props.parent })
 
 if (isModal.value) {
-  const unregister = modalService.register({ id: overlayId, isOpen: () => modelValue.value, open, close })
+  const unregister = modalService.register({ id: overlayId, isOpen: () => modelValue.value, open, close, owner: claimModalOwner() })
   onScopeDispose(unregister)
 }
 
+// A popover promises no role, so it announces none; `aria-controls` only names
+// a root that exists.
 const activatorProps = computed(() => ({
-  'aria-haspopup': isModal.value ? 'dialog' : 'menu',
+  'aria-haspopup': isModal.value ? 'dialog' : undefined,
   'aria-expanded': modelValue.value,
+  'aria-controls': lifecycle.isRendered.value ? rootId.value : undefined,
   'onClick': toggle,
 }))
 
-function canDismiss(reason: MOverlayDismissReason): boolean {
-  if (props.persistent) return false
-  if (reason === 'outside') return props.closeOnOutside
-  if (reason === 'escape') return props.closeOnEscape
-  return props.closeOnSwipe !== 'none'
-}
-
-function requestUserDismiss(reason: MOverlayDismissReason) {
-  if (canDismiss(reason)) void close()
-}
-
-function onScrimClick() {
-  emit('clickOutside')
-  requestUserDismiss('outside')
-}
-
-// Close request (Esc, Android back) on a modal <dialog>. Always prevented: the
-// kit decides, and an overlay stacked above (menu, tooltip) handles its own Esc.
-function onCancel(event: Event) {
-  event.preventDefault()
-  if (isTop.value) requestUserDismiss('escape')
-}
+const dismiss = useOverlayDismiss({
+  policy: () => props,
+  isOpen: () => modelValue.value,
+  isTop: () => isTop.value,
+  receivesCloseRequests: () => isInertModal.value,
+  hasScrim: () => showScrim.value,
+  panel,
+  close: () => void close(),
+  onDismiss: reason => emit('dismiss', reason),
+  onClickOutside: () => emit('clickOutside'),
+})
 
 // The browser may still force-close a dialog (repeated Esc without user
 // activation). Follow it when dismissal is allowed, otherwise re-open.
 function onNativeClose() {
   if (topLayer.isHiding() || lifecycle.status.value === 'closed' || lifecycle.status.value === 'closing') return
-  if (canDismiss('escape')) void close()
+  if (dismiss.canDismiss('escape')) void close()
   else topLayer.show()
 }
 
-// Non-modal roots get no close request from the browser.
-useGlobalListener('window', 'keydown', (event) => {
-  if (!modelValue.value || !isTop.value || isInertModal.value) return
-  if ((event as KeyboardEvent).key !== 'Escape') return
-  event.preventDefault()
-  requestUserDismiss('escape')
+const swipeStart = () => props.swipeTarget ?? (props.showSwipeBanner ? swipeBanner.value : panel.value)
+
+// A panel that starts the swipe itself leaves the browser only the other
+// axis, so the drag is not taken for a page pan (`pointercancel` mid-swipe).
+const panelSwipeClass = computed(() => {
+  if (props.closeOnSwipe === 'none' || props.swipeTarget || props.showSwipeBanner) return undefined
+  return props.closeOnSwipe === 'left' || props.closeOnSwipe === 'right' ? 'ui-overlay__panel--swipe-inline' : 'ui-overlay__panel--swipe-block'
 })
 
-useClickOutside(panel, () => {
-  if (!modelValue.value || !isTop.value || showScrim.value) return
-  emit('clickOutside')
-  requestUserDismiss('outside')
-})
+const isPanelScrollable = computed(() => isModal.value && lifecycle.status.value === 'open')
 
-const { swipeStyle } = useOverlaySwipe(() => (props.showSwipeBanner ? swipeBanner.value : panel.value), {
+const { swipeStyle } = useOverlaySwipe(swipeStart, {
   direction: () => props.closeOnSwipe,
   threshold: () => props.swipeThreshold,
-  disabled: () => !canDismiss('swipe') || lifecycle.status.value !== 'open',
-  onDismiss: () => requestUserDismiss('swipe'),
+  disabled: () => !dismiss.canDismiss('swipe') || lifecycle.status.value !== 'open',
+  onDismiss: () => dismiss.request('swipe'),
 })
 
+// The trap puts focus on the surface; the content's own `autofocus` wins
+// after it (showModal() ran while the panel was still hidden, so the browser
+// could not apply it).
+function activateFocus() {
+  focusTrap.activate()
+  panel.value?.querySelector<HTMLElement>('[autofocus]')?.focus()
+}
+
 watch(lifecycle.isVisible, (visible) => {
-  if (visible && shouldTrapFocus.value) nextTick(focusTrap.activate)
+  if (visible && shouldTrapFocus.value) nextTick(activateFocus)
 })
 
 defineExpose({ id: overlayId, status: lifecycle.status, open, close, toggle })
@@ -307,6 +311,10 @@ $prefix: 'md-overlay';
     background-color: color-mix(in srgb, #{g($t, 'scrim.color')} #{g($t, 'scrim.opacity')}, transparent);
     transition: opacity g($t, 'scrim.motion.enter.duration') g($t, 'scrim.motion.enter.easing');
 
+    @media (prefers-contrast: more) {
+      background-color: color-mix(in srgb, #{g($t, 'scrim.color')} #{g($t, 'scrim.contrast.more.opacity')}, transparent);
+    }
+
     // `overlayBehavior: auto` — only the topmost modal dims the page.
     &--muted {
       opacity: 0;
@@ -328,9 +336,32 @@ $prefix: 'md-overlay';
     }
   }
 
+  &__panel--modal {
+    @supports (align-items: safe center) {
+      align-items: safe center;
+    }
+  }
+
+  &__panel--scrollable {
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+  }
+
   &__panel--popover {
     align-items: flex-start;
     justify-content: flex-start;
+  }
+
+  &__panel--swipe-inline {
+    touch-action: pan-y;
+  }
+
+  &__panel--swipe-block {
+    touch-action: pan-x;
+  }
+
+  &__swipe-banner {
+    touch-action: none;
   }
 
   &__gesture-guard {
@@ -363,13 +394,6 @@ $prefix: 'md-overlay';
   &-enter-from,
   &-leave-to {
     opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ui-overlay-fade-enter-active,
-  .ui-overlay-fade-leave-active {
-    transition-duration: 0s;
   }
 }
 </style>

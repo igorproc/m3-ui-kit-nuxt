@@ -117,6 +117,24 @@ test.describe('MTextField', () => {
     expect((await field.boundingBox())!.height).toBeCloseTo(fieldHeight, 0)
   })
 
+  // Q33-А: clearing belongs to MSearch or an #append button with the kit's own name and tokens.
+  test('type="search" draws no native cancel button', async ({ page }) => {
+    await openFixture(page, 'text-field/stress')
+    await expect(page.getByTestId('search-type')).toHaveAttribute('type', 'search')
+
+    const hidden = await page.evaluate(() => [...document.styleSheets].some((sheet) => {
+      try {
+        return [...sheet.cssRules].some(rule => rule instanceof CSSStyleRule
+          && rule.selectorText.includes('.ui-text-field__input::-webkit-search-cancel-button')
+          && rule.style.getPropertyValue('appearance') === 'none')
+      } catch {
+        return false
+      }
+    }))
+
+    expect(hidden).toBe(true)
+  })
+
   test('a numeric 0 shows as a value', async ({ page }) => {
     await openFixture(page, 'text-field/stress')
 

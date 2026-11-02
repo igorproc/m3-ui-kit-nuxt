@@ -3,9 +3,9 @@ import type { ComputedRef, Ref } from 'vue'
 import type { Clock, ClockTime, TimeField, TimePeriod } from '#kit/utils/time/createClock'
 
 export interface TimePickerLabels {
-  hour: string
-  minute: string
-  period: string
+  hour?: string
+  minute?: string
+  period?: string
 }
 
 export interface TimePickerControlOptions {
@@ -17,7 +17,7 @@ export interface TimePickerControlOptions {
   labels: () => TimePickerLabels
   /** Names the group: the id of a visible headline, or a phrase when there is none. */
   labelledBy: () => string | undefined
-  label: () => string
+  label: () => string | undefined
 }
 
 export interface TimePickerRadioAttrs {
@@ -46,8 +46,10 @@ export interface TimePickerControl {
   setPeriod: (period: TimePeriod) => void
   commit: (next: ClockTime | null) => void
   rootAttrs: ComputedRef<{ 'role': 'group', 'aria-labelledby': string | undefined, 'aria-label': string | undefined, 'aria-disabled': true | undefined }>
+  /** The radio group of the hour and minute selectors, named like the picker. */
+  selectorGroupAttrs: ComputedRef<{ 'role': 'radiogroup', 'aria-labelledby': string | undefined, 'aria-label': string | undefined }>
   getSelectorAttrs: (part: TimeField) => TimePickerRadioAttrs
-  periodGroupAttrs: ComputedRef<{ 'role': 'radiogroup', 'aria-label': string, 'aria-readonly': true | undefined, 'aria-disabled': true | undefined }>
+  periodGroupAttrs: ComputedRef<{ 'role': 'radiogroup', 'aria-label': string | undefined, 'aria-readonly': true | undefined, 'aria-disabled': true | undefined }>
   getPeriodAttrs: (period: TimePeriod) => TimePickerRadioAttrs
 }
 
@@ -113,6 +115,12 @@ export function useTimePickerControl(options: TimePickerControlOptions, id: stri
     'aria-disabled': options.disabled() || undefined,
   }))
 
+  const selectorGroupAttrs = computed(() => ({
+    'role': 'radiogroup' as const,
+    'aria-labelledby': options.labelledBy(),
+    'aria-label': options.labelledBy() ? undefined : options.label(),
+  }))
+
   const selectorId = (part: TimeField) => `${id}-${part}`
 
   function getSelectorAttrs(part: TimeField): TimePickerRadioAttrs {
@@ -124,7 +132,8 @@ export function useTimePickerControl(options: TimePickerControlOptions, id: stri
       'type': 'button',
       'role': 'radio',
       'aria-checked': field.value === part,
-      'aria-label': time.value ? `${name} ${display.value[part]}` : name,
+      // Without the app's word for the part, the button's own digits name it.
+      'aria-label': name && time.value ? `${name} ${display.value[part]}` : name,
       'tabindex': tabbable ? 0 : -1,
       'disabled': options.disabled() || undefined,
       'onClick': () => {
@@ -179,6 +188,7 @@ export function useTimePickerControl(options: TimePickerControlOptions, id: stri
     setPeriod,
     commit,
     rootAttrs,
+    selectorGroupAttrs,
     getSelectorAttrs,
     periodGroupAttrs,
     getPeriodAttrs,

@@ -12,6 +12,7 @@ $on-surface: map.get($theme-color-link, on-surface);
 $hairline: max(1px, 1rem);
 $band: spacing(16);
 $target: spacing(40);
+$swatch: spacing(32);
 $tokens: (
   root: (
     width: 280rem,
@@ -79,28 +80,29 @@ $tokens: (
   ),
   swatches: (
     gap: spacing(8),
-    size: spacing(32),
+    size: $swatch,
+    coarse: (gap: calc(#{spacing(48)} - #{$swatch})),
     radius: map.get($theme-shape-link, small),
     outline: map.get($theme-color-link, outline-variant),
     outline-width: $hairline,
     // The chosen swatch: a check and a ring in the content ink, never colour
     // alone.
     selected: (
-      ring: $on-surface,
-      width: 2rem,
-      // The focus ring stands outside the selection ring, so a focused chosen
-      // swatch shows both.
-      focus-offset: calc(2rem + #{map.get($theme-focus-link, 'offset')}),
-      check: (
+      container: (
+        ring: (color: $on-surface, width: 2rem),
+        // The focus ring stands outside the selection ring, so a focused chosen
+        // swatch shows both.
+        focus-offset: calc(2rem + #{map.get($theme-focus-link, 'offset')}),
+      ),
+      content: (
         size: 20rem,
-        on-dark: map.get($theme-color-link, surface),
-        on-light: $on-surface,
+        color: (on-dark: map.get($theme-color-link, surface), on-light: $on-surface),
       ),
     ),
     // A small lift under the pointer, only where motion is welcome; a press
     // lays the state layer in the check's ink over the colour.
     hover-scale: 1.1,
-    layer: (pressed: state-opacity(pressed)),
+    layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
     motion: (
       duration: var(--sys-motion-duration-short-2),
       easing: var(--sys-motion-easing-standard),

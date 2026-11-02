@@ -44,19 +44,18 @@ test.describe('MTable', () => {
   test('rows and the header take their density step', async ({ page }) => {
     await openFixture(page, 'table/matrix')
     const unit = await remInPx(page)
-    // A collapsed border is shared by two rows, and a row whose content fills
-    // the step (the 40 checkbox in a compact row) grows by its share of it, so
-    // a row stands at its step plus at most the device-pixel divider.
-    const hairline = 1 / unit
+    // Ш6 (plans-audit-2): the 40 checkbox no longer adds the divider to a
+    // compact row, so every row stands at its step, whichever dividers it shares.
     const expectStep = async (row: Locator, step: number, label: string) => {
-      const height = (await box(row)).height / unit
-      expect(height, label).toBeGreaterThanOrEqual(step - 0.5)
-      expect(height, label).toBeLessThanOrEqual(step + hairline + 0.5)
+      expect((await box(row)).height / unit, label).toBeCloseTo(step, 0)
     }
 
     for (const [density, [row, header]] of Object.entries(HEIGHTS)) {
       const table = page.getByTestId(`density-${density}`)
-      await expectStep(table.locator('tbody tr').first(), row, `${density} row`)
+      const rows = table.locator('tbody tr')
+      for (let index = 0; index < await rows.count(); index++) {
+        await expectStep(rows.nth(index), row, `${density} row ${index}`)
+      }
       await expectStep(table.locator('thead tr'), header, `${density} header`)
     }
   })
@@ -120,11 +119,17 @@ test.describe('MTable', () => {
     const selectAll = table.getByRole('checkbox', { name: 'Select all orders on this page' })
 
     await expect(selectAll).not.toBeChecked()
+    // B9.2b: a partly selected page is announced as mixed (the native `indeterminate`).
+    await expect(selectAll).toBeChecked({ indeterminate: true })
 
     // The native input is transparent under the drawn box; a click reaches it the way the label's does.
     await selectAll.evaluate(input => (input as HTMLInputElement).click())
     await expect(table.locator('tbody tr[aria-selected="true"]')).toHaveCount(5)
     await expect(selectAll).toBeChecked()
+    expect(await selectAll.evaluate(input => (input as HTMLInputElement).indeterminate)).toBe(false)
+
+    await table.getByRole('checkbox', { name: 'Desk lamp' }).evaluate(input => (input as HTMLInputElement).click())
+    await expect(selectAll).toBeChecked({ indeterminate: true })
   })
 
   test('the selection outlives the page: only the page is rendered and select-all is per page', async ({ page }) => {
@@ -203,6 +208,32 @@ test.describe('MTable', () => {
     await expect(range).toHaveText('1–7 of 7')
   })
 
+  // B9.2a (Q24-А): navigation waits while a page loads, and the control that
+  // asked for it keeps the focus — natively disabled, it dropped it on body.
+  test('the footer controls keep focus while the page they asked for loads', async ({ page }) => {
+    await openFixture(page, 'table/stress')
+    const footer = frame(page, 'remote-footer')
+    const table = page.getByTestId('remote-footer')
+    const next = footer.getByRole('button', { name: 'Next page' })
+    const size = footer.getByLabel('Rows per page')
+
+    await next.focus()
+    await page.keyboard.press('Enter')
+    await expect(table).toHaveAttribute('aria-busy', 'true')
+    await expect(next).toBeFocused()
+    await expect(table).not.toHaveAttribute('aria-busy', 'true')
+    await expect(page.getByTestId('remote-range')).toHaveText('11–20 of 240')
+
+    await size.focus()
+    await size.selectOption('25')
+    await expect(table).toHaveAttribute('aria-busy', 'true')
+    await expect(size).toBeFocused()
+    await expect(size).toHaveAttribute('aria-disabled', 'true')
+    await expect(table).not.toHaveAttribute('aria-busy', 'true')
+    await expect(size).toBeFocused()
+    await expect(size).toHaveValue('25')
+  })
+
   test('a row click reports the row, a checkbox click does not', async ({ page }) => {
     await openFixture(page, 'table/matrix')
     const row = page.getByTestId('main').locator('tbody tr').nth(2)
@@ -241,12 +272,57 @@ test.describe('MTable', () => {
     }
     await expect(region).toBeFocused()
     // T-3 (M3-polish): the ring is drawn on the frame, outside the edge-fade mask.
-    expect(await style(frame(page, 'wide'), 'outline-style')).toBe('solid')
+    expect(await style(frame(page, 'wide').locator('.ui-table-container__ring'), 'outline-style')).toBe('solid')
     expect(await style(region, 'outline-style')).toBe('none')
 
     await page.keyboard.press('ArrowRight')
     await page.keyboard.press('ArrowRight')
     await expect.poll(() => region.evaluate(el => Math.abs(el.scrollLeft))).toBeGreaterThan(0)
+  })
+
+  // plans-audit-2: the edge fade slides its mask over the inline-end edge by the
+  // scroll position, with no custom property; the fade is gone at the end.
+  for (const dir of DIRECTIONS) {
+    test(`the inline-end edge fades only while columns lie beyond it (${dir})`, async ({ page }) => {
+      await page.setViewportSize({ width: 768, height: 900 })
+      await openFixture(page, 'table/stress', { dir })
+      const unit = await remInPx(page)
+      const viewport = frame(page, 'wide').locator('.ui-table-container__viewport')
+      const offset = async () => Number.parseFloat(await style(viewport, 'mask-position'))
+      const [shown, hidden] = dir === 'ltr' ? [-24 * unit, 0] : [0, -24 * unit]
+
+      expect(await style(viewport, 'mask-image')).toContain('gradient')
+      expect(await offset()).toBeCloseTo(shown, 1)
+
+      await viewport.evaluate((el) => {
+        el.scrollLeft = getComputedStyle(el).direction === 'rtl' ? -el.scrollWidth : el.scrollWidth
+      })
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+      expect(await offset()).toBeCloseTo(hidden, 1)
+    })
+  }
+
+  // plans-audit-2: the `>` that kept a nested table apart gave way to a sibling
+  // ring and a `:not()` over the rows; the nested table still answers only for itself.
+  test('a table nested in a cell neither lights with the outer row nor rings the outer frame', async ({ page }) => {
+    await openFixture(page, 'table/stress')
+    const outer = page.getByTestId('nested')
+    const outerRow = outer.locator(':scope > tbody > tr').first()
+    const inner = page.getByTestId('nested-inner-0')
+    const region = page.getByRole('region', { name: 'Breakdown, North' })
+    const ring = (table: Locator) => table.locator('xpath=../..').locator(':scope > .ui-table-container__ring')
+
+    await outerRow.locator(':scope > td').nth(1).hover()
+    await waitForMotion(page)
+    expect(Number(await style(outerRow.locator(':scope > td').nth(1), 'opacity', '::before'))).toBeCloseTo(0.08, 2)
+    expect(Number(await style(inner.locator('td').first(), 'opacity', '::before'))).toBe(0)
+
+    await expect(region).toHaveAttribute('tabindex', '0')
+    await outerRow.getByRole('checkbox', { name: 'North' }).focus()
+    await page.keyboard.press('Tab')
+    await expect(region).toBeFocused()
+    expect(await style(ring(inner), 'outline-style')).toBe('solid')
+    expect(await style(ring(outer), 'outline-style')).toBe('none')
   })
 
   test('a table that fits adds no tab stop', async ({ page }) => {

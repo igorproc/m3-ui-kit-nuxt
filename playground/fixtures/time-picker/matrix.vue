@@ -11,7 +11,7 @@
         <h2>{{ state.name }}</h2>
         <MTimePicker
           v-model="values[state.name]"
-          v-bind="state.props"
+          v-bind="{ ...TIME_LABELS, ...state.props }"
           :data-test="state.name"
         />
       </div>
@@ -20,6 +20,7 @@
     <div class="fixture-time-picker__wide">
       <h2>horizontal</h2>
       <MTimePicker
+        v-bind="TIME_LABELS"
         v-model="horizontal"
         layout="horizontal"
         hour-cycle="h12"
@@ -28,6 +29,7 @@
       />
       <h2>horizontal, 24-hour</h2>
       <MTimePicker
+        v-bind="TIME_LABELS"
         v-model="horizontal24"
         layout="horizontal"
         label="Select time"
@@ -40,6 +42,7 @@
       @submit.prevent="submitted = true"
     >
       <MTimePicker
+        v-bind="TIME_LABELS"
         v-model="inForm"
         hour-cycle="h12"
         name="start"
@@ -53,6 +56,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import MTimePicker from '#kit/components/ui/time-picker/index.vue'
+import { TIME_LABELS } from './labels'
 
 const states = [
   { name: 'h23-evening', props: { label: 'Select time' }, value: '21:45' },

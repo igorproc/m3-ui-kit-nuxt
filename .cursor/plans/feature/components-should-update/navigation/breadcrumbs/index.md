@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; авторский компонент кита на системе M3 (текстовые кнопки, иконки) · Токены Compose: нет · Код: `src/runtime/components/ui/breadcrumbs/`, части `src/runtime/components/fragments/breadcrumbs/{item,divider}/` ([item.md](item.md), [divider.md](divider.md)) · Аудит: `data/breadcrumbs.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-16: `nav > ol`, плоский список, `overflow: scroll | wrap` (по умолчанию scroll), текущая крошка с `aria-current="page"`, разделители скрыты от AT, без `useRoute`. Открыты: текущая отличается только оттенком, длинная крошка вылезает в wrap, кольцо фокуса обрезается в scroll, forced colors.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Ш1–Ш5: текущая 700 и forced colors, кольцо и маска края в scroll (отступы, отрицательные поля и смещение маски — в карте токенов), перенос в wrap, прокрутка к текущей, мишень 48 по блочной оси без перекрытия соседей на таче. Осталась документация (Ш6) — вне репо кита.</implementation-status>
 
 ## Вердикт
 
@@ -89,7 +89,7 @@
 3. **S — перенос в wrap** (CT-04).
 4. **S — прокрутка к текущей и намёк у края** (CT-11).
 5. **S — токены и цель** (TK-02, RS-12).
-6. **S — документация** (DC-01…05).
+6. **отложено**: документация вне репо кита (docs_v2/v3, `plans-audit-2/report.md` §6). **S — документация** (DC-01…05).
 
 ## Тесты
 

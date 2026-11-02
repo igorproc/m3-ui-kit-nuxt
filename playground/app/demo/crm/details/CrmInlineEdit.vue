@@ -55,7 +55,7 @@
       <MLoading
         v-if="tx.pending.value"
         inline
-        size="small"
+        density="compact"
         aria-label="Сохранение"
       />
       <MButtonIcon

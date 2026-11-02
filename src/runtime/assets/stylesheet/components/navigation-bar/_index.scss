@@ -4,42 +4,44 @@
 // ==========================================
 // NAVIGATION BAR M3 COMPONENT TOKENS
 // ==========================================
+// The destinations are the shared navigation item (`navigation-item/_index.scss`).
 
+$height: 64rem;
+$safe-area: (
+  bottom: env(safe-area-inset-bottom, 0rem),
+  left: env(safe-area-inset-left, 0rem),
+  right: env(safe-area-inset-right, 0rem),
+);
+
+@function centered($margin) {
+  @return (
+    margin: $margin,
+    safe-area: (
+      left: calc(#{$margin} + #{map.get($safe-area, left)}),
+      right: calc(#{$margin} + #{map.get($safe-area, right)}),
+    ),
+  );
+}
+
+// The container is flat, as in M3: no corner, no shadow, set apart by its tone.
 $tokens: (
   container: (
-    height: 80rem,
-    padding: (
-      inline: 12rem,
-      block: 8rem,
-    ),
-    shape: var(--sys-shape-corner-large),
-    color: map.get($theme-color-link, 'surface'),
-    shadow: elevation(2),
+    // M3 Expressive short bar; two-line labels grow it.
+    height: $height,
+    color: map.get($theme-color-link, 'surface-container'),
     text: (
       color: map.get($theme-color-link, 'on-surface-variant'),
     ),
+    safe-area: map.merge($safe-area, (
+      min-height: calc(#{$height} + #{map.get($safe-area, bottom)}),
+    )),
   ),
-  item: (
-    gap: 4rem,
-    padding: (
-      block: 4rem,
-    ),
-    color: map.get($theme-color-link, 'on-surface-variant'),
-    active: (
-      color: map.get($theme-color-link, 'primary'),
-    ),
-    typography: 'label-medium',
-  ),
-  label: (
-    max: (
-      width: 72rem,
-    ),
-  ),
-  icon: (
-    size: 24rem,
-  ),
-  badge: (
-    top: -12rem,
-    right: -24rem,
+  // M3 `Centered` arrangement of horizontal items: the side margin, as a share
+  // of the bar's width, by the number of destinations.
+  centered: (
+    3: centered(20%),
+    4: centered(15%),
+    5: centered(10%),
+    6: centered(5%),
   ),
 );

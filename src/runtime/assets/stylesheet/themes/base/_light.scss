@@ -1,5 +1,7 @@
 @use "../../abstracts/forward" as *;
 
+// Semantic roles are the default seeds harmonized to the fallback seed (#888).
+// `theme-definition` also covers the `system` definition.
 @include theme-definition('light', '_m3-fallback') {
   color-scheme: light;
 
@@ -53,4 +55,17 @@
   --md-sys-color-on-error: #fff;
   --md-sys-color-error-container: #ffdad6;
   --md-sys-color-on-error-container: #410002;
+  --md-sys-color-scrim: #000;
+  --md-sys-color-success: #006d43;
+  --md-sys-color-on-success: #fff;
+  --md-sys-color-success-container: #92f7bc;
+  --md-sys-color-on-success-container: #002111;
+  --md-sys-color-warning: #8c4f00;
+  --md-sys-color-on-warning: #fff;
+  --md-sys-color-warning-container: #ffdcbf;
+  --md-sys-color-on-warning-container: #2d1600;
+  --md-sys-color-info: #068;
+  --md-sys-color-on-info: #fff;
+  --md-sys-color-info-container: #c2e8ff;
+  --md-sys-color-on-info-container: #001e2b;
 }

@@ -2,7 +2,7 @@
 
 <identity>M3: Bottom sheets (standard · modal, drag handle) и Side sheets (standard · modal) · Токены Compose: `SheetBottomTokens.kt`, `ScrimTokens.kt`, `DragHandleTokens.kt` (только для сравнения, см. ниже); поведение — `BottomSheet.kt`, `ModalBottomSheet.kt`, `SheetDefaults.kt` (`BottomSheetDefaults`, `SheetValue`). У side sheets токенов в Compose 1.5 нет · Код: `src/runtime/components/ui/sheet/`, токены `src/runtime/assets/stylesheet/components/sheet/_index.scss`, слой — `components/ui/overlay/` · Аудит: `data/sheet.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Лист стоит на `MOverlay` (нативный `<dialog>`, inert, scroll lock, свайп вниз), поэтому модальная механика уже есть. Шаги 1–5 не ломают API и могут идти сразу; side sheet и стандартный вариант ждут вопросов 1–2.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделаны шаги 1, 2, 4, 5, 6: `surface-container-low`, ширина 640, ручка `on-surface-variant` и forced colors, логические свойства, `max-block-size` + прокрутка тела + safe area, имя через `ariaLabel` / `aria-labelledby` с dev-предупреждением, `cancel(swipe)` / `confirm`, reduced motion, закрытие по порогу 56 rem или скорости 125 rem/с (жест только с ручки, Q18-А). Шаг 3 (ручка-кнопка) отменён — ручка декоративна (W36-Б, B4.5e); шаги 8–9 отменены (W33-Г, W34-А, W35-А); шаг 7 (документация) — вне репо. Фикстуры `sheet/{matrix,stress}` и `sheet.e2e.ts` (17 тестов) зелёные.</implementation-status>
 
 ## Вердикт
 
@@ -176,7 +176,8 @@
    `__content`, вставка скроллбара, safe area. Закрывает CT-10, RS-08, RS-09, RS-10. Зависимости:
    нет, overlay.md, шаг 3 — дополнительная страховка. Файлы: те же плюс
    `composables/overlay/useOverlaySwipe.ts` (свайп внутри прокрученного контента).
-3. **M — ручка-кнопка.** Зона 48, `<button>` со слоем состояния (`state-opacity()`), кольцом,
+3. **M — ручка-кнопка.** **Отменено**: ручка декоративна, жест начинается только с неё (Q18-А, W36-Б,
+   B4.5e); зона 48 и пилюля 32 × 4 сделаны. Зона 48, `<button>` со слоем состояния (`state-opacity()`), кольцом,
    именем и тултипом (`MTooltip`). Тап и Enter закрывают лист. Если принят вариант 2 вопроса 3 —
    ещё и переключают высоту. Правило показа — по вопросу 4. Зависимости: вопрос 4; S1, S8. Файлы:
    `sheet/index.vue`, `sheet/props.ts`, `shared/constants/messages.ts`.
@@ -185,13 +186,15 @@
    [modals.md](modals.md). Файлы: `sheet/index.vue`, `overlay/index.vue`.
 5. **S — движение.** Reduced motion: fade вместо сдвига. Переходы остаются на `--sys-motion-*` (S4 отклонён). Файлы:
    `sheet/_index.scss`, `sheet/index.vue`.
-6. **S — жест по M3.** Порог 56 и учёт скорости (быстрый короткий взмах закрывает). Зависимости:
+6. **S — жест по M3.** Порог 56 и учёт скорости (быстрый короткий взмах закрывает). Сделано:
+   `swipeThreshold` в rem (56), скорость 125 rem/с за последние 100 мс, slop 8 rem — общее для всех
+   `closeOnSwipe` (лист и drawer). Зависимости:
    общий для всех `closeOnSwipe` — согласовать с navigation-drawer.md. Файл:
    `composables/overlay/useOverlaySwipe.ts`.
-7. **M — документация (DC-02…05).** Анатомия и токены из `_index.scss`, пропы из `mSheetProps`,
+7. **M — документация (DC-02…05).** **Отложено**: документация вне репо кита. Анатомия и токены из `_index.scss`, пропы из `mSheetProps`,
    поведение (свайп, ручка, Esc, фокус, прокрутка), что настраивается токенами.
-8. **L — side sheet.** После ответа на вопрос 1, см. раздел ниже.
-9. **M — стандартный вариант и partially expanded.** Только если вопросы 2 и 3 решены в пользу
+8. **L — side sheet.** **Отменено** (W33-Г). После ответа на вопрос 1, см. раздел ниже.
+9. **M — стандартный вариант и partially expanded.** **Отменено** (W34-А, W35-А). Только если вопросы 2 и 3 решены в пользу
    добавления.
 
 ## Тесты

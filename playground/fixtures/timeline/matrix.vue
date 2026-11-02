@@ -74,12 +74,21 @@
             title="Filled"
             text="Content on a filled surface."
             variant="filled"
+            data-test="variant-filled"
           />
           <MTimelineItem
             title="Outlined"
             text="Content on an outlined surface."
             variant="outlined"
             content-tag="article"
+            data-test="variant-outlined"
+          />
+          <MTimelineItem
+            text="A body alone on a filled surface."
+            time="09:40"
+            datetime="2026-07-12T09:40"
+            variant="filled"
+            data-test="variant-untitled"
           />
           <MTimelineItem
             title="No dot"
@@ -91,6 +100,19 @@
             title="Elevated"
             text="Content on an elevated surface."
             variant="elevated"
+            data-test="variant-elevated"
+          />
+        </MTimeline>
+      </div>
+
+      <div class="fixture-timeline__frame">
+        <h2>Every colour role</h2>
+        <MTimeline data-test="roles">
+          <MTimelineItem
+            v-for="role in roles"
+            :key="role.color"
+            v-bind="role"
+            :data-test="`role-${role.color}`"
           />
         </MTimeline>
       </div>
@@ -104,6 +126,7 @@ import MTimelineItem from '#kit/components/ui/timeline/item/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import type { MTimelineDensity, MTimelineLine, MTimelineSide } from '#kit/components/ui/timeline/props'
 import type { MColor } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 const sides: MTimelineSide[] = ['end', 'start', 'alternate']
 const lines: MTimelineLine[] = ['solid', 'dashed', 'none']
@@ -115,7 +138,7 @@ interface TimelineEvent {
   time: string
   datetime: string
   color?: MColor
-  icon?: string
+  icon?: MIconName
   status?: string
 }
 
@@ -124,6 +147,23 @@ const events: TimelineEvent[] = [
   { title: 'Packed', text: 'Warehouse north', time: '11:40', datetime: '2026-10-07T11:40', color: 'tertiary', icon: ICONS.check, status: 'Done' },
   { title: 'Delivery failed', text: 'Nobody at the address', time: '17:05', datetime: '2026-10-07T17:05', color: 'error', icon: ICONS.error, status: 'Failed' },
   { title: 'Delivered', time: 'Next day', datetime: '2026-10-08' },
+]
+
+interface TimelineRole {
+  title: string
+  color: MColor
+  icon?: MIconName
+  status?: string
+}
+
+const roles: TimelineRole[] = [
+  { title: 'Primary', color: 'primary' },
+  { title: 'Secondary', color: 'secondary' },
+  { title: 'Tertiary', color: 'tertiary' },
+  { title: 'Error', color: 'error', icon: ICONS.error, status: 'Failed' },
+  { title: 'Info', color: 'info', icon: ICONS.info, status: 'Note' },
+  { title: 'Success', color: 'success', icon: ICONS.checkCircle, status: 'Done' },
+  { title: 'Warning', color: 'warning', icon: ICONS.warning, status: 'Delayed' },
 ]
 </script>
 

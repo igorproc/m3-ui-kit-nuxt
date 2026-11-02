@@ -225,6 +225,30 @@ describe('useVirtualScroll', () => {
       expect(result.scrollOffset.value).toBe(500)
       stop()
     })
+
+    // A fractional viewport leaves the native RTL end a pixel short: Chromium
+    // reports `-159682` where the range is `159682.8`, and LTR reports `159683`.
+    it('reaches the end in RTL although the native offset stops a pixel short', () => {
+      const scroller = createScroller({ dir: 'rtl' })
+      const { result, stop } = run({ container: scroller.element, count: 100, itemSize: 20, horizontal: true })
+
+      scroller.setLeft(-1899)
+      frame()
+
+      expect(result.isAtEnd.value).toBe(true)
+      stop()
+    })
+
+    it('stays short of the end two pixels before it', () => {
+      const scroller = createScroller({ dir: 'rtl' })
+      const { result, stop } = run({ container: scroller.element, count: 100, itemSize: 20, horizontal: true })
+
+      scroller.setLeft(-1898)
+      frame()
+
+      expect(result.isAtEnd.value).toBe(false)
+      stop()
+    })
   })
 
   describe('anchoring', () => {

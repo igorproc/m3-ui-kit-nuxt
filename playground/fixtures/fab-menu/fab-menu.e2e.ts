@@ -68,6 +68,19 @@ test.describe('MFabMenu', () => {
     await expect(actions(page).first()).toBeFocused()
   })
 
+  // The drawer used to be shown a tick after the open, so the focus call met a
+  // hidden popover and stayed on the FAB.
+  test('ArrowDown on a closed FAB opens the menu on its top action', async ({ page }) => {
+    await openFixture(page, 'fab-menu/matrix')
+    const button = fab(page.getByTestId('menu-primary-end'))
+
+    await button.focus()
+    await page.keyboard.press('ArrowDown')
+
+    await expect(button).toHaveAttribute('aria-expanded', 'true')
+    await expect(actions(page).first()).toBeFocused()
+  })
+
   test('Escape closes the menu and returns focus to the FAB', async ({ page }) => {
     await openFixture(page, 'fab-menu/matrix')
     const button = fab(page.getByTestId('menu-primary-end'))

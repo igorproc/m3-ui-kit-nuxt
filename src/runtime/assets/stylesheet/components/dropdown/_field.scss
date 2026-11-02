@@ -33,4 +33,10 @@
   &__status {
     @include sr-only;
   }
+
+  // The menu's own element, teleported out of the field: `match-width` gives
+  // it the field's width inline, and this keeps a narrow field's panel readable.
+  &__menu {
+    min-width: g($t, 'panel.min-width');
+  }
 }

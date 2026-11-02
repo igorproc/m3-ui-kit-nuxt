@@ -6,6 +6,11 @@ export default {
   plugins: [
     'stylelint-scss',
   ],
+  // `playground/render` holds local design boards kept out of git via .git/info/exclude.
+  ignoreFiles: [
+    'playground/render/**',
+    'coverage/**',
+  ],
   rules: {
     'at-rule-no-unknown': null,
     'media-query-no-invalid': null,

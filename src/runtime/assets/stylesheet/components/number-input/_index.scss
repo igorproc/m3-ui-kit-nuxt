@@ -1,6 +1,7 @@
 @use 'sass:map';
 @use 'sass:math';
 @use '../../abstracts/forward.scss' as *;
+@use '../text-field/family';
 
 // ==========================================
 // NUMBER INPUT COMPONENT TOKENS
@@ -13,8 +14,8 @@
 // filled field it rests on the indicator rather than crossing it.
 // ==========================================
 
-// One source of truth for the default height: the `default` density step.
-$field-height: 56rem;
+// The box height of each density step; `default` is the family's 56.
+$heights: (compact: 44rem, default: 56rem, comfortable: 64rem);
 
 // Never thinner than one device pixel (decisions.md, hairline). Every vertical
 // sum it is part of is a calc.
@@ -27,10 +28,7 @@ $notch-padding-inline: spacing(4);
 $stepper-inset: spacing(4);
 $adornment-size: 24rem;
 $adornment-gap: spacing(8);
-
-// A leading split zone pushes the resting label past it: the zone's inset, the
-// zone itself (its size follows density) and the usual content start.
-$label-split-left: calc(#{$stepper-inset} + var(--ui-number-input-stepper-size) + #{$padding-inline});
+$adornment-clearance: $adornment-size + $adornment-gap;
 
 // The value line: one line of the input's type scale.
 $value-line: var(--md-sys-typescale-body-large-line-height);
@@ -44,16 +42,28 @@ $value-line: var(--md-sys-typescale-body-large-line-height);
 // The zones ride down with the value: a centred zone with a top margin moves
 // by half of it, so the margin is the whole top/bottom imbalance — capped at
 // the room the zone leaves in the box, so a tall zone is never pushed through
-// the indicator.
+// the indicator. A leading split zone pushes the resting label past it: the
+// zone's inset, the zone itself and the usual content start; the same clearance
+// at the trailing edge keeps a long label off the increment zone.
 @function density-step($height, $value-top, $split, $stacked) {
   $padding-top: calc(#{$value-top} - #{$hairline});
   $padding-bottom: calc(#{$height - $value-top} - #{$hairline} - #{$value-line});
   $imbalance: calc(#{$padding-top} - #{$padding-bottom});
   $content: calc(#{$height} - 2 * #{$hairline});
+  $split-left: calc(#{$stepper-inset} + #{$split} + #{$padding-inline});
 
   @return (height: $height,
-    label: (top: calc(#{$value-top} - #{$label-line-height} * #{$label-raised-scale * 0.5})),
+    label: (
+      top: calc(#{$value-top} - #{$label-line-height} * #{$label-raised-scale * 0.5}),
+      split: (left: $split-left, max-width: calc(100% - 2 * #{$split-left})),
+      // Beside a prepend as well: past the adornment and its gap.
+      split-prepend: (
+        left: calc(#{$split-left} + #{$adornment-clearance}),
+        max-width: calc(100% - 2 * #{$split-left} - #{$adornment-clearance}),
+      ),
+    ),
     input: (padding: (top: $padding-top, bottom: $padding-bottom)),
+    unit: (offset: $imbalance),
     stepper: (
       split: $split,
       stacked: $stacked,
@@ -63,6 +73,49 @@ $value-line: var(--md-sys-typescale-body-large-line-height);
       ),
     ),
   );
+}
+
+// A box is where content starts and what is measured from it: where a label
+// beside a prepend starts, how far a label on the notch may run, the outline's
+// start padding, the open notch.
+@function box($inset) {
+  @return (
+    inset: $inset,
+    label: (
+      // Beside a prepend the label starts where the value does (the text
+      // field's contract): past the adornment and its gap.
+      prepend: (left: calc(#{$inset} + #{$adornment-clearance})),
+      // On the notch the label sits above every zone, so it may run to the
+      // content end; drawn at three quarters, hence the division.
+      notch: (max-width: calc((100% - 2 * #{$inset}) / #{$label-raised-scale})),
+    ),
+    // The `<fieldset>`'s start padding puts the legend where the raised
+    // label's padding box begins.
+    outline: (start: calc(#{$inset} - #{$notch-padding-inline} - #{$hairline})),
+    notch: (open: calc(100% - #{$inset} + #{$notch-padding-inline} + #{$hairline})),
+  );
+}
+
+// An outlined box per corner and height. A large or pill corner curves past the
+// default start, and a notch cut into that curve reads as a broken corner — so
+// the content (and with it the notch) starts past the effective radius. A
+// `full` radius is capped by the box to half its height.
+@function outlined-boxes() {
+  $boxes: ();
+
+  @each $shape in family.$shapes {
+    $row: ();
+
+    @each $density, $height in $heights {
+      $radius: map.get($theme-shape-link, $shape);
+      $inset: max(#{$padding-inline}, min(#{$radius}, #{$height} / 2) + #{$notch-padding-inline});
+      $row: map.set($row, $density, box($inset));
+    }
+
+    $boxes: map.set($boxes, $shape, $row);
+  }
+
+  @return $boxes;
 }
 
 $on-surface: map.get($theme-color-link, on-surface);
@@ -94,26 +147,11 @@ $tokens: (
     max-width: calc(100% - #{2 * $padding-inline}),
     color: map.get($theme-color-link, on-surface-variant),
     transform: translateY(-50%) scale($label-raised-scale),
-    // A leading split zone pushes the resting label past it, so the two never
-    // overlap; the same clearance at the trailing edge keeps a long label off
-    // the increment zone. Raised onto the border it returns to the content
-    // start: the notch does not follow the zone.
-    split: (left: $label-split-left,
-      max-width: calc(100% - 2 * #{$label-split-left}),
-    ),
-    // Beside a prepend the label starts where the value does (the text
-    // field's contract): past the adornment and its gap.
-    prepend: (
-      left: calc(var(--ui-number-input-inset) + #{$adornment-size + $adornment-gap}),
-      max-width: calc(100% - #{2 * $padding-inline + $adornment-size + $adornment-gap}),
-      split: (
-        left: calc(#{$label-split-left} + #{$adornment-size + $adornment-gap}),
-        max-width: calc(100% - 2 * #{$label-split-left} - #{$adornment-size + $adornment-gap}),
-      ),
-    ),
-    // On the notch the label sits above every zone, so it may run to the
-    // content end; drawn at three quarters, hence the division.
-    notch: (max-width: calc((100% - 2 * var(--ui-number-input-inset)) / #{$label-raised-scale})),
+    // A split zone or a prepend beside an overlaid label moves where it starts:
+    // per density (`density.*.label.split`) and per box (`box.*.label.prepend`).
+    // Raised onto the border it returns to the content start — the notch does
+    // not follow the zone.
+    prepend: (max-width: calc(100% - #{2 * $padding-inline + $adornment-clearance})),
     required: (color: map.get($theme-color-link, error)),
   ),
   input: (
@@ -138,13 +176,6 @@ $tokens: (
     // A long unit truncates instead of squeezing the value out.
     max-width: 30%,
     caret: (size: 18rem),
-    // The chosen unit is the list's selection role plus a check: not colour
-    // alone (WCAG 1.4.1).
-    selected: (
-      container: map.get($theme-color-link, secondary-container),
-      color: map.get($theme-color-link, on-secondary-container),
-      check: (size: 20rem),
-    ),
     menu: (min-width: 96rem),
   ),
   // Stepper zones. Separated from the value by tone and corner radius — never
@@ -205,9 +236,14 @@ $tokens: (
   // compact field and a comfortable one still align their values. `compact`
   // keeps its stepper zone at 32rem, clear of the 24rem WCAG 2.5.8 floor.
   density: (
-    compact: density-step(44rem, 18rem, 32rem, 36rem),
-    default: density-step($field-height, spacing(24), 40rem, 44rem),
-    comfortable: density-step(64rem, 28rem, 40rem, 48rem),
+    compact: density-step(map.get($heights, compact), 18rem, 32rem, 36rem),
+    default: density-step(map.get($heights, default), spacing(24), 40rem, 44rem),
+    comfortable: density-step(map.get($heights, comfortable), 28rem, 40rem, 48rem),
+  ),
+  // Where content starts, per variant — and on outlined per corner and height.
+  box: (
+    filled: box($padding-inline),
+    outlined: outlined-boxes(),
   ),
   state: (
     duration: var(--sys-motion-duration-short-3),
@@ -244,26 +280,17 @@ $tokens: (
     ),
   ),
   outlined: (
-    // Where content starts. A large or pill corner curves past the default
-    // start, and a notch cut into that curve reads as a broken corner — so the
-    // content (and with it the notch) starts past the effective radius. A `full`
-    // radius is capped by the box to half its height.
-    inset: max(#{$padding-inline}, min(var(--ui-number-input-radius), var(--ui-number-input-height) / 2) + #{$notch-padding-inline}),
     // The control trades its own border for padding of the same width, so its
     // `overflow: hidden` clips at the outer edge and the outline drawn inside
     // that ring is never cut.
     frame: $hairline,
-    // The `<fieldset>` that draws the border. Its start padding puts the legend
-    // where the raised label's padding box begins.
-    outline: (padding: (start: calc(var(--ui-number-input-inset) - #{$notch-padding-inline} - #{$hairline}))),
     // The gap cut into the top border behind a raised label: the label text at
     // its raised size (a real font size — only layout size widens the gap),
-    // plus breathing room on either side.
+    // plus breathing room on either side; open, its width is the box's.
     // The resting legend is collapsed to a sliver rather than removed: the
     // notch is open or closed by placement, never by a transition.
     notch: (padding: (inline: $notch-padding-inline),
       collapsed: 0.01rem,
-      open: calc(100% - var(--ui-number-input-inset) + #{$notch-padding-inline} + #{$hairline}),
       font-size: calc(var(--md-sys-typescale-#{$label-typescale}-size) * #{$label-raised-scale}),
     ),
     // `HoverLabelColor`: outlined lifts its label with its edge on hover.

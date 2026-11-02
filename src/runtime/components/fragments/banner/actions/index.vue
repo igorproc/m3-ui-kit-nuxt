@@ -38,18 +38,18 @@ defineProps({
 
   // Logical alignment keeps RTL correct without touching DOM order.
   justify-content: flex-end;
-  gap: g($t, 'actions-gap');
+  gap: g($t, 'actions.gap');
 
   &--stacked {
     justify-content: flex-start;
-    margin-block-start: g($t, 'actions-margin-block');
+    margin-block-start: g($t, 'actions.margin.block');
   }
 
   &--auto {
     justify-content: flex-start;
-    margin-block-start: g($t, 'actions-margin-block');
+    margin-block-start: g($t, 'actions.margin.block');
 
-    @media only screen and (min-width: #{g($t, 'auto-threshold')}) {
+    @media only screen and (min-width: #{g($t, 'auto.threshold')}) {
       justify-content: flex-end;
       margin-block-start: 0;
     }

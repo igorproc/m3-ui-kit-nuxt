@@ -1,0 +1,161 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SELECTION CONTROL · SHARED PARTS
+// ==========================================
+// What `MCheckbox`, `MRadio` and `MSwitch` share, included inside each block:
+// the field row (control, label, support line), and — for the checkbox and the
+// radio — the 40 state layer with its focus ring and 48 pointer target.
+// The component map supplies the keys read here:
+//   container.size · container.gap · label.typography · label.color ·
+//   label.offset · label.required · support.inset · disabled.label ·
+//   state.layer.opacity.* · (unselected|selected|error).content.active.layer.*
+
+/// Tokens a checkbox, a radio or a switch map shares: the layer roles of M3
+/// (an unselected control presses in `primary`, a selected one in `on-surface`).
+@function control-tokens($container-size, $container-gap) {
+  $on-surface: map.get($theme-color-link, 'on-surface');
+  $primary: map.get($theme-color-link, 'primary');
+
+  @return (
+    container: (size: $container-size, gap: $container-gap),
+    label: (
+      typography: 'body-medium',
+      color: $on-surface,
+      required: map.get($theme-color-link, 'error'),
+      // Centres the control on the label's first line, however many it wraps to.
+      offset: calc((#{$container-size} - var(--md-sys-typescale-body-medium-line-height)) / 2),
+    ),
+    // The support line starts under the label text, past the control.
+    support: (inset: calc(#{$container-size} + #{$container-gap})),
+    state: (
+      layer: (
+        opacity: (hover: state-opacity(hover), focus: state-opacity(focus), pressed: state-opacity(pressed)),
+      ),
+    ),
+    unselected: (content: (active: (layer: (color: $on-surface, pressed: $primary)))),
+    selected: (content: (active: (layer: (color: $primary, pressed: $on-surface)))),
+    error: (content: (active: (layer: (color: map.get($theme-color-link, 'error'))))),
+    disabled: (label: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent)),
+  );
+}
+
+/// The row: control and label (wrapping, never squeezing the control), the
+/// required mark and the support line under the label text.
+@mixin field($t) {
+  display: inline-flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+
+  &__field {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: g($t, 'container.gap');
+    min-inline-size: 0;
+    cursor: pointer;
+  }
+
+  &__label {
+    min-inline-size: 0;
+    padding-block-start: g($t, 'label.offset');
+    overflow-wrap: anywhere;
+    color: g($t, 'label.color');
+    user-select: none;
+
+    @include typescale(g($t, 'label.typography'));
+  }
+
+  &__required {
+    color: g($t, 'label.required');
+  }
+
+  &__support {
+    padding-inline-start: g($t, 'support.inset');
+  }
+
+  &--disabled &__field {
+    cursor: default;
+  }
+
+  &--disabled &__label {
+    color: g($t, 'disabled.label');
+  }
+
+  @include forced-colors {
+    &--disabled &__label {
+      color: GrayText;
+    }
+  }
+}
+
+/// The 40 container of a checkbox or a radio: its state layer (no scale), the
+/// focus ring as a circle round it (W7-А) and the 48 target on touch.
+/// `$selected` lists the host's modifiers that mean "selected" (`checked`…).
+@mixin layer($t, $selected) {
+  &__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__container {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    inline-size: g($t, 'container.size');
+    block-size: g($t, 'container.size');
+    border-radius: var(--sys-shape-corner-full);
+
+    @include touch-target;
+  }
+
+  // The native input is transparent, so the ring goes round the visible layer.
+  &__input:focus-visible + &__container {
+    @include focus-ring;
+  }
+
+  &__state-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: g($t, 'unselected.content.active.layer.color');
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--sys-motion-duration-short-1) var(--sys-motion-easing-linear);
+  }
+
+  @include can-hover {
+    &:not(#{&}--disabled) &__field:hover &__state-layer {
+      opacity: g($t, 'state.layer.opacity.hover');
+    }
+  }
+
+  &__input:focus-visible + &__container &__state-layer {
+    opacity: g($t, 'state.layer.opacity.focus');
+  }
+
+  &:not(#{&}--disabled) &__field:active &__state-layer {
+    opacity: g($t, 'state.layer.opacity.pressed');
+    background-color: g($t, 'unselected.content.active.layer.pressed');
+  }
+
+  // Selected: hover and focus in `primary`, the press in `on-surface`.
+  @each $modifier in $selected {
+    &--#{$modifier} &__state-layer {
+      background-color: g($t, 'selected.content.active.layer.color');
+    }
+
+    &--#{$modifier}:not(#{&}--disabled) &__field:active &__state-layer {
+      background-color: g($t, 'selected.content.active.layer.pressed');
+    }
+  }
+
+  &--error &__state-layer,
+  &--error:not(#{&}--disabled) &__field:active &__state-layer {
+    background-color: g($t, 'error.content.active.layer.color');
+  }
+}

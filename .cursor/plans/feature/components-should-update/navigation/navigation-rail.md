@@ -2,7 +2,7 @@
 
 <identity>M3: Navigation rail (Expressive: wide navigation rail — collapsed / expanded / modal expanded) · Токены Compose: `NavigationRailCollapsedTokens`, `NavigationRailExpandedTokens`, `NavigationRailColorTokens`, `NavigationRailBaselineItemTokens`, `NavigationRailVerticalItemTokens`, `NavigationRailHorizontalItemTokens`, `ScrimTokens`; поведение — `WideNavigationRail.kt`, `WideNavigationRailState.kt`, `NavigationItem.kt`, baseline `NavigationRail.kt` · Код: `src/runtime/components/ui/navigation-rail/` (+ `item/`) · Аудит: `data/navigation-rail.json` · Тип: public (+ sub `MNavigationRailItem`)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Фаза C добавила кольцо фокуса, `can-hover` и forced colors; геометрия пункта, раскрытие и модальный режим не трогались.</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Общий пункт, поля 44 и промежутки 4/0 (`spacing()`), `#header` + `v-model:expanded`, ширина 256 (W64-А), режимы modal/dismissible, движение на токенах; `transition` и высоты (`calc(100dvh − …)`) — в карте, вне `m-layout` рейл берёт высоту контейнера (модификатор `--standalone`, не выше окна), кольцо фокуса крайних пунктов развёрнутого рейла не обрезается (IN-05: запас под кольцо в списке, возвращённый отрицательным полем), e2e forced colors и reduced motion. Остались ссылки `to` (B5.1a, отложено Q56-А) и документация (вне репо).</implementation-status>
 
 ## Вердикт
 
@@ -163,9 +163,9 @@ IN-01, IN-04 (кольцо есть, форма — шаг 3), LY-06, TK-04, TH-
    свёрнутый рейл-заглушка в сетке. Зависимости: вопрос 2, вопрос 1 плана `navigation-drawer.md`.
 8. **Движение** (S). Явные `transition` на токенах `--sys-motion-*`: ширина рейла, прозрачность
    подписи, рост индикатора; без пружин и FLIP. Закрывает MO-02.
-9. **Ссылки и a11y** (M). `to`, `badgeLabel`, клавиатура — общий композабл с баром. Закрывает
+9. **частично, `to` отложено** (B5.1a, Q56-А; `badgeLabel` сделан, клавиатура — W56-А). **Ссылки и a11y** (M). `to`, `badgeLabel`, клавиатура — общий композабл с баром. Закрывает
    A11-01, A11-04, A11-08.
-10. **Документация** (S). `docs/server/data/en/navigation-rail.json`: убрать несуществующие `fabIcon`
+10. **отложено**: документация вне репо кита (docs_v2/v3, `plans-audit-2/report.md` §6). **Документация** (S). `docs/server/data/en/navigation-rail.json`: убрать несуществующие `fabIcon`
     и слоты `top/bottom`, описать режимы, раскрытие, клавиатуру (DC-02…05).
 
 ## Тесты

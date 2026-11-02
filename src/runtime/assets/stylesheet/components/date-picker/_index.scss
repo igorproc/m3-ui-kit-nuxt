@@ -13,6 +13,13 @@ $on-surface: map.get($theme-color-link, on-surface);
 $on-surface-variant: map.get($theme-color-link, on-surface-variant);
 $primary: map.get($theme-color-link, primary);
 $on-primary: map.get($theme-color-link, on-primary);
+
+// What is disabled recedes by its colour role (Compose: each colour at 38%),
+// never by opacity, which would fade a focus ring or a mark along with it.
+@function disabled($color) {
+  @return color-mix(in srgb, #{$color} state-opacity(disabled-content), transparent);
+}
+
 $cell: 48rem;
 $day: 40rem;
 $hairline: max(1px, 1rem);
@@ -48,7 +55,7 @@ $tokens: (
     typography: 'label-large',
     toggle: (padding: spacing(12)),
   ),
-  weekday: (typography: 'body-large', color: $on-surface, height: $cell),
+  weekday: (typography: 'body-large', color: $on-surface, height: $cell, disabled: (color: disabled($on-surface))),
   grid: (cell: $cell, rows: 6),
   day: (
     size: $day,
@@ -56,8 +63,12 @@ $tokens: (
     typography: 'body-large',
     color: $on-surface,
     today: (color: $primary, outline: (color: $primary, width: $hairline)),
-    selected: (container: $primary, color: $on-primary),
-    disabled: (opacity: state-opacity(disabled-content)),
+    selected: (container: (color: $primary), content: (color: $on-primary)),
+    disabled: (
+      color: disabled($on-surface),
+      today: disabled($primary),
+      selected: (container: (color: disabled($primary)), content: (color: disabled($on-primary))),
+    ),
   ),
   year: (
     width: 72rem,
@@ -68,7 +79,12 @@ $tokens: (
     typography: 'body-large',
     color: $on-surface-variant,
     current: (color: $primary, outline: (color: $primary, width: $hairline)),
-    selected: (container: $primary, color: $on-primary),
+    selected: (container: (color: $primary), content: (color: $on-primary)),
+    disabled: (
+      color: disabled($on-surface-variant),
+      current: disabled($primary),
+      selected: (container: (color: disabled($primary)), content: (color: disabled($on-primary))),
+    ),
     // The list is as tall as the day grid (weekdays and six weeks), so
     // switching views keeps the height.
     height-total: $cell * 7,

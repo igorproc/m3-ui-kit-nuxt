@@ -125,6 +125,15 @@ test.describe('MHotkey', () => {
     await expect(modifier).not.toHaveClass(/ui-hotkey__key--pressed/)
   })
 
+  // B9.4: `1rem` falls below a device pixel on a narrow screen; the hairline keeps one.
+  test('a keycap edge keeps at least one pixel on a narrow screen', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 })
+    await openFixture(page, 'hotkey/matrix')
+    const enabled = keycaps(page.getByTestId('mod-k-enabled-windows')).first()
+
+    expect(Number.parseFloat(await style(enabled, 'border-top-width'))).toBeGreaterThanOrEqual(1)
+  })
+
   test('keycaps keep a boundary and their states in forced-colors mode', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active' })
     await openFixture(page, 'hotkey/matrix')
@@ -139,10 +148,8 @@ test.describe('MHotkey', () => {
     const idle = await style(live, 'background-color')
     await page.keyboard.down(key)
     await expect(live).toHaveClass(/ui-hotkey__key--pressed/)
-    const pressed = await style(live, 'background-color')
+    await expect.poll(() => style(live, 'background-color')).not.toBe(idle)
     await page.keyboard.up(key)
-
-    expect(pressed).not.toBe(idle)
   })
 
   test('the server draws the mac form when the request names macOS', async ({ request }) => {

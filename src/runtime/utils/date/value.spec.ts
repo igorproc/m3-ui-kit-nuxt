@@ -23,6 +23,19 @@ describe('date model values', () => {
     expect(toModelValue(new Date(2026, 9, 20), like)).toEqual(expected)
   })
 
+  // N.7 (Q51-Б): an empty model has no type to keep; the field says which it wants.
+  it.each([
+    ['date', new Date(2026, 9, 20)],
+    ['string', '2026-10-20'],
+    ['number', new Date(2026, 9, 20).getTime()],
+  ] as const)('writes an empty model as the asked %s', (type, expected) => {
+    expect(toModelValue(new Date(2026, 9, 20), null, type)).toEqual(expected)
+  })
+
+  it('keeps the type of a model that has one over the asked type', () => {
+    expect(toModelValue(new Date(2026, 9, 20), new Date(2026, 0, 1), 'string')).toEqual(new Date(2026, 9, 20))
+  })
+
   it('writes nothing for no date', () => {
     expect(toModelValue(null, '2026-10-14')).toBeNull()
   })

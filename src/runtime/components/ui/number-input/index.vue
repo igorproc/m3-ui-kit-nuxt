@@ -82,7 +82,7 @@
         </span>
       </div>
 
-      <MNumberInputUnit
+      <NumberInputUnit
         v-if="hasUnit"
         v-model="unitModel"
         :units="units"
@@ -94,7 +94,7 @@
           v-if="$slots.unit"
           name="unit"
         />
-      </MNumberInputUnit>
+      </NumberInputUnit>
 
       <slot
         v-if="controls === 'split'"
@@ -184,7 +184,7 @@
 <script setup lang="ts">
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import MNumberInputUnit from './unit.vue'
+import NumberInputUnit from '#kit/components/fragments/number-input/Unit.vue'
 import { useNumberInputControl } from '#kit/composables/number-input/useNumberInputControl'
 import { mNumberInputProps } from './props'
 import type { MNumberInputSlots } from './props'
@@ -240,6 +240,17 @@ if (import.meta.dev) {
   if (!props.label && !attrs['aria-label'] && !attrs['aria-labelledby']) {
     console.warn('[m-number-input] has no accessible name: pass `label`, `aria-label` or `aria-labelledby`.')
   }
+
+  // The kit ships no English copy for its own buttons either.
+  watchEffect(() => {
+    const steppers = (props.controls === 'split' || props.controls === 'stacked') && !(slots.increment && slots.decrement)
+    if (steppers && !(props.incrementLabel && props.decrementLabel)) {
+      console.warn('[m-number-input] the stepper buttons have no accessible name: pass `increment-label` and `decrement-label`.')
+    }
+    if (props.units?.length && !props.unitLabel) {
+      console.warn('[m-number-input] the unit menu says only the unit it shows: pass `unit-label` for what it does.')
+    }
+  })
 }
 
 // The whole box is the input's hit target; zones, the unit and the scrub
@@ -293,16 +304,14 @@ defineExpose({ control, input: element })
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/number-input' as t;
-@use '#kit/assets/stylesheet/components/text-field/family' as family;
 @use '#kit/assets/stylesheet/components/number-input/label' as label;
+@use '#kit/assets/stylesheet/components/number-input/control' as control;
 @use '#kit/assets/stylesheet/components/number-input/zones' as zones;
 @use '#kit/assets/stylesheet/components/number-input/states' as states;
 @use '#kit/assets/stylesheet/components/number-input/parts' as parts;
 
 .ui-number-input {
   $t: material-map(t.$tokens, 'm-number-input');
-
-  --ui-number-input-inset: #{g($t, 'container.padding.inline')};
 
   position: relative;
   isolation: isolate;
@@ -311,90 +320,8 @@ defineExpose({ control, input: element })
   gap: g($t, 'container.gap');
   min-width: 0;
 
-  @include parts.axes($t);
-
-  &--outlined {
-    --ui-number-input-inset: #{g($t, 'outlined.inset')};
-  }
-
   @include label.label($t);
-
-  // ── container · owns the border and the surface ──
-  // `align-items: stretch` is what makes the stepper zones full-height, and
-  // `overflow: hidden` is what makes their edges follow the corner radius.
-  &__control {
-    position: relative;
-
-    // Contains the filled state layer, so its negative z-index cannot slip
-    // behind an ancestor's background.
-    isolation: isolate;
-    display: flex;
-    align-items: stretch;
-
-    // A height, not a floor: a 1rem border below one CSS pixel is drawn a
-    // whole pixel wide, and a floor would let the value's line box push the
-    // field a design pixel past the text field beside it.
-    height: var(--ui-number-input-height);
-    overflow: hidden;
-    border: g($t, 'container.border.width') solid g($t, 'container.border.color');
-    border-radius: var(--ui-number-input-radius);
-    background-color: g($t, 'container.surface');
-    transition:
-      border-color g($t, 'state.duration') g($t, 'state.easing'),
-      background-color g($t, 'state.duration') g($t, 'state.easing');
-  }
-
-  &__body {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    gap: g($t, 'adornment.gap');
-    min-width: 0;
-    padding-inline: var(--ui-number-input-inset);
-  }
-
-  // A zone at an edge takes the corner, so the content beside it keeps the
-  // default start instead of clearing the curve.
-  &--split .ui-number-input__body {
-    padding-inline: g($t, 'container.padding.inline');
-  }
-
-  &--stacked .ui-number-input__body,
-  &--unit .ui-number-input__body {
-    padding-inline-end: g($t, 'container.padding.inline');
-  }
-
-  &__input {
-    flex: 1;
-    min-width: 0;
-    padding: 0;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    color: g($t, 'input.color');
-    caret-color: g($t, 'input.caret.color');
-
-    // Spec rule: numeric values use tabular figures so digits never shift width
-    // while stepping.
-    font-variant-numeric: tabular-nums;
-
-    @include typescale(g($t, 'typography.input'));
-
-    &::placeholder {
-      color: g($t, 'input.placeholder.color');
-    }
-
-    @include family.autofill($t);
-  }
-
-  &__adornment {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    color: g($t, 'adornment.color');
-    font-size: g($t, 'adornment.size');
-  }
-
+  @include control.control($t);
   @include zones.zones($t);
   @include parts.support($t);
   @include states.states($t);

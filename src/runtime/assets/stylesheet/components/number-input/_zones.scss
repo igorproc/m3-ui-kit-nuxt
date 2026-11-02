@@ -1,4 +1,5 @@
 @use '../../abstracts/forward.scss' as *;
+@use '../text-field/family';
 
 // ==========================================
 // NUMBER INPUT · STEPPER ZONES AND SCRUB HANDLE
@@ -7,6 +8,22 @@
 // box: its own surface tone, its own corner radius, inset from the container
 // edge. Material has no hairline inside a control — that is what made the
 // field read as a form toolkit (craft.md §1).
+
+// A zone's corner per step of the box's shape: all four, or only the `top` or
+// `bottom` pair — the halves of the stacked column meet flat at the seam.
+@mixin zone-radius($t, $edge: all) {
+  @include family.steps('number-input', $shape: true) using ($shape) {
+    $radius: g($t, 'stepper.radius.#{$shape}');
+
+    @if $edge == top {
+      border-radius: $radius $radius 0 0;
+    } @else if $edge == bottom {
+      border-radius: 0 0 $radius $radius;
+    } @else {
+      border-radius: $radius;
+    }
+  }
+}
 
 @mixin zones($t) {
   &__stepper {
@@ -19,10 +36,13 @@
     overflow: hidden;
     padding: 0;
     border: none;
-    border-radius: var(--ui-number-input-zone-radius);
     background-color: g($t, 'stepper.surface');
     color: g($t, 'stepper.color');
     cursor: pointer;
+
+    // The zones ride the box's shape axis, one tier rounder — so `shape="full"`
+    // turns them into pills without a second visual language to maintain.
+    @include zone-radius($t);
 
     // MD3 state layer: an overlay in the element's own ink, so the tone below
     // keeps showing through. A background swap would replace it instead.
@@ -55,10 +75,13 @@
   }
 
   &--split .ui-number-input__stepper {
-    width: var(--ui-number-input-stepper-size);
-    height: var(--ui-number-input-stepper-size);
     margin-inline: g($t, 'stepper.inset');
     font-size: g($t, 'stepper.split.size');
+
+    @include family.steps('number-input', $density: true) using ($density) {
+      width: g($t, 'density.#{$density}.stepper.split');
+      height: g($t, 'density.#{$density}.stepper.split');
+    }
   }
 
   // One column of arrows at the trailing edge, halved by a gap rather than by a
@@ -70,9 +93,13 @@
     align-self: center;
     gap: g($t, 'container.border.width');
     width: g($t, 'stepper.stacked.width');
-    height: var(--ui-number-input-stacked-height);
     margin-inline: g($t, 'stepper.inset');
-    border-radius: var(--ui-number-input-zone-radius);
+
+    @include family.steps('number-input', $density: true) using ($density) {
+      height: g($t, 'density.#{$density}.stepper.stacked');
+    }
+
+    @include zone-radius($t);
 
     .ui-number-input__stepper {
       flex: 1;
@@ -83,11 +110,11 @@
     }
 
     .ui-number-input__stepper--increment {
-      border-radius: var(--ui-number-input-zone-radius) var(--ui-number-input-zone-radius) 0 0;
+      @include zone-radius($t, top);
     }
 
     .ui-number-input__stepper--decrement {
-      border-radius: 0 0 var(--ui-number-input-zone-radius) var(--ui-number-input-zone-radius);
+      @include zone-radius($t, bottom);
     }
   }
 
@@ -115,9 +142,9 @@
     cursor: ew-resize;
     user-select: none;
 
-    // The gesture owns horizontal pointer movement; without this a touch drag
-    // scrolls the page instead of changing the value.
-    touch-action: none;
+    // The gesture owns horizontal travel only: a touch drag along the line
+    // changes the value, a vertical swipe over the label still scrolls the page.
+    touch-action: pan-y;
 
     @include typescale(g($t, 'typography.scrub'));
   }

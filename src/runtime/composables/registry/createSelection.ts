@@ -19,8 +19,9 @@
  * selection.select(a.id)
  * ```
  */
-import { toRaw, toValue, useId } from 'vue'
+import { toRaw, toValue } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
+import { createTicketIds } from '#kit/utils/registry/internals'
 import { useContext } from '#kit/shared/utils/context/createContext'
 import { createTrinity } from '#kit/shared/utils/context/createTrinity'
 import type { ContextTrinity } from '#kit/shared/utils/context/createTrinity'
@@ -86,6 +87,7 @@ export function createSelection<
   } = _options
 
   const model = createModel<Z, E>({ ...options, multiple, enroll: false })
+  const nextId = createTicketIds()
 
   function seek(direction: 'first' | 'last' = 'first', from?: number): E | undefined {
     return model.seek(direction, from, (ticket: E) => !toValue(ticket.disabled))
@@ -141,7 +143,7 @@ export function createSelection<
   }
 
   function register(registration: Partial<Z> = {}): E {
-    const id = registration.id ?? useId()
+    const id = nextId(registration.id)
     const decorated: Partial<Z> = {
       select: () => model.select(id),
       unselect: () => unselect(id),

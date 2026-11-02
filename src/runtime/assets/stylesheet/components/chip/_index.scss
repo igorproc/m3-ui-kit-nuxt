@@ -1,45 +1,97 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
+// ==========================================
+// CHIP M3 COMPONENT TOKENS
+// ==========================================
+// Compose `AssistChipTokens`, `FilterChipTokens`, `InputChipTokens`,
+// `SuggestionChipTokens`; paddings from `Chip.kt`. One state layer in the
+// content colour serves every type, the selection and both variants.
+
+$on-surface: map.get($theme-color-link, 'on-surface');
+$on-surface-variant: map.get($theme-color-link, 'on-surface-variant');
+$primary: map.get($theme-color-link, 'primary');
+$on-secondary-container: map.get($theme-color-link, 'on-secondary-container');
+$disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$disabled-container: color-mix(in srgb, #{$on-surface} state-opacity(disabled-container), transparent);
 $tokens: (
-  height: 32rem,
-  padding: (inline: 12rem),
-  radius: 8rem,
-  gap: 8rem,
-
-  text: (
-    type: 'label-large',
-    color: (
-      variant: map.get($theme-color-link, 'on-surface-variant'),
-      default: map.get($theme-color-link, 'on-surface'),
-      selected: map.get($theme-color-link, 'on-primary-container'),
+  height: spacing(32),
+  radius: map.get($theme-shape-link, 'small'),
+  gap: spacing(8),
+  // Start / end padding by what stands at the edge (`Chip.kt` content paddings).
+  padding: (
+    plain: spacing(16),
+    beside: spacing(8),
+    input: (plain: spacing(12), avatar: spacing(4)),
+  ),
+  text: (type: 'label-large'),
+  // The label role per type.
+  label: (
+    assist: $on-surface,
+    filter: $on-surface-variant,
+    input: $on-surface-variant,
+    suggestion: $on-surface-variant,
+  ),
+  // The leading icon role per type.
+  icon: (
+    size: 18rem,
+    assist: $primary,
+    filter: $primary,
+    input: $on-surface-variant,
+    suggestion: $primary,
+  ),
+  avatar: (size: spacing(24), shape: map.get($theme-shape-link, 'full')),
+  outlined: (
+    // Hairline: `1rem` falls below a device pixel on narrow screens.
+    width: max(1px, 1rem),
+    color: map.get($theme-color-link, 'outline-variant'),
+    // A focused flat chip darkens its edge as well as drawing the ring.
+    focus: (assist: $on-surface, other: $on-surface-variant),
+  ),
+  elevated: (
+    color: map.get($theme-color-link, 'surface-container-low'),
+    rest: elevation(1),
+    hover: elevation(2),
+    pressed: elevation(1),
+  ),
+  // A selected chip takes its container's on-role; an input chip keeps its
+  // leading icon in `primary`.
+  selected: (
+    container: (
+      color: map.get($theme-color-link, 'secondary-container'),
+      // A selected flat chip lifts on hover (`FlatSelectedHoverContainerElevation`).
+      elevation: (hover: elevation(1)),
+    ),
+    content: (
+      color: $on-secondary-container,
+      icon: (color: $on-secondary-container, input: $primary),
     ),
   ),
-  bg: (
-    color: (
-      default: map.get($theme-color-link, 'surface-container-highest'),
-      suggestion: map.get($theme-color-link, 'surface-container-low'),
-      selected: map.get($theme-color-link, 'secondary-container'),
-    ),
-  ),
-  border: (
-    width: 1rem,
-    color: (default: map.get($theme-color-link, 'outline')),
-  ),
-
-  icon: (size: 18rem),
-
   state: (
     layer: (
       opacity: (
         hover: state-opacity(hover),
+        focus: state-opacity(focus),
         active: state-opacity(pressed),
       ),
     ),
   ),
-  disabled: (opacity: state-opacity(disabled-content)),
+  disabled: (
+    content: $disabled-content,
+    outline: $disabled-container,
+    container: $disabled-container,
+  ),
   // Reached the group `max`: unavailable for selection, but not disabled, so it
   // stays more legible than a disabled chip.
   blocked: (opacity: 0.6),
-  suggestion: (shadow: elevation(1)),
+  remove: (
+    // The remove action's own round layer, as wide as a 18 glyph plus a ring of air.
+    layer: (size: calc(18rem + #{spacing(8)})),
+  ),
+  motion: (
+    // The checkmark grows in slowly and leaves fast (material-web filter chip).
+    enter: (duration: var(--sys-motion-duration-medium-1), easing: var(--sys-motion-easing-emphasized-decelerate)),
+    exit: (duration: var(--sys-motion-duration-short-3), easing: var(--sys-motion-easing-emphasized-accelerate)),
+    state: (duration: var(--sys-motion-duration-short-3), easing: var(--sys-motion-easing-standard)),
+  ),
 );

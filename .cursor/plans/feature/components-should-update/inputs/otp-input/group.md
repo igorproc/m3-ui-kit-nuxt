@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 — часть авторского [MOtpInput](index.md) · Токены Compose: нет · Код: `span.ui-otp-input__group` в `src/runtime/components/ui/otp-input/index.vue:14-58` (вложенный `v-for` по `groups: OtpCell[][]`), диапазоны — `useOtpValue.ranges` (`src/runtime/composables/otp-input/useOtpValue.ts:91-109`), токены `root.gap` / `group.gap` в `src/runtime/assets/stylesheet/components/otp-input/_index.scss:7-12` · Аудит: `data/otp-input.json` (общий) · Тип: часть компонента, не компонент</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано в шаге 1 семейства (`min-width: 0`, раскладка группы).</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано в шаге 1 семейства (`min-width: 0`, раскладка группы). Фаза 2 (2026-10-30): сжатые ячейки — квадрат (`min-height: 0` снимает автоминимум блока с `aspect-ratio` по содержимому); e2e «squeezed cells stay square».</implementation-status>
 
 ## Вердикт
 

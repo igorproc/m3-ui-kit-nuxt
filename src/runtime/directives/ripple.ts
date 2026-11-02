@@ -11,6 +11,23 @@ interface RippleOptions {
 
 type RippleEvent = (MouseEvent | TouchEvent | KeyboardEvent) & { [stopSymbol]?: boolean }
 
+/** Per-element ripple state, kept on the element itself between events. */
+interface RippleData {
+  enabled?: boolean
+  centered?: boolean
+  circle?: boolean
+  touched?: boolean
+  isTouch?: boolean
+  class?: string
+  showTimer?: number
+  showTimerCommit?: (() => void) | null
+  keyDownHandler?: (e: KeyboardEvent) => void
+  /** A key holds this element's ripple: auto-repeat must not stack more. */
+  keyboardActive?: boolean
+}
+
+type RippleElement = HTMLElement & { _ripple?: RippleData }
+
 const DELAY_RIPPLE = 80
 
 function transform(el: HTMLElement, value: string) {
@@ -59,9 +76,6 @@ const calculate = (e: RippleEvent, el: HTMLElement, value: RippleOptions = {}) =
   const radius = (maxRadius + softEdgeSize) / 2
   const scale = (maxDim * 0.2) / (radius * 2)
 
-  // @ts-expect-error custom property
-  const rippleData = el._ripple
-
   const centerX = `${(el.clientWidth - (radius * 2)) / 2}px`
   const centerY = `${(el.clientHeight - (radius * 2)) / 2}px`
 
@@ -72,8 +86,7 @@ const calculate = (e: RippleEvent, el: HTMLElement, value: RippleOptions = {}) =
 }
 
 const ripples = {
-  show(e: RippleEvent, el: HTMLElement, value: RippleOptions = {}) {
-    // @ts-expect-error custom property
+  show(e: RippleEvent, el: RippleElement, value: RippleOptions = {}) {
     const rippleData = el._ripple
     if (!rippleData?.enabled) {
       return
@@ -118,9 +131,8 @@ const ripples = {
     })
   },
 
-  hide(el: HTMLElement | null) {
+  hide(el: RippleElement | null) {
     if (!el) return
-    // @ts-expect-error custom property
     const rippleData = el._ripple
     if (!rippleData?.enabled) return
 
@@ -152,15 +164,13 @@ const ripples = {
   },
 }
 
-function isRippleEnabled(value: any) {
+function isRippleEnabled(value: unknown) {
   return typeof value === 'undefined' || !!value
 }
 
 function rippleShow(e: RippleEvent) {
   const value: RippleOptions = {}
-  const element = e.currentTarget as HTMLElement | undefined
-
-  // @ts-expect-error custom property
+  const element = e.currentTarget as RippleElement | undefined
   const rippleData = element?._ripple
   if (!rippleData || rippleData.touched || e[stopSymbol]) return
 
@@ -185,11 +195,8 @@ function rippleShow(e: RippleEvent) {
       ripples.show(e, element!, value)
     }
     rippleData.showTimer = window.setTimeout(() => {
-      // @ts-expect-error custom property
       if (element?._ripple?.showTimerCommit) {
-        // @ts-expect-error custom property
         element._ripple.showTimerCommit()
-        // @ts-expect-error custom property
         element._ripple.showTimerCommit = null
       }
     }, DELAY_RIPPLE)
@@ -203,9 +210,8 @@ function rippleStop(e: RippleEvent) {
 }
 
 function rippleHide(e: Event) {
-  const element = e.currentTarget as HTMLElement | null
+  const element = e.currentTarget as RippleElement | null
   if (!element) return
-  // @ts-expect-error custom property
   const rippleData = element._ripple
   if (!rippleData) return
 
@@ -222,9 +228,7 @@ function rippleHide(e: Event) {
   }
 
   window.setTimeout(() => {
-    // @ts-expect-error custom property
     if (element._ripple) {
-      // @ts-expect-error custom property
       element._ripple.touched = false
     }
   })
@@ -232,8 +236,7 @@ function rippleHide(e: Event) {
 }
 
 function rippleCancelShow(e: MouseEvent | TouchEvent) {
-  const element = e.currentTarget as HTMLElement | undefined
-  // @ts-expect-error custom property
+  const element = e.currentTarget as RippleElement | undefined
   const rippleData = element?._ripple
   if (!rippleData) return
 
@@ -244,38 +247,38 @@ function rippleCancelShow(e: MouseEvent | TouchEvent) {
   window.clearTimeout(rippleData.showTimer)
 }
 
-let keyboardRipple = false
+const rippleDataOf = (e: Event) => (e.currentTarget as RippleElement | null)?._ripple
 
 function keyboardRippleShow(e: KeyboardEvent, keys: string[]) {
-  if (!keyboardRipple && keys.includes(e.key)) {
-    keyboardRipple = true
-    rippleShow(e as RippleEvent)
-  }
+  const rippleData = rippleDataOf(e)
+  if (!rippleData || rippleData.keyboardActive || !keys.includes(e.key)) return
+
+  rippleData.keyboardActive = true
+  rippleShow(e as RippleEvent)
 }
 
 function keyboardRippleHide(e: KeyboardEvent) {
-  keyboardRipple = false
+  const rippleData = rippleDataOf(e)
+  if (rippleData) rippleData.keyboardActive = false
   rippleHide(e as Event)
 }
 
 function focusRippleHide(e: FocusEvent) {
-  if (keyboardRipple) {
-    keyboardRipple = false
-    rippleHide(e as Event)
-  }
+  const rippleData = rippleDataOf(e)
+  if (!rippleData?.keyboardActive) return
+
+  rippleData.keyboardActive = false
+  rippleHide(e as Event)
 }
 
-function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabled: boolean) {
+function updateRipple(el: RippleElement, binding: RippleDirectiveBinding, wasEnabled: boolean) {
   const { value, modifiers } = binding
 
   const enabled = isRippleEnabled(value)
   if (!enabled) {
     ripples.hide(el)
   }
-
-  // @ts-expect-error custom property
-  const rippleData = el._ripple ?? {}
-  // @ts-expect-error custom property
+  const rippleData: RippleData = el._ripple ?? {}
   el._ripple = rippleData
 
   rippleData.enabled = enabled
@@ -283,11 +286,12 @@ function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabl
   rippleData.circle = modifiers.circle
 
   const bindingValue = typeof value === 'object' && value !== null ? value : {}
-  if ((bindingValue as any).class) {
-    rippleData.class = (bindingValue as any).class
+  if (bindingValue.class) {
+    rippleData.class = bindingValue.class
   }
 
-  const allowedKeys = (bindingValue as any).keys ?? ['Enter', 'Space']
+  // A Space keydown reports `key: ' '`; the name `'Space'` is accepted for it.
+  const allowedKeys = (bindingValue.keys ?? ['Enter', ' ']).map(key => (key === 'Space' ? ' ' : key))
 
   if (enabled && !wasEnabled) {
     if (modifiers.stop) {
@@ -325,7 +329,7 @@ function updateRipple(el: HTMLElement, binding: RippleDirectiveBinding, wasEnabl
   }
 }
 
-function removeListeners(el: HTMLElement) {
+function removeListeners(el: RippleElement) {
   el.removeEventListener('touchstart', rippleStop)
   el.removeEventListener('mousedown', rippleStop)
 
@@ -337,8 +341,6 @@ function removeListeners(el: HTMLElement) {
   el.removeEventListener('mousedown', rippleShow)
   el.removeEventListener('mouseup', rippleHide)
   el.removeEventListener('mouseleave', rippleHide)
-
-  // @ts-expect-error custom property
   const rippleData = el._ripple
   if (rippleData?.keyDownHandler) {
     el.removeEventListener('keydown', rippleData.keyDownHandler)
@@ -357,11 +359,9 @@ export const ripple = {
   mounted(el: HTMLElement, binding: RippleDirectiveBinding) {
     updateRipple(el, binding, false)
   },
-  unmounted(el: HTMLElement) {
+  unmounted(el: RippleElement) {
     removeListeners(el)
-    // @ts-expect-error custom property
     window.clearTimeout(el._ripple?.showTimer)
-    // @ts-expect-error custom property
     delete el._ripple
   },
   updated(el: HTMLElement, binding: RippleDirectiveBinding) {

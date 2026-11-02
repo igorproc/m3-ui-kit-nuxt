@@ -4,7 +4,7 @@
  * @remarks
  * Internal core of the button family (`MButton`, `MButtonFab`,
  * `MButtonExtendedFab`): native-button vs Nuxt-link root, the
- * `disabled || loading` state, the toggle (`selected`) state, the ARIA/link
+ * `disabled || softDisabled || loading` state, the toggle (`selected`) state, the ARIA/link
  * attributes, the ripple gate, and the BEM class group. It lives in `utils/`
  * (no auto-import) because it hands out the kit's own class names — the
  * escape hatch for a button is the native `<button>`.
@@ -18,6 +18,8 @@ import { linkAttrs, linkTag } from '#kit/utils/link'
 
 export interface UseButtonProps {
   disabled?: boolean
+  /** Disabled that keeps the Tab stop: `aria-disabled`, activation swallowed. */
+  softDisabled?: boolean
   loading?: boolean
   variant?: string
   color?: string
@@ -44,8 +46,11 @@ export function useButton(options: UseButtonOptions) {
   const { block, props } = options
 
   const isLink = computed(() => props.tag === 'link')
-  const isDisabled = computed(() => Boolean(props.disabled) || Boolean(props.loading))
-  const isToggle = computed(() => props.selected !== undefined)
+  // Inert but still focusable: loading, or soft-disabled without a real `disabled`.
+  const isFocusableInert = computed(() => !props.disabled && (Boolean(props.loading) || Boolean(props.softDisabled)))
+  const isDisabled = computed(() => Boolean(props.disabled) || isFocusableInert.value)
+  // A link navigates and has no pressed state to announce, so it is never a toggle.
+  const isToggle = computed(() => !isLink.value && props.selected !== undefined)
   const isDisabledLink = computed(() => isLink.value && Boolean(props.disabled))
   const tag = computed<Component | string>(() => isLink.value ? linkTag(Boolean(props.disabled)) : 'button')
 
@@ -70,37 +75,37 @@ export function useButton(options: UseButtonOptions) {
     return classes
   })
 
-  // A loading button is inert but keeps focus: a native `disabled` would throw
-  // focus to <body> the moment the work starts. Only a real `disabled` button
-  // leaves the tab order.
+  // A loading or soft-disabled button is inert but keeps focus: a native
+  // `disabled` would throw focus to <body> the moment the work starts or the
+  // last page is reached. Only a real `disabled` button leaves the tab order.
   const rootAttrs = computed<Record<string, unknown>>(() => {
     const attrs: Record<string, unknown> = {
       'aria-busy': props.loading ? 'true' : undefined,
-      'onClickCapture': swallowWhileLoading,
+      'onClickCapture': swallowWhileInert,
       'onClick': toggle,
     }
 
     // A disabled link loses its destination (the kit's one disabled-link
-    // behaviour, `utils/link`); a loading one keeps it and its Tab stop, and
-    // its activation is swallowed like a loading button's.
+    // behaviour, `utils/link`); a loading or soft-disabled one keeps it and its
+    // Tab stop, and its activation is swallowed like a loading button's.
     if (isLink.value) {
       Object.assign(attrs, linkAttrs(props.to, Boolean(props.disabled)))
-      if (props.loading && !props.disabled) attrs['aria-disabled'] = 'true'
+      if (isFocusableInert.value) attrs['aria-disabled'] = 'true'
       return attrs
     }
 
     attrs.type = props.type ?? 'button'
     attrs.disabled = Boolean(props.disabled)
-    attrs['aria-disabled'] = props.loading && !props.disabled ? 'true' : undefined
+    attrs['aria-disabled'] = isFocusableInert.value ? 'true' : undefined
     attrs['aria-pressed'] = isToggle.value ? String(Boolean(props.selected)) : undefined
     return attrs
   })
 
   // Capture on the root runs before any click listener the consumer attached to
-  // it, so a keyboard activation of a loading button reaches no handler, no form
+  // it, so a keyboard activation of an inert button reaches no handler, no form
   // submit and no navigation.
-  function swallowWhileLoading(event: Event) {
-    if (!props.loading) return
+  function swallowWhileInert(event: Event) {
+    if (!props.loading && !props.softDisabled) return
 
     event.preventDefault()
     event.stopImmediatePropagation()

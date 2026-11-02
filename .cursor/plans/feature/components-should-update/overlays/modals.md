@@ -4,6 +4,8 @@
 Area: existing modal infrastructure · Update targets: `useModal`, Nuxt plugin, `MDialog`, modal `MSheet`, overlay host · Depends on: `feature/components-should-update/overlays/overlay.md`
 </identity>
 
+<implementation-status state="done" updated="2026-10-30">Сервис — `useNuxtApp().$material.modal` (не `$modals`: сервисы кита живут на `$material`), хэндл — `useModal()`. Сделаны migration 1, 3, 5, 6 и `<service-api>`: `open(component, { props, slots, parent })` → `Promise<ModalResult>` (одноразовый; `open(id)` для зарегистрированных остаётся), `closeTop(reason)` и `closeAll(reason)` закрывают и `persistent` (W43-А), причина доходит до результата программной модалки; пресеты `confirm` / `alert` (W42-А). Migration 2, 4, 7 отменены (VFM удалён, шимов нет). Тесты: конкурирующие события, вложенность (`parent-closed`, возврат фокуса в родителя), `closeAll` + `persistent`, безопасный SSR-хост — `createModalService.spec.ts`.</implementation-status>
+
 <problem>
 Декларативный `v-model` удобен для dialog, который является частью состояния страницы, но одноразовые confirm/alert/quick-form сценарии заставляют заранее размещать экземпляры dialog в template и обслуживать лишние refs.
 
@@ -133,12 +135,12 @@ const shouldDelete = await $modals.confirm({
 
 <migration>
 1. Ввести типы `ModalResult`, `ModalDismissReason`, `ModalService` и behavioral tests.
-2. Реализовать service поверх текущего VFM mounting adapter без изменения overlay visuals.
+2. Реализовать service поверх текущего VFM mounting adapter без изменения overlay visuals. **Отменено**: VFM удалён целиком.
 3. Инъецировать `$modals` и добавить `useModals()` с capture ближайшего context.
-4. Перевести `openModal()` в deprecated compatibility wrapper. Wrapper должен честно документировать legacy return; новые вызовы используют service result.
+4. Перевести `openModal()` в deprecated compatibility wrapper. Wrapper должен честно документировать legacy return; новые вызовы используют service result. **Отменено**: без шимов до стабильной версии (`decisions.md:39`).
 5. Подключить service к `MOverlay` runtime после реализации overlay plan.
 6. Добавить typed internal confirm/alert components/presets.
-7. Удалить legacy wrapper только в следующем major release; затем отдельно решить, оставлять или заменять VFM adapter.
+7. Удалить legacy wrapper только в следующем major release; затем отдельно решить, оставлять или заменять VFM adapter. **Отменено**: нечего удалять.
 </migration>
 
 <tests>

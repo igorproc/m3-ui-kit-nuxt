@@ -40,8 +40,8 @@ import type { MaybeRefOrGetter, Ref } from 'vue'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 import { supportsAnchorPositioning } from '#kit/shared/utils/support'
 import { useGlobalListener } from '../useGlobalListener'
-import { computePopoverPosition, parsePlacement, placementToArea } from './placement'
-import type { PopoverPlacement, PopoverRect } from './placement'
+import { computePopoverPosition, joinPlacement, observePlacement, parsePlacement, placementToArea } from './placement'
+import type { PopoverDirection, PopoverPlacement, PopoverRect, PopoverSide } from './placement'
 
 /** Lifecycle states. `opening`/`closing` are transient animation guards. */
 export type PopoverStatus = 'closed' | 'opening' | 'open' | 'closing'
@@ -49,8 +49,12 @@ export type PopoverStatus = 'closed' | 'opening' | 'open' | 'closing'
 export interface UsePopoverOptions {
   /** Placement of the surface relative to the trigger. @default 'bottom' */
   placement?: MaybeRefOrGetter<PopoverPlacement>
-  /** Gap (px) between trigger and surface along the main axis. @default 0 */
-  offset?: MaybeRefOrGetter<number>
+  /**
+   * Gap between trigger and surface along the main axis: pixels, or a CSS
+   * length in `px` / `rem` (`'4rem'`), which follows the kit's root scale.
+   * @default 0
+   */
+  offset?: MaybeRefOrGetter<number | string>
   /** Force the surface width to match the trigger. @default false */
   matchWidth?: MaybeRefOrGetter<boolean>
   /** Flip to the opposite side / alignment when the surface would overflow the viewport. @default true */
@@ -63,7 +67,10 @@ export interface UsePopoverOptions {
   surface?: MaybeRefOrGetter<HTMLElement | null | undefined>
   /** Minimum gap (px) kept from the viewport edges when clamping (JS path). @default 8 */
   margin?: MaybeRefOrGetter<number>
-  /** Stacking order for the surface. @default 999 */
+  /**
+   * Stacking order for the surface; none by default. A surface in the top
+   * layer needs none, and one outside it takes the order of its overlay stack.
+   */
   zIndex?: number | string
 }
 
@@ -77,6 +84,20 @@ export interface UsePopoverReturn {
   isAnchorSupported: Ref<boolean>
   /** Last measured trigger rect (read-only). */
   rect: Readonly<Ref<PopoverRect>>
+  /** Inline direction of the trigger, read when it is measured. */
+  direction: Readonly<Ref<PopoverDirection>>
+  /**
+   * The placement the surface actually took after flipping: computed on the JS
+   * path, read off the laid-out boxes on the native one once they are
+   * measured. The requested placement until then.
+   */
+  placement: Readonly<Ref<PopoverPlacement>>
+  /**
+   * `dir` for the teleported surface: the trigger's direction where it differs
+   * from the root's, so the surface reads the way its trigger does; otherwise
+   * `undefined` (the surface inherits the root's).
+   */
+  surfaceDir: Readonly<Ref<PopoverDirection | undefined>>
   /** Style object to spread on the surface. */
   popoverStyle: Ref<Record<string, string>>
   /** Style object to spread on the trigger (sets `anchor-name`). */
@@ -94,7 +115,45 @@ export interface UsePopoverReturn {
 
 const EMPTY_RECT: PopoverRect = { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 }
 
-const DEFAULT_Z_INDEX = '999'
+const px = (value: string) => Number.parseFloat(value) || 0
+
+/** A length for the JS path, in CSS pixels; `rem` reads the live root size. */
+function toPixels(length: number | string): number {
+  if (typeof length === 'number') return length
+  const value = Number.parseFloat(length) || 0
+  if (!length.endsWith('rem') || !IN_BROWSER) return value
+  return value * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
+}
+
+/**
+ * Border-box size of the laid-out surface, unrounded.
+ *
+ * Layout size, not the painted box: the surface is measured right after it
+ * mounts, mid enter-transition, when a `scale()` would shrink the rect. Not
+ * `offsetWidth/Height` either: they round to whole pixels, and at a fractional
+ * rem that rounding opens a gap of up to half a pixel against the trigger.
+ */
+function measureLayoutSize(el: HTMLElement): { width: number, height: number } {
+  const style = getComputedStyle(el)
+  const width = Number.parseFloat(style.width)
+  const height = Number.parseFloat(style.height)
+  // `auto` (not laid out, e.g. `display: none`): only the rounded box is known.
+  if (Number.isNaN(width) || Number.isNaN(height)) return { width: el.offsetWidth, height: el.offsetHeight }
+  if (style.boxSizing === 'border-box') return { width, height }
+
+  return {
+    width: width + px(style.paddingLeft) + px(style.paddingRight) + px(style.borderLeftWidth) + px(style.borderRightWidth),
+    height: height + px(style.paddingTop) + px(style.paddingBottom) + px(style.borderTopWidth) + px(style.borderBottomWidth),
+  }
+}
+
+/** The margin facing the trigger; logical, like the `position-area` it pairs with. */
+const OFFSET_MARGIN: Record<PopoverSide, string> = {
+  top: 'margin-block-end',
+  bottom: 'margin-block-start',
+  start: 'margin-inline-end',
+  end: 'margin-inline-start',
+}
 
 /** Native flip tactics, tried in order when the preferred area overflows. */
 const POSITION_TRY_FALLBACKS = 'flip-block, flip-inline, flip-block flip-inline'
@@ -104,9 +163,18 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
 
   const status = shallowRef<PopoverStatus>(model.value ? 'open' : 'closed')
   const rect = shallowRef<PopoverRect>({ ...EMPTY_RECT })
+  const direction = shallowRef<PopoverDirection>('ltr')
+  const rootDirection = shallowRef<PopoverDirection>('ltr')
+  const surfaceDir = computed(() => direction.value === rootDirection.value ? undefined : direction.value)
   const surfaceSize = shallowRef<{ width: number, height: number }>({ width: 0, height: 0 })
+  const observed = shallowRef<PopoverPlacement | null>(null)
 
   const isAnchorSupported = shallowRef(supportsAnchorPositioning())
+  const requested = computed<PopoverPlacement>(() => toValue(options.placement) ?? 'bottom')
+
+  watch(requested, () => {
+    observed.value = null
+  })
 
   // Surface stays mounted for the whole non-closed window so the leave
   // transition can play; `isOpen` is the v-if/teleport gate.
@@ -142,21 +210,6 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
     rect.value = next
   }
 
-  function reposition() {
-    const el = toValue(options.trigger)
-    if (el) {
-      const r = el.getBoundingClientRect()
-      rect.value = { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height }
-    }
-
-    // Layout size, not the painted box: the surface is measured right after it
-    // mounts, mid enter-transition, when a `scale()` would shrink the rect.
-    const surfaceEl = toValue(options.surface)
-    if (surfaceEl) {
-      surfaceSize.value = { width: surfaceEl.offsetWidth, height: surfaceEl.offsetHeight }
-    }
-  }
-
   const resolvedStrategy = computed<'anchor' | 'fixed'>(() => {
     const strategy = toValue(options.strategy) ?? 'auto'
     if (strategy === 'anchor') return 'anchor'
@@ -164,62 +217,84 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
     return isAnchorSupported.value ? 'anchor' : 'fixed'
   })
 
-  const anchorStyle = computed<Record<string, string>>(() => ({ 'anchor-name': anchorName }))
+  function observe() {
+    const triggerEl = toValue(options.trigger)
+    const surfaceEl = toValue(options.surface)
+    if (resolvedStrategy.value !== 'anchor' || !triggerEl || !surfaceEl) return
+    observed.value = observePlacement(triggerEl.getBoundingClientRect(), surfaceEl.getBoundingClientRect(), requested.value, direction.value)
+  }
 
-  const popoverStyle = computed<Record<string, string>>(() => {
-    const [side, align] = parsePlacement(toValue(options.placement) ?? 'bottom')
-    const offset = toValue(options.offset) ?? 0
-    const matchWidth = toValue(options.matchWidth) ?? false
-    const zIndex = String(options.zIndex ?? DEFAULT_Z_INDEX)
-
-    // Native CSS anchor path — let the browser keep the surface pinned.
-    if (resolvedStrategy.value === 'anchor') {
-      const style: Record<string, string> = {
-        'position': 'fixed',
-        'inset': 'unset',
-        'margin': 'unset',
-        'position-anchor': anchorName,
-        'position-area': placementToArea(side, align),
-        'z-index': zIndex,
-      }
-      if (toValue(options.flip) ?? true) style['position-try-fallbacks'] = POSITION_TRY_FALLBACKS
-      if (offset) {
-        const marginSide = side === 'top'
-          ? 'margin-bottom'
-          : side === 'bottom'
-            ? 'margin-top'
-            : side === 'left'
-              ? 'margin-right'
-              : 'margin-left'
-        style[marginSide] = `${offset}px`
-      }
-      if (matchWidth) style.width = 'anchor-size(width)'
-      return style
+  function reposition() {
+    const dirBefore = surfaceDir.value
+    const el = toValue(options.trigger)
+    if (el) {
+      const r = el.getBoundingClientRect()
+      rect.value = { top: r.top, bottom: r.bottom, left: r.left, right: r.right, width: r.width, height: r.height }
+      direction.value = getComputedStyle(el).direction === 'rtl' ? 'rtl' : 'ltr'
+      rootDirection.value = getComputedStyle(document.documentElement).direction === 'rtl' ? 'rtl' : 'ltr'
     }
 
-    // JS fallback — compute a fixed position from the measured rects. The
-    // viewport excludes the scrollbar, so a shifted surface never hides under it.
-    const r = rect.value
-    const { top, left } = computePopoverPosition({
-      anchor: r,
+    const surfaceEl = toValue(options.surface)
+    if (surfaceEl) surfaceSize.value = measureLayoutSize(surfaceEl)
+
+    const areaMirrorsOnNextRender = surfaceDir.value !== dirBefore
+    if (areaMirrorsOnNextRender) nextTick(observe)
+    else observe()
+  }
+
+  const anchorStyle = computed<Record<string, string>>(() => ({ 'anchor-name': anchorName }))
+
+  const offsetPx = computed(() => toPixels(toValue(options.offset) ?? 0))
+
+  // JS fallback — a fixed position from the measured rects. The viewport
+  // excludes the scrollbar, so a shifted surface never hides under it.
+  const fixedPosition = computed(() => {
+    if (resolvedStrategy.value !== 'fixed') return null
+    return computePopoverPosition({
+      anchor: rect.value,
       surface: surfaceSize.value,
       viewport: {
         width: IN_BROWSER ? document.documentElement.clientWidth : 0,
         height: IN_BROWSER ? document.documentElement.clientHeight : 0,
       },
-      placement: toValue(options.placement) ?? 'bottom',
-      offset,
+      placement: requested.value,
+      offset: offsetPx.value,
       margin: toValue(options.margin) ?? 8,
       flip: toValue(options.flip) ?? true,
+      direction: direction.value,
     })
+  })
 
-    const style: Record<string, string> = {
-      'position': 'fixed',
-      'top': `${top}px`,
-      'left': `${left}px`,
-      'z-index': zIndex,
+  const placement = computed<PopoverPlacement>(() => {
+    const position = fixedPosition.value
+    if (position) return joinPlacement(position.side, position.align)
+    return observed.value ?? requested.value
+  })
+
+  const popoverStyle = computed<Record<string, string>>(() => {
+    const [side, align] = parsePlacement(requested.value)
+    const offset = toValue(options.offset) ?? 0
+    const matchWidth = toValue(options.matchWidth) ?? false
+    const style: Record<string, string> = { position: 'fixed' }
+    if (options.zIndex != null) style['z-index'] = String(options.zIndex)
+
+    // Native CSS anchor path — let the browser keep the surface pinned.
+    if (!fixedPosition.value) {
+      Object.assign(style, {
+        'inset': 'unset',
+        'margin': 'unset',
+        'position-anchor': anchorName,
+        'position-area': placementToArea(side, align, surfaceDir.value !== undefined),
+      })
+      if (toValue(options.flip) ?? true) style['position-try-fallbacks'] = POSITION_TRY_FALLBACKS
+      if (offsetPx.value) style[OFFSET_MARGIN[side]] = typeof offset === 'number' ? `${offset}px` : offset
+      if (matchWidth) style.width = 'anchor-size(width)'
+      return style
     }
-    if (matchWidth) style.width = `${r.width}px`
+
+    style.top = `${fixedPosition.value.top}px`
+    style.left = `${fixedPosition.value.left}px`
+    if (matchWidth) style.width = `${rect.value.width}px`
     return style
   })
 
@@ -249,6 +324,9 @@ export function usePopover(model: Ref<boolean>, options: UsePopoverOptions = {})
     isOpen,
     isAnchorSupported,
     rect,
+    direction,
+    placement,
+    surfaceDir,
     popoverStyle,
     anchorStyle,
     open,

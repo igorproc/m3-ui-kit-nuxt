@@ -102,6 +102,24 @@
       </MCard>
     </div>
 
+    <h2>Words in a row of equal columns at 120</h2>
+    <div class="fixture-card-stress__tight">
+      <MCard
+        variant="outlined"
+        data-test="word-row"
+      >
+        <div
+          class="fixture-card-stress__words"
+          role="group"
+          aria-label="Words"
+          tabindex="0"
+        >
+          <span data-test="word-row-item">Heartbeat</span>
+          <span data-test="word-row-item">Breathing</span>
+        </div>
+      </MCard>
+    </div>
+
     <h2>Contract violation</h2>
     <label class="fixture-card-stress__toggle">
       <input
@@ -157,6 +175,18 @@ const showInvalid = ref(false)
 
   &__narrow {
     width: 280rem;
+  }
+
+  &__tight {
+    width: 120rem;
+  }
+
+  // Equal columns, as a segmented button lays out its labels: each column may
+  // shrink to its content's minimum, which a card must not cut to one glyph.
+  &__words {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: auto;
   }
 
   &__cover {

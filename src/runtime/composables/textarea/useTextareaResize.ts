@@ -39,16 +39,16 @@ const KEYBOARD_PAGE_STEP = 5
  * object straight through — every read happens inside a computed, so a plain
  * object works too for a consumer that has no component around it.
  *
- * It is a resolved configuration, not a wish list: `rows` and `resizeLabel` are
- * required because their defaults belong to the component's props. A fallback
- * here would be a second copy of the same decision, invisible in the API table
- * and kept in step by nothing.
+ * It is a resolved configuration, not a wish list: `rows` is required because
+ * its default belongs to the component's props. A fallback here would be a
+ * second copy of the same decision, invisible in the API table and kept in step
+ * by nothing. `resizeLabel` has no default anywhere: the kit ships no copy.
  */
 export interface TextareaResizeProps {
   /** Minimum (and initial) height in rows. */
   rows: number
   /** `aria-label` for the grip. */
-  resizeLabel: string
+  resizeLabel?: string
   /** Growth ceiling in rows; `undefined` means uncapped. */
   maxRows?: number
   /** Grow with content instead of staying at `rows`. */
@@ -65,7 +65,7 @@ export interface TextareaGripAttrs {
   'role': 'separator'
   'tabindex': number
   'aria-orientation': 'horizontal'
-  'aria-label': string
+  'aria-label': string | undefined
   'aria-valuenow': number
   'aria-valuemin': number
   'aria-valuemax': number | undefined

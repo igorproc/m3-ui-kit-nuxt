@@ -77,6 +77,8 @@ $tokens: (
   ),
   separator: (
     color: map.get($theme-color-link, on-surface-variant),
+    // Recedes with the characters of a disabled code, never brighter than them.
+    disabled: (color: $disabled-content),
   ),
   message: (
     margin: (top: spacing(4)),

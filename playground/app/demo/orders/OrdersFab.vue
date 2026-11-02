@@ -31,12 +31,12 @@ const ITEMS: MFabMenuItem[] = [
 ]
 
 // The layout publishes how far its pinned bars reach into the viewport, so the
-// FAB clears the bottom navigation bar on compact screens. Its `right` inset is
+// FAB clears the bottom navigation bar on compact screens. Its `end` inset is
 // the inline-end footprint whatever the direction, hence `inset-inline-end`.
 const zone = useLayoutZone()
 const placement = computed(() => ({
   insetBlockEnd: `calc(${zone?.insets.bottom ?? '0px'} + 16rem)`,
-  insetInlineEnd: `calc(${zone?.insets.right ?? '0px'} + 16rem)`,
+  insetInlineEnd: `calc(${zone?.insets.end ?? '0px'} + 16rem)`,
 }))
 </script>
 

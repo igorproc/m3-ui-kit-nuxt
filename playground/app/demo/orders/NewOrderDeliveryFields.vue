@@ -13,6 +13,7 @@
           locale="ru-RU"
           :min-date="minDate"
           :max-date="maxDate"
+          mode-toggle
           prev-month-label="Предыдущий месяц"
           next-month-label="Следующий месяц"
           switch-to-year-label="Выбрать год"

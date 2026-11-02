@@ -5,6 +5,7 @@
     :class="{ 'ui-file-input--inert': actionsDisabled }"
   >
     <MTextField
+      ref="fieldRef"
       v-bind="{ ...controlAttrs(), ...fieldError() }"
       :model-value="displayText"
       :focused="focusedModel"
@@ -132,8 +133,9 @@ import { mFileInputProps } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 import { useField } from '#kit/composables/useField'
 import { useBoundProp } from '#kit/utils/text-field/supportLine'
-import { createFilePolicy, syncInputFiles } from '#kit/shared/utils/file'
+import { createFilePolicy, describeRejection, syncInputFiles } from '#kit/shared/utils/file'
 import type { FileRejection } from '#kit/shared/utils/file'
+import type { MFieldParts } from '#kit/components/ui/text-field/props'
 import type { InputHTMLAttributes } from 'vue'
 
 interface BrowseButtonSlotProps {
@@ -173,6 +175,7 @@ defineSlots<{
 
 const labelEchoId = useId()
 const nativeInput = ref<HTMLInputElement>()
+const fieldRef = ref<MFieldParts | null>(null)
 
 const files = computed<File[]>(() => {
   if (Array.isArray(modelValue.value)) return modelValue.value
@@ -182,16 +185,14 @@ const files = computed<File[]>(() => {
 // Validation binds the files, not the summary text the field displays.
 const field = useField<File | File[] | null>({ path: props.path, model: modelValue })
 
-// A refused file is reported until the next choice or a clear: the error says
-// which file and why, not only that something went wrong.
-const rejection = ref<FileRejection>()
-const rejectionText = computed(() => {
-  if (!rejection.value) return undefined
-  const reasons = rejection.value.reasons.map(reason => props.rejectMessages?.[reason]).filter(Boolean)
-  return reasons.length ? `${rejection.value.file.name}: ${reasons.join(', ')}` : rejection.value.file.name
-})
+// The refused files of the last pick are reported until the next choice or a
+// clear: the error says which files and why, not only that something went wrong.
+const rejections = ref<FileRejection[]>([])
+const rejectionText = computed(() => rejections.value.length
+  ? rejections.value.map(rejection => describeRejection(rejection, props.rejectMessages)).join('; ')
+  : undefined)
 
-const isError = computed(() => props.error || Boolean(props.errorMessage) || field.hasError.value || Boolean(rejection.value))
+const isError = computed(() => props.error || Boolean(props.errorMessage) || field.hasError.value || rejections.value.length > 0)
 const displayError = computed(() => field.errorMessage.value ?? props.errorMessage ?? rejectionText.value)
 
 // The field reserves its support line only when an error can reach it
@@ -199,7 +200,7 @@ const displayError = computed(() => field.errorMessage.value ?? props.errorMessa
 // produce one, or a file was just refused. Otherwise
 // the error props are not passed at all.
 const isBound = useBoundProp()
-const fieldError = () => (isBound('error') || isBound('errorMessage') || props.path || rejection.value
+const fieldError = () => (isBound('error') || isBound('errorMessage') || props.path || rejections.value.length
   ? { error: isError.value, errorMessage: displayError.value }
   : {})
 
@@ -267,11 +268,14 @@ const pickerAttrs = {
   },
 }
 
+// The clear button goes with the files: the focus stays in the field rather
+// than falling to the page with it.
 function clear() {
   if (actionsDisabled.value) return
   modelValue.value = props.multiple ? [] : null
-  rejection.value = undefined
+  rejections.value = []
   emit('clear')
+  nextTick(() => fieldRef.value?.input?.focus({ preventScroll: true }))
 }
 
 // The native input holds what the model holds — files set from outside
@@ -287,7 +291,7 @@ function onNativeChange(event: Event) {
   const input = event.target as HTMLInputElement
   const result = policy.value.evaluate(input.files ?? [])
 
-  rejection.value = result.rejected[0]
+  rejections.value = result.rejected
   for (const refused of result.rejected) emit('reject', refused)
   if (result.accepted.length > 0) {
     modelValue.value = props.multiple ? result.accepted : result.accepted[0]!

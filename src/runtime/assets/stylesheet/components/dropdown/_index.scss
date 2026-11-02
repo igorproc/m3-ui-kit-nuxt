@@ -1,6 +1,6 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
-@use '../menu/index' as menu;
+@use '../popover/index' as popover;
 @use '../list/item/index' as item;
 
 // ==========================================
@@ -45,9 +45,12 @@ $tokens: (
       comfortable: panel-cap(comfortable, 4.5),
     ),
     padding-block: $panel-padding-block,
-    // The list scrolls inside the menu surface and has to keep its thumb clear
+    // The panel is the field's width, but never narrower than a row that reads:
+    // a few words of body-large beside the check, not one syllable per line.
+    min-width: 200rem,
+    // The list scrolls inside the popover surface and has to keep its thumb clear
     // of that surface's corners.
-    scrollbar-inset: g(menu.$tokens, 'surface.border.radius'),
+    scrollbar-inset: g(popover.$tokens, 'surface.border.radius'),
   ),
   // The row's own state layer, driven by the virtual focus: the pointer draws
   // hover, the keyboard draws focus (plus the focus ring). The layer is the

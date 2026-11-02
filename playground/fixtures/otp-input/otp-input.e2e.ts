@@ -58,6 +58,20 @@ test.describe('MOtpInput', () => {
     })
   }
 
+  for (const id of ['narrow', 'grid-column', 'flex-row']) {
+    test(`squeezed cells stay square in the ${id} case`, async ({ page }) => {
+      await openFixture(page, 'otp-input/stress')
+      const sizes = await cells(page, id).evaluateAll(list => list.map((cell) => {
+        const { width, height } = cell.getBoundingClientRect()
+        return { width, height }
+      }))
+
+      for (const { width, height } of sizes) {
+        expect(Math.abs(width - height)).toBeLessThanOrEqual(0.5)
+      }
+    })
+  }
+
   test('an empty cell is outline-variant, a cell with a character is outline', async ({ page }) => {
     await openFixture(page, 'otp-input/matrix')
     const filled = await borderColor(cells(page, 'outlined-partial').first())
@@ -212,6 +226,14 @@ test.describe('MOtpInput', () => {
 
     await expect(input(page, 'readonly')).toHaveValue('123456')
     await expectActive(page, 'readonly', 1)
+  })
+
+  test('a disabled separator recedes with the cells, never brighter than their characters', async ({ page }) => {
+    await openFixture(page, 'otp-input/matrix')
+    const field = page.getByTestId('disabled-grouped')
+    const color = (selector: string) => field.locator(selector).first().evaluate(el => getComputedStyle(el).color)
+
+    expect(await color('.ui-otp-input__separator')).toBe(await color('.ui-otp-input__field--filled'))
   })
 
   test('disabled and loading fields hold their code', async ({ page }) => {

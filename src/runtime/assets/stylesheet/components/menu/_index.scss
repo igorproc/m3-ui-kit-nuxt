@@ -5,44 +5,123 @@
 // MENU M3 COMPONENT TOKENS
 // ==========================================
 
+@function -menu-variant($container, $content, $muted, $selected-container, $selected-content) {
+  $c: $theme-color-link;
+  $disabled: state-opacity(disabled-content);
+
+  @return (
+    container: (
+      color: map.get($c, $container),
+    ),
+    content: (
+      color: map.get($c, $content),
+    ),
+    muted: (
+      color: map.get($c, $muted),
+    ),
+    selected: (
+      container: (
+        color: map.get($c, $selected-container),
+      ),
+      content: (
+        color: map.get($c, $selected-content),
+      ),
+    ),
+    disabled: (
+      content: (
+        color: color-mix(in srgb, #{map.get($c, $content)} $disabled, transparent),
+      ),
+      selected: (
+        container: (
+          color: color-mix(in srgb, #{map.get($c, $selected-container)} $disabled, transparent),
+        ),
+        content: (
+          color: color-mix(in srgb, #{map.get($c, $selected-content)} $disabled, transparent),
+        ),
+      ),
+    ),
+  );
+}
+
 $tokens: (
   surface: (
-    top: 72rem,
-    right: 32rem,
     min: (
       width: 112rem,
     ),
     max: (
       width: 280rem,
     ),
-    border: (
-      radius: map.get($theme-shape-link, 'extra-small'),
-    ),
-    bg: (
-      color: map.get($theme-color-link, 'surface-container'),
-    ),
-    color: map.get($theme-color-link, 'on-surface'),
     shadow: elevation(2),
+  ),
+  group: (
+    padding: (
+      block: 2rem,
+      inline: 4rem,
+    ),
+    gap: 2rem,
+    shape: (
+      outer: map.get($theme-shape-link, 'large'),
+      inner: map.get($theme-shape-link, 'small'),
+    ),
+    label: (
+      type: 'label-large',
+      padding: 8rem 12rem 4rem,
+    ),
+  ),
+  variant: (
+    elevated: -menu-variant(surface-container-low, on-surface, on-surface-variant, tertiary-container, on-tertiary-container),
+    tonal: -menu-variant(tertiary-container, on-tertiary-container, on-tertiary-container, tertiary, on-tertiary),
   ),
   item: (
     min: (
-      height: 48rem,
+      height: 44rem,
     ),
-    padding: 0 12rem,
-    gap: 12rem,
+    padding: (
+      inline: 12rem,
+    ),
+    gap: 8rem,
+    shape: (
+      rest: map.get($theme-shape-link, 'extra-small'),
+      edge: map.get($theme-shape-link, 'medium'),
+    ),
+    // The colours of a selected item are the variant's (`variant.*.selected`).
+    selected: (shape: map.get($theme-shape-link, 'medium')),
     text: (
-      color: map.get($theme-color-link, 'on-surface'),
-      type: 'label-large',
+      type: 'body-large',
     ),
     shortcut: (
-      color: map.get($theme-color-link, 'on-surface-variant'),
-      type: 'body-small',
+      type: 'label-small',
     ),
-    hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(hover), transparent),
+    icon: (
+      size: 20rem,
     ),
-    active: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(pressed), transparent),
+    supporting: (
+      type: 'body-medium',
+    ),
+    two-line: (
+      padding: (
+        block: 8rem,
+      ),
+    ),
+    state: (
+      hover: state-opacity(hover),
+      focus: state-opacity(focus),
+      pressed: state-opacity(pressed),
+      duration: var(--sys-motion-duration-short-2),
+      easing: var(--sys-motion-easing-standard),
+    ),
+  ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-emphasized-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-3),
+      easing: var(--sys-motion-easing-emphasized-accelerate),
+    ),
+    scale: (
+      from: 0.8,
     ),
   ),
 );

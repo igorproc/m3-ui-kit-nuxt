@@ -44,7 +44,7 @@
         :density="density"
         :aria-label="`Density ${density}`"
         :columns="shortColumns"
-        :data="products.slice(0, 2)"
+        :data="products.slice(0, 3)"
         selectable
         :select-all-label="`Select all, ${density}`"
         :data-test="`density-${density}`"

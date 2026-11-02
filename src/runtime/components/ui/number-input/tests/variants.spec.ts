@@ -34,10 +34,10 @@ describe('m-number-input · variants', () => {
       expect(wrapper.classes()).toContain('ui-number-input--shape-extra-small')
     })
 
-    it('maps the shape prop onto its own modifier', async () => {
-      const wrapper = await mount({ shape: 'full' })
+    it.each(['none', 'extra-small', 'medium', 'large', 'full'] as const)('maps the %s shape onto its own modifier', async (shape) => {
+      const wrapper = await mount({ shape })
 
-      expect(wrapper.classes()).toContain('ui-number-input--shape-full')
+      expect(wrapper.classes()).toContain(`ui-number-input--shape-${shape}`)
     })
 
     it('drops the shape a value flanked by stepper zones cannot carry', async () => {
@@ -93,6 +93,17 @@ describe('m-number-input · variants', () => {
       expect(wrapper.classes()).toContain('ui-number-input--stacked')
       expect(stacked.exists()).toBe(true)
       expect(stacked.findAll('.ui-number-input__stepper')).toHaveLength(2)
+    })
+
+    it.each([
+      ['split', 2],
+      ['stacked', 2],
+      ['scrub', 0],
+      [false, 0],
+    ] as const)('draws the steppers controls=%s asks for', async (controls, steppers) => {
+      const wrapper = await mount({ controls, label: 'Width' })
+
+      expect(wrapper.findAll('.ui-number-input__stepper')).toHaveLength(steppers)
     })
 
     it('renders no stepper at all when controls are off', async () => {

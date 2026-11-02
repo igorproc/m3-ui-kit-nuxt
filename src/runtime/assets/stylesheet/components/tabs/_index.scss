@@ -3,59 +3,93 @@
 
 // ==========================================
 // TABS M3 COMPONENT TOKENS
+// (PrimaryNavigationTabTokens, SecondaryNavigationTabTokens)
 // ==========================================
 
+$on-surface: map.get($theme-color-link, on-surface);
+$on-surface-variant: map.get($theme-color-link, on-surface-variant);
+$primary: map.get($theme-color-link, primary);
 $tokens: (
   list: (
-    gap: 8rem,
+    gap: spacing(8),
     border: (
-      width: 1rem,
+      width: max(1px, 1rem),
       color: map.get($theme-color-link, outline-variant),
+    ),
+    // ScrollableTabRow edge padding: the first tab is offset from the start.
+    scrollable: (
+      padding: (
+        start: calc(#{spacing(48)} + #{spacing(4)}),
+      ),
     ),
   ),
   tab: (
-    gap: 4rem,
     padding: (
-      inline: 16rem,
+      inline: spacing(16),
     ),
-    min: (
-      height: 48rem,
+    height: (
+      base: 48rem,
+      // An icon over a label (IconAndLabelTextContainerHeight).
+      stacked: 64rem,
     ),
-    text: (
-      color: map.get($theme-color-link, on-surface-variant),
+    gap: (
+      top: spacing(2),
+      start: spacing(8),
+    ),
+    scrollable: (
+      min-width: 90rem,
     ),
     icon: (
       size: 24rem,
     ),
+    typography: 'title-small',
   ),
-  indicator: (
-    height: 3rem,
-    color: map.get($theme-color-link, primary),
-    active: (
-      width: 40rem,
+  // Colours per hierarchy: Inactive* is `unselected`, Active* is `selected`,
+  // the indicator is the selected container. The state layer takes the colour
+  // of the content it covers.
+  primary: (
+    unselected: (content: (color: $on-surface-variant, active: (color: $on-surface))),
+    selected: (container: (color: $primary), content: (color: $primary)),
+    indicator: (
+      height: 3rem,
+      min-width: 24rem,
+      shape: 3rem 3rem 0 0,
     ),
   ),
-  active: (
-    color: map.get($theme-color-link, primary),
-  ),
-  disabled: (
-    opacity: state-opacity(disabled-content),
+  secondary: (
+    unselected: (content: (color: $on-surface-variant, active: (color: $on-surface))),
+    selected: (container: (color: $primary), content: (color: $on-surface)),
+    indicator: (
+      height: 2rem,
+      shape: 0,
+    ),
   ),
   state: (
-    layer: (
-      bg: map.get($theme-color-link, on-surface),
-      active: (
-        bg: map.get($theme-color-link, primary),
-      ),
-      opacity: (
-        hover: state-opacity(hover),
-      ),
+    hover: state-opacity(hover),
+    focus: state-opacity(focus),
+    pressed: state-opacity(pressed),
+  ),
+  disabled: (
+    color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent),
+  ),
+  badge: (
+    // After a label without an icon.
+    gap: spacing(4),
+  ),
+  motion: (
+    indicator: (
+      duration: var(--sys-motion-duration-medium-2),
+      easing: var(--sys-motion-easing-emphasized),
+    ),
+    color: (
+      duration: var(--sys-motion-duration-short-3),
+      easing: var(--sys-motion-easing-standard),
     ),
   ),
-  typography: (
-    label: 'label-large',
-  ),
   content: (
-    padding: 16rem 0,
+    padding: (
+      block: spacing(16),
+      inline: 0rem,
+    ),
   ),
 );

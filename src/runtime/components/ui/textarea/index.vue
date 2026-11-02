@@ -172,6 +172,22 @@ const {
   isResizing,
 } = useTextareaControl(modelValue, focusedModel, props)
 
+if (import.meta.dev) {
+  // The kit ships no default label (no English copy); an unnamed textarea is
+  // worse, so say it in dev rather than in a broken form.
+  const attrs = useAttrs()
+
+  if (!props.label && !attrs['aria-label'] && !attrs['aria-labelledby']) {
+    console.warn('[m-textarea] has no accessible name: pass `label`, `aria-label` or `aria-labelledby`.')
+  }
+
+  watchEffect(() => {
+    if (props.resizable && !props.resizeLabel) {
+      console.warn('[m-textarea] the resize grip has no accessible name: pass `resize-label`.')
+    }
+  })
+}
+
 // The whole box is the control's hit target; the grip, an adornment's button
 // and the footer's actions keep their own presses.
 const box = createFieldBoxPress(element)
@@ -220,20 +236,12 @@ defineExpose({ control, input: element })
 .ui-textarea {
   $t: material-map(t.$tokens, 'm-textarea');
 
-  --ui-textarea-inset: #{g($t, 'container.padding.inline')};
-
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: g($t, 'container.gap');
   min-width: 0;
-
-  @include family.shape-axis($t, 'textarea');
-
-  &--outlined {
-    --ui-textarea-inset: #{g($t, 'outlined.inset')};
-  }
 
   @include label.label($t);
 
@@ -249,11 +257,12 @@ defineExpose({ control, input: element })
     isolation: isolate;
     overflow: hidden;
     border: g($t, 'container.border.width') solid g($t, 'container.border.color');
-    border-radius: var(--ui-textarea-radius);
     background-color: g($t, 'container.surface');
     transition:
       border-color g($t, 'state.duration') g($t, 'state.easing'),
       background-color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include family.shape-axis($t, 'textarea');
 
     // MD3 state layer: the element's own ink at a fixed opacity, painted over
     // the surface and under the value. Only `filled` raises it: `outlined` has
@@ -277,8 +286,12 @@ defineExpose({ control, input: element })
     align-items: flex-start;
     gap: g($t, 'adornment.gap');
     min-width: 0;
-    padding: g($t, 'container.padding.block') var(--ui-textarea-inset);
+    padding: g($t, 'container.padding.block') g($t, 'box.filled.inset');
     cursor: text;
+
+    @include family.outlined-boxes('textarea', $density: false) using ($box) {
+      padding: g($t, 'container.padding.block') g($t, '#{$box}.inset');
+    }
   }
 
   // Everything that shifts that padding lives right below it — the label

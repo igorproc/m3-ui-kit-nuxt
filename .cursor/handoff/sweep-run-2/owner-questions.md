@@ -1,0 +1,16 @@
+# Вопросы владельцу после sweep-run-2 (2026-10-24)
+
+**Как ответить одной строкой:** `всё по рекомендации, кроме S3=А`.
+
+| # | Откуда | Вопрос | Варианты | Рекомендация |
+|---|---|---|---|---|
+| S1 | G4 · B6.2c (Q56-А) | generic `TItem` у MDropdown/MAutocomplete выводить из `items`, а не из модели | **А** перевести SFC на `defineProps<T>()` + `withDefaults` — дефолты окажутся в двух местах · **Б** типизировать SFC через уже существующий `MDropdownProps<TItem, TValue>` (`dropdown/props.ts`), как предлагал исходный фикс · **В** оставить как есть | **Б** — так и было задумано в Q56, без дубля дефолтов |
+| S2 | G4 · time-picker, шаг 7 плана | сжать циферблат (200) по высоте в низком окне | **А** px в media-запросе — против правила rem · **Б** `container-type: size` — ломает первый кадр SSR · **В** не делать | **В** — оба способа нарушают твои правила |
+| S3 | G5 · P3 table | первая/последняя страница в подвале MTable (план обещает; Q47-А — «компактный приватный подвал») | **А** добавить (+ ключи в `icons.ts`, пропы подписей) · **Б** не добавлять, поправить план | **Б** — Q47-А уже выбрал компактный подвал |
+| S4 | W52-А | твои WIP-файлы объявляют `color: MColor`, а отдают в кнопку (`MAccentColor`) — vue-tsc красный в 3 местах: `demo/crm/data/crmTypes.ts:82`, `demo/orders/data/history.ts:15`, `fixtures/timeline/matrix.vue:16,36` | **А** я заменю `MColor` → `MAccentColor` в этих строках · **Б** поправишь сам при коммите WIP | **А** — одно слово, поведение не меняется |
+| S5 | ломающие изменения | они задели твои WIP-демо (кит их не правил): `size="small"` у MLoading/MProgress игнорируется → `density="compact"`; `type="warning"` у MAlert игнорируется, станет `info` → `color="warning"` (`crm/tasks/CrmTasksTab.vue:15`, `orders/OrdersSideColumn.vue:15`); у MDialogDate в `crm/new-deal/CrmDateField.vue` стрелки без подписей; `mode-toggle` выключен по умолчанию в `orders/NewOrderDeliveryFields.vue` | **А** я правлю эти места · **Б** сам при коммите WIP | **А** |
+| S6 | G2 · loading/progress | `delay` / `minDuration` (показ после задержки, минимальное время показа) — без пропа `active` минимальную длительность не выразить | **А** ввести `active` (показ по нему, а не по `v-if`) + `delay`/`minDuration` · **Б** не делать, приложение держит своё состояние | **Б** — новое API ради редкого случая |
+| S8 | сведение docs | тоны статуса у `MTimelineItem`: роли `info/success/warning` теперь есть в `MColor`, но timeline сужен до `MAccentColor` | **А** расширить timeline до всех ролей `MColor` · **Б** оставить четыре | **А** — прежняя причина отказа (нет ролей) снята W52-А |
+| S9 | сведение docs | слово `layout` в трёх смыслах: `MTabs` (`fixed\|scrollable`), `MToolbar` (`horizontal\|vertical`), `MBanner` (`inline\|stacked\|auto`); у `MSlider` то же «гориз./верт.» называется `orientation` | **А** toolbar → `orientation` (как slider), tabs и banner оставить `layout` · **Б** оставить как есть | **А** — убирает одно из пересечений одним переименованием |
+| S10 | сведение docs | `MProgress wavy: boolean` — флаг, называющий стиль, против правила «ось, а не флаг» | **А** ось `shape: 'flat' \| 'wavy'` · **Б** оставить флаг | **А** |
+| S7 | G2 · loading | переименовать `ariaLabel` → `label` (как в плане) | **А** `label` · **Б** оставить `ariaLabel` | **Б** — Q44-А уже принят с `ariaLabel` |

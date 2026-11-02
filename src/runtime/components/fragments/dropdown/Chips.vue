@@ -7,8 +7,11 @@
     tabindex="-1"
     :class="[`${block}__chip`, { [`${block}__chip--active`]: focus === index }]"
     :disabled="disabled || entry.itemDisabled"
+    :removal="readonly ? 'none' : 'whole'"
+    :remove-label="removeLabel?.replace('{title}', entry.title)"
     @mousedown.prevent
-    @click.stop="readonly || emit('remove', entry)"
+    @click.stop
+    @remove="emit('remove', entry)"
   >
     <slot
       :item="entry.item"
@@ -19,12 +22,6 @@
     >
       {{ entry.title }}
     </slot>
-    <template
-      v-if="!readonly"
-      #trailing
-    >
-      <MIcon :name="ICONS.close" />
-    </template>
   </MChip>
 </template>
 
@@ -34,12 +31,12 @@
  * the keyboard reaches them from the input with the arrows, as the virtual
  * focus of the combobox (`aria-activedescendant`), never with Tab.
  *
- * Read-only chips show the value in full ink and offer no removal.
+ * Each chip is one button that removes its value (`removal="whole"`), named
+ * by the app's phrase. Read-only chips show the value in full ink and offer
+ * no removal.
  */
 import type { DropdownResolvedItem } from '#kit/composables/dropdown/types'
-import { ICONS } from '#kit/shared/constants/icons'
 import MChip from '#kit/components/ui/chip/index.vue'
-import MIcon from '#kit/components/ui/icon/index.vue'
 
 defineProps<{
   entries: TEntry[]
@@ -50,6 +47,8 @@ defineProps<{
   focus: number | null
   disabled: boolean
   readonly: boolean
+  /** Name of a chip's removal; `{title}` is replaced with the value's title. */
+  removeLabel?: string
 }>()
 
 const emit = defineEmits<{

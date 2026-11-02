@@ -1,0 +1,19 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// CHOICE SUPPORT LINE TOKENS
+// ==========================================
+// The line under a checkbox, a switch, a radio or a radio group: helper text,
+// or the error in its place with a glyph (never colour alone). The values are
+// the field family's support line, so a form reads as one.
+
+$typography: body-small;
+$tokens: (
+  typography: $typography,
+  // One line of body-small: the reserved height is the line itself.
+  min-height: var(--md-sys-typescale-#{$typography}-line-height),
+  color: map.get($theme-color-link, on-surface-variant),
+  error: (color: map.get($theme-color-link, error)),
+  icon: (size: 16rem, gap: 6rem),
+);

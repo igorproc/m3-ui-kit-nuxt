@@ -147,6 +147,8 @@ export interface MTableHeaderProps<T extends TableData> {
   columns: TableColumn<T>[]
   selectable?: boolean
   isAllSelected?: boolean
+  /** Some rows of the page are selected, not all: select-all shows it as mixed. */
+  isMixed?: boolean
   selectAllLabel?: string
   sort?: SortState<T> | null
 }

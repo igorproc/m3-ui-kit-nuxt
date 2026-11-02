@@ -61,6 +61,23 @@ test.describe('MColorInput', () => {
     await expect(trigger).toBeFocused()
   })
 
+  // Q16-Б: the picker is a dialog of controls; Tab walks them and keeps the panel open.
+  test('Tab walks the picker inside its dialog and leaves it open', async ({ page }) => {
+    await openFixture(page, 'color-input/matrix')
+    const trigger = root(page.getByTestId('value-filled')).getByRole('button', { name: 'Pick a colour' })
+
+    await trigger.click()
+    const dialog = page.getByRole('dialog', { name: 'Pick a colour' })
+    await expect(dialog).toBeVisible()
+    for (let step = 0; step < 8; step++) {
+      await page.keyboard.press('Tab')
+      expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true)
+    }
+
+    await expect(dialog).toBeVisible()
+    await expect(page.locator('[role="menu"]')).toHaveCount(0)
+  })
+
   test('read-only and disabled fields do not open the picker', async ({ page }) => {
     await openFixture(page, 'color-input/matrix')
 

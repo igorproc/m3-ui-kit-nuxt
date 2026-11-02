@@ -11,23 +11,24 @@
 $on-surface: map.get($theme-color-link, 'on-surface');
 $tokens: (
   root: (
-    gap: 16rem,
+    gap: spacing(16),
     min: (height: 54rem),
     shape: map.get($theme-shape-link, 'none'),
     padding: (
-      block: 16rem,
-      inline: 16rem,
+      block: spacing(16),
+      inline: spacing(16),
     ),
   ),
   // `auto` switches presentation on a static threshold. Media queries resolve
   // rem against the initial 16px, so the breakpoint stays in px.
   auto: (threshold: map.get($breakpoints, 'tablet-xs')),
-  surface: (
+  plain: (
     container: (color: map.get($theme-color-link, 'surface')),
     content: (color: $on-surface),
     divider: (
       color: map.get($theme-color-link, 'outline-variant'),
-      width: 1rem,
+      // A hairline stays one device pixel at least, whatever the rem scale.
+      width: max(1px, 1rem),
     ),
   ),
   tonal: (
@@ -38,12 +39,12 @@ $tokens: (
     size: 24rem,
     color: map.get($theme-color-link, 'on-surface-variant'),
   ),
-  content: (gap: 4rem),
+  content: (gap: spacing(4)),
   title: (typography: map.get($theme-typography-link, 'title', 'medium')),
   body: (typography: map.get($theme-typography-link, 'body', 'medium')),
   actions: (
-    gap: 8rem,
-    margin: (block: 12rem),
+    gap: spacing(8),
+    margin: (block: spacing(12)),
   ),
   close: (
     size: 40rem,
@@ -54,5 +55,13 @@ $tokens: (
   motion: (
     duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
+    enter: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-standard-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-3),
+      easing: var(--sys-motion-easing-standard-accelerate),
+    ),
   ),
 );

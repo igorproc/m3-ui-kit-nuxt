@@ -5,36 +5,45 @@
 // DIALOG M3 COMPONENT TOKENS
 // ==========================================
 
+$margin: 16rem;
+$divider-thickness: max(1px, 1rem);
 $tokens: (
   max: (
-    width: 560rem,
+    inline-size: 560rem,
+    // The dialog keeps its margin on a short screen and scrolls its body.
+    block-size: calc(100dvh - 2 * #{$margin}),
   ),
   min: (
-    width: 280rem,
+    inline-size: 280rem,
   ),
   border: (
-    radius: 28rem,
+    radius: map.get($theme-shape-link, 'extra-large'),
   ),
   bg: (
-    color: map.get($theme-color-link, 'surface'),
+    color: map.get($theme-color-link, 'surface-container-high'),
   ),
   text: (
     color: map.get($theme-color-link, 'on-surface'),
   ),
   shadow: elevation(3),
   padding: 24rem,
-  margin: 16rem,
-  container: (
-    gap: 16rem,
-  ),
+  margin: $margin,
+  // M3 rhythm: 16 under the icon, 16 under the headline, 24 under the body.
   icon: (
     margin: (
-      bottom: 16rem,
+      block: (
+        end: 16rem,
+      ),
     ),
     color: map.get($theme-color-link, 'secondary'),
     size: 24rem,
   ),
   headline: (
+    margin: (
+      block: (
+        end: calc(16rem - #{$divider-thickness}),
+      ),
+    ),
     color: map.get($theme-color-link, 'on-surface'),
     text: (
       type: 'headline-small',
@@ -46,10 +55,18 @@ $tokens: (
       type: 'body-medium',
     ),
   ),
+  divider: (
+    thickness: $divider-thickness,
+    color: map.get($theme-color-link, 'outline-variant'),
+    reveal: spacing(16),
+    easing: var(--sys-motion-easing-linear),
+  ),
   actions: (
     gap: 8rem,
     margin: (
-      top: 24rem,
+      block: (
+        start: calc(24rem - #{$divider-thickness}),
+      ),
     ),
   ),
   motion: (

@@ -57,11 +57,13 @@ export function useListItemControl({ props, attrs, semantic }: UseListItemContro
     return props.tag
   })
 
-  // A link announces the current page; a button announces a toggle. Nothing
-  // when the row is not part of a selection, so a plain action row stays a
-  // plain button.
+  // A link announces the current page; a button announces a toggle; a static
+  // row, which may not carry `aria-selected`, is the current item of its list.
+  // Nothing when the row is not part of a selection, so a plain action row
+  // stays a plain button.
   const selectionAttrs = (): Record<string, string> => {
-    if (props.selected === undefined || !isInteractive.value) return {}
+    if (props.selected === undefined) return {}
+    if (!isInteractive.value) return props.selected ? { 'aria-current': 'true' } : {}
     if (isLink.value) return props.selected ? { 'aria-current': 'page' } : {}
     return { 'aria-pressed': String(props.selected) }
   }

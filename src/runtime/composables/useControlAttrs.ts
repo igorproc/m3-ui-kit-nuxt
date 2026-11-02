@@ -11,7 +11,8 @@ import { mergeProps, useAttrs } from 'vue'
  *
  * `controlAttrs(own)` merges the component's own attribute bag on top: own
  * values win on a clash, but listeners are chained rather than replaced, so a
- * consumer's `@keydown` still fires next to the component's.
+ * consumer's `@keydown` still fires next to the component's. An own key left
+ * `undefined` says nothing, so it leaves the consumer's value in place.
  *
  * @example
  * <div v-bind="rootAttrs()"><input v-bind="controlAttrs(inputAttrs)"></div>
@@ -23,7 +24,10 @@ export function useControlAttrs() {
 
   const controlAttrs = (own?: object) => {
     const { class: _class, style: _style, ...rest } = attrs
-    return own ? mergeProps(rest, own as Record<string, unknown>) : rest
+    if (!own) return rest
+
+    const said = Object.fromEntries(Object.entries(own).filter(([, value]) => value !== undefined))
+    return mergeProps(rest, said)
   }
 
   return { rootAttrs, controlAttrs }

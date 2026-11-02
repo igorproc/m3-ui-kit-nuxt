@@ -2,7 +2,7 @@
 
 <identity>M3: Foundations → Layout (window size classes, panes, canonical layouts); отдельного компонента в каталоге нет · Токены Compose: нет (раскладка задаётся `WindowSizeClass` и адаптивными скаффолдами вне `material3`) · Код: `src/runtime/components/ui/{layout,main,container,row,col,spacer,responsive}/`, `src/runtime/composables/layout/` · Аудит: `data/{layout,main,container,row,col,spacer,responsive}.json` · Тип: primitive</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Шаги 1–6 сделаны: сетка на `spacing()` и токен `pane.fixed.width`, safe-area у прибитых зон (`carve.ts`, генерация CSS вынесена в `layout/css.ts`) и у `m-container`, `scrollbar-gutter` у main в full-height, `m-responsive` на `overflow: clip`, деприкация `<m-main>`, таблица классов окон и рецепт навигации в `docs/layout.md`; панели, алиасы классов окна и опция `container` перенесены.</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Сделаны шаги 1–6, 8 (алиасы классов окна), 10 (`container` у `m-container`) и Q20 (инсеты на `html`). Отложен шаг 7 (панели `m-layout-pane`, `useListDetail`) — решение владельца 2026-10-07; шаг 9 (сетка на пружине) отменён по S4.</implementation-status>
 
 ## Вердикт
 

@@ -80,7 +80,7 @@
 import { ref } from 'vue'
 import MHotkey from '#kit/components/ui/hotkey/index.vue'
 import { useHotkey } from '#kit/composables/hotkey/useHotkey'
-import { provideHotkeyLabels } from '#kit/composables/hotkey/useHotkeyLabels'
+import { provideHotkeyLabels } from '#kit/composables/hotkey/provideHotkeyLabels'
 import type { HotkeyKey, HotkeyPlatform } from '#kit/shared/types/hotkey'
 
 provideHotkeyLabels({ disabled: 'unavailable' })

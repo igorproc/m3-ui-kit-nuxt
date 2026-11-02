@@ -57,6 +57,9 @@ async function withoutInactive<T extends { target: unknown[] }>(page: Page, node
  * forever, and a scroll-driven animation (the table's edge fade) runs for the page's whole life.
  */
 export async function waitForMotion(page: Page) {
+  // A Vue transition adds its enter classes on the next frame: checked at once, a surface that
+  // has just been inserted has no running animation yet and is measured mid-entry.
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
   await page.waitForFunction(() => document.getAnimations().every(animation =>
     animation.playState !== 'running'
     || animation.effect?.getTiming().iterations === Infinity

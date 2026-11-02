@@ -1,5 +1,5 @@
 <template>
-  <m-app>
+  <m-app :skip-link-label="route.path === '/app/matrix' ? 'Skip to content' : undefined">
     <NuxtPage />
   </m-app>
 </template>

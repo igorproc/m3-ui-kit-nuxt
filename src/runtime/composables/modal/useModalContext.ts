@@ -14,6 +14,7 @@ import { onBeforeUnmount, shallowRef } from 'vue'
 import type { Ref } from 'vue'
 import { createContext } from '#kit/shared/utils/context/createContext'
 import type { PopoverStatus } from '#kit/composables/popover/usePopover'
+import type { ModalDismissReason } from './useModal'
 
 /** Overlay lifecycle — same states as the popover FSM. */
 export type OverlayStatus = PopoverStatus
@@ -27,10 +28,16 @@ export interface M3ModalContext {
   close: () => Promise<void>
 }
 
+/** The programmatic modal that rendered a surface: the registry closes the surface through it. */
+export interface ModalOwner {
+  close: (reason?: ModalDismissReason) => Promise<void>
+}
+
 // Nullable: a root modal has no parent, so the default is `null` instead of throwing.
 const [injectModalContext, provideModalContext] = createContext<M3ModalContext | null>('m3:modal', null)
+const [injectModalOwner, provideModalOwner] = createContext<ModalOwner | null>('m3:modal-owner', null)
 
-export { injectModalContext }
+export { injectModalContext, provideModalOwner }
 
 export interface UseModalContextOptions {
   id: string
@@ -62,6 +69,13 @@ export function useModalContext(options: UseModalContextOptions): M3ModalContext
   provideModalContext(context)
 
   return context
+}
+
+/** The programmatic modal that rendered the calling surface; the surfaces inside it are not its own. */
+export function claimModalOwner(): ModalOwner | null {
+  const owner = injectModalOwner()
+  provideModalOwner(null)
+  return owner
 }
 
 /** Closes every open child and waits for all of them to finish closing. */

@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 (авторский поведенческий примитив; часть [MSelectionGroup](selection-group.md)) · Токены Compose: нет · Код: `src/runtime/components/ui/selection-item/index.vue`, логика `src/runtime/composables/selection/useSelectionItem.ts`, тип состояния `src/runtime/composables/selection/context.ts` (`SelectionItemState`) · Аудит: `data/selection-item.json` · Тип: public (renderless), дочерний к `MSelectionGroup`</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент работает с 2026-07-13: регистрирует тикет в ближайшей группе, отдаёт состояние и действия слотом, снимается через `onScopeDispose`, без группы падает с понятной ошибкой. План 2026-10-07 добавляет только готовые атрибуты доступности — по решению ВГ-1 в [selection-group.md](selection-group.md). Код не менялся.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Sweep run 2 (G1): `attrs` паттерна группы в слоте (W27-Б). Фаза 2 аудита: элемент проверен e2e в эталонной разметке `selection-group/matrix.vue` (toggle-кнопки, блок по `max`). Осталось: документация в `docs`.</implementation-status>
 
 ## Вердикт
 
@@ -89,7 +89,7 @@ interface MSelectionItemSlot<TValue> {
 1. **S** — `attrs` в `SelectionItemState` (вычисляется в `useSelectionItem` из паттерна группы),
    общий для ручного и data-driven пути. Зависит от ВГ-1 в [selection-group.md](selection-group.md),
    шаг 2. Файлы: `composables/selection/{context,useSelectionItem}.ts`, `selection-item/index.vue`.
-2. **S** — Документация (репозиторий `docs`): раздел «Доступность» — какие `aria-*` биндить для
+2. **S** — **Отложено** (вне репозитория кита). Документация (репозиторий `docs`): раздел «Доступность» — какие `aria-*` биндить для
    toggle-кнопки, радио, флажка и опции списка и какую клавиатуру ожидать (DC-04).
 3. **S** — Тесты.
 

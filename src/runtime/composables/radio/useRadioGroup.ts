@@ -19,6 +19,8 @@ export interface RadioGroupContext {
   name: ComputedRef<string>
   /** Whether the whole group is disabled. */
   disabled: ComputedRef<boolean>
+  /** Whether the group shows an error: every radio takes the error look. */
+  invalid: ComputedRef<boolean>
   /** Resolved value of the checked radio. */
   selectedValue: ComputedRef<RadioValue | undefined>
   /** Register a radio ticket in the single-selection instance. */

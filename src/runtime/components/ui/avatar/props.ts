@@ -9,6 +9,7 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MShape, MVariant } from '#kit/shared/types/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 /** MD3 surface presets meaningful for an identity surface. */
 export type MAvatarVariant = Extract<MVariant, 'tonal' | 'filled' | 'outlined'>

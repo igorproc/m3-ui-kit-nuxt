@@ -47,7 +47,7 @@ const toContrastLevel = (contrast: TThemeContrast | undefined): number => {
 }
 
 const buildScheme = (sourceHct: Hct, isDark: boolean, data: TTheme, level: number): DynamicScheme => {
-  const variant = VARIANT_MAP[data.variant ?? data.preset ?? 'tonalSpot']
+  const variant = VARIANT_MAP[data.variant ?? 'tonalSpot']
   const specVersion = data.specVersion ?? '2025'
   const hue = sourceHct.hue
 
@@ -85,7 +85,8 @@ export const generateScheme = (data: TTheme, opts: IGenerateSchemeOptions = {}):
   const level = toContrastLevel(opts.contrast ?? data.contrast)
 
   const semanticInput: TSemanticColors = { ...(opts.semanticColors ?? {}), ...(data.semanticColors ?? {}) }
-  const semantic = Object.entries(semanticInput).map(([name, value]) => {
+  const seeds = Object.entries(semanticInput).filter((entry): entry is [string, Exclude<TSemanticColors[string], false>] => entry[1] !== false)
+  const semantic = seeds.map(([name, value]) => {
     const color = typeof value === 'string' ? value : value.color
     const blend = typeof value === 'string'
       ? (opts.semanticBlend ?? true)

@@ -14,13 +14,18 @@ export interface PanelStateInput {
   items: number
   /** `false` while the query is shorter than the minimum (autocomplete). */
   queryReady: boolean
+  /**
+   * A query was typed (autocomplete). With it an empty list is an answer to
+   * that query — a server's included, which sends no items at all.
+   */
+  queried?: boolean
 }
 
-export function panelState({ rows, loading, items, queryReady }: PanelStateInput): DropdownPanelState {
+export function panelState({ rows, loading, items, queryReady, queried = false }: PanelStateInput): DropdownPanelState {
   if (rows > 0) return 'rows'
   if (!queryReady) return 'hint'
   if (loading) return 'loading'
-  return items > 0 ? 'no-results' : 'empty'
+  return items > 0 || queried ? 'no-results' : 'empty'
 }
 
 const STATE_MESSAGE = { 'empty': 'empty', 'no-results': 'noResults', 'hint': undefined } as const

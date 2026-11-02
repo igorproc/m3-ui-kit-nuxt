@@ -45,6 +45,8 @@
 <script setup lang="ts">
 import UiIcon from '#kit/components/ui/icon/index.vue'
 import { useSegmentedButton } from '#kit/composables/button/useSegmentedButton'
+import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
+import { useSegmentNameWarning } from '#kit/utils/button/segmentNames'
 import { ICONS } from '#kit/shared/constants/icons'
 import { mSegmentedProps } from './props'
 import type { MSegmentedItem, MSegmentedModelValue } from './props'
@@ -55,6 +57,9 @@ const props = defineProps(mSegmentedProps)
 const value = defineModel<MSegmentedModelValue>()
 
 const { isSelected, isItemDisabled, groupAttrs, segmentAttrs, segmentRef } = useSegmentedButton(value, props)
+
+useButtonNameWarning('m-button-segmented', () => undefined, '`aria-label` or `aria-labelledby`')
+useSegmentNameWarning('m-button-segmented', () => props.items)
 
 // Every segment keeps the room for the check, so choosing one changes no width
 // (M3 / material-web: segments are equal and the check opens inside one). An
@@ -80,8 +85,11 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
 
   // Equal segments, each as wide as the widest (M3 `weight(1f)`, material-web
   // `grid-auto-columns: 1fr`). A row too wide even with every label wrapped
-  // between words scrolls instead of spilling out of its container.
+  // between words scrolls instead of spilling out of its container. An
+  // ancestor's `overflow-wrap: anywhere` (a table cell, a timeline item) is
+  // reset: it would shrink each column to one glyph and break labels mid-word.
   display: inline-grid;
+  overflow-wrap: normal;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   max-width: 100%;
@@ -145,7 +153,7 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
     }
 
     &:disabled {
-      color: g($t, 'unselected.content.disabled.color');
+      color: g($t, 'disabled.unselected.content.color');
       cursor: default;
       pointer-events: none;
     }
@@ -184,14 +192,14 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
 
   @each $role in $roles {
     &--#{$role} &__segment--selected {
-      background-color: g($t, 'selected.#{$role}.container');
-      color: g($t, 'selected.#{$role}.content');
+      background-color: g($t, 'selected.container.color.#{$role}');
+      color: g($t, 'selected.content.color.#{$role}');
     }
   }
 
   &__segment--selected:disabled {
     background-color: g($t, 'disabled.selected.container.color');
-    color: g($t, 'disabled.content.color');
+    color: g($t, 'disabled.selected.content.color');
   }
 
   // The selected fill is the selection: forcing would flatten it and paint the

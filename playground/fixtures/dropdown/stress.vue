@@ -59,6 +59,19 @@
       />
     </div>
 
+    <!-- A field narrower than a readable row: the panel takes a width of its own. -->
+    <div class="fixture-stress__tiny">
+      <MDropdown
+        v-model="tiny"
+        :messages="messages"
+        :items="cities"
+        item-title="name"
+        item-value="id"
+        label="City"
+        data-test="tiny"
+      />
+    </div>
+
     <div class="fixture-stress__narrow">
       <MDropdown
         :messages="messages"
@@ -78,7 +91,7 @@ import { ref } from 'vue'
 import MDropdown from '#kit/components/ui/dropdown/index.vue'
 
 // The kit ships no copy of its own: the app names the controls and states.
-const messages = { clear: 'Clear selection', loading: 'Loading options', empty: 'No options' }
+const messages = { clear: 'Clear selection', loading: 'Loading options', empty: 'No options', remove: 'Remove {title}' }
 
 const long = [
   { id: 1, name: 'Express overnight delivery with signature on receipt and insurance up to the declared value' },
@@ -96,7 +109,14 @@ const scripts = [
   { id: 4, name: '🙂 Emoji row' },
 ]
 
+const cities = [
+  { id: 1, name: 'Saint Petersburg' },
+  { id: 2, name: 'Rio de Janeiro' },
+  { id: 3, name: 'Kuala Lumpur' },
+]
+
 const longValue = ref(1)
+const tiny = ref<number>()
 const chips = ref(Array.from({ length: 12 }, (_, index) => index + 1))
 const huge = ref(500)
 </script>
@@ -109,5 +129,9 @@ const huge = ref(500)
 
 .fixture-stress__narrow {
   max-width: 280rem;
+}
+
+.fixture-stress__tiny {
+  width: 120rem;
 }
 </style>

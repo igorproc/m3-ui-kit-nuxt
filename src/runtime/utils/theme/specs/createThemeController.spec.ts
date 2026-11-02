@@ -63,10 +63,11 @@ describe('createThemeController — restrict.customPalette', () => {
     expect(paletteCookie.value.neutralChroma).toBe(30)
   })
 
-  it('leaves an undeclared palette alone when unlocked', () => {
+  // B2.4a: an undeclared key renders no tokens, locked or not.
+  it('falls back from an undeclared palette when unlocked too', () => {
     const { controller } = setup({}, { isCustom: false, key: 'not-in-config' })
 
-    expect(controller.resolvedPalette.value).toBe('not-in-config')
+    expect(controller.resolvedPalette.value).toBe('blue')
   })
 
   it('applies a custom palette normally when unlocked (default)', () => {
@@ -81,12 +82,14 @@ describe('createThemeController — restrict.customPalette', () => {
 
 describe('createThemeController — hostile cookies', () => {
   // A seed the generator cannot parse used to throw inside the theme plugin and take
-  // the whole SSR render down with a 500.
+  // the whole SSR render down with a 500; then it rendered no tokens (B2.4a). It now
+  // falls back to the default palette.
   it.each(['xyz12', 'nope', 'nonsense', '', '#12345'])('rejects the unparseable seed %o', (key) => {
     const { controller } = setup({}, { isCustom: true, key })
 
     expect(controller.customColor.value).toBeNull()
-    expect(controller.activeTheme.value?.color).toBeUndefined()
+    expect(controller.resolvedPalette.value).toBe('blue')
+    expect(controller.activeTheme.value?.color).toBe('#0061A4')
   })
 
   it.each(['#abc', '#abcdef', '#abcdef80', 'abcdef'])('accepts the valid seed %o', (key) => {

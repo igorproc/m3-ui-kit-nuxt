@@ -5,6 +5,7 @@
         v-if="iconName"
         class="ui-breadcrumbs-divider__icon"
         :name="iconName"
+        mirror
       />
       <template v-else>{{ divider }}</template>
     </slot>
@@ -45,13 +46,9 @@ const iconName = computed(() => (ICON_NAME.test(props.divider) ? props.divider a
 
   display: inline-flex;
   align-items: center;
-  color: g($t, 'divider-color');
-  font-size: g($t, 'divider-size');
+  color: g($t, 'divider.color');
+  font-size: g($t, 'divider.size');
   line-height: 0;
   user-select: none;
-
-  [dir='rtl'] & .ui-breadcrumbs-divider__icon {
-    transform: g($t, 'divider-rtl-transform');
-  }
 }
 </style>

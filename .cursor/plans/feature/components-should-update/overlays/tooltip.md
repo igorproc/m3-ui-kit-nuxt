@@ -2,7 +2,7 @@
 
 <identity>M3: Tooltips — plain и rich (с subhead и действиями, persistent) · Токены Compose: `PlainTooltipTokens.kt`, `RichTooltipTokens.kt`; поведение — `Tooltip.kt` (`TooltipBox`, `PlainTooltip`, `RichTooltip`, `TooltipDefaults`), `internal/BasicTooltip.kt` (`TooltipDuration`) · Код: `src/runtime/components/ui/tooltip/`, позиционирование — `src/runtime/composables/popover/usePopover.ts`, токены `src/runtime/assets/stylesheet/components/tooltip/_index.scss` · Аудит: `data/tooltip.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Тултип уже переведён на `usePopover` и top layer (`popover="manual"`), он hoverable (грейс 100 мс, WCAG 1.4.13) и закрывается по Esc. Шаги 1–4 не ломают API и могут идти сразу; rich и касание ждут вопросов 1–3.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Шаги 1–6 сделаны: роли `inverse-*`, угол 4, min 40 × 24, зазор 4 из одного места, `aria-describedby` на фокусируемом (scope `#default="{ props }"` + авто-связь, Q19-В), связь появляется с монтирования и только при непустом содержимом (в серверном HTML ссылки на несуществующий id нет), показ по `:focus-visible`, Esc-слушатель только у открытого, «один за раз», `placement` / `v-model:open` / `disabled`, rich без действий (W37-Б), долгое нажатие на таче (W39-А; короткий тап не показывает). Rich с действиями отменён (W38-А); шаг 7 (документация) — вне репо. Unit-спека `useTooltipControl`, фикстуры `tooltip/{matrix,stress}` и `tooltip.e2e.ts` (19 тестов) зелёные.</implementation-status>
 
 ## Вердикт
 
@@ -154,11 +154,11 @@ colors (`index.vue:144`, TH-04 уже исправлен).
    `tooltipAttrs`, без классов и `data-*`, `behavior.md`).
 4. **S — управляемость.** `placement`, `v-model:open`, `disabled`. Файлы: `tooltip/props.ts`,
    `tooltip/index.vue`.
-5. **M — rich.** По вопросам 1–2: ветка токенов `rich.*`, subhead, разметка с базовыми линиями,
+5. **M — rich.** Rich без действий сделан (W37-Б); действия **отменено** (W38-А). По вопросам 1–2: ветка токенов `rich.*`, subhead, разметка с базовыми линиями,
    действия (`MButton`). Если вариант 3 — режим «клик + persistent + немодальный диалог». Файлы:
    `tooltip/index.vue` (или `tooltip/rich/`, если SFC выходит за 400 строк), `tooltip/_index.scss`.
 6. **S — касание.** По вопросу 3.
-7. **M — документация (DC-02…05).** Анатомия и токены, когда plain и когда rich, запрет интерактива
+7. **M — документация (DC-02…05).** **Отложено**: документация вне репо кита. Анатомия и токены, когда plain и когда rich, запрет интерактива
    в plain, показ на фокусе, Esc, hoverable, переворот.
 
 ## Тесты

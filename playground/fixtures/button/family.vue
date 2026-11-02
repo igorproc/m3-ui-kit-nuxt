@@ -251,15 +251,12 @@
       >
         Save
         <template #menu="{ close }">
-          <button
+          <MMenuItem
             v-for="option in saveOptions"
             :key="option.value"
-            type="button"
-            class="ui-menu__item"
-            @click="lastEvent = `select:${option.value}`; close()"
-          >
-            {{ option.label }}
-          </button>
+            :label="option.label"
+            @select="lastEvent = `select:${option.value}`; close()"
+          />
         </template>
       </MButtonSplit>
     </div>
@@ -302,6 +299,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
+import MMenuItem from '#kit/components/ui/menu/item/index.vue'
 import MButtonFab from '#kit/components/ui/button/fab/index.vue'
 import MButtonExtendedFab from '#kit/components/ui/button/extended-fab/index.vue'
 import MButtonSegmented from '#kit/components/ui/button/segmented/index.vue'

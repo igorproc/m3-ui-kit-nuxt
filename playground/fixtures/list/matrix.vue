@@ -92,7 +92,7 @@
           :headline="`${element.name} ${state.name}`"
           supporting-text="Supporting text"
           :leading-icon="ICONS.email"
-          :selected="element.name === 'static' ? undefined : state.selected"
+          :selected="state.selected"
           :disabled="state.disabled"
           :data-test="`${element.name}-${state.name}`"
         />
@@ -118,6 +118,13 @@
           supporting-text="Supporting text"
           :leading-icon="ICONS.star"
           :data-test="`density-${density}-2`"
+        />
+        <MListItem
+          overline="Overline"
+          :headline="`${density}, three lines`"
+          supporting-text="Supporting text"
+          :leading-icon="ICONS.star"
+          :data-test="`density-${density}-3`"
         />
       </MList>
     </div>

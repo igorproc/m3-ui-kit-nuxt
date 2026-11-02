@@ -40,6 +40,15 @@ describe('m-textarea · a11y', () => {
       expect(wrapper.find('.ui-textarea__required').attributes('aria-hidden')).toBe('true')
     })
 
+    it('puts a consumer aria-label on the textarea, not on the wrapper', async () => {
+      if (current) current.unmount()
+      current = await mountSuspended(MTextarea, { attrs: { 'aria-label': 'Message' } })
+      const wrapper = current as VueWrapper
+
+      expect(wrapper.find('textarea').attributes('aria-label')).toBe('Message')
+      expect(wrapper.attributes('aria-label')).toBeUndefined()
+    })
+
     it('relies on the native textarea role rather than an invented one', async () => {
       const wrapper = await mount({ label: 'Notes' })
 
@@ -202,6 +211,13 @@ describe('m-textarea · a11y', () => {
       expect(grip.attributes('aria-valuenow')).toBe('3')
       expect(grip.attributes('aria-valuemin')).toBe('3')
       expect(grip.attributes('aria-valuemax')).toBe('8')
+    })
+
+    // Q32-А: the kit ships no English copy; the name comes from the app.
+    it('ships no name of its own', async () => {
+      const wrapper = await mount({ resizable: true })
+
+      expect(wrapper.find('.ui-textarea__grip').attributes('aria-label')).toBeUndefined()
     })
 
     it('is reachable by keyboard — a pointer-only handle would fail 2.1.1', async () => {

@@ -8,4 +8,4 @@
 ## 2. Zero-Runtime M3 Component Refactoring
 - **Declarative Value Transition**: Transfer the component's legacy static stylesheet variables to the new zero-runtime M3 architecture. Map all styling variables inside an `_index.scss` file in the component's folder (following the structure in [badge/_index.scss](file:///d:/dev/primetime/ui/kit/app/assets/stylesheet/components/badge/_index.scss)).
 - **Preserve Behavior and Logic**: Never touch or alter the Vue component logic (`<script setup>` or core template structure) unless explicitly requested or needed to fix/propagate styles cleanly.
-- **Static Resolution**: Ensure all design tokens are picked from the local `$tokens` map using `g($t, 'path-to-token')`.
+- **Static Resolution**: Ensure all design tokens are picked from the local `$tokens` map using `g($t, 'path.to.token')`.

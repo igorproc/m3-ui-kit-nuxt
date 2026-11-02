@@ -1,12 +1,22 @@
+@use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
 // CHIP GROUP M3 COMPONENT TOKENS
 // ==========================================
-// Layout only. Every selected/hover/focus/disabled visual state belongs to
-// `MChip`; the group owns gap, direction, wrap and overflow.
+// Layout and the field role. Every selected/hover/focus/disabled visual state
+// belongs to `MChip`; the group owns the row, its name and its support line.
 
+$ring: map.get($theme-focus-link, 'width') + map.get($theme-focus-link, 'offset');
 $tokens: (
-  gap: 8rem,
-  scroll: (padding: (block: 2rem)),
+  gap: spacing(8),
+  label: (
+    gap: spacing(4),
+    typography: 'body-medium',
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    required: map.get($theme-color-link, 'error'),
+  ),
+  // The chips' focus ring reaches this far past their edge.
+  scroll: (padding: $ring),
+  fade: spacing(24),
 );

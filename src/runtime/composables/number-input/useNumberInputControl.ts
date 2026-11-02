@@ -40,6 +40,8 @@ import { useNumberValue } from '#kit/composables/number-input/useNumberValue'
 import { useNumberScrub } from '#kit/composables/number-input/useNumberScrub'
 import type { NumberValueHooks, NumberValueProps, UseNumberValueReturn } from '#kit/composables/number-input/useNumberValue'
 import type { NumberScrubProps } from '#kit/composables/number-input/useNumberScrub'
+import { shownUnit } from '#kit/utils/number-input/unit'
+import type { NumberInputUnitEntry } from '#kit/utils/number-input/unit'
 
 export interface NumberInputControlProps extends NumberValueProps, NumberScrubProps {
   /** Validation-adapter path. Evaluated once at setup; absent means inert. */
@@ -54,8 +56,12 @@ export interface NumberInputControlProps extends NumberValueProps, NumberScrubPr
   autofocus?: boolean
   autocomplete?: string
   /** Accessible names for the stepper buttons — the only user-facing copy here. */
-  incrementLabel: string
-  decrementLabel: string
+  incrementLabel?: string
+  decrementLabel?: string
+  /** The unit beside the value; said with it in `aria-valuetext` ("42 kg"). */
+  unit?: string | null
+  /** Unit choices; the chosen one is said by its label, the first while none is chosen. */
+  units?: readonly NumberInputUnitEntry[]
 }
 
 export interface NumberInputAttrs {
@@ -108,7 +114,7 @@ export interface NumberAlertAttrs {
 export interface NumberStepperAttrs {
   'type': 'button'
   'disabled': boolean
-  'aria-label': string
+  'aria-label': string | undefined
   /** The field's label, so two fields' identical "Increase value" buttons can be told apart. */
   'aria-describedby': string | undefined
   'aria-controls': string
@@ -182,6 +188,15 @@ export function useNumberInputControl(
   const describedBy = computed(() => (message.value ? messageId : undefined))
   const inputMode = computed<'numeric' | 'decimal'>(() => (value.precision.value > 0 ? 'decimal' : 'numeric'))
 
+  // A unit only seen is not heard: the spinbutton says it with the value.
+  const valueText = computed(() => {
+    if (model.value === null) return undefined
+    const unit = shownUnit(props.units, props.unit)
+    const formatted = value.codec.value.format(model.value)
+
+    return unit ? `${formatted} ${unit}` : formatted
+  })
+
   function increment() {
     value.step(1)
   }
@@ -241,7 +256,7 @@ export function useNumberInputControl(
     'aria-valuemin': props.min,
     'aria-valuemax': props.max,
     'aria-valuenow': model.value ?? undefined,
-    'aria-valuetext': model.value === null ? undefined : value.codec.value.format(model.value),
+    'aria-valuetext': valueText.value,
     'aria-invalid': isError.value ? 'true' : undefined,
     'aria-busy': meta.pending ? 'true' : undefined,
     'aria-required': props.required ? 'true' : undefined,
@@ -262,7 +277,7 @@ export function useNumberInputControl(
   const supportAttrs = computed<NumberSupportAttrs>(() => ({ id: messageId }))
   const alertAttrs = computed<NumberAlertAttrs>(() => ({ role: 'alert' }))
 
-  const stepperAttrs = (label: string, enabled: boolean, onClick: () => void): NumberStepperAttrs => ({
+  const stepperAttrs = (label: string | undefined, enabled: boolean, onClick: () => void): NumberStepperAttrs => ({
     'type': 'button',
     'disabled': !enabled,
     'aria-label': label,

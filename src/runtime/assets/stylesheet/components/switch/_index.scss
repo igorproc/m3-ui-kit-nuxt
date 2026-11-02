@@ -1,90 +1,84 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use '../choice/control' as control;
 
 // ==========================================
 // SWITCH M3 COMPONENT TOKENS
 // ==========================================
+// Compose `SwitchTokens`; the field row and its roles are the selection
+// family's (`choice/_control.scss`).
 
-$tokens: (
-  gap: 12rem,
-  label: (
-    color: map.get($theme-color-link, 'on-surface'),
-    text: (
-      type: 'body-medium',
-    ),
-  ),
+$track-width: 52rem;
+$track-height: 32rem;
+$border: 2rem;
+$thumb-on: 24rem;
+
+// The thumb container is the "on" thumb's box, centred on the track's
+// height; it travels from the off centre (16) to the on centre (52 − 16).
+$thumb-travel: $track-width - $track-height;
+$on-surface: map.get($theme-color-link, 'on-surface');
+$disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$disabled-container: state-opacity(disabled-container);
+$surface-highest: map.get($theme-color-link, 'surface-container-highest');
+$tokens: map.deep-merge(control.control-tokens($track-height, 12rem), (
+  // The label starts after the track, not after a 40 layer.
+  support: (inset: calc(#{$track-width} + 12rem)),
   track: (
-    width: 52rem,
-    height: 32rem,
-    bg: (
-      color: map.get($theme-color-link, 'surface-container-highest'),
-    ),
-    border: (
-      color: map.get($theme-color-link, 'outline'),
-      width: 2rem,
-    ),
+    width: $track-width,
+    height: $track-height,
+    border: (width: $border),
   ),
   thumb: (
-    size: (
-      off: 16rem,
-      on: 24rem,
-      active: 28rem,
-    ),
-    color: (
-      off: map.get($theme-color-link, 'outline'),
-      on: map.get($theme-color-link, 'on-primary'),
-      hover: (
-        off: map.get($theme-color-link, 'on-surface-variant'),
-        on: map.get($theme-color-link, 'primary-container'),
-      ),
-    ),
+    // Where the thumb container stands: its centre on the track's off centre.
+    start: calc((#{$track-height} - #{$thumb-on}) / 2 - #{$border}),
+    travel: $thumb-travel,
+    travel-rtl: $thumb-travel * -1,
+    pressed: (size: 28rem),
   ),
-  state: (
-    layer: (
-      size: 40rem,
-      opacity: (
-        hover: state-opacity(hover),
-        active: state-opacity(pressed),
-      ),
+  icon: (size: 16rem),
+  layer: (size: 40rem),
+  // The track is the container, the thumb and its glyph the content. Hover,
+  // focus and press share one thumb tone per value (Compose `*HandleColor`);
+  // the layer tones come from `control-tokens`.
+  unselected: (
+    container: (color: $surface-highest, border: map.get($theme-color-link, 'outline')),
+    content: (
+      color: map.get($theme-color-link, 'outline'),
+      icon: $surface-highest,
+      active: (color: map.get($theme-color-link, 'on-surface-variant')),
     ),
+    shape: (thumb: 16rem),
   ),
-  checked: (
-    track: (
-      bg: (
-        color: map.get($theme-color-link, 'primary'),
-      ),
-      border: (
-        color: map.get($theme-color-link, 'primary'),
-      ),
+  selected: (
+    container: (color: map.get($theme-color-link, 'primary')),
+    content: (
+      color: map.get($theme-color-link, 'on-primary'),
+      icon: map.get($theme-color-link, 'on-primary-container'),
+      active: (color: map.get($theme-color-link, 'primary-container')),
     ),
-    thumb: (
-      container: (
-        translate: 20rem,
-      ),
-    ),
+    shape: (thumb: $thumb-on),
   ),
+  error: (container: (border: map.get($theme-color-link, 'error'))),
   disabled: (
-    opacity: state-opacity(disabled-content),
-    track: (
-      bg: (
-        color: color-mix(in srgb, #{map.get($theme-color-link, 'surface-variant')} state-opacity(disabled-container), transparent),
+    unselected: (
+      container: (
+        color: color-mix(in srgb, #{$surface-highest} $disabled-container, transparent),
+        border: color-mix(in srgb, #{$on-surface} $disabled-container, transparent),
       ),
-      border: (
-        color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(disabled-container), transparent),
+      content: (
+        color: $disabled-content,
+        icon: color-mix(in srgb, #{$surface-highest} state-opacity(disabled-content), transparent),
       ),
     ),
-    thumb: (
-      color: map.get($theme-color-link, 'on-surface'),
-    ),
-    checked: (
-      track: (
-        bg: (
-          color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} state-opacity(disabled-container), transparent),
-        ),
-      ),
-      thumb: (
-        color: map.get($theme-color-link, 'surface'),
-      ),
+    selected: (
+      container: (color: color-mix(in srgb, #{$on-surface} $disabled-container, transparent)),
+      content: (color: map.get($theme-color-link, 'surface'), icon: $disabled-content),
     ),
   ),
-);
+  motion: (
+    duration: var(--sys-motion-duration-short-3),
+    easing: var(--sys-motion-easing-standard),
+    // The icon fades and turns in on the same short tokens.
+    icon: (duration: var(--sys-motion-duration-short-4), easing: var(--sys-motion-easing-emphasized-decelerate)),
+  ),
+));

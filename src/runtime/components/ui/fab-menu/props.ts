@@ -34,8 +34,8 @@ export const mFabMenuProps = {
   align: { type: String as PropType<MFabMenuAlign>, default: 'end' },
   /** Accessible name of the default FAB; no default copy is shipped. */
   ariaLabel: { type: String, default: undefined },
-  openIcon: { type: String, default: ICONS.add },
-  closeIcon: { type: String, default: ICONS.close },
+  openIcon: { type: String as PropType<MIconName>, default: ICONS.add },
+  closeIcon: { type: String as PropType<MIconName>, default: ICONS.close },
 }
 
 export type MFabMenuProps = ExtractPublicPropTypes<typeof mFabMenuProps>

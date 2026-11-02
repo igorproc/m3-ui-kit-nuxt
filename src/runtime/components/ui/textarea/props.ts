@@ -12,7 +12,6 @@
  */
 import type { ExtractPublicPropTypes, PropType, VNode } from 'vue'
 import { mFieldProps } from '#kit/components/ui/text-field/props'
-import { MESSAGES } from '#kit/shared/constants/messages'
 import type { MFieldLabelPlacement, MFieldMessageSlotProps } from '#kit/components/ui/text-field/props'
 import type { MTextareaWrap, TextareaCounterState } from '#kit/composables/textarea/useTextareaControl'
 
@@ -40,8 +39,8 @@ export const mTextareaProps = {
    * A height set by hand outranks `autoGrow` until Escape resets it.
    */
   resizable: { type: Boolean, default: false },
-  /** Accessible name of the resize grip. */
-  resizeLabel: { type: String, default: MESSAGES.textareaResize },
+  /** Accessible name of the resize grip. No default: without it dev warns. */
+  resizeLabel: { type: String, default: undefined },
   maxlength: { type: Number, default: undefined },
   /** `true` counts against `maxlength`; a number sets a display-only limit. */
   counter: { type: [Boolean, Number] as PropType<boolean | number>, default: false },

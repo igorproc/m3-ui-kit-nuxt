@@ -42,7 +42,7 @@ test.describe('MLoading', () => {
   test('under reduced motion the expressive shapes still morph over several frames', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await openFixture(page, 'loading/matrix')
-    const samples = await sampleShape(page, '[data-test="expressive-large"] svg.ui-shape', 3200)
+    const samples = await sampleShape(page, '[data-test="shape-comfortable"] svg.ui-shape', 3200)
 
     const runs: number[] = []
     let run = 0
@@ -61,7 +61,7 @@ test.describe('MLoading', () => {
   // Q-5: the swing follows the speed's size, so the shape never turns back past square.
   test('the expressive shape swings one way and comes to rest square', async ({ page }) => {
     await openFixture(page, 'loading/matrix')
-    const samples = await sampleShape(page, '[data-test="expressive-large"] svg.ui-shape', 2400)
+    const samples = await sampleShape(page, '[data-test="shape-comfortable"] svg.ui-shape', 2400)
 
     expect(Math.min(...samples.map(sample => sample.angle))).toBeGreaterThanOrEqual(0)
     expect(Math.max(...samples.map(sample => sample.angle))).toBeGreaterThan(10)
@@ -71,7 +71,7 @@ test.describe('MLoading', () => {
   test('an inline indicator is centred on the line of text', async ({ page }) => {
     await openFixture(page, 'loading/matrix')
     const rem = await remInPx(page)
-    const offset = await page.getByTestId('inline-circular').evaluate((node) => {
+    const offset = await page.getByTestId('inline-spinner').evaluate((node) => {
       const box = node.getBoundingClientRect()
       const range = document.createRange()
       range.selectNodeContents(node.parentElement!.firstChild!)
@@ -82,11 +82,30 @@ test.describe('MLoading', () => {
     expect(Math.abs(offset / rem)).toBeLessThan(1.5)
   })
 
+  for (const dir of DIRECTIONS) {
+    test(`a contained indicator is 38 inside its 48 container, 5 in from each edge (${dir})`, async ({ page }) => {
+      await openFixture(page, 'loading/matrix', { dir })
+      const rem = await remInPx(page)
+
+      for (const [type, part] of [['spinner', '.ui-loading__spinner'], ['shape', '.ui-loading__shape']] as const) {
+        const root = page.getByTestId(`contained-${type}`)
+        const container = await root.evaluate(el => Number.parseFloat(getComputedStyle(el).width))
+        const indicator = await root.locator(part).evaluate((el) => {
+          const style = getComputedStyle(el)
+          return [style.width, style.height, style.left, style.top].map(Number.parseFloat)
+        })
+
+        expect(container / rem, type).toBeCloseTo(48, 0)
+        expect(indicator.map(value => Math.round(value / rem)), type).toEqual([38, 38, 5, 5])
+      }
+    })
+  }
+
   test('the arc and the shape keep a system colour in forced-colors mode', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active' })
     await openFixture(page, 'loading/matrix')
 
-    expect(await page.locator('[data-test="circular-large"] .ui-loading__circle').first().evaluate(el => getComputedStyle(el).forcedColorAdjust)).toBe('none')
-    expect(await page.locator('[data-test="expressive-large"] .ui-loading__expressive').evaluate(el => getComputedStyle(el).forcedColorAdjust)).toBe('none')
+    expect(await page.locator('[data-test="spinner-comfortable"] .ui-loading__circle').first().evaluate(el => getComputedStyle(el).forcedColorAdjust)).toBe('none')
+    expect(await page.locator('[data-test="shape-comfortable"] .ui-loading__shape').evaluate(el => getComputedStyle(el).forcedColorAdjust)).toBe('none')
   })
 })

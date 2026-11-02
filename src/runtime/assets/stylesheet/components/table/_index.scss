@@ -79,6 +79,7 @@ $tokens: (
       // The 40 checkbox target with 4 on each side.
       width: spacing(48),
       padding: (inline: spacing(4)),
+      height: calc(#{$-row-compact} - #{$-hairline}),
     ),
   ),
   header: (
@@ -115,7 +116,13 @@ $tokens: (
     icon: (size: spacing(20)),
   ),
   // A fade at the inline end while more columns lie beyond it.
-  fade: (size: spacing(24)),
+  fade: (
+    size: spacing(24),
+    mask: (
+      width: calc(100% + #{spacing(24)}),
+      shift: calc(-1 * #{spacing(24)}),
+    ),
+  ),
   pagination: (
     padding: (
       inline: spacing(16),

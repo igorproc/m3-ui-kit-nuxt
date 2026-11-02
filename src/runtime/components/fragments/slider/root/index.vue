@@ -2,12 +2,12 @@
   <div
     class="ui-slider-root"
     :class="[
+      `ui-slider-root--${density}`,
       { 'ui-slider-root--vertical': orientation === 'vertical' },
       { 'ui-slider-root--dragging': isDragging },
       { 'ui-slider-root--disabled': disabled },
       { 'ui-slider-root--readonly': readonly },
     ]"
-    :data-orientation="orientation"
   >
     <slot />
   </div>
@@ -16,6 +16,7 @@
 <script setup lang="ts">
 interface Props {
   orientation?: 'horizontal' | 'vertical'
+  density?: 'default' | 'comfortable'
   isDragging?: boolean
   disabled?: boolean
   readonly?: boolean
@@ -23,6 +24,7 @@ interface Props {
 
 withDefaults(defineProps<Props>(), {
   orientation: 'horizontal',
+  density: 'default',
   isDragging: false,
   disabled: false,
   readonly: false,
@@ -30,35 +32,21 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style lang="scss">
-@use '#kit/assets/stylesheet/components/slider/root/index' as t;
-
-$prefix: 'ui-slider-root';
+@use '#kit/assets/stylesheet/components/slider' as t;
 
 .ui-slider-root {
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'md-slider');
 
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: g($t, 'gap');
   position: relative;
   isolation: isolate;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
-
-  &--dragging * {
-    transition: none !important;
-  }
+  inline-size: 100%;
 
   &--vertical {
     align-items: center;
-    height: 100%;
-    width: g($t, 'height');
-  }
-
-  &__label {
-    color: g($t, 'label.color');
-
-    @include apply-typography(g($t, 'label.typography'));
+    inline-size: auto;
   }
 }
 </style>

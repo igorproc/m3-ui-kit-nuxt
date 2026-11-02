@@ -2,7 +2,7 @@
   <div
     :id="layoutId"
     class="m-layout"
-    :class="{ 'm-layout--full-height': fullHeight }"
+    :class="{ 'm-layout--full-height': fullHeight, 'm-layout--nested': nested }"
   >
     <slot />
   </div>
@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
 const uid = useId()
 const layoutId = `m-layout-${(uid || 'ssr').replace(/[^\w-]/g, '')}`
 
-const { css } = createLayout(layoutId, () => props.fullHeight)
+const { css, nested } = createLayout(layoutId, () => props.fullHeight)
 
 /**
  * Computed-стиль собирается после setup всех детей (реестр уже полон при SSR),
@@ -73,10 +73,11 @@ if (import.meta.dev) {
   &--full-height {
     height: 100dvh;
     overflow: hidden;
+  }
 
-    > .m-layout-main {
-      scrollbar-gutter: stable;
-    }
+  // Content of an outer zone: as tall as its own content, not the window
+  &--nested {
+    min-height: 0;
   }
 }
 </style>

@@ -2,22 +2,56 @@
 @use '../../abstracts/variables' as *;
 
 $tokens: (
-  border: (radius: map.get($theme-shape-link, full),
+  border: (
+    radius: map.get($theme-shape-link, full),
   ),
-  background: (color: map.get($theme-color-link, error),
+  background: (
+    color: map.get($theme-color-link, error),
   ),
   text: (
     color: map.get($theme-color-link, on-error),
     typography: map.get($theme-typography-link, label, small),
   ),
-
   large: (
     size: 16rem,
-    padding: (inline: 4rem),
-    text: 0,
+    padding: (
+      inline: 4rem,
+    ),
+    // A longer string is cut with an ellipsis; its full text belongs to the host's name.
+    max-inline-size: 4ch,
   ),
   dot: (
     size: 6rem,
-    padding: (inline: 0),
+    padding: (
+      inline: 0,
+    ),
+  ),
+  // M3 `BadgedBox`: where the badge sits against the corner of its anchor
+  // (24 icon). `inline` is measured back from the anchor's end edge.
+  anchor: (
+    small: (
+      inline: 6rem,
+      block: 0rem,
+    ),
+    large: (
+      inline: 12rem,
+      block: -2rem,
+    ),
   ),
 );
+
+/// Places a badge at the top-end corner of its positioned anchor, as M3's
+/// `BadgedBox` does. The anchor (`position: relative`) is the icon box the
+/// badge annotates.
+/// @param {String} $size - `small` (the dot) or `large` (with a value).
+@mixin badge-anchor($size: large) {
+  @if not map.has-key(map.get($tokens, anchor), $size) {
+    @error 'Unknown badge size `#{$size}`. Available: small, large.';
+  }
+
+  $offsets: map.get($tokens, anchor, $size);
+
+  position: absolute;
+  inset-block-start: map.get($offsets, block);
+  inset-inline-start: calc(100% - #{map.get($offsets, inline)});
+}

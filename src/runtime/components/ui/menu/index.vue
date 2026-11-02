@@ -1,6 +1,16 @@
 <template>
-  <!-- Dummy element to find original position and parent trigger -->
+  <slot
+    name="activator"
+    :props="control.triggerAttrs.value"
+    :is-open="modelValue"
+    :open="menu.open"
+    :close="menu.close"
+    :toggle="menu.toggle"
+  />
+
+  <!-- Finds the trigger: without an `anchor`, the menu's parent element. -->
   <div
+    v-if="!$slots.activator"
     ref="anchorRef"
     class="ui-menu-anchor"
     style="display: none;"
@@ -11,60 +21,63 @@
     overlay it sits in — see useOverlayTeleportTarget). Rendering teleports
     during SSR leaves mismatched teleport anchor comments in the host, so
     hydration only wires up the first menu and silently breaks the rest
-    ("only one menu opens"). Overlays need no SSR, so skip it entirely.
+    ("only one menu opens"). Overlays need no SSR, so skip it entirely. A
+    `v-if` leaves a comment in place, where <client-only> renders a <span>
+    into the trigger.
   -->
-  <client-only>
-    <teleport :to="teleportTarget">
-      <transition
-        name="ui-menu-anim"
-        @enter="showInTopLayer"
-        @after-enter="menu.onAfterEnter"
-        @after-leave="menu.onAfterLeave"
+  <teleport
+    v-if="isMounted"
+    :to="teleportTarget"
+  >
+    <transition
+      name="ui-menu-anim"
+      appear
+      @enter="onEnter"
+      @after-enter="menu.onAfterEnter"
+      @after-leave="menu.onAfterLeave"
+    >
+      <div
+        v-if="modelValue"
+        ref="$positioned"
+        :popover.attr="usesPopoverLayer ? 'manual' : undefined"
+        class="ui-menu"
+        :dir="menu.surfaceDir.value"
+        :style="[menu.menuStyle.value, { zIndex: ticket.zIndex.value }]"
+        v-bind="wrapperAttrs"
       >
         <div
-          v-if="modelValue"
-          ref="$positioned"
-          :popover.attr="usesPopoverLayer ? 'manual' : undefined"
-          class="ui-menu"
-          :class="{ 'ui-menu--absolute': absolute }"
-          :style="[menu.menuStyle.value, { zIndex: ticket.zIndex.value }]"
-          v-bind="$attrs"
+          ref="$menu"
+          class="ui-menu__surface"
+          :class="[`ui-menu__surface--${variant}`, {
+            'ui-menu__surface--grouped': groupCount > 0,
+            'ui-menu__surface--matched': matchWidth,
+            'ui-menu__surface--panel': hostsWidget,
+          }]"
+          v-bind="surfaceBindings"
         >
-          <div
-            v-if="!absolute"
-            class="ui-menu__backdrop"
-            aria-hidden="true"
-            @click="requestClose"
-          />
-
-          <div
-            ref="$menu"
-            class="ui-menu__surface"
-            role="menu"
-            tabindex="-1"
-            @keydown="onSurfaceKeydown"
-          >
-            <slot />
-          </div>
+          <slot />
         </div>
-      </transition>
-    </teleport>
-  </client-only>
+      </div>
+    </transition>
+  </teleport>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick, watch } from 'vue'
+import { computed, nextTick, onMounted, shallowRef, useAttrs, useId, watch } from 'vue'
 import { useMenu } from '#kit/composables/menu/useMenu'
+import { useMenuControl } from '#kit/composables/menu/useMenuControl'
 import { useStack } from '#kit/composables/useStack'
 import { useScrollLock } from '#kit/composables/overlay/useScrollLock'
 import { supportsPopover } from '#kit/shared/utils/support'
 import { useOverlayTeleportTarget } from '#kit/composables/overlay/useOverlayTarget'
-import { useFocusTrap } from '#kit/composables/overlay/useFocusTrap'
 import { useClickOutside } from '#kit/composables/useClickOutside'
+import { splitMenuAttrs } from '#kit/utils/menu/attrs'
+import { provideMenuContext } from './context'
 import { mMenuProps } from './props'
+import type { MMenuActivatorScope } from './types'
 
-// Multiple root nodes (anchor + teleport): forward fallthrough attrs (class,
-// etc.) explicitly onto the surface wrapper instead of letting Vue warn.
+// Multiple root nodes (activator + anchor + teleport): fallthrough attrs are
+// split by hand between the positioned wrapper and the `role="menu"` surface.
 defineOptions({ inheritAttrs: false })
 
 const props = defineProps(mMenuProps)
@@ -73,13 +86,32 @@ const emit = defineEmits<{
   (e: 'click-outside'): void
 }>()
 
+const slots = defineSlots<{
+  /** The element that opens the menu; bind `props` on it. */
+  activator?: (scope: MMenuActivatorScope) => unknown
+  default?: () => unknown
+}>()
+
 const $menu = shallowRef<null | HTMLElement>(null)
 const $positioned = shallowRef<null | HTMLElement>(null)
 const modelValue = defineModel<boolean>({ default: false })
-const anchorRef = ref<HTMLElement | null>(null)
+const anchorRef = shallowRef<HTMLElement | null>(null)
+const activatorEl = shallowRef<HTMLElement | null>(null)
 
-/** The explicit anchor wins; otherwise the parent element is the trigger. */
-const anchorEl = computed<HTMLElement | null>(() => props.anchor ?? anchorRef.value?.parentElement ?? null)
+const attrs = useAttrs()
+const split = computed(() => splitMenuAttrs(attrs))
+const wrapperAttrs = computed(() => split.value.wrapper)
+const surfaceAttrs = computed(() => split.value.surface)
+
+// Slotted into a button's label, the parent is a <span>; the button around it
+// is the trigger. Elsewhere the parent element is.
+const parentTrigger = () => {
+  const parent = anchorRef.value?.parentElement ?? null
+  return parent?.closest<HTMLElement>('button, a[href], [role="button"]') ?? parent
+}
+const trigger = () => activatorEl.value ?? parentTrigger()
+/** The explicit anchor wins; otherwise the trigger is. */
+const anchorEl = computed<HTMLElement | null>(() => props.anchor ?? activatorEl.value ?? parentTrigger())
 
 // Top layer: above a modal <dialog> (which makes everything else inert) and
 // free of any ancestor's overflow. Without the Popover API the stack z-index
@@ -87,114 +119,69 @@ const anchorEl = computed<HTMLElement | null>(() => props.anchor ?? anchorRef.va
 const usesPopoverLayer = supportsPopover()
 const teleportTarget = useOverlayTeleportTarget()
 
-const showInTopLayer = (el: Element) => {
-  if (usesPopoverLayer) (el as HTMLElement).showPopover()
-}
+const triggerId = useId()
+const menuIdFallback = useId()
+const isMounted = shallowRef(false)
+onMounted(() => {
+  isMounted.value = true
+  if (slots.activator) activatorEl.value = document.getElementById(triggerId)
+})
 
 // The composable owns placement: native anchoring, or — when unsupported —
 // measuring these two elements and re-measuring on scroll/resize.
 const menu = useMenu(modelValue, {
-  absolute: () => props.absolute,
-  origin: () => props.origin,
+  placement: () => props.placement,
   matchWidth: () => props.matchWidth,
   trigger: () => anchorEl.value,
   surface: () => $positioned.value,
 })
 
-// --- Menu keyboard navigation (APG menu pattern) --------------------------
-// Items are slotted by the consumer (typically `<button class="ui-menu__item">`).
-// On open the focus trap moves focus onto the menu surface and keeps Tab
-// inside it; the menu then decides inner focus itself: it promotes the items
-// to `role="menuitem"`, makes them roving-tabbable and focuses the first one.
-// Arrow/Home/End move focus, Esc closes.
-// When the menu hosts another composite widget (e.g. the dropdown's
-// `role="listbox"`), that consumer owns keyboard/focus — the menu must not
-// promote items or steal focus.
-const hostsForeignWidget = (): boolean =>
-  !!$menu.value?.querySelector('[role="listbox"], [role="option"]')
+const labelledBy = shallowRef<string | undefined>(undefined)
 
-const getMenuItems = (): HTMLElement[] => {
-  const surface = $menu.value
-  if (!surface || hostsForeignWidget()) return []
+const control = useMenuControl({
+  open: modelValue,
+  triggerId,
+  menuId: () => (attrs.id as string | undefined) ?? menuIdFallback,
+  surface: () => $menu.value,
+  fallbackReturn: trigger,
+  rendered: () => isMounted.value && modelValue.value,
+  labelledBy: () => labelledBy.value,
+})
 
-  const nodes = surface.querySelectorAll<HTMLElement>('[role="menuitem"], button')
-  return Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.getAttribute('aria-disabled') !== 'true')
-}
+const surfaceBindings = computed(() => ({ ...control.menuAttrs.value, ...surfaceAttrs.value }))
 
-const prepareMenuItems = (): HTMLElement[] => {
-  const items = getMenuItems()
-  items.forEach((el, index) => {
-    if (!el.hasAttribute('role')) el.setAttribute('role', 'menuitem')
-    el.tabIndex = index === 0 ? 0 : -1
-  })
-  return items
-}
+const groupCount = shallowRef(0)
+provideMenuContext({
+  getItemAttrs: control.getItemAttrs,
+  registerGroup: () => {
+    groupCount.value++
+    return () => {
+      groupCount.value--
+    }
+  },
+})
 
-const focusItemAt = (items: HTMLElement[], index: number) => {
-  items.forEach((el, i) => {
-    el.tabIndex = i === index ? 0 : -1
-  })
-  items[index]?.focus()
-}
+const hostsWidget = shallowRef(false)
 
-const getTriggerEl = (): HTMLElement | null => anchorRef.value?.parentElement ?? null
-
-const closeAndRestoreFocus = () => {
-  const trigger = getTriggerEl()
-  menu.close()
-  nextTick(() => trigger?.focus())
-}
-
-const focusNextItem = (items: HTMLElement[]) => {
-  const current = items.findIndex(el => el === document.activeElement)
-  focusItemAt(items, current < 0 ? 0 : (current + 1) % items.length)
-}
-
-const focusPreviousItem = (items: HTMLElement[]) => {
-  const current = items.findIndex(el => el === document.activeElement)
-  focusItemAt(items, current <= 0 ? items.length - 1 : current - 1)
-}
-
-const focusTrap = useFocusTrap($menu, { initialFocus: () => $menu.value ?? false })
-
-const onSurfaceKeydown = (event: KeyboardEvent) => {
-  const items = getMenuItems()
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault()
-      if (items.length) focusNextItem(items)
-      break
-    case 'ArrowUp':
-      event.preventDefault()
-      if (items.length) focusPreviousItem(items)
-      break
-    case 'Home':
-      event.preventDefault()
-      if (items.length) focusItemAt(items, 0)
-      break
-    case 'End':
-      event.preventDefault()
-      if (items.length) focusItemAt(items, items.length - 1)
-      break
-    case 'Escape':
-      event.preventDefault()
-      closeAndRestoreFocus()
-      break
-  }
-}
-
-watch(modelValue, async (val) => {
-  if (!val) {
-    focusTrap.deactivate()
+// APG: the menu is named by the button that opens it, unless the consumer
+// names it. The trigger gets an id when it has none.
+function resolveName() {
+  const el = trigger()
+  if (split.value.named || !el || hostsWidget.value) {
+    labelledBy.value = undefined
     return
   }
+  if (!el.id) el.id = triggerId
+  labelledBy.value = el.id
+  if (import.meta.dev && !el.textContent?.trim() && !el.getAttribute('aria-label'))
+    console.warn('[m-menu] has no accessible name: give its trigger a label, or pass `aria-label` / `aria-labelledby`.')
+}
 
+watch(() => isMounted.value && modelValue.value, async (shown) => {
+  if (!shown) return
   await nextTick()
-  // A hosted composite (dropdown listbox) keeps focus in its own field.
-  if (hostsForeignWidget()) return
-  focusTrap.activate()
-  prepareMenuItems()[0]?.focus()
+  hostsWidget.value = control.hostsForeignWidget()
+  resolveName()
 })
 
 // Inject the anchor-name onto the trigger when CSS anchor positioning is
@@ -225,10 +212,15 @@ const ticket = useStack().register({ onDismiss: requestClose })
 // inside a modal does not release the page when it closes.
 const scrollLock = useScrollLock()
 
+function onEnter(el: Element) {
+  if (usesPopoverLayer) (el as HTMLElement).showPopover()
+  menu.reposition()
+  if (props.lockScroll) scrollLock.lock()
+}
+
 watch(modelValue, (val) => {
   if (val) {
     ticket.select()
-    if (props.lockScroll) scrollLock.lock()
   } else {
     ticket.unselect()
     scrollLock.unlock()
@@ -239,21 +231,25 @@ watch(modelValue, (val) => {
 // is null at setup. The composable resolves the element at click time, and
 // ignoring the trigger lets a re-click toggle instead of double-firing
 // (outside-close then the trigger's own open).
-useClickOutside($menu, requestClose, {
-  ignore: [() => anchorRef.value?.parentElement],
+const outside = useClickOutside($menu, requestClose, {
+  ignore: [trigger],
 })
+
+// A closed menu listens to nothing: a page of closed menus would otherwise
+// run every one of their handlers on each press.
+watch(modelValue, open => (open ? outside.resume() : outside.pause()), { immediate: true })
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/menu/index' as t;
+@use '#kit/assets/stylesheet/components/menu/colors' as colors;
 
 .ui-menu {
   $t: material-map(t.$tokens, 'md-menu');
 
-  position: fixed;
-  inset: 0;
-
   // Neutralise the UA [popover] box; the surface below draws the menu.
+  position: fixed;
+  inset: auto;
   pointer-events: auto;
   margin: 0;
   padding: 0;
@@ -261,100 +257,87 @@ useClickOutside($menu, requestClose, {
   background: transparent;
   color: inherit;
   overflow: visible;
-  width: auto;
+
+  // Hug the content by default; `match-width` overrides via inline width
+  // (rect width in the JS fallback, anchor-size() under CSS anchoring).
+  width: max-content;
   height: auto;
 
-  &__backdrop {
-    position: absolute;
-    inset: 0;
-    background: transparent;
-    cursor: default;
-  }
-
-  &__surface {
-    position: absolute;
-    top: g($t, 'surface-top');
-    right: g($t, 'surface-right');
-    min-width: g($t, 'surface-min-width');
-    max-width: g($t, 'surface-max-width');
-    border-radius: g($t, 'surface-border-radius');
-    background-color: g($t, 'surface-bg-color');
-    color: g($t, 'surface-color');
-    box-shadow: g($t, 'surface-shadow');
-
-    // Animation properties
-    transform-origin: var(--ui-menu-origin);
-    will-change: transform, opacity;
+  &__surface,
+  &__group {
+    padding: g($t, 'group.padding.block') g($t, 'group.padding.inline');
+    box-shadow: g($t, 'surface.shadow');
 
     @include forced-colors {
       border: 1px solid CanvasText;
     }
   }
 
-  &__item {
+  &__surface {
+    position: relative;
     width: 100%;
-    min-height: g($t, 'item-min-height');
-    padding: g($t, 'item-padding');
+    min-width: g($t, 'surface.min.width');
+    max-width: g($t, 'surface.max.width');
+    border-radius: g($t, 'group.shape.outer');
+
+    // Animation properties
+    transform-origin: var(--ui-menu-origin);
+    will-change: transform, opacity;
+  }
+
+  &__group {
+    border-radius: g($t, 'group.shape.inner');
+
+    &:first-child {
+      border-start-start-radius: g($t, 'group.shape.outer');
+      border-start-end-radius: g($t, 'group.shape.outer');
+    }
+
+    &:last-child {
+      border-end-start-radius: g($t, 'group.shape.outer');
+      border-end-end-radius: g($t, 'group.shape.outer');
+    }
+  }
+
+  @include colors.variants($t);
+
+  &__surface--grouped {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: g($t, 'item-gap');
-    border: none;
-    background: transparent;
-    cursor: pointer;
+    flex-direction: column;
+    gap: g($t, 'group.gap');
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
 
-    @include typescale(g($t, 'item-text-type'));
-
-    color: g($t, 'item-text-color');
-    text-align: left;
-    transition: background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-
-    @include can-hover {
-      &:hover {
-        background-color: g($t, 'item-hover-bg');
-      }
-    }
-
-    &:active {
-      background-color: g($t, 'item-active-bg');
+    @include forced-colors {
+      border: 0;
     }
   }
 
-  &__item-label {
-    flex: 1;
+  &__surface--matched {
+    max-width: none;
   }
 
-  &__item-shortcut {
-    color: g($t, 'item-shortcut-color');
-
-    @include typescale(g($t, 'item-shortcut-type'));
+  &__surface--panel {
+    max-width: none;
+    padding: 0;
   }
 
-  &--absolute {
-    position: fixed;
-    inset: auto;
-
-    // Hug the content by default; `match-width` overrides via inline width
-    // (rect width in the JS fallback, anchor-size() under CSS anchoring).
-    width: max-content;
-    height: auto;
+  // Reduced motion shortens the system durations; the fade stays, the scale goes.
+  &-anim-enter-active {
+    transition: opacity g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
 
     .ui-menu__surface {
-      position: relative;
-      top: 0;
-      right: 0;
-      width: 100%;
-      max-width: none;
-      margin: 0;
+      transition: transform g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
     }
   }
 
-  &-anim-enter-active,
   &-anim-leave-active {
-    transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1);
+    transition: opacity g($t, 'motion.exit.duration') g($t, 'motion.exit.easing');
 
     .ui-menu__surface {
-      transition: transform 250ms cubic-bezier(0.2, 0, 0, 1);
+      transition: transform g($t, 'motion.exit.duration') g($t, 'motion.exit.easing');
     }
   }
 
@@ -363,13 +346,12 @@ useClickOutside($menu, requestClose, {
     opacity: 0;
 
     .ui-menu__surface {
-      transform: scale(0.8);
+      transform: scale(g($t, 'motion.scale.from'));
+
+      @media (prefers-reduced-motion: reduce) {
+        transform: none;
+      }
     }
   }
-}
-
-// Items fill a surface that clips: the ring goes inside.
-.ui-menu__item:focus-visible {
-  @include focus-ring(inset);
 }
 </style>

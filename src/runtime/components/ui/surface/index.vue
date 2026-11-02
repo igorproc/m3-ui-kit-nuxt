@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { useSurfaceClickWarning } from '#kit/composables/surface/useSurfaceClickWarning'
+import { useSurfaceClickWarning } from '#kit/utils/surface/useSurfaceClickWarning'
 import { mSurfaceProps } from './props'
 
 const props = defineProps(mSurfaceProps)

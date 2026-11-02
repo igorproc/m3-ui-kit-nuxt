@@ -7,9 +7,9 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { NuxtLinkProps } from '#app'
 import { propsFactory } from '#kit/shared/utils/props/propsFactory'
-import { makeColorProps, makeStateProps, makeVariantProps } from '#kit/shared/utils/props'
+import { makeColorProps, makeStateProps } from '#kit/shared/utils/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
-import type { MColor, MVariant } from '#kit/shared/types/props'
+import type { MAccentColor, MVariant } from '#kit/shared/types/props'
 
 export type MButtonTag = 'button' | 'link'
 export type MButtonType = 'button' | 'submit' | 'reset'
@@ -21,12 +21,22 @@ export type MButtonDensity = MFieldDensity
  * follows the density step, so the consumer never picks a mismatched corner.
  */
 export type MButtonShape = 'round' | 'square'
+/** M3 common buttons: the five button styles, no `plain`. */
+export type MButtonVariant = Extract<MVariant, 'elevated' | 'filled' | 'tonal' | 'outlined' | 'text'>
 
 /** Generator for the button family (lets wrappers override defaults). */
 export const makeMButtonProps = propsFactory({
   ...makeColorProps(),
-  ...makeVariantProps(),
+  /** Material surface treatment that controls the button emphasis. */
+  variant: { type: String as PropType<MButtonVariant>, default: 'filled' },
   ...makeStateProps(),
+  /**
+   * Disabled that keeps the Tab stop: `aria-disabled`, the disabled look, and
+   * activation swallowed. For a control that cannot act right now and may be
+   * holding focus — Next on the last page, a pager while a page loads — where a
+   * native `disabled` would drop focus to the page. `disabled` wins over it.
+   */
+  softDisabled: { type: Boolean, default: false },
   /** Height, padding, icon and type step. */
   density: { type: String as PropType<MButtonDensity>, default: 'default' },
   /** Resting container shape; a selected toggle is always square. */
@@ -67,7 +77,7 @@ export const mIconButtonProps = {
    * Colour role. Left unset, a standard or outlined icon button takes the
    * content colour of its container (an app bar, a toolbar, an alert).
    */
-  color: { type: String as PropType<MColor>, default: undefined },
+  color: { type: String as PropType<MAccentColor>, default: undefined },
   /** Container width at the density's height. */
   width: { type: String as PropType<MIconButtonWidth>, default: 'default' },
   /** Accessible name required by the icon-only button. */

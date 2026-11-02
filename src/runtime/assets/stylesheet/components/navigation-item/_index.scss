@@ -1,0 +1,110 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// NAVIGATION ITEM M3 TOKENS
+// (shared by the bar, the rail and the drawer — one item, three hosts)
+// ==========================================
+// The indicator (pill) carries the selection and the state layer. A vertical
+// item (`top`) holds only the icon in it, the label sits below; a horizontal
+// item (`start`) holds the icon and the label.
+
+$on-surface: map.get($theme-color-link, 'on-surface');
+$on-secondary-container: map.get($theme-color-link, 'on-secondary-container');
+$tokens: (
+  icon: (
+    size: 24rem,
+  ),
+  // Compose `NavigationBarTokens`: Inactive* is `unselected`, Active* is
+  // `selected`; the indicator is the selected container.
+  unselected: (
+    content: (
+      color: map.get($theme-color-link, 'on-surface-variant'),
+      // An unselected destination under the pointer.
+      active: (color: $on-surface),
+    ),
+  ),
+  selected: (
+    container: (color: map.get($theme-color-link, 'secondary-container')),
+    content: (
+      color: map.get($theme-color-link, 'secondary'),
+      icon: $on-secondary-container,
+    ),
+  ),
+  disabled: (
+    color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent),
+  ),
+  indicator: (
+    shape: map.get($theme-shape-link, 'full'),
+    state: (
+      color: $on-secondary-container,
+      hover: state-opacity(hover),
+      focus: state-opacity(focus),
+      pressed: state-opacity(pressed),
+    ),
+  ),
+  top: (
+    gap: spacing(4),
+    typography: 'label-medium',
+  ),
+  start: (
+    typography: 'label-large',
+  ),
+  bar: (
+    padding: (
+      block: calc(#{spacing(4)} + #{spacing(2)}),
+    ),
+    indicator: (
+      width: 64rem,
+      height: 32rem,
+    ),
+    start: (
+      height: 40rem,
+      padding: spacing(16),
+      gap: spacing(4),
+      typography: 'label-medium',
+    ),
+  ),
+  rail: (
+    min-height: 64rem,
+    indicator: (
+      width: 56rem,
+      height: 32rem,
+    ),
+    start: (
+      height: 56rem,
+      padding: spacing(16),
+      gap: spacing(8),
+    ),
+  ),
+  drawer: (
+    height: 56rem,
+    padding: (
+      start: spacing(16),
+      end: spacing(24),
+    ),
+    gap: spacing(12),
+    selected: (
+      content: (color: $on-secondary-container),
+    ),
+    trailing: (
+      color: map.get($theme-color-link, 'on-surface-variant'),
+    ),
+  ),
+  motion: (
+    // The pill grows out of its centre; the colours follow on a shorter beat.
+    indicator: (
+      duration: var(--sys-motion-duration-medium-2),
+      easing: var(--sys-motion-easing-emphasized-decelerate),
+    ),
+    color: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-standard),
+    ),
+    // A rail switching between collapsed and expanded fades its labels in.
+    label: (
+      duration: var(--sys-motion-duration-medium-2),
+      easing: var(--sys-motion-easing-standard),
+    ),
+  ),
+);

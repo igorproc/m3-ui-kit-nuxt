@@ -11,7 +11,7 @@ export const cities: City[] = [
 ]
 
 /** Titles and values resolved by key — the shape most consumers have. */
-export const base = { items: cities, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off' } as const
+export const base: Record<string, unknown> = { items: cities, itemTitle: 'name', itemValue: 'id', itemDisabled: 'off' }
 
 export type Wrapper = Awaited<ReturnType<typeof mountSuspended>>
 

@@ -11,12 +11,18 @@
 
 $on-surface: map.get($theme-color-link, on-surface);
 $on-surface-variant: map.get($theme-color-link, on-surface-variant);
+$primary: map.get($theme-color-link, primary);
+$on-primary: map.get($theme-color-link, on-primary);
 $primary-container: map.get($theme-color-link, primary-container);
 $on-primary-container: map.get($theme-color-link, on-primary-container);
 $surface-highest: map.get($theme-color-link, surface-container-highest);
 $selector: (width: 96rem, height: 80rem);
 $separator: 24rem;
 $dial: 256rem;
+
+@function -disabled($color) {
+  @return color-mix(in srgb, #{$color} state-opacity(disabled-content), transparent);
+}
 
 // Compose's 36, which is off the 4-step spacing scale.
 $display-gap: spacing(32) + spacing(4);
@@ -43,38 +49,42 @@ $tokens: (
     shape: map.get($theme-shape-link, small),
     typography: 'display-large',
     color: (container: $surface-highest, label: $on-surface),
-    selected: (container: $primary-container, label: $on-primary-container),
+    selected: (container: (color: $primary-container), content: (color: $on-primary-container)),
   ),
   separator: (width: $separator, typography: 'display-large', color: $on-surface),
   period: (
     typography: 'title-medium',
     gap: spacing(4),
+    coarse: (gap: spacing(8)),
     // Beside the selectors (vertical) or under them (horizontal).
     offset: (vertical: spacing(12), horizontal: spacing(16)),
     vertical: (width: 52rem, height: map.get($selector, height)),
     horizontal: (width: 216rem, height: 38rem),
     input: (height: 72rem),
-    shape: map.get($theme-shape-link, full),
-    color: (container: map.get($theme-color-link, surface-container-lowest), label: $on-surface-variant),
+    unselected: (
+      container: (color: map.get($theme-color-link, surface-container-lowest)),
+      content: (color: $on-surface-variant),
+      shape: map.get($theme-shape-link, full),
+    ),
     selected: (
-      container: $primary-container,
-      label: $on-primary-container,
+      container: (color: $primary-container),
+      content: (color: $on-primary-container, weight: 700),
       shape: map.get($theme-shape-link, medium),
-      weight: 700,
     ),
   ),
   dial: (
     size: $dial,
     color: $surface-highest,
     shape: map.get($theme-shape-link, full),
-    number: (size: 48rem, typography: 'body-large', color: $on-surface, selected: map.get($theme-color-link, on-primary)),
+    number: (size: 48rem, typography: 'body-large', color: $on-surface),
+    selected: (content: (color: $on-primary)),
     hand: (
-      color: map.get($theme-color-link, primary),
+      color: $primary,
       track: 2rem,
       handle: 48rem,
       center: 8rem,
       // A minute between the five-minute marks.
-      dot: (size: 4rem, color: map.get($theme-color-link, on-primary)),
+      dot: (size: 4rem, color: $on-primary),
     ),
   ),
   field: (
@@ -101,7 +111,23 @@ $tokens: (
   // The row under the picker that holds the mode switch: M3's dial → actions 24.
   actions: (gap: spacing(24)),
   layer: (hover: state-opacity(hover), pressed: state-opacity(pressed)),
-  disabled: (opacity: state-opacity(disabled-content)),
+  disabled: (
+    headline: -disabled($on-surface-variant),
+    selector: (
+      container: -disabled($surface-highest),
+      label: -disabled($on-surface),
+      selected: (container: (color: -disabled($primary-container)), content: (color: -disabled($on-primary-container))),
+    ),
+    separator: -disabled($on-surface),
+    dial: (
+      color: -disabled($surface-highest),
+      hand: -disabled($primary),
+      number: -disabled($on-surface),
+      selected: (content: (color: -disabled($on-primary))),
+    ),
+    field: (container: -disabled($surface-highest), label: -disabled($on-surface)),
+    support: -disabled($on-surface-variant),
+  ),
   motion: (
     duration: var(--sys-motion-duration-short-4),
     easing: var(--sys-motion-easing-standard),

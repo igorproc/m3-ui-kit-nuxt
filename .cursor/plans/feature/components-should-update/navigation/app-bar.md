@@ -2,7 +2,7 @@
 
 <identity>M3: App bars (small, medium flexible, large flexible; search app bar — см. [search](../inputs/search.md)) · Токены Compose: `AppBarTokens`, `AppBarSmallTokens`, `AppBarMediumFlexibleTokens`, `AppBarLargeFlexibleTokens` · Код: `src/runtime/components/ui/app-bar/` (+ `nav/`, `title/`, `actions/`), `src/runtime/composables/app-bar/useAppBar.ts` · Аудит: `data/app-bar.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Оси Expressive уже есть: `type` small/medium/large, `align` start/center, подзаголовок у всех размеров. Заливка при прокрутке есть, тени нет. Регистрация в `m-layout`. Расходятся типографика, отступы и перенос заголовка; нет сворачивания при прокрутке и ландмарка.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Токены, ландмарк и заголовок, перенос flexible-заголовка и тултип small, сворачивание (scroll-driven), предупреждения о `center`/`collapse`; начальная прокрутка; safe-area у прибитого (`sticky`) бара вне `m-layout` (модификатор `--safe-area`, внутри раскладки вырез отдаёт зона), переходы через карту `container.motion`. Осталась документация (Ш7) — вне репо кита.</implementation-status>
 
 ## Вердикт
 
@@ -112,7 +112,7 @@ small и medium. Обрезка многоточием есть в обоих.
 4. **M — сворачивание** medium/large (после вопроса 1).
 5. **S — начальная прокрутка вне раскладки и safe-area** (RS-09).
 6. **S — деприкация `center-aligned`, предупреждение о `center` у medium/large.**
-7. **M — документация** (DC-01…05): размеры, выравнивание, прокрутка, связка с `m-layout` и
+7. **отложено**: документация вне репо кита (docs_v2/v3, `plans-audit-2/report.md` §6). **M — документация** (DC-01…05): размеры, выравнивание, прокрутка, связка с `m-layout` и
    с поиском.
 
 ## Тесты

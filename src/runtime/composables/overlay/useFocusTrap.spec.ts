@@ -22,14 +22,17 @@ afterEach(() => {
 })
 
 describe('useFocusTrap', () => {
-  it('moves focus in on activation and returns it on deactivation', async () => {
-    const { outside, panel, first } = buildPanel()
+  // The surface takes focus, not its first control: the content decides
+  // whether anything inside deserves it (`autofocus`), the trap does not guess.
+  it('moves focus onto the container on activation and returns it on deactivation', async () => {
+    const { outside, panel } = buildPanel()
     outside.focus()
     const scope = effectScope()
     const trap = scope.run(() => useFocusTrap(panel))!
 
     trap.activate()
-    expect(document.activeElement).toBe(first)
+    expect(document.activeElement).toBe(panel)
+    expect(panel.tabIndex).toBe(-1)
 
     trap.deactivate()
     await nextTick()
@@ -80,6 +83,29 @@ describe('useFocusTrap', () => {
     middle.focus()
     expect(tab(middle).defaultPrevented).toBe(true)
     expect(document.activeElement).toBe(first)
+    scope.stop()
+  })
+
+  it('keeps a tabindex the container already has', () => {
+    const { panel } = buildPanel()
+    panel.tabIndex = 0
+    const scope = effectScope()
+    const trap = scope.run(() => useFocusTrap(panel))!
+
+    trap.activate()
+    expect(document.activeElement).toBe(panel)
+    expect(panel.tabIndex).toBe(0)
+    scope.stop()
+  })
+
+  it('leaves focus where it is when it already sits inside', () => {
+    const { panel, last } = buildPanel()
+    last.focus()
+    const scope = effectScope()
+    const trap = scope.run(() => useFocusTrap(panel))!
+
+    trap.activate()
+    expect(document.activeElement).toBe(last)
     scope.stop()
   })
 

@@ -2,7 +2,7 @@
 
 <identity>M3: отдельного компонента нет; основа — фон приложения на ролях `background`/`on-background`, единый слой оверлеев · Токены Compose: `ColorSchemeKeyTokens` (background) · Код: `src/runtime/components/ui/app/`, `src/runtime/assets/stylesheet/components/app/_index.scss` · Аудит: `data/app.json` · Тип: public, инфраструктура</identity>
 
-<implementation-status state="planned" updated="2026-10-07">2026-10-07: `rootElement` отдаётся живым ref (EN-04), пропы и публичные типы переехали в `props.ts`, добавлена ссылка «Перейти к содержимому» (`skipLinkLabel`/`skipLinkTarget`), `core/scope.vue` ссылается на `docs/architecture.md`, там же краткий раздел о `MApp`; фикстуры `app/{matrix,stress}` и e2e. Полная docs-страница (DC-01…05) перенесена в docs_v2 вне репо.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Шаги 1, 3–5 сделаны: живой `rootElement`, пропы в `props.ts`, ссылка «Перейти к содержимому», ссылка `core/scope.vue` на `docs/architecture.md`; 2026-10-30 e2e ссылки идут на `app/matrix` (playground даёт подпись только этой фикстуре). Шаг 2 (docs-страница) отменён: docs_v2 вне репо. `> *` у хоста оверлеев оставлен — принятое исключение `decisions.md` («Принятые исключения…», 2026-10-23).</implementation-status>
 
 ## Вердикт
 
@@ -79,7 +79,7 @@
 
 1. **S — EN-04.** Отдавать ref, добавить спеку: после монтирования `rootElement.value` — корень.
    Сделано.
-2. **M — документация (DC-01…05).** **Перенесено**: docs-страница пишется в docs_v2 вне этого
+2. **M — документация (DC-01…05).** **Отменено**: docs-страница пишется в docs_v2 вне этого
    репозитория. В репо — краткий раздел «`<MApp>` and apps without it» в
    `docs/architecture.md` §2 (что монтирует `MApp`, слот загрузки и `aria-busy`, ссылка
    «Перейти к содержимому», сборка без `MApp`). Пункт «стандартный корень слоя» устарел: кит —

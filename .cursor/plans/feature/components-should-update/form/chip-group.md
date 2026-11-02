@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; M3 описывает только «chip set» — раскладку чипов, которую material-web делает toolbar-ом (`m3-reference/docs/components/chip.md`, «Chip sets») · Токены Compose: нет; чипы — `*ChipTokens` через `MChip` · Код: `src/runtime/components/ui/chip-group/` + `src/runtime/composables/chip-group/context.ts` · Аудит: `data/chip-group.json` · Тип: public, родитель семейства</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент работает с 2026-07-16: выделенный контекст, тикеты выбора поверх `useSelectionGroup`, roving tabindex, `direction`/`wrap`, режим данных. План 2026-10-07 доводит его по системе: имя группы, строка поддержки, безопасная прокрутка, порядок обхода из DOM, перенос фокуса при удалении. Код не менялся. Ждут ГВ-1…ГВ-5.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: удаление последнего чипа оставляет фокус на ряду (focusout только от самого ряда, F2-07); фикстуры `chip-group/{matrix,stress}` (single, multiple, max, disabled, смешанный набор, данные, поле с ошибкой, вертикаль, прокрутка, удаление, вставка; 120 чипов) и `chip-group.e2e.ts`. Ранее (G1): порядок DOM, вход Tab, поле, `label`, затухание у края.</implementation-status>
 
 ## Вердикт
 

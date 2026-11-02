@@ -12,7 +12,7 @@
 
     <MAlert
       v-model="incidentVisible"
-      type="warning"
+      color="warning"
       title="Задержки доставки у перевозчика"
       icon="ic:outline-local-shipping"
       closable

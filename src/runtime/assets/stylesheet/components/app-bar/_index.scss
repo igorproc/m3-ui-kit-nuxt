@@ -11,6 +11,14 @@
 // only its own map; the grid-area name each leaf claims lives in that same map
 // (`area`), keeping placement and styling in one place.
 
+// Height variants keyed by size; each carries a taller `subtitle` counterpart
+// shown when a subtitle is present.
+$height: (
+  small: (base: 64rem, subtitle: 72rem),
+  medium: (base: 112rem, subtitle: 136rem),
+  large: (base: 120rem, subtitle: 152rem),
+);
+
 // Container chrome — surface, scroll fill, padding.
 $container: (
   color: map.get($theme-color-link, surface),
@@ -21,44 +29,56 @@ $container: (
     shadow: none,
   ),
   padding: (
-    inline: 16rem,
-    block: 8rem,
+    // The 48rem icon buttons bring their own room; M3 adds 4 at the edges.
+    inline: spacing(4),
   ),
-);
-
-// Height variants keyed by size; each carries a taller `subtitle` counterpart
-// shown when a subtitle is present.
-// ASSUMPTION: exact subtitle dp absent from the saved MD3 specs (lazy-loaded); tune if needed.
-$height: (
-  small: (base: 64rem, subtitle: 72rem),
-  medium: (base: 112rem, subtitle: 136rem),
-  large: (base: 120rem, subtitle: 152rem),
+  safe-area: (
+    top: env(safe-area-inset-top, 0rem),
+    left: calc(#{spacing(4)} + env(safe-area-inset-left, 0rem)),
+    right: calc(#{spacing(4)} + env(safe-area-inset-right, 0rem)),
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-medium-2),
+    easing: var(--sys-motion-easing-standard),
+  ),
 );
 
 // Leading region — <MAppBarNav>.
 $nav: (
   area: nav,
   min: (width: 48rem, height: 48rem),
-  margin: 8rem,
 );
 
 // Headline region — <MAppBarTitle>.
 $title: (
   area: headline,
+  // M3 starts a headline 16 from the edge (12 past the bar's 4) when nothing
+  // leads it; a leading button wider than that pushes it instead.
+  inset: 12rem,
   gap: 2rem,
   color: map.get($theme-color-link, on-surface),
-  padding-bottom: (
-    medium: 24rem,
-    large: 28rem,
-  ),
+  // Under a flexible headline: with the small bar's height as the top row it
+  // makes the M3 heights exactly (112 = 64 + 36 + 12, 120 = 64 + 44 + 12).
+  padding-bottom: 12rem,
   typography: (
     small: map.get($theme-typography-link, title, large),
-    medium: map.get($theme-typography-link, headline, small),
-    large: map.get($theme-typography-link, headline, medium),
+    medium: map.get($theme-typography-link, headline, medium),
+    large: map.get($theme-typography-link, display, small),
   ),
+  // A flexible (medium, large) headline wraps up to this many lines.
+  lines: 2,
   subtitle: (
     color: map.get($theme-color-link, on-surface-variant),
-    typography: map.get($theme-typography-link, body, medium),
+    typography: (
+      small: map.get($theme-typography-link, label, medium),
+      medium: map.get($theme-typography-link, label, large),
+      large: map.get($theme-typography-link, title, medium),
+    ),
+  ),
+  // The copy a folded medium / large bar shows in its top row.
+  collapsed: (
+    area: collapsed,
+    typography: map.get($theme-typography-link, title, large),
   ),
 );
 
@@ -66,5 +86,27 @@ $title: (
 $actions: (
   area: actions,
   gap: 4rem,
-  margin: 8rem,
+  // Trailing icon buttons take the variant tone; the leading one stays on-surface.
+  color: map.get($theme-color-link, on-surface-variant),
+);
+
+// Fold of a collapsing bar: it shrinks to the small height over the first
+// stretch of scroll as long as the height it loses; the copy fades in over
+// the second half of that stretch.
+$collapse: (
+  target: map.get($height, small, base),
+  range: (
+    medium: (
+      base: map.get($height, medium, base) - map.get($height, small, base),
+      subtitle: map.get($height, medium, subtitle) - map.get($height, small, base),
+    ),
+    large: (
+      base: map.get($height, large, base) - map.get($height, small, base),
+      subtitle: map.get($height, large, subtitle) - map.get($height, small, base),
+    ),
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-medium-2),
+    easing: var(--sys-motion-easing-standard),
+  ),
 );

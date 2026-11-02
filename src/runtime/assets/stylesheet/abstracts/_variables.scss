@@ -1,7 +1,7 @@
 @use "sass:map";
 @use "~material-kit-config" as *;
 
-/* variables */
+// variables
 $scrollbar-width: 12px;
 $scrollbar-inline-inset: 4px;
 $breakpoints: (
@@ -68,7 +68,7 @@ $z-indexes: (
   aside: 40,
 );
 
-/* links */
+// links
 $theme-color-link: (
   // Primary
   'primary': var(--md-sys-color-primary),
@@ -313,5 +313,5 @@ $theme-typography-link: (
   ),
 );
 
-/* reassign */
+// reassign
 $breakpoints: map.merge($breakpoints, $material-kit-breakpoints);

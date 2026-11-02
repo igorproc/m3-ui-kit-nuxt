@@ -22,6 +22,5 @@ useAppBarContext()
   justify-content: center;
   min-width: g($nav, 'min.width');
   min-height: g($nav, 'min.height');
-  margin-inline-end: g($nav, 'margin');
 }
 </style>

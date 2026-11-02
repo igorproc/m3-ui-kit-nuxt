@@ -3,7 +3,7 @@
  *
  * @remarks
  * Auto-layout engine v2 (carving). `m-layout` owns a registry of first-level
- * zones in DOM order; the pure carving module (`./layout/carve`) turns it into
+ * zones in DOM order; the pure carving module (`utils/layout/carve`) turns it into
  * `grid-template-*` per device range, injected via `useHead` — SSR-first,
  * zero CLS, no measurements.
  *
@@ -21,35 +21,31 @@ import {
   onBeforeUnmount,
   onMounted,
   onScopeDispose,
-  readonly,
-  ref,
   shallowReactive,
   toValue,
   unref,
   useId,
-  watch,
   watchEffect,
+  type ComputedRef,
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue'
 import { useNuxtApp } from '#app'
-import { IN_BROWSER } from '#kit/shared/constants/globals'
 import { createContext } from '#kit/shared/utils/context/createContext'
-import { useEventListener } from './useEventListener'
-import { useGlobalListener } from './useGlobalListener'
 import {
-  KIND_BY_AREA,
   ZONE_ATTR,
   sanitizeAreaName,
-} from './layout/carve'
-import type { CarveItem, LayoutKind } from './layout/carve'
-import { buildLayoutCss } from './layout/css'
-import { createLayoutRegistry } from './layout/registry'
-import type { LayoutItem, LayoutRegistry } from './layout/registry'
-import { createScrollLock, type ScrollLock } from './layout/scroll'
+} from '#kit/utils/layout/carve'
+import type { CarveItem, LayoutKind } from '#kit/utils/layout/carve'
+import { buildLayoutCss } from '#kit/utils/layout/css'
+import { createLayoutRegistry } from '#kit/utils/layout/registry'
+import type { LayoutItem, LayoutRegistry } from '#kit/utils/layout/registry'
+import { createLayoutZone } from '#kit/utils/layout/zone'
+import type { LayoutZone } from '#kit/utils/layout/zone'
 
-/** @deprecated v1 naming — use `LayoutKind` ('header'→'top', 'left'→'start', …). */
-export type LayoutArea = 'header' | 'left' | 'main' | 'right' | 'footer' | string
+export type { LayoutKind } from '#kit/utils/layout/carve'
+export type { LayoutItem } from '#kit/utils/layout/registry'
+export type { LayoutZone } from '#kit/utils/layout/zone'
 
 interface LayoutProvide {
   /** uid of the owning `m-layout` instance — the parent-component check. */
@@ -59,37 +55,17 @@ interface LayoutProvide {
   /** Re-inserts a late-mounted item at its real DOM position. */
   reorder: LayoutRegistry['reorder']
   items: LayoutItem[]
+  /** `main` scrolls itself instead of the document (`<m-layout full-height>`). */
+  fullHeight: Readonly<Ref<boolean>>
 }
 
 interface LayoutHostProvide {
+  /** Kind of the hosting zone: what fills an aside is plain content in `main`. */
+  kind: Readonly<Ref<LayoutKind>>
+  /** The hosting zone scrolls itself (`main` of a `full-height` layout): sticky content inside sticks to it, not to the window. */
+  scroller: Readonly<Ref<boolean>>
   /** A nested component donates its size to the hosting zone; returns dispose. */
   contribute: (size: Ref<string | undefined>) => () => void
-}
-
-/** CSS-выражения суммарных краёв; значения живут в `--m3-layout-inset-*` (генерирует carve). */
-const INSET_VARS = {
-  top: 'var(--m3-layout-inset-top, 0px)',
-  right: 'var(--m3-layout-inset-right, 0px)',
-  bottom: 'var(--m3-layout-inset-bottom, 0px)',
-  left: 'var(--m3-layout-inset-left, 0px)',
-} as const
-
-/**
- * Контекстная зона лейаута (layoutContextZone) — публичный rich-контекст,
- * доступный любому потомку `<m-layout>`; `null` вне лейаута.
- */
-export interface LayoutZone {
-  layoutId: string
-  /** Реестр зон (read-only, в DOM-порядке). */
-  items: Readonly<LayoutItem[]>
-  /** Суммарные края лейаута как CSS-выражения (для FAB, snackbar, отступов). */
-  insets: typeof INSET_VARS
-  /** Скролл активного скроллера: документ или `m-layout-main` в `full-height`. */
-  windowY: Readonly<Ref<number>>
-  /** Реф-счётный лок скролла: два потребителя → один физический лок. */
-  scrollLock: ScrollLock
-  /** Готовые офсеты для `position: sticky` внутри лейаута. */
-  sticky: { top: string, bottom: string }
 }
 
 // Nullable defaults: layout-aware components degrade to a no-op when used
@@ -117,6 +93,7 @@ export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<bool
   const nested = useLayoutContext() !== null
   const registry = createLayoutRegistry()
   const { items } = registry
+  const isFullHeight = computed(() => toValue(fullHeight))
 
   onMounted(registry.markHydrated)
 
@@ -126,6 +103,7 @@ export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<bool
     unregister: registry.unregister,
     reorder: registry.reorder,
     items,
+    fullHeight: isFullHeight,
   })
 
   // Вложенный <m-layout> внутри зоны (например m-layout-main): сбрасываем
@@ -134,48 +112,8 @@ export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<bool
   // регистрации в своей сетке — грид не выкроится, зоны лягут в поток.
   provideLayoutHostContext(null)
 
-  // ── Контекстная зона (layoutContextZone) ──────────────────────────────────
-  // Активный скроллер: в обычном режиме скроллит документ, в full-height —
-  // m-layout-main. Слушаем оба источника: события шлёт только реально
-  // скроллящийся, поэтому режим различать не нужно.
-  const mainEl = ref<HTMLElement | null>(null)
-
-  const syncMainEl = () => {
-    const main = items.find(item => item.kind === 'main')
-    const el = main ? registry.getEl(main.id) : null
-    mainEl.value = el instanceof HTMLElement ? el : null
-  }
-
-  onMounted(syncMainEl)
-  watch(items, syncMainEl, { flush: 'post' })
-
-  const windowY = ref(0)
-
-  if (IN_BROWSER) {
-    useGlobalListener('window', 'scroll', () => {
-      windowY.value = window.scrollY
-    }, { passive: true })
-
-    useEventListener(() => mainEl.value, 'scroll', (event) => {
-      windowY.value = (event.target as HTMLElement).scrollTop
-    }, { passive: true })
-  }
-
-  // Лочим все потенциальные скроллеры разом — замороженный не-скроллер
-  // визуально no-op, зато scrollLock не зависит от режима лейаута
-  const scrollLock = createScrollLock(() => [
-    IN_BROWSER ? document.documentElement : null,
-    mainEl.value,
-  ])
-
-  provideLayoutZoneContext({
-    layoutId,
-    items,
-    insets: INSET_VARS,
-    windowY: readonly(windowY),
-    scrollLock,
-    sticky: { top: INSET_VARS.top, bottom: INSET_VARS.bottom },
-  })
+  // Активный скроллер: в обычном режиме документ, в full-height — m-layout-main
+  provideLayoutZoneContext(createLayoutZone(layoutId, registry, isFullHeight))
 
   // Same resolved map the breakpoint composables read — resolved once by the plugin.
   const { breakpoints } = useNuxtApp().$material.breakpoints
@@ -198,17 +136,16 @@ export function createLayout(layoutId: string, fullHeight: MaybeRefOrGetter<bool
       { range: 'mobile', itemsMedia: `only screen and (max-width: ${tabletMin - 1}px)` },
       { range: 'tablet', media: `only screen and (min-width: ${tabletMin}px) and (max-width: ${desktopMin - 1}px)` },
       { range: 'desktop', media: `only screen and (min-width: ${desktopMin}px)` },
-    ], { fullHeight: toValue(fullHeight), nested })
+    ], { fullHeight: isFullHeight.value, nested })
   })
 
-  return { css, items }
+  return { css, items, nested }
 }
 
 export interface UseLayoutItemOptions {
   id?: string | Ref<string>
-  kind?: LayoutKind | Ref<LayoutKind | undefined>
-  /** @deprecated v1 — use `kind` ('header'→'top', 'left'→'start', …). */
-  area?: LayoutArea | Ref<LayoutArea>
+  /** Zone kind. Required: an item without one is no zone (it never falls back to a second `main`). */
+  kind: LayoutKind | Ref<LayoutKind>
   /** CSS var name (`--ui-app-bar-height-small`) or a size expression (`360rem`). */
   sizeToken?: string | Ref<string | undefined>
   /** The zone pins to the viewport — feeds sticky insets (план §2.6). */
@@ -239,28 +176,64 @@ function hasLayoutOwner(instance: ReturnType<typeof getCurrentInstance>, layoutU
   return false
 }
 
+export interface UseLayoutItem {
+  layoutItemStyles: ComputedRef<Record<string, string>>
+  layoutItemAttrs: ComputedRef<Record<string, string>>
+  /** Registered as a zone of its `m-layout`. */
+  isLayoutChild: boolean
+  /** Inside a zone: donates its size to that zone instead of registering. */
+  isLayoutHostChild: boolean
+  /** Kind of the hosting zone; `undefined` unless `isLayoutHostChild`. */
+  hostKind: Readonly<Ref<LayoutKind | undefined>>
+  /** The hosting zone is its layout's scroller; `false` unless `isLayoutHostChild`. */
+  hostIsScroller: Readonly<Ref<boolean>>
+  /** The zone is its layout's scroller: `main` of a `full-height` layout. */
+  isScroller: Readonly<Ref<boolean>>
+}
+
+const AXIS_OF: Record<LayoutKind, 'block' | 'inline' | undefined> = {
+  top: 'block',
+  bottom: 'block',
+  start: 'inline',
+  end: 'inline',
+  main: undefined,
+}
+
+// A height only adds to a row zone and a width to a column; main takes the rest
+// of the grid and has no size to add to.
+function addsToHost(kind: LayoutKind | undefined, hostKind: LayoutKind | undefined) {
+  const axis = kind && AXIS_OF[kind]
+  return !!axis && axis === (hostKind && AXIS_OF[hostKind])
+}
+
+function notAZone(host: LayoutHostProvide | null = null): UseLayoutItem {
+  const none = computed<Record<string, string>>(() => ({}))
+
+  return {
+    layoutItemStyles: none,
+    layoutItemAttrs: none,
+    isLayoutChild: false,
+    isLayoutHostChild: Boolean(host),
+    hostKind: computed(() => host?.kind.value),
+    hostIsScroller: computed(() => host?.scroller.value ?? false),
+    isScroller: computed(() => false),
+  }
+}
+
 /**
  * Item-level: layout-aware components self-register when their owning
  * `<m-layout>` is within three transparent component ancestors. Nested items
  * inside an existing layout host contribute their size to that zone instead;
- * outside a layout everything degrades to a no-op.
+ * outside a layout, or without a `kind`, everything degrades to a no-op.
  */
-export function useLayoutItem(options: UseLayoutItemOptions = {}) {
+export function useLayoutItem(options: UseLayoutItemOptions): UseLayoutItem {
   const layout = useLayoutContext()
   const host = useLayoutHostContext()
   const instance = getCurrentInstance()
 
-  const noStyles = computed<Record<string, string>>(() => ({}))
   const sizeExpr = computed(() => normalizeSize(unref(options.sizeToken)))
 
-  if (!layout) {
-    return {
-      layoutItemStyles: noStyles,
-      layoutItemAttrs: noStyles,
-      isLayoutChild: false,
-      isLayoutHostChild: false,
-    }
-  }
+  if (!layout) return notAZone()
 
   // A host wins over shallow owner discovery. This prevents a nested app bar
   // from registering a second top zone below MLayoutHeader/MLayoutMain.
@@ -270,23 +243,22 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     // Inside an existing zone, donate size to its host (for example, an
     // MAppBar inside MLayoutHeader). Other deeply nested UI stays a no-op.
     if (host) {
-      onScopeDispose(host.contribute(sizeExpr))
+      const donated = computed(() => addsToHost(unref(options.kind), host.kind.value) ? sizeExpr.value : undefined)
+      onScopeDispose(host.contribute(donated))
     }
-    return {
-      layoutItemStyles: noStyles,
-      layoutItemAttrs: noStyles,
-      isLayoutChild: false,
-      isLayoutHostChild: Boolean(host),
-    }
+    return notAZone(host)
   }
 
-  const kindRef = computed<LayoutKind>(() => {
-    const kind = unref(options.kind)
-    if (kind) return kind
+  // The type requires `kind`; a JS consumer can still omit it on `m-layout-item`.
+  if (unref(options.kind) === undefined) {
+    if (import.meta.dev) {
+      console.warn('[m-layout] A layout item without `kind` is not a zone: it gets no grid area. Set kind="top|bottom|start|end|main".')
+    }
+    return notAZone()
+  }
 
-    const area = unref(options.area)
-    return (area && KIND_BY_AREA[area]) || 'main'
-  })
+  const kindRef = computed(() => unref(options.kind))
+  const isScroller = computed(() => kindRef.value === 'main' && layout.fullHeight.value)
 
   const autoId = (useId() || 'ssr').replace(/[^\w-]/g, '')
   const idRef = computed(() => sanitizeAreaName(unref(options.id) ?? `${kindRef.value}-${autoId}`))
@@ -295,6 +267,8 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
   const contributions = shallowReactive(new Set<Ref<string | undefined>>())
 
   provideLayoutHostContext({
+    kind: kindRef,
+    scroller: isScroller,
     contribute: (size) => {
       contributions.add(size)
       return () => {
@@ -382,11 +356,8 @@ export function useLayoutItem(options: UseLayoutItemOptions = {}) {
     layoutItemAttrs,
     isLayoutChild: true,
     isLayoutHostChild: false,
+    hostKind: computed(() => undefined),
+    hostIsScroller: computed(() => false),
+    isScroller,
   }
 }
-
-/**
- * @deprecated v2: зоны провайдят zone-контекст сами через `useLayoutItem`;
- * area-контекст больше не существует. No-op, вызовы удалить в фазе C.
- */
-export function provideLayoutArea(_area: LayoutArea | Ref<LayoutArea>) {}

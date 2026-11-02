@@ -21,8 +21,8 @@ import { IN_BROWSER } from '#kit/shared/constants/globals'
 import { prefersReducedMotion } from '#kit/utils/motion/shared/reduced-motion'
 import { toLogicalScrollLeft, toPhysicalScrollLeft } from '#kit/utils/viewport/logicalScroll'
 import type { InlineDirection } from '#kit/utils/viewport/logicalScroll'
-import { buildMeasurement, computeRange } from './geometry'
-import type { VirtualRange } from './geometry'
+import { buildMeasurement, computeRange } from '#kit/utils/virtual-scroll/geometry'
+import type { VirtualRange } from '#kit/utils/virtual-scroll/geometry'
 import type {
   UseVirtualScrollOptions,
   UseVirtualScrollReturn,
@@ -37,7 +37,12 @@ import type {
 /** Frames of quiet before a native scroll is considered settled. */
 const SETTLE_MS = 120
 
+/** Pixels the native scroll end may stop short of the geometric end. */
+const END_TOLERANCE = 1
+
 const INTENT_EVENTS = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+
+const EDGE_KEYS = new Set(['Home', 'End'])
 
 interface PendingScroll {
   target: number
@@ -123,7 +128,11 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
   const isAtStart = computed(() => scrollOffset.value <= startThreshold)
   const isAtEnd = computed(() => {
     const maxOffset = Math.max(0, totalSize.value - viewportSize.value)
-    return scrollOffset.value >= maxOffset - endThreshold
+    // The native end can fall a pixel short of the geometric one: a fractional
+    // viewport is reported as a whole `clientWidth`, and Chromium truncates a
+    // negative RTL `scrollLeft` (-159682 where LTR reports 159683). A threshold
+    // wider than that pixel is kept exact.
+    return scrollOffset.value >= Math.min(maxOffset - endThreshold, maxOffset - END_TOLERANCE)
   })
   const isScrolling = computed(() => state.value === 'scrolling' || state.value === 'programmatic')
 
@@ -187,11 +196,23 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
     observer.observe(element)
   }
 
+  // The server rendered the range at `initialOffset`; a container that arrives
+  // at its start is moved there at once, so the first client frame keeps it.
+  function jumpToInitialOffset(element: HTMLElement) {
+    if (initialOffset <= 0 || !isEnabled.value || readOffset(element) > 0) return
+    const target = clampOffset(initialOffset)
+    if (horizontal) element.scrollTo({ left: toPhysicalScrollLeft(target, direction), behavior: 'instant' })
+    else element.scrollTo({ top: target, behavior: 'instant' })
+    scrollOffset.value = readOffset(element)
+  }
+
   // Re-attach the observer whenever the container element itself is replaced.
   watch(() => toValue(container), (element) => {
     finishProgrammatic(false, 'settling')
     observe(element ?? null)
-    if (element) measure()
+    if (!element) return
+    measure()
+    jumpToInitialOffset(element)
   }, { immediate: true, flush: 'post' })
 
   watch(isEnabled, (on) => {
@@ -246,6 +267,9 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
   function applyScroll(offset: number, behavior: ScrollBehavior) {
     const element = toValue(container)
     if (!element) return
+    // Read at the moment of the scroll, not through `useReducedMotion`: that ref
+    // is `false` until a component mounts, and this composable may run in a
+    // bare effect scope. Both ask the same query.
     const resolved = prefersReducedMotion() ? 'auto' : behavior
     if (horizontal) element.scrollTo({ left: toPhysicalScrollLeft(offset, direction), behavior: resolved })
     else element.scrollTo({ top: offset, behavior: resolved })
@@ -288,6 +312,19 @@ export function useVirtualScroll(options: UseVirtualScrollOptions): UseVirtualSc
     if (end > scrollOffset.value + viewportSize.value) return end - viewportSize.value
     return scrollOffset.value
   }
+
+  // Browsers move only the block axis on Home / End, so a focused horizontal
+  // lane takes them itself. Keys aimed at a row stay with the consumer.
+  useEventListener(
+    () => (horizontal ? toValue(container) : null),
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (!isEnabled.value || event.target !== event.currentTarget || !EDGE_KEYS.has(event.key)) return
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      event.preventDefault()
+      void scrollToOffset(event.key === 'Home' ? 0 : totalSize.value, { behavior: 'smooth' })
+    },
+  )
 
   async function scrollToIndex(
     index: number,

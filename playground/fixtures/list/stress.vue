@@ -38,6 +38,24 @@
       />
     </MList>
 
+    <h2>Words in a row of equal columns at 140</h2>
+    <MList
+      class="fixture-list-stress__panel fixture-list-stress__panel--tight"
+      data-test="list-word-row"
+    >
+      <MListItem headline="Pace">
+        <div
+          class="fixture-list-stress__words"
+          role="group"
+          aria-label="Words"
+          tabindex="0"
+        >
+          <span data-test="word-row-item">Heartbeat</span>
+          <span data-test="word-row-item">Breathing</span>
+        </div>
+      </MListItem>
+    </MList>
+
     <h2>Sticky subheaders on tinted surfaces</h2>
     <div class="fixture-list-stress__grid">
       <div
@@ -140,6 +158,18 @@ const longWord = 'Supercalifragilisticexpialidocious-and-a-path/that/never/break
     &--narrow {
       width: 200rem;
     }
+
+    &--tight {
+      width: 140rem;
+    }
+  }
+
+  // Equal columns, as a segmented button lays out its labels: each column may
+  // shrink to its content's minimum, which a row must not cut to one glyph.
+  &__words {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: auto;
   }
 
   &__scroller {

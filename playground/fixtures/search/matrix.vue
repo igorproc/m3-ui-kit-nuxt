@@ -12,7 +12,7 @@
         v-model="values[state.name]"
         :aria-label="`Search, ${state.name}`"
         placeholder="Search the archive"
-        clear-label="Clear the query"
+        :messages="{ clear: 'Clear the query' }"
         v-bind="state.props"
         :data-test="state.name"
         @submit="submitted = $event"
@@ -25,7 +25,7 @@
         v-model="withActions"
         aria-label="Search mail"
         placeholder="Search mail"
-        clear-label="Clear the query"
+        :messages="{ clear: 'Clear the query' }"
         data-test="actions"
       >
         <template #trailing>
@@ -51,12 +51,15 @@ import { reactive, ref } from 'vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import MSearch from '#kit/components/ui/search/index.vue'
+import type { MFieldDensity } from '#kit/components/ui/text-field/props'
 import { ICONS } from '#kit/shared/constants/icons'
 
-const states = [
+const states: { name: string, props: { disabled?: boolean, density?: MFieldDensity }, value: string }[] = [
   { name: 'empty', props: {}, value: '' },
   { name: 'populated', props: {}, value: 'material design' },
   { name: 'disabled', props: { disabled: true }, value: 'archived' },
+  { name: 'compact', props: { density: 'compact' }, value: '' },
+  { name: 'comfortable', props: { density: 'comfortable' }, value: '' },
 ]
 
 const values = reactive<Record<string, string>>(Object.fromEntries(states.map(state => [state.name, state.value])))

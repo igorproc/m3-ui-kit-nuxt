@@ -3,11 +3,11 @@
  *
  * `mode` (dial or typed) and `layout` are the picker's own axes, not the MD3
  * surface `variant`. The model stays a 24-hour `HH:mm` string whatever the
- * hour cycle shows.
+ * hour cycle shows. Every phrase is a prop without a default — the kit ships
+ * no copy of its own, and dev warns for a part left unnamed.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { HourCycleOption } from '#kit/utils/time/createClock'
-import { MESSAGES } from '#kit/shared/constants/messages'
 
 export type MTimePickerMode = 'picker' | 'input'
 export type MTimePickerLayout = 'vertical' | 'horizontal'
@@ -18,7 +18,7 @@ export const mTimePickerProps = {
   label: { type: String, default: undefined },
   helperText: { type: String, default: undefined },
   /** Names the group when no headline is shown. */
-  ariaLabel: { type: String, default: MESSAGES.timeTitle },
+  ariaLabel: { type: String, default: undefined },
   /** `'picker'` turns a dial; `'input'` types the time. Also `v-model:mode`. */
   mode: { type: String as PropType<MTimePickerMode>, default: 'picker' },
   /**
@@ -43,14 +43,16 @@ export const mTimePickerProps = {
   errorMessage: { type: String, default: undefined },
   /** Submits the `HH:mm` value with a form. */
   name: { type: String, default: undefined },
-  hourLabel: { type: String, default: MESSAGES.timeHour },
-  minuteLabel: { type: String, default: MESSAGES.timeMinute },
-  periodLabel: { type: String, default: MESSAGES.timePeriod },
+  hourLabel: { type: String, default: undefined },
+  minuteLabel: { type: String, default: undefined },
+  periodLabel: { type: String, default: undefined },
   /** AM and PM in the locale's words unless set. */
   amLabel: { type: String, default: undefined },
   pmLabel: { type: String, default: undefined },
-  hourError: { type: String, default: MESSAGES.timeErrorHour },
-  minuteError: { type: String, default: MESSAGES.timeErrorMinute },
+  /** Said when a typed hour is refused; without it the error shows its glyph alone. */
+  hourError: { type: String, default: undefined },
+  /** Said when a typed minute is refused; without it the error shows its glyph alone. */
+  minuteError: { type: String, default: undefined },
 }
 
 export type MTimePickerProps = ExtractPublicPropTypes<typeof mTimePickerProps>

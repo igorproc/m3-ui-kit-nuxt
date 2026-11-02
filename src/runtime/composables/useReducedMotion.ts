@@ -10,6 +10,7 @@
 import { getCurrentInstance, onBeforeUnmount, onMounted, readonly, shallowRef } from 'vue'
 import type { Ref } from 'vue'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
+import { REDUCED_MOTION_QUERY } from '#kit/utils/motion/shared/reduced-motion'
 
 const reduced = shallowRef(false)
 let query: MediaQueryList | undefined
@@ -23,7 +24,7 @@ function subscribe() {
   subscribers += 1
   if (query || !IN_BROWSER || !window.matchMedia) return
 
-  query = window.matchMedia('(prefers-reduced-motion: reduce)')
+  query = window.matchMedia(REDUCED_MOTION_QUERY)
   reduced.value = query.matches
   query.addEventListener('change', onChange)
 }

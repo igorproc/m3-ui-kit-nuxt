@@ -6,25 +6,104 @@
 // Aligned with Material 3 Specifications
 // ==========================================
 
+// Indeterminate loops, in the timing of the MDC indicators. These are
+// constants of an endless loop, not transition durations: the system
+// `--sys-motion-*` steps shorten under reduced motion, which would speed the
+// loop up exactly when it should slow down.
+$loop: (
+  linear: 2s,
+  rotate: 2s,
+  dash: 1.5s,
+  wave: 1s,
+);
+
+// Reduced motion slows the loops instead of stopping them: a frozen bar reads
+// as a finished or broken task, and `animation: none` leaves Chromium's
+// indeterminate fill at zero width.
+$reduced: 4;
+
+@function slowed($loops, $factor) {
+  $result: ();
+
+  @each $key, $duration in $loops {
+    $result: map.merge($result, ($key: $duration * $factor));
+  }
+
+  @return $result;
+}
+
+// One period of the expressive wave, drawn as a mask that tiles along the
+// bar, so the wave fills any width without a JS-built path. Compose
+// `LinearProgressIndicatorTokens`: amplitude 3, wavelength 40 (20 while
+// indeterminate).
+$wave-amplitude: 3;
+$wave-periods: (
+  determinate: 40,
+  indeterminate: 20,
+);
+$thickness: (
+  compact: spacing(2),
+  default: spacing(4),
+  comfortable: spacing(8),
+);
+
+@function wave-mask($period, $stroke) {
+  $height: $stroke + 2 * $wave-amplitude;
+  $mid: $height * 0.5;
+  $quadratic-peak-to-control: 2;
+  $crest-control: $mid - $quadratic-peak-to-control * $wave-amplitude;
+  $trough-control: $mid + $quadratic-peak-to-control * $wave-amplitude;
+  $d: 'M#{-$period} #{$mid}';
+
+  @for $i from -1 through 1 {
+    $x: $i * $period;
+    $d: '#{$d} Q#{$x + $period * 0.25} #{$crest-control} #{$x + $period * 0.5} #{$mid} Q#{$x + $period * 0.75} #{$trough-control} #{$x + $period} #{$mid}';
+  }
+
+  @return url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 #{$period} #{$height}' preserveAspectRatio='none'%3E%3Cpath d='#{$d}' fill='none' stroke='black' stroke-width='#{$stroke}'/%3E%3C/svg%3E");
+}
+
+@function wave-step($step) {
+  $stroke: strip-unit(map.get($thickness, $step));
+
+  @return (
+    height: ($stroke + 2 * $wave-amplitude) * 1rem,
+    mask: (
+      determinate: wave-mask(map.get($wave-periods, determinate), $stroke),
+      indeterminate: wave-mask(map.get($wave-periods, indeterminate), $stroke),
+    ),
+  );
+}
+
 $tokens: (
   linear: (
-    height: (
-      small: 2rem,
-      medium: 4rem,
-      large: 8rem,
+    density: (
+      compact: (thickness: map.get($thickness, compact)),
+      default: (thickness: map.get($thickness, default)),
+      comfortable: (thickness: map.get($thickness, comfortable)),
     ),
+    shape: map.get($theme-shape-link, 'full'),
+    label: (gap: spacing(4)),
     track: (
       color: map.get($theme-color-link, 'secondary-container'),
+      // M3 2024: the track starts 4 after the bar's end.
+      start: min(100%, calc(var(--ui-progress-value) + #{spacing(4)})),
     ),
     bar: (
       color: map.get($theme-color-link, 'primary'),
     ),
   ),
   circular: (
-    size: (
-      small: 24rem,
-      medium: 40rem,
-      large: 48rem,
+    density: (
+      compact: (
+        size: 24rem,
+      ),
+      default: (
+        size: 40rem,
+      ),
+      comfortable: (
+        size: 48rem,
+      ),
     ),
     track: (
       color: map.get($theme-color-link, 'secondary-container'),
@@ -32,5 +111,27 @@ $tokens: (
     spinner: (
       color: map.get($theme-color-link, 'primary'),
     ),
+    label: (gap: spacing(8)),
+  ),
+  wave: (
+    shape: map.get($theme-shape-link, 'none'),
+    period: (
+      determinate: map.get($wave-periods, determinate) * 1rem,
+      indeterminate: map.get($wave-periods, indeterminate) * 1rem,
+    ),
+    track: (inset: $wave-amplitude * 1rem),
+    density: (
+      compact: wave-step(compact),
+      default: wave-step(default),
+      comfortable: wave-step(comfortable),
+    ),
+  ),
+  motion: (
+    value: (
+      duration: var(--sys-motion-duration-medium-4),
+      easing: var(--sys-motion-easing-emphasized),
+    ),
+    loop: $loop,
+    reduced: slowed($loop, $reduced),
   ),
 );

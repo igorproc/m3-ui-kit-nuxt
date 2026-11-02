@@ -14,8 +14,8 @@ import { computed, onScopeDispose, readonly, ref, toValue } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 import { tryUseNuxtApp } from '#app'
 import { injectModalContext } from '#kit/composables/modal/useModalContext'
-import { isKeyHeld, registerHotkey } from './registry'
-import { useHotkeyPresentation } from './useHotkeyPresentation'
+import { isKeyHeld, registerHotkey } from '#kit/utils/hotkey/registry'
+import { useHotkeyPresentation } from '#kit/utils/hotkey/presentation'
 import type {
   HotkeyDefinition,
   HotkeyKey,
@@ -65,7 +65,6 @@ export function useHotkey(
   }
 
   const enabled = () => toValue(options.enabled ?? true)
-  const scope = () => toValue(options.scope)
   const paused = ref(false)
 
   const presentation = useHotkeyPresentation({
@@ -78,7 +77,6 @@ export function useHotkey(
   const { stop } = registerHotkey({
     getKeys: keysGetter,
     getEnabled: enabled,
-    getScope: scope,
     getPlatform: () => presentation.platform.value,
     isPaused: () => paused.value,
     isOnTopLayer: useTopLayer(),

@@ -2,7 +2,7 @@
 
 <identity>M3: Badges (small · large) · Токены Compose: `BadgeTokens`; поведение и раскладка — `Badge.kt` (`Badge`, `BadgedBox`, `BadgeWithContentHorizontalOffset` 12, `BadgeWithContentVerticalOffset` 14, `BadgeOffset` 6, `BadgeWithContentHorizontalPadding` 4) · Код: `src/runtime/components/ui/badge/`, карта `src/runtime/assets/stylesheet/components/badge/_index.scss` · Аудит: `data/badge.json` · Тип: public (неинтерактивный индикатор)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Размеры, роли и типографика совпадают с `BadgeTokens`; forced colors точки сделан фазой C. Не сделаны: размещение относительно якоря (каждый потребитель ставит бейдж своими числами), доступность (live-регион на каждом бейдже), пустое значение, ограничение текста. Ждут БВ-1…БВ-4.</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Сделано: карта на точечных путях без `large.text` и `z-index`, токены `anchor.*` и миксин `badge-anchor`, не live-регион по умолчанию (`announce`), точка `aria-hidden`, обрезка `4ch`, пустое значение не рисуется, forced colors; навигация bar / rail / drawer на миксине; фикстура `fixtures/badge/matrix.vue` (содержимое × хост × dir) и e2e угла на иконке, в icon button, в bar и в rail. Остались вкладки на `badge-anchor` (верх −4 вместо −2) — делает группа navigation вместе с e2e угла во вкладках.</implementation-status>
 
 ## Вердикт
 
@@ -118,6 +118,7 @@ TH-04 → шаг 1; CT-01, CT-04 → шаг 3 (БВ-3); LY-07 → шаг 4. TK-0
    затем вкладки и drawer по их планам. Видимое изменение: бейдж встаёт к углу иконки. Зависит от
    [navigation-bar.md](../navigation/navigation-bar.md) (поле `badge: number | true`,
    `badgeLabel`). Файлы: `badge/*`, `abstracts/_mixins.scss` или новый компонент, карты навигации.
+   Перевод вкладок **отложен** до группы navigation (plans-audit-2, фаза 2): у вкладок свои смещения (`tabs/_index.scss:81-90`).
 5. **S** — Тесты.
 
 ## Тесты

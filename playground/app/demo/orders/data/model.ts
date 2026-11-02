@@ -1,3 +1,5 @@
+import type { MIconName } from '#kit/components/ui/icon/props'
+
 export type OrderStatus = 'new' | 'paid' | 'assembling' | 'shipped' | 'delivered' | 'cancelled' | 'returned'
 export type OrderDelivery = 'courier' | 'pickup' | 'post'
 export type OrderFlag = 'urgent' | 'return' | 'pickup'
@@ -56,7 +58,7 @@ export type OrderRow = {
 
 export interface StatusMeta {
   label: string
-  icon: string
+  icon: MIconName
 }
 
 export const STATUS_META: Record<OrderStatus, StatusMeta> = {

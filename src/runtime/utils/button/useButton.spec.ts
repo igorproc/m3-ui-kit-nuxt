@@ -65,6 +65,47 @@ describe('useButton', () => {
     expect(event.stopImmediatePropagation).toHaveBeenCalled()
   })
 
+  // Q24-А: a control that cannot act right now (pagination at its last page,
+  // a page request in flight) keeps its Tab stop, so focus never drops to <body>.
+  it('treats softDisabled as disabled that keeps the button focusable', () => {
+    const props = reactive({ softDisabled: true })
+    const { isDisabled, rippleEnabled, rootAttrs, rootClass } = useButton({ block: 'ui-button', props })
+
+    expect(isDisabled.value).toBe(true)
+    expect(rippleEnabled.value).toBe(false)
+    expect(rootAttrs.value['aria-disabled']).toBe('true')
+    expect(rootAttrs.value.disabled).toBe(false)
+    expect(rootAttrs.value['aria-busy']).toBeUndefined()
+    expect(rootClass.value.at(-1)).toMatchObject({ 'ui-button--disabled': true, 'ui-button--loading': false })
+  })
+
+  it('swallows a click while soft-disabled', () => {
+    const props = reactive({ softDisabled: true })
+    const { rootAttrs } = useButton({ block: 'ui-button', props })
+    const event = clickEvent()
+
+    ;(rootAttrs.value.onClickCapture as (e: Event) => void)(event)
+
+    expect(event.preventDefault).toHaveBeenCalled()
+    expect(event.stopImmediatePropagation).toHaveBeenCalled()
+  })
+
+  it('lets a real disabled win over softDisabled', () => {
+    const props = reactive({ disabled: true, softDisabled: true })
+    const { rootAttrs } = useButton({ block: 'ui-button', props })
+
+    expect(rootAttrs.value.disabled).toBe(true)
+    expect(rootAttrs.value['aria-disabled']).toBeUndefined()
+  })
+
+  it('keeps a soft-disabled link in the tab order', () => {
+    const props = reactive({ tag: 'link' as const, to: '/next', softDisabled: true })
+    const { rootAttrs } = useButton({ block: 'ui-button', props })
+
+    expect(rootAttrs.value.to).toBe('/next')
+    expect(rootAttrs.value['aria-disabled']).toBe('true')
+  })
+
   it('lets a click through when not loading', () => {
     const props = reactive({ loading: false })
     const { rootAttrs } = useButton({ block: 'ui-button', props })
@@ -161,6 +202,8 @@ describe('useButton', () => {
       props.disabled = false
       props.loading = true
       ;(rootAttrs.value.onClick as () => void)()
+      Object.assign(props, { loading: false, softDisabled: true })
+      ;(rootAttrs.value.onClick as () => void)()
 
       expect(onToggle).not.toHaveBeenCalled()
     })
@@ -170,6 +213,19 @@ describe('useButton', () => {
       const { rootAttrs } = useButton({ block: 'ui-button', props })
 
       expect(rootAttrs.value['aria-pressed']).toBeUndefined()
+    })
+
+    // B8.3b: a link navigates; it is never a toggle, so it neither reports a
+    // next state nor wears the toggle look it could not announce.
+    it('is never a toggle as a link', () => {
+      const onToggle = vi.fn()
+      const props = reactive({ tag: 'link' as const, to: '/orders', selected: false })
+      const { rootAttrs, rootClass } = useButton({ block: 'ui-button', props, onToggle })
+
+      ;(rootAttrs.value.onClick as () => void)()
+
+      expect(onToggle).not.toHaveBeenCalled()
+      expect(rootClass.value.at(-1)).toMatchObject({ 'ui-button--selected': false, 'ui-button--unselected': false })
     })
   })
 })

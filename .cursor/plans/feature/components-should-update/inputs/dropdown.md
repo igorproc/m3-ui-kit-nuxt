@@ -2,7 +2,7 @@
 
 <identity>M3: Menus → exposed dropdown menu (`ExposedDropdownMenuBox` + `ExposedDropdownMenu`, якорь `PrimaryNotEditable`) · Токены Compose: `FilledAutocompleteTokens.kt`, `OutlinedAutocompleteTokens.kt` (поле + `MenuContainer*`), `MenuTokens.kt` (выбранный пункт), `ListTokens.kt` (строка); поведение — `ExposedDropdownMenu.kt` (`ItemContentPadding` 16, `calculateMaxHeight`, `TrailingIcon`), `Menu.kt` (`MenuVerticalMargin` 48, `DropdownMenuVerticalPadding` 8, `MenuListItemContainerHeight` 48) · Код: `src/runtime/components/ui/dropdown/` (`index.vue`, `props.ts`, `context.ts`), движок `src/runtime/composables/dropdown/*` (`useDropdownControl`, `useDropdownSelection`, `useDropdownEntries`, `useDropdownKeyboard`, `useDropdownChips`, `useTypeahead`, `usePanelStatus`) + `composables/listbox/useListbox.ts`, токены `src/runtime/assets/stylesheet/components/dropdown/{_index,_panel}.scss` · Аудит: `data/dropdown.json` · Тип: public; родитель семейства выбора (`MAutocomplete` спредит `mDropdownProps` и рисует ту же панель)</identity>
 
-<implementation-status state="partial" updated="2026-10-19">M3-polish (2026-10-19): панель вынесена в общий фрагмент `fragments/dropdown/Panel.vue` (классы `ui-dropdown-panel__*`), строки рисует слой `::before` по виртуальному фокусу (8/10 %); фразы — проп `messages` без дефолтов; механика без нативного `readonly` (ввод гасится, IME откатывается), `readonly` — по пропу; read-only: очистка off, чипы в полной краске без ×; чипы не tab stop, стрелки по чипам зеркалятся в RTL; Enter/Space на очистке очищают и возвращают фокус; наведение не прокручивает список; галочка держит место в multiple; не открывается «в пустоту»; `#loading`; `defineSlots`; движок — `utils/dropdown/` вне автоимпорта. Не сделаны: шаг 3 (поверхность MMenu), шаг 4 (input-чип), типизированный generic по `items` (нужен типовой интерфейс пропов поля).</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–4, 6, 7 и данные шага 5 (`#loading`, readonly, Tab при открытом списке). Панель — общий фрагмент `fragments/dropdown/Panel.vue` в приватном `fragments/popover` (Q16-Б: `surface-container`, угол 4, тень; axe открытой панели без исключений), строки 8 / 10 % + кольцо, выбор `secondary-container`, галочка в конце (Q2 → 1), строка = высоте поля (Q1 → 1), намёк полстроки (Q3 → 2), input-чипы с именованным удалением (W17-Б), `messages` без дефолтов, скрытые поля формы (Q30), логические значения `menuPlacement`. Фаза 2 (2026-10-30): generic `TItem` выводится из `items` (S1 → Б, `MDropdownPropsOptions`); Q2 / Q3 записаны в журнал фазы 2 (`decisions-fields.md`). Отложено: кламп высоты панели по свободному месту — Q56-А, кирпичик B4.2 `usePopover`; рендер не переснят — инфраструктура съёмки вне git (`common.md` §4).</implementation-status>
 
 ## Вердикт
 
@@ -179,8 +179,8 @@ hatch с `listboxAttrs`, `getOptionAttrs`, `panelStyle`…); `expose` — `open`
    `MMenu` перейдёт на группы Expressive. e2e: axe без исключений. Зависимости: шаги 1–4 меню.
 4. **L — input-чип с отдельным удалением** ([план чипа](../form/chip.md), шаг 7, В-4): перевод
    `#leading-content`, перенос `&__chip--active` на кнопку удаления, имя «Удалить {title}» (CT-13).
-5. **M — данные по ответам фазы D:** ошибка загрузки (`loadError` / `#error` / `retry`), задержка
-   индикатора, `#loading`, readonly, Tab при открытом списке. Файлы: `dropdown/index.vue`,
+5. **M — данные по ответам фазы D:** ошибка загрузки (`loadError` / `#error` / `retry`) — **отменено** (Q-11: рецепт через
+   `#empty` / `#no-results`), задержка индикатора — **отменено** (S6 → Б), `#loading`, readonly, Tab при открытом списке. Файлы: `dropdown/index.vue`,
    `usePanelStatus.ts`, `props.ts`.
 6. **S — намёк на продолжение списка** (после вопроса 3).
 7. **M — тесты** (раздел ниже). Документация DC-02…05 — в репозитории `docs`.
@@ -207,7 +207,7 @@ hatch с `listboxAttrs`, `getOptionAttrs`, `panelStyle`…); `expose` — `open`
 - [ ] Чип удаляется отдельным действием с именем.
 - [ ] `npm run lint`, `lint:style`, `lint:scss`, `typecheck`, vitest, e2e `dropdown` и
       `autocomplete` — зелёные.
-- [ ] Рендер `current.webp` переснят, расхождения с `concept.webp` — только из открытых вопросов.
+- [ ] Рендер `current.webp` переснят (**отложено**: инфраструктура съёмки вне git), расхождения с `concept.webp` — только из открытых вопросов.
 
 ## Предложения по UX
 

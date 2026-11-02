@@ -2,19 +2,25 @@
  * Public prop surface for `<MNavigationBar>`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import type { MIconName } from '#kit/components/ui/icon/props'
+import type { NavigationDestination, NavigationItemPlacement } from '#kit/components/fragments/navigation-item/types'
 
-export interface MNavigationBarItem {
-  id: string
-  icon: MIconName
-  label: string
-  badge?: number
-}
+/** A destination of the bar. */
+export type MNavigationBarItem = NavigationDestination
+
+/** `top`: icon above the label, destinations share the width (compact windows). `start`: icon beside the label, destinations centred (medium windows). */
+export type MNavigationBarIconPlacement = NavigationItemPlacement
 
 export const mNavigationBarProps = {
   items: { type: Array as PropType<MNavigationBarItem[]>, default: () => [] },
-  // Accessible name for the <nav> landmark.
-  ariaLabel: { type: String as PropType<string>, default: 'Primary' },
+  /** Layout of every destination; the app picks it, for example by `useBreakpoint().is.compact`. */
+  iconPlacement: { type: String as PropType<MNavigationBarIconPlacement>, default: 'top' },
+  /** Name of the <nav> landmark. A lone navigation needs none, so the kit ships none. */
+  ariaLabel: { type: String, default: undefined },
 }
 
 export type MNavigationBarProps = ExtractPublicPropTypes<typeof mNavigationBarProps>
+
+export interface MNavigationBarEmits {
+  /** Every activation of a destination, the already active one included. */
+  (event: 'select', id: string, nativeEvent: MouseEvent): void
+}

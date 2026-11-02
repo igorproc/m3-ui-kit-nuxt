@@ -26,7 +26,7 @@
       role="option"
       :aria-selected="swatch.selected"
       :aria-label="swatch.label"
-      :style="{ '--m-color-picker-swatch': swatch.value }"
+      :style="{ backgroundColor: swatch.value }"
       @pointerdown.prevent
       @click="choose(index)"
     >
@@ -57,7 +57,7 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import { useColorPickerContext } from '#kit/utils/color-picker/context'
 import { useListbox } from '#kit/composables/listbox/useListbox'
-import { isLightColor, normalizeSwatch, parseColor } from '#kit/shared/utils/color'
+import { formatColor, isLightColor, normalizeSwatch, parseColor } from '#kit/shared/utils/color'
 import type { ColorSwatch, RGBA } from '#kit/shared/utils/color'
 
 interface Props {
@@ -72,12 +72,13 @@ const ctx = useColorPickerContext()
 const listId = useId()
 const focused = ref(false)
 
-/** Two spellings of one colour (`#6750a4`, `#6750A4`, `rgb(103 80 164)`) are one colour. */
+/**
+ * Two spellings of one colour (`#6750a4`, `#6750A4`, `rgb(103 80 164)`) are one
+ * colour. Compared as the model's format writes them: an hsl round trip lands
+ * a fraction off the swatch it came from, and its precision is the format's.
+ */
 function sameColor(left: RGBA, right: RGBA) {
-  return Math.round(left.r) === Math.round(right.r)
-    && Math.round(left.g) === Math.round(right.g)
-    && Math.round(left.b) === Math.round(right.b)
-    && Math.round(left.a * 100) === Math.round(right.a * 100)
+  return formatColor(left, ctx.format.value) === formatColor(right, ctx.format.value)
 }
 
 const entries = computed(() => {
@@ -145,6 +146,10 @@ function onKeydown(event: KeyboardEvent) {
   border-radius: g($t, 'swatches.radius');
   outline: none;
 
+  @media (pointer: coarse) {
+    gap: g($t, 'swatches.coarse.gap');
+  }
+
   &__item {
     position: relative;
     isolation: isolate;
@@ -155,15 +160,16 @@ function onKeydown(event: KeyboardEvent) {
     height: g($t, 'swatches.size');
     border: g($t, 'swatches.outline-width') solid g($t, 'swatches.outline');
     border-radius: g($t, 'swatches.radius');
-    background-color: var(--m-color-picker-swatch);
+
+    @include touch-target;
 
     // The ink that stands out from the colour: light on a dark swatch, dark
     // on a light one. The check and the press layer take it.
-    color: g($t, 'swatches.selected.check.on-dark');
+    color: g($t, 'swatches.selected.content.color.on-dark');
     cursor: pointer;
 
     &--light {
-      color: g($t, 'swatches.selected.check.on-light');
+      color: g($t, 'swatches.selected.content.color.on-light');
     }
 
     &::before {
@@ -186,23 +192,29 @@ function onKeydown(event: KeyboardEvent) {
     // The chosen swatch: a ring in the content ink and a check, never colour
     // alone. A shadow, not the outline, so the focus ring can stand around it.
     &--selected {
-      box-shadow: 0 0 0 g($t, 'swatches.selected.width') g($t, 'swatches.selected.ring');
+      box-shadow: 0 0 0 g($t, 'swatches.selected.container.ring.width') g($t, 'swatches.selected.container.ring.color');
 
       @include forced-colors {
-        outline: g($t, 'swatches.selected.width') solid Highlight;
+        outline: g($t, 'swatches.selected.container.ring.width') solid Highlight;
       }
     }
 
     // The keyboard's position in the list: the kit's focus ring, outside the
     // selection ring.
     &--active {
-      @include focus-ring(g($t, 'swatches.selected.focus-offset'));
+      @include focus-ring(g($t, 'swatches.selected.container.focus-offset'));
     }
   }
 
-  // A small lift under the pointer and a layer under the press — only while
-  // the palette can be chosen from.
+  // A layer and a small lift under the pointer, a layer under the press — only
+  // while the palette can be chosen from.
   &:not(&--locked) &__item {
+    @include can-hover {
+      &:hover::before {
+        opacity: g($t, 'swatches.layer.hover');
+      }
+    }
+
     &:active::before {
       opacity: g($t, 'swatches.layer.pressed');
     }
@@ -219,7 +231,7 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   &__check {
-    font-size: g($t, 'swatches.selected.check.size');
+    font-size: g($t, 'swatches.selected.content.size');
   }
 
   &--locked &__item {

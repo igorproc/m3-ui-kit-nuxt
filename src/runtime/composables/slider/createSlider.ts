@@ -32,12 +32,14 @@ export interface UseSliderProps {
   disabled: boolean
   readonly: boolean
   orientation: 'horizontal' | 'vertical'
+  /** `center`: a single thumb's active track runs from the middle of the scale. */
+  origin?: 'start' | 'center'
 }
 
 export function useSlider(
   modelValue: Ref<number | number[]>,
   props: UseSliderProps,
-  emit: (event: 'update:modelValue', ...args: any[]) => void,
+  emit: (event: 'update:modelValue', value: number | number[]) => void,
 ) {
   /**
    * Round a value to the nearest step, clamped to min/max.
@@ -181,7 +183,13 @@ export function useSlider(
   const activeRange = computed(() => {
     const pcts = percentages.value
     if (pcts.length === 0) return { start: 0, end: 0 }
-    if (pcts.length === 1) return { start: 0, end: pcts[0] ?? 0 }
+    if (pcts.length === 1) {
+      const value = pcts[0] ?? 0
+      // Centered: from the middle to the thumb, on whichever side it stands.
+      return props.origin === 'center'
+        ? { start: Math.min(50, value), end: Math.max(50, value) }
+        : { start: 0, end: value }
+    }
     return {
       start: Math.min(...pcts),
       end: Math.max(...pcts),

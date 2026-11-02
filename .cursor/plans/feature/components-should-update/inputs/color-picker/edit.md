@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Edit.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: ошибка с подсказкой формата, Escape откатывает и снимает ошибку, каналы — группа, компактная плотность.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: ошибка с подсказкой формата, Escape откатывает и снимает ошибку, каналы — группа, компактная плотность. Фаза 2 (2026-10-30): буквы каналов — нотация (N7 → 1, журнал фазы 2), «%» — единица поля (`unit` у `MNumberInput`, звучит в `aria-valuetext`).</implementation-status>
 
 ## Вердикт
 

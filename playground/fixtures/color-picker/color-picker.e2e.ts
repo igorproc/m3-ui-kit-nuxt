@@ -58,7 +58,7 @@ test.describe('MColorPicker', () => {
     expect(await hue.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('none')
   })
 
-  test('the 2-D field is two sliders, and the field shows their focus', async ({ page }) => {
+  test('the 2-D field is two sliders, and the thumb they move shows their focus', async ({ page }) => {
     await openFixture(page, 'color-picker/matrix')
     const root = picker(page, 'enabled')
 
@@ -66,7 +66,28 @@ test.describe('MColorPicker', () => {
     await page.keyboard.press('PageDown')
 
     await expect(root.getByRole('slider', { name: 'Brightness' })).toHaveAttribute('aria-valuenow', /\d+/)
-    expect(await root.locator('.ui-color-canvas').evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid')
+    expect(await root.locator('.ui-color-canvas__thumb').evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid')
+    expect(await root.locator('.ui-color-canvas').evaluate(el => getComputedStyle(el).outlineStyle)).toBe('none')
+  })
+
+  test('Shift and an arrow step a canvas axis by ten', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    const brightness = picker(page, 'enabled').getByRole('slider', { name: 'Brightness' })
+
+    await brightness.focus()
+    await page.keyboard.press('End')
+    await page.keyboard.press('Shift+ArrowDown')
+
+    await expect(brightness).toHaveAttribute('aria-valuenow', '90')
+  })
+
+  test('a swatch takes the state layer under the pointer', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    const swatch = picker(page, 'enabled').getByRole('option', { name: 'Error' })
+
+    await swatch.hover()
+    await waitForMotion(page)
+    expect(Number(await swatch.evaluate(el => getComputedStyle(el, '::before').opacity))).toBeGreaterThan(0)
   })
 
   test('the format list fits a narrow picker without breaking its words', async ({ page }) => {
@@ -181,5 +202,23 @@ test.describe('MColorPicker', () => {
     const value = picker(page, 'narrow').locator('.ui-color-edit input')
 
     expect(await value.evaluate(el => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0)
+  })
+})
+
+// N1 + S8: a swatch is drawn 32; on a coarse pointer it answers across 48, and the
+// row opens until the targets meet instead of overlapping.
+test.describe('MColorPicker · 48 swatch target on touch', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 1920, height: 1080 } })
+
+  test('a swatch answers 24 from its centre, and the next swatch starts where its target ends', async ({ page }) => {
+    await openFixture(page, 'color-picker/matrix')
+    const options = picker(page, 'enabled').getByRole('option')
+    const first = (await options.nth(0).boundingBox())!
+    const second = (await options.nth(1).boundingBox())!
+    const unit = await remInPx(page)
+
+    const target = await options.nth(0).evaluate(el => getComputedStyle(el, '::after').content)
+    expect(target).not.toBe('none')
+    expect(Math.round((second.x - first.x) / unit)).toBe(48)
   })
 })

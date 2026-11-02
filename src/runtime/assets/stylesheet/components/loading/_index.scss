@@ -29,18 +29,26 @@ $reduced: 2;
   );
 }
 
+$contained-size: 48rem;
+$contained-indicator: 38rem;
 $tokens: (
-  size: (
-    small: 16rem,
-    medium: 24rem,
-    large: 32rem,
+  density: (
+    compact: (
+      size: 16rem,
+      thickness: 3rem,
+    ),
+    default: (
+      size: 24rem,
+      thickness: 4rem,
+    ),
+    comfortable: (
+      size: 32rem,
+      thickness: 5rem,
+    ),
   ),
-  // Arc stroke. `inline` follows the host's font size, so the stroke scales
-  // with the indicator instead of staying a fixed width.
+  // `inline` follows the host's font size, so the stroke scales with the
+  // indicator instead of staying a fixed width.
   thickness: (
-    small: 3rem,
-    medium: 4rem,
-    large: 5rem,
     inline: 0.1em,
   ),
   // Inline in a line of text, the 1em box is centred on the capital letters'
@@ -50,6 +58,17 @@ $tokens: (
   ),
   spinner: (
     color: map.get($theme-color-link, 'primary'),
+  ),
+  // M3 contained indicator: a 48 container around a 38 indicator.
+  contained: (
+    size: $contained-size,
+    indicator: (size: $contained-indicator),
+    inset: calc((#{$contained-size} - #{$contained-indicator}) / 2),
+    shape: map.get($theme-shape-link, 'full'),
+    bg: (
+      color: map.get($theme-color-link, 'primary-container'),
+    ),
+    color: map.get($theme-color-link, 'on-primary-container'),
   ),
   motion: (
     easing: $curve,

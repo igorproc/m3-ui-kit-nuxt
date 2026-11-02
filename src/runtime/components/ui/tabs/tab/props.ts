@@ -14,7 +14,18 @@ export interface MTabProps {
   value: TabValue
   label?: string
   icon?: MIconName
+  /** Glyph of the selected tab. Without it an `ic` outline icon turns to its filled pair; set it for a glyph that has none. */
+  activeIcon?: MIconName
   disabled?: boolean
-  /** Optional Nuxt route destination. Without it the tab remains a button. */
+  /** Route of the tab: inside `MTabs` it turns the tabs into a navigation of links. */
   to?: NuxtLinkProps['to']
+  /** A count, or `true` for a dot. Drawn only: its meaning comes from `badgeLabel`. */
+  badge?: number | true
+  /** What the badge means; describes the tab. */
+  badgeLabel?: string
+}
+
+export interface MTabSlots {
+  /** The label content. */
+  default?: (props: { selected: boolean }) => unknown
 }

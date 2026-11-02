@@ -1,7 +1,7 @@
 <template>
   <div
+    v-bind="control.selectorGroupAttrs.value"
     class="ui-time-picker__display"
-    role="radiogroup"
   >
     <button
       v-bind="control.getSelectorAttrs('hours')"

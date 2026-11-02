@@ -37,8 +37,8 @@ export const mModalLayerProps = {
   closeOnEscape: { type: Boolean, default: true },
   /** Swipe direction that closes the surface. */
   closeOnSwipe: { type: String as PropType<MOverlaySwipeDirection>, default: 'none' },
-  /** Pointer travel (px) past which a swipe closes instead of snapping back. */
-  swipeThreshold: { type: Number, default: 80 },
+  /** Travel (rem) past which a slow swipe closes instead of snapping back; a fling closes at any length. */
+  swipeThreshold: { type: Number, default: 56 },
   /** Only the `swipe-banner` slot starts a swipe, not the whole content. */
   showSwipeBanner: { type: Boolean, default: false },
   /** Block user dismissal (outside / escape / swipe) — overrides the `closeOn*` props. */
@@ -63,6 +63,11 @@ export const mModalLayerProps = {
 export const mOverlayProps = {
   /** `modal` isolates the page (scrim + inert + scroll lock + focus trap). `popover` keeps context. */
   mode: { type: String as PropType<MOverlayMode>, default: 'modal' },
+  /**
+   * Element a swipe starts from — a sheet's drag handle, so its body can
+   * scroll. Without it the swipe banner or the whole panel starts the swipe.
+   */
+  swipeTarget: { type: Object as PropType<HTMLElement | null>, default: null },
   ...mModalLayerProps,
 }
 
@@ -81,4 +86,6 @@ export interface MOverlayEmits {
   (event: 'update:modelValue', value: boolean): void
   (event: 'beforeOpen' | 'beforeClose', payload: { stop: () => void }): void
   (event: 'opened' | 'closed' | 'clickOutside'): void
+  /** A user dismissal the overlay accepted, emitted before it starts closing. */
+  (event: 'dismiss', reason: MOverlayDismissReason): void
 }

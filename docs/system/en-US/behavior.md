@@ -50,9 +50,10 @@ The composable owns the *relationships* — `for` / `id`, `aria-describedby`, `a
 state modifiers, as **BEM modifiers rather than `data-*`**: a `data-*` attribute reads as an
 API surface, and consumers will start selecting on it.
 
-> `useSliderControl` still emits `data-orientation` / `data-state` / `data-disabled` /
-> `data-readonly`. It predates the rule and is the case the rule was written against — do
-> not copy it into a new composable.
+> `useSliderControl` used to emit `data-orientation` / `data-state` / `data-disabled` /
+> `data-readonly` — the case the rule was written against. They were removed (sweep run 2,
+> W5-А): its bags now carry only roles, `aria-*`, handlers and geometry; a range's root bag is
+> `role="group"`.
 
 Geometry that CSS needs travels the same way, as custom properties on the bag
 (`--m-slider-percent`, `--m-slider-progress`). This is the one sanctioned use of runtime
@@ -86,3 +87,42 @@ Where a native element can do the work, it does. `<MOtpInput>` draws N cells ove
 real `<input maxlength=N autocomplete="one-time-code">` — paste, SMS autofill, backspace
 across cell boundaries and screen-reader naming all come free, where N separate inputs would
 mean fighting the browser for each of them.
+
+A form gets values, not titles. `<MDropdown>` and `<MAutocomplete>` submit one
+`<input type="hidden">` per chosen value under `name` (a whole item by its `id`), as
+`<select multiple>` does; the visible input, which holds a title, submits nothing. The date and
+time pickers submit `YYYY-MM-DD` and `HH:mm` the same way. A pasted one-time code keeps its
+separators out of `invalid`: "123-456" from an SMS is not a mistake.
+
+## Overlays and feedback
+
+- **Focus moves onto the surface, not its first control.** A modal (`<MDialog>`, `<MSheet>`,
+  `<MOverlay>` with a trap) focuses itself when it opens; content that deserves focus says so
+  with `autofocus`. Closing returns focus to where it was before.
+- **A menu is a menu.** `<MMenu>` always opens at its anchor (`placement`, logical `start` /
+  `end`, mirrored in RTL). Arrows wrap, Home / End jump, a letter jumps by typeahead, Escape
+  closes and gives focus back; Tab closes and moves on from the trigger, as if the menu
+  followed it in the DOM. A disabled item stays in the arrow order as `aria-disabled`. Content
+  that is not a menu (a listbox, a colour picker) floats in a private popover panel with no
+  menu role. Items: `<MMenuItem>` and `<MMenuGroup>`; custom item markup takes `getItemAttrs()`
+  from `useMenuControl`.
+- **A modal answers.** `<MDialog>` / `<MSheet>` slots get `{ confirm, cancel, close }`;
+  `confirm(payload)` emits `confirm`, `cancel()` and a user dismissal (scrim, Escape, swipe)
+  emit `cancel(reason)`, `close()` and the parent's `v-model` give no answer. `useModal().open()`
+  resolves `{ status: 'confirmed', value }` (falsy payloads kept) or `{ status: 'cancelled',
+  reason }` (`cancel`, `outside`, `escape`, `swipe`, `programmatic`, `parent-closed`).
+  `$material.modal.confirm()` / `.alert()` build an `alertdialog` from caller-given labels.
+- **Announcements go through a persistent region.** A region mounted together with its text
+  is not reliably announced. The overlay host and every open modal hold a `role="status"` /
+  `role="alert"` pair; `<MSnackbar>`, `<MAlert>` and `<MBanner>` write their message into the
+  pair of the layer they render in (a layer without one gets their own) and are not live
+  regions themselves. `announce="off"` is for content already in the server HTML.
+- **A tooltip describes from the start.** Its surface is in the document from mount; the
+  trigger takes `aria-describedby` from the default slot's `props` (or, when it does not bind
+  them, on its first focusable element). It shows on hover and on keyboard focus, never on a
+  click, and on a long press on touch.
+- **A dismissed block keeps focus on the page.** Closing `<MAlert>` / `<MBanner>` from inside
+  moves focus to what follows it, else to the nearest heading before it (`return-focus="false"`
+  leaves it to the caller).
+- **`<MBanner layout="auto">` follows the window, not its container.** The banner is a
+  page-level surface; in a narrow column pick `inline` or `stacked`.

@@ -130,6 +130,15 @@ test.describe('MLazy', () => {
     expect(await boundary.evaluate(el => el.contains(document.activeElement))).toBe(true)
   })
 
+  test('the server HTML adds no tab stop to a placeholder with its own control', async ({ request }) => {
+    const markup = await (await request.get('/lazy/matrix?theme=light&dir=ltr')).text()
+    const tag = markup.match(/<[^>]*data-test="idle-own-control-on-interaction"[^>]*>/)?.[0]
+
+    expect(tag).toBeDefined()
+    expect(tag).not.toContain('role="button"')
+    expect(tag).not.toContain('tabindex')
+  })
+
   test('the activator keeps a visible focus ring in forced-colors mode', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active' })
     await openFixture(page, 'lazy/matrix')
@@ -159,6 +168,25 @@ test.describe('MLazy', () => {
 
     await expect(boundary).toHaveClass(/ui-lazy--idle/)
     await expect(field).toHaveCount(0)
+  })
+
+  // B9.7a: the local model releases the content too, and the shorter placeholder
+  // that takes its place does not pull the boundary back into view.
+  test('with once=false and no v-model, content leaves with the viewport and comes back', async ({ page }) => {
+    await openFixture(page, 'lazy/stress')
+    const boundary = page.getByTestId('release-unbound')
+
+    await expect(boundary).toHaveClass(/ui-lazy--active/)
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await expect(boundary).toHaveClass(/ui-lazy--idle/)
+    await expect(boundary.getByText('Released placeholder')).toHaveCount(1)
+    await page.waitForTimeout(300)
+    await expect(boundary).toHaveClass(/ui-lazy--idle/)
+
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await expect(boundary).toHaveClass(/ui-lazy--active/)
+    await expect(boundary.getByText('Released content')).toHaveCount(1)
   })
 
   test('activation does not change the reserved height, not even for a frame', async ({ page }) => {

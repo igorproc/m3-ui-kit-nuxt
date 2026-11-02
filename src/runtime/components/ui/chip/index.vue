@@ -1,259 +1,212 @@
 <template>
-  <button
-    ref="element"
-    class="ui-chip"
-    :class="chipClasses"
-    type="button"
-    :disabled="isDisabled"
-    :aria-pressed="ticket ? isSelected : undefined"
-    :aria-disabled="isBlocked ? 'true' : undefined"
-    :tabindex="ticket?.tabindex.value"
-    @click="onClick"
-    @keydown="onKeydown"
+  <span
+    v-if="removal === 'button'"
+    v-bind="rootAttrs()"
+    class="ui-chip ui-chip--multi"
+    :class="chipClasses()"
+    @pointerenter="requestTip"
+    @pointerleave="dropTip"
+    @focusin="onFocusIn"
+    @focusout="dropTip"
   >
-    <span
-      v-if="$slots.icon"
-      class="ui-chip__icon"
+    <!-- `removal="button"`: two actions, so the chip is a wrapper of two buttons. -->
+    <button
+      ref="element"
+      v-bind="controlAttrs(actionAttrs)"
+      class="ui-chip__action"
+      type="button"
     >
-      <slot name="icon" />
-    </span>
+      <component :is="content" />
+    </button>
 
-    <span class="ui-chip__label">
-      <slot />
-    </span>
+    <button
+      ref="remove"
+      v-bind="removeAttrs"
+      class="ui-chip__remove"
+      type="button"
+    >
+      <MIcon
+        class="ui-chip__remove-icon"
+        :name="ICONS.close"
+      />
+    </button>
+  </span>
+
+  <button
+    v-else
+    ref="element"
+    v-bind="singleAttrs()"
+    class="ui-chip"
+    :class="chipClasses()"
+    type="button"
+    @pointerenter="requestTip"
+    @pointerleave="dropTip"
+    @focusin="onFocusIn"
+    @focusout="dropTip"
+  >
+    <component :is="content" />
 
     <span
-      v-if="$slots.trailing"
+      v-if="$slots.trailing || removal === 'whole'"
       class="ui-chip__trailing"
     >
-      <slot name="trailing" />
+      <slot name="trailing">
+        <MIcon :name="ICONS.close" />
+      </slot>
     </span>
   </button>
 </template>
 
-<script setup lang="ts">
-import { tryUseChipGroupContext } from '#kit/composables/chip-group/context'
+<script setup lang="ts" generic="TValue = unknown">
+import { h, mergeProps } from 'vue'
+import ChipContent from '#kit/components/fragments/chip/content.vue'
+import MIcon from '#kit/components/ui/icon/index.vue'
+import { useChipControl } from '#kit/composables/chip/useChipControl'
+import { useChipTip } from '#kit/utils/chip/useChipTip'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { ICONS } from '#kit/shared/constants/icons'
 import { mChipProps } from './props'
+import type { MChipPropsOptions, MChipSlots } from './props'
 
-const props = defineProps(mChipProps)
+// In the two-button shape `class`/`style` stay on the wrapper and the rest
+// goes to the main action, as the one-button chip receives it.
+defineOptions({ inheritAttrs: false })
+const attrs = useAttrs()
+const { controlAttrs } = useControlAttrs()
+
+const props = defineProps(mChipProps as MChipPropsOptions<TValue>)
+const slots = defineSlots<MChipSlots>()
+const emit = defineEmits<{ (event: 'remove'): void }>()
 
 const selectedModel = defineModel<boolean>({ default: false })
 
 const element = useTemplateRef<HTMLElement>('element')
-const group = tryUseChipGroupContext()
 
-/**
- * A chip joins the group only with a `value`. Without one it stays standalone —
- * a normal Tab stop with its own boolean model — even inside a group layout.
- */
-const ticket = group && props.value !== undefined
-  ? group.register({
-      value: () => props.value,
-      disabled: () => props.disabled,
-      element,
-    })
-  : undefined
+const { isSelected, isDisabled, isBlocked, removeElement, actionAttrs, removeAttrs } = useChipControl(
+  props,
+  selectedModel,
+  element,
+  () => emit('remove'),
+)
 
-onScopeDispose(() => ticket?.stop())
+const remove = useTemplateRef<HTMLElement>('remove')
+watchEffect(() => {
+  removeElement.value = remove.value
+})
 
-const isSelected = computed(() => (ticket ? ticket.selected.value : selectedModel.value))
-const isDisabled = computed(() => (ticket ? ticket.disabled.value : props.disabled))
-// Blocked by the group `max`: announced as unavailable through aria-disabled
-// rather than natively disabled, so it stays discoverable in the group.
-const isBlocked = computed(() => Boolean(ticket && ticket.blockReason.value === 'max'))
+const rootAttrs = () => ({ class: attrs.class, style: attrs.style })
+const singleAttrs = () => mergeProps(controlAttrs(actionAttrs.value), rootAttrs())
 
-const chipClasses = computed(() => [
+const showsCheck = computed(() => props.type === 'filter' && props.showSelectedIcon)
+const hasLeading = () => Boolean(slots.icon || slots.avatar || (showsCheck.value && isSelected.value))
+const hasTrailing = () => Boolean(slots.trailing) || props.removal !== 'none'
+
+const { tip, tipText, tipOpen, contentRef, requestTip, dropTip, onFocusIn, onTipOpen } = useChipTip(isDisabled)
+
+// One leading part and label for both shapes; the chip's own slots pass through.
+const content = () => h(ChipContent, {
+  'ref': contentRef,
+  'selected': isSelected.value,
+  'disabled': isDisabled.value,
+  'blocked': isBlocked.value,
+  'check': showsCheck.value,
+  'tip': tip.value,
+  'tipText': tipText.value,
+  'tipOpen': tipOpen.value,
+  'onUpdate:tipOpen': onTipOpen,
+}, Object.fromEntries((['default', 'icon', 'avatar', 'selected-icon'] as const)
+  .filter(name => slots[name])
+  .map(name => [name, slots[name]])))
+
+const chipClasses = () => [
   `ui-chip--${props.type}`,
+  `ui-chip--${props.type === 'input' ? 'outlined' : props.variant}`,
   {
     'ui-chip--selected': isSelected.value,
     'ui-chip--disabled': isDisabled.value,
     'ui-chip--blocked': isBlocked.value,
+    'ui-chip--leading': hasLeading(),
+    'ui-chip--avatar': Boolean(slots.avatar),
+    'ui-chip--trailing': hasTrailing(),
   },
-])
+]
 
-function onClick() {
-  if (isDisabled.value) return
-
-  if (ticket) {
-    // The registry rejects a blocked toggle, so no local guard is duplicated.
-    ticket.toggle()
-    return
-  }
-
-  if (props.type === 'filter') selectedModel.value = !selectedModel.value
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (!ticket || !group) return
-
-  const horizontal = group.direction.value === 'horizontal'
-  // RTL swaps the visual meaning of previous/next along the inline axis only.
-  const rtl = horizontal && element.value
-    ? getComputedStyle(element.value).direction === 'rtl'
-    : false
-
-  const forward = horizontal ? (rtl ? 'ArrowLeft' : 'ArrowRight') : 'ArrowDown'
-  const backward = horizontal ? (rtl ? 'ArrowRight' : 'ArrowLeft') : 'ArrowUp'
-  const value = ticket.value.value
-
-  switch (event.key) {
-    case forward:
-      event.preventDefault()
-      group.focusNext(value)
-      break
-    case backward:
-      event.preventDefault()
-      group.focusPrev(value)
-      break
-    case 'Home':
-      event.preventDefault()
-      group.focusFirst()
-      break
-    case 'End':
-      event.preventDefault()
-      group.focusLast()
-      break
-  }
-  // Space/Enter keep native button activation and reach `onClick`.
+if (import.meta.dev) {
+  watchEffect(() => {
+    if (props.type === 'input' && props.variant === 'elevated') {
+      console.warn('[m-chip] an input chip has no elevated variant; it stays outlined.')
+    }
+    if (props.removal !== 'none' && !props.removeLabel) {
+      console.warn('[m-chip] the remove action has no name: pass `remove-label`.')
+    }
+  })
 }
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/chip/index' as t;
-
-$prefix: 'md-chip';
+@use '#kit/assets/stylesheet/components/chip/states' as states;
 
 .ui-chip {
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'md-chip');
 
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
+
+  // In a scrolling row a chip keeps its width; it never squeezes its label.
+  flex-shrink: 0;
   align-items: center;
-  justify-content: center;
   gap: g($t, 'gap');
-  min-height: g($t, 'height');
-  padding-inline: g($t, 'padding-inline');
+  max-inline-size: 100%;
+  min-block-size: g($t, 'height');
+  box-sizing: border-box;
+  padding-inline: g($t, 'padding.plain');
+  border: g($t, 'outlined.width') solid transparent;
   border-radius: g($t, 'radius');
-  border: g($t, 'border-width') solid transparent;
-  background-color: g($t, 'bg-color-default');
-  color: g($t, 'text-color-variant');
+  background-color: transparent;
   cursor: pointer;
   outline: none;
   text-decoration: none;
   transition:
-    background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    box-shadow var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-    transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+    background-color g($t, 'motion.state.duration') g($t, 'motion.state.easing'),
+    color g($t, 'motion.state.duration') g($t, 'motion.state.easing'),
+    border-color g($t, 'motion.state.duration') g($t, 'motion.state.easing'),
+    box-shadow g($t, 'motion.state.duration') g($t, 'motion.state.easing'),
+    padding g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
 
-  @include typescale(g($t, 'text-type'));
+  @include typescale(g($t, 'text.type'));
+  @include states.layer($t);
+  @include states.padding($t);
+  @include states.roles($t);
+  @include states.multi($t);
 
-  &__icon,
+  &:not(.ui-chip--multi) {
+    @include touch-target;
+  }
+
   &__trailing {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: g($t, 'icon-size');
-  }
-
-  &__label {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  @include can-hover {
-    &:hover:not(.ui-chip--disabled) {
-      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-default')});
-    }
-  }
-
-  &:active:not(.ui-chip--disabled) {
-    background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-active')}, #{g($t, 'bg-color-default')});
-    transform: translateY(1rem);
-  }
-
-  &--assist,
-  &--filter,
-  &--input {
-    background-color: transparent;
-    border-color: g($t, 'border-color-default');
-    color: g($t, 'text-color-default');
-
-    @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, transparent);
-      }
-    }
-
-    &:active {
-      background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-active')}, transparent);
-    }
-  }
-
-  &--suggestion {
-    background-color: g($t, 'bg-color-suggestion');
-    border-color: transparent;
-    box-shadow: g($t, 'suggestion-shadow');
-
-    @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, #{map.get($theme-color-link, 'on-surface')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-suggestion')});
-      }
-    }
-  }
-
-  &--selected {
-    background-color: g($t, 'bg-color-selected');
-    color: g($t, 'text-color-selected');
-    border-color: transparent;
-
-    @include can-hover {
-      &:hover {
-        background-color: color-mix(in srgb, #{g($t, 'text-color-selected')} #{g($t, 'state-layer-opacity-hover')}, #{g($t, 'bg-color-selected')});
-      }
-    }
+    flex-shrink: 0;
+    font-size: g($t, 'icon.size');
   }
 
   &:focus-visible {
     @include focus-ring;
   }
 
-  &--disabled {
-    cursor: default;
-    opacity: g($t, 'disabled-opacity');
-    pointer-events: none;
-  }
-
   // Selection is blocked by the group `max`; the chip stays focusable so the
   // user can reach it and understand why it cannot be selected.
   &--blocked {
     cursor: default;
-    opacity: g($t, 'blocked-opacity');
+    opacity: g($t, 'blocked.opacity');
   }
 
-  // The transparent border already turns into the chip's edge; selection is
-  // only a fill, and opacity would dim GrayText below the user's palette.
-  @include forced-colors {
-    &--selected {
-      // Hover and pressed state layers out-specify this and would drop the fill.
-      background-color: Highlight !important;
-      border-color: Highlight;
-      color: HighlightText;
-    }
-
-    &--disabled,
-    &--blocked {
-      opacity: 1;
-      border-color: GrayText;
-      color: GrayText;
-    }
-
-    &--selected.ui-chip--disabled {
-      background-color: GrayText !important;
-      color: Canvas;
-    }
+  &--disabled {
+    cursor: default;
+    pointer-events: none;
   }
+
+  @include states.forced;
 }
 </style>

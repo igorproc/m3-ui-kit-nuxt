@@ -154,11 +154,11 @@ import { reactive, ref } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import type { MButtonDensity, MButtonShape } from '#kit/components/ui/button/props'
-import type { MColor, MVariant } from '#kit/shared/types/props'
+import type { MButtonDensity, MButtonShape, MButtonVariant } from '#kit/components/ui/button/props'
+import type { MAccentColor } from '#kit/shared/types/props'
 
-const variants: MVariant[] = ['elevated', 'filled', 'tonal', 'outlined', 'text']
-const colors: MColor[] = ['primary', 'secondary', 'tertiary', 'error']
+const variants: MButtonVariant[] = ['elevated', 'filled', 'tonal', 'outlined', 'text']
+const colors: MAccentColor[] = ['primary', 'secondary', 'tertiary', 'error']
 const densities: MButtonDensity[] = ['compact', 'default', 'comfortable']
 const shapes: MButtonShape[] = ['round', 'square']
 const toggleRows = ['toggle', 'selected', 'selected-disabled'] as const

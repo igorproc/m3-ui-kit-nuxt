@@ -1,48 +1,49 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use '../choice/control' as control;
 
 // ==========================================
 // CHECKBOX M3 COMPONENT TOKENS
 // ==========================================
+// Compose `CheckboxTokens`; the field row, the 40 layer and its roles are the
+// selection family's (`choice/_control.scss`).
 
-$tokens: (
-  container: (
-    size: 40rem,
-    gap: 12rem,
-  ),
+$on-surface: map.get($theme-color-link, 'on-surface');
+$disabled: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$tokens: map.deep-merge(control.control-tokens(40rem, 12rem), (
   control: (
     size: 18rem,
-    border: (
-      width: 2rem,
-      radius: 2rem,
-      color: map.get($theme-color-link, outline),
-    ),
-    bg: transparent,
+    // `RoundedCornerShape(2.dp)`: no shape step is this small.
+    radius: 2rem,
+    border: (width: 2rem),
   ),
-  icon: (
-    size: 16rem,
-  ),
-  checked: (
-    color: map.get($theme-color-link, primary),
-    icon: (
-      color: map.get($theme-color-link, on-primary),
+  icon: (size: 18rem, stroke: 2, dash: 1, scale: 0.6),
+  // The box is the container (its edge while unselected), the check the content.
+  unselected: (
+    container: (
+      border: map.get($theme-color-link, 'on-surface-variant'),
+      active: (border: $on-surface),
     ),
   ),
-  state: (
-    layer: (
-      opacity: (
-        hover: state-opacity(hover),
-        active: state-opacity(pressed),
-      ),
-    ),
+  selected: (
+    container: (color: map.get($theme-color-link, 'primary')),
+    content: (color: map.get($theme-color-link, 'on-primary')),
   ),
   error: (
-    color: map.get($theme-color-link, error),
+    container: (color: map.get($theme-color-link, 'error'), border: map.get($theme-color-link, 'error')),
+    content: (color: map.get($theme-color-link, 'on-error')),
   ),
   disabled: (
-    opacity: state-opacity(disabled-content),
+    unselected: (container: (border: $disabled)),
+    selected: (
+      container: (color: $disabled),
+      content: (color: map.get($theme-color-link, 'surface')),
+    ),
   ),
-  typography: (
-    label: 'body-medium',
+  // The fill and the check come in on emphasized-decelerate, leave fast.
+  motion: (
+    enter: (duration: var(--sys-motion-duration-medium-3), easing: var(--sys-motion-easing-emphasized-decelerate)),
+    exit: (duration: var(--sys-motion-duration-short-3), easing: var(--sys-motion-easing-emphasized-accelerate)),
+    fade: (duration: var(--sys-motion-duration-short-1), easing: var(--sys-motion-easing-linear)),
   ),
-);
+));

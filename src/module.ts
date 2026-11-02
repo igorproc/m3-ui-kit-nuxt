@@ -9,7 +9,8 @@ import {
 } from '@nuxt/kit'
 
 import { COOKIE_THEME_KEYS } from './runtime/shared/constants/cookie'
-import { findUndeclaredDefaultPalette } from './options/validate'
+import { findInvalidSeeds, findUndeclaredDefaultPalette } from './options/validate'
+import { prependScssPrelude } from './options/scss'
 import { resolveBreakpoints } from './runtime/utils/viewport/resolveBreakpoints'
 import { resolveTypography, typefaceToScss } from './runtime/utils/typography/resolveTypography'
 import type { ResolvedTypography } from './runtime/utils/typography/resolveTypography'
@@ -18,22 +19,14 @@ import type { MaterialKitOptions } from './runtime/shared/types/kit'
 
 export type { MaterialKitOptions }
 
-/**
- * Prepends the kit's abstract prelude (functions, mixins, system vars) to every
- * SCSS entry so `g()`, mixins and `$material-kit-*` are in scope, while keeping
- * any prelude the consumer already declared.
- */
-function injectScssPrelude(nuxt: any, additionalScss: string) {
+/** Puts the kit's abstract prelude in front of every SCSS entry (`prependScssPrelude`). */
+function injectScssPrelude(nuxt: Nuxt, additionalScss: string) {
   nuxt.options.vite ??= {}
   nuxt.options.vite.css ??= {}
   nuxt.options.vite.css.preprocessorOptions ??= {}
   nuxt.options.vite.css.preprocessorOptions.scss ??= {}
 
-  const scss = nuxt.options.vite.css.preprocessorOptions.scss
-  const previous = typeof scss.additionalData === 'string' ? scss.additionalData : ''
-  const prelude = `@use "${additionalScss.replace(/\\/g, '/')}" as *;\n`
-
-  scss.additionalData = `${prelude}${previous}`
+  prependScssPrelude(nuxt.options.vite.css.preprocessorOptions.scss, additionalScss)
 }
 
 /**
@@ -45,7 +38,7 @@ function injectScssPrelude(nuxt: any, additionalScss: string) {
  * so the `@use '~material-kit-themes'` import keeps resolving; static themes
  * (`definedInScss`) live in `assets/stylesheet/themes/base`.
  */
-function registerThemePipeline(options: MaterialKitOptions, typography: ResolvedTypography, nuxt: any) {
+function registerThemePipeline(options: MaterialKitOptions, typography: ResolvedTypography, nuxt: Nuxt) {
   // Emit the resolved map, not just the consumer's overrides: the SCSS side keeps its
   // own copy of the defaults, and shipping the full map makes that copy a fallback
   // instead of a second source of truth.
@@ -77,7 +70,7 @@ const materialKitModule: NuxtModule<MaterialKitOptions> = defineNuxtModule<Mater
   meta: {
     name: '@pr0s1k/primetime-kit',
     configKey: 'materialKit',
-    compatibility: { nuxt: '>=4.0.0' },
+    compatibility: { nuxt: '^4.4.8' },
   },
   moduleDependencies(nuxt: Nuxt): ModuleDependencies {
     const kitModulesDir = fileURLToPath(new URL('../node_modules', import.meta.url))
@@ -108,7 +101,7 @@ const materialKitModule: NuxtModule<MaterialKitOptions> = defineNuxtModule<Mater
       default: {
         definition: 'dark',
         palette: '_m3-fallback',
-        contrast: 'medium',
+        contrast: 'standard',
       },
       themes: [
         {
@@ -127,6 +120,14 @@ const materialKitModule: NuxtModule<MaterialKitOptions> = defineNuxtModule<Mater
         `[@pr0s1k/primetime-kit] \`materialKit.theme.default.palette\` is "${undeclared.palette}", `
         + 'which is not declared in `materialKit.theme.themes`.\n'
         + `Declared palettes: ${undeclared.declared.join(', ') || '(none)'}`,
+      )
+    }
+
+    const invalidSeeds = findInvalidSeeds(options)
+    if (invalidSeeds.length) {
+      throw new Error(
+        '[@pr0s1k/primetime-kit] `materialKit.theme.themes[].color` must be a HEX seed (3, 6 or 8 digits): '
+        + invalidSeeds.map(seed => `"${seed.key}" has "${seed.color}"`).join(', '),
       )
     }
 

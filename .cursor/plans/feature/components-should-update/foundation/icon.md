@@ -2,7 +2,7 @@
 
 <identity>M3: Styles → Icons (Material Symbols: размер 24 по умолчанию, оси FILL / weight / grade / optical size) · Токены Compose: нет отдельного файла; размеры иконок задаются в токенах каждого компонента (`IconSize`) · Код: `src/runtime/components/ui/icon/`, `src/runtime/shared/constants/icons.ts` · Аудит: `data/icon.json` · Тип: public, примитив</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Сделано: квадрат `1em` всегда, `label` → `role="img"`, проп `filled` (outline → baseline), типизированное `name` с ключами `ICONS`, dev-warning на пустое и некорректное имя, слой `composables/icon`. Перенесены: `filled` в компонентах с выбором и документация.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделано: квадрат `1em`, `label` → `role="img"`, `filled`, типизированное `name`, dev-предупреждения о пустом, неверном и (2026-10-30, на dev-сервере по локальному набору `ic`) неизвестном имени, глиф под классом `ui-icon__glyph`, внутренности в `utils/icon` (B1.7a); залитый глиф у активной навигации и у выбранной `MButtonIcon` (W70-А, контекст `utils/icon/glyphFill`). Отменено: `filled` у chip filter и segmented (W70-А — там галочка), документация (docs_v2 вне репо).</implementation-status>
 
 ## Вердикт
 
@@ -64,7 +64,10 @@
   пока глиф грузится, и не схлопывается при ошибке.
 - **Значимая иконка.** `label` → `role="img"`, `aria-label`, без `aria-hidden`. Без `label` —
   декоративная, как сейчас.
-- **Неизвестное имя** в dev: `console.warn` с именем и подсказкой про `ICONS`.
+- **Неизвестное имя** в dev: `console.warn` с именем и подсказкой про `ICONS`. Пустое и неверное по
+  форме имя ловится везде; корректное по форме, но отсутствующее в наборе `ic` — на dev-сервере при
+  SSR, по локальным данным `@iconify-json/ic` (без запроса в сеть и без данных набора в браузере).
+  Имена других коллекций кит не судит.
 - EN-09 закрыт: глобального `:deep()` в стилях больше нет (`index.vue:33–57`).
 
 ## API
@@ -81,9 +84,10 @@
 3. **M — ось заливки** (после вопроса 1 и СВ-3).
    - `filled` переводит `ic:outline-x` → `ic:baseline-x`.
    - Компоненты с выбором (navigation bar/rail/drawer, chip filter, segmented, toggle-кнопки)
-     ставят `filled` на выбранном. **Перенесено**: это правка чужих компонентов, решение за
-     владельцем.
-4. **S — документация** (DC-03, DC-04). **Перенесено**: документация (docs_v2) живёт вне репозитория.
+     ставят `filled` на выбранном. Сделано по W70-А: навигация (2026-10-24) и выбранная
+     `MButtonIcon` (2026-10-30, контекст `utils/icon/glyphFill` заливает `MIcon` в слоте).
+     Для chip filter и segmented **отменено** (W70-А: выбор там — галочка).
+4. **S — документация** (DC-03, DC-04). **Отменено**: документация (docs_v2) живёт вне репозитория.
    - `name` обязателен.
    - Размер берётся от `font-size` родителя.
    - Наборы и константа `ICONS`.

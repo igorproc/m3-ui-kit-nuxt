@@ -27,6 +27,16 @@ function matchesAccept(file: File, accept?: string) {
   })
 }
 
+/**
+ * What the support line says about one refused file: its name, then the app's
+ * words for each reason ("photo.png: too large"). A reason without words
+ * leaves the name alone.
+ */
+export function describeRejection(rejection: FileRejection, messages?: Partial<Record<FileRejectReason, string>>): string {
+  const reasons = rejection.reasons.map(reason => messages?.[reason]).filter(Boolean)
+  return reasons.length ? `${rejection.file.name}: ${reasons.join(', ')}` : rejection.file.name
+}
+
 export function createFilePolicy(options: FilePolicyOptions = {}) {
   function evaluate(files: Iterable<File>): FilePolicyResult {
     const accepted: File[] = []

@@ -1,4 +1,5 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import type { VueWrapper } from '@vue/test-utils'
 import type { Component } from 'vue'
 import MTable from '../index.vue'
 import type { TableColumn } from '../types'
@@ -21,7 +22,7 @@ export const rows: Row[] = [
   { id: 3, name: 'Cid', amount: 4 },
 ]
 
-export type Wrapper = Awaited<ReturnType<typeof mountSuspended>>
+export type Wrapper = VueWrapper
 
 /** Mounts `MTable` with the shared columns and rows; `props` override them. */
 export function mountTable(props: Record<string, unknown> = {}, options: Record<string, unknown> = {}): Promise<Wrapper> {

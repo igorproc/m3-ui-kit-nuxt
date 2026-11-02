@@ -33,6 +33,7 @@
         class="ui-color-edit__channel"
         :model-value="channel.value"
         :label="channel.label"
+        :unit="channel.unit"
         :min="0"
         :max="channel.max"
         :step="channel.step"
@@ -59,6 +60,7 @@
         class="ui-color-edit__channel"
         :model-value="channel.value"
         :label="channel.label"
+        :unit="channel.unit"
         :min="0"
         :max="channel.max"
         :step="channel.step"
@@ -85,6 +87,7 @@ type RgbChannel = keyof Pick<RGBA, 'r' | 'g' | 'b' | 'a'>
 type HslChannel = keyof Pick<HSLA, 'h' | 's' | 'l' | 'a'>
 
 const ctx = useColorPickerContext()
+const PERCENT = '%'
 
 // The value field reserves its support line only while it has an error to show
 // (decision 2026-10-19): passed only for an unreadable value.
@@ -96,20 +99,20 @@ const hsla = computed(() => rgbaToHsla(ctx.rgba.value))
 const includesAlpha = computed(() => ctx.format.value === 'rgba' || ctx.format.value === 'hsla')
 
 const rgbChannels = computed(() => [
-  { key: 'r' as const, label: 'R', value: ctx.rgba.value.r, max: 255, step: 1, precision: 0 },
-  { key: 'g' as const, label: 'G', value: ctx.rgba.value.g, max: 255, step: 1, precision: 0 },
-  { key: 'b' as const, label: 'B', value: ctx.rgba.value.b, max: 255, step: 1, precision: 0 },
+  { key: 'r' as const, label: 'R', value: ctx.rgba.value.r, max: 255, step: 1, precision: 0, unit: undefined },
+  { key: 'g' as const, label: 'G', value: ctx.rgba.value.g, max: 255, step: 1, precision: 0, unit: undefined },
+  { key: 'b' as const, label: 'B', value: ctx.rgba.value.b, max: 255, step: 1, precision: 0, unit: undefined },
   ...(includesAlpha.value
-    ? [{ key: 'a' as const, label: 'A %', value: Math.round(ctx.rgba.value.a * 100), max: 100, step: 1, precision: 0 }]
+    ? [{ key: 'a' as const, label: 'A', value: Math.round(ctx.rgba.value.a * 100), max: 100, step: 1, precision: 0, unit: PERCENT }]
     : []),
 ])
 
 const hslChannels = computed(() => [
-  { key: 'h' as const, label: 'H', value: Math.round(hsla.value.h), max: 360, step: 1, precision: 0 },
-  { key: 's' as const, label: 'S %', value: Math.round(hsla.value.s * 100), max: 100, step: 1, precision: 0 },
-  { key: 'l' as const, label: 'L %', value: Math.round(hsla.value.l * 100), max: 100, step: 1, precision: 0 },
+  { key: 'h' as const, label: 'H', value: Math.round(hsla.value.h), max: 360, step: 1, precision: 0, unit: undefined },
+  { key: 's' as const, label: 'S', value: Math.round(hsla.value.s * 100), max: 100, step: 1, precision: 0, unit: PERCENT },
+  { key: 'l' as const, label: 'L', value: Math.round(hsla.value.l * 100), max: 100, step: 1, precision: 0, unit: PERCENT },
   ...(includesAlpha.value
-    ? [{ key: 'a' as const, label: 'A %', value: Math.round(hsla.value.a * 100), max: 100, step: 1, precision: 0 }]
+    ? [{ key: 'a' as const, label: 'A', value: Math.round(hsla.value.a * 100), max: 100, step: 1, precision: 0, unit: PERCENT }]
     : []),
 ])
 

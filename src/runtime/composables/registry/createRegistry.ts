@@ -2,16 +2,17 @@
  * @module createRegistry
  *
  * @remarks
- * Foundational ticket registry ported 1:1 from `@vuetify/v0` (semantics
- * preserved; verbose per-symbol JSDoc condensed). Manages a collection of
- * tickets with id-based access, index ordering/reindexing, value reverse-lookup,
- * a small event bus, and per-iteration caching. It is the substrate the
- * selection chain (`createModel` → `createSelection` → `createGroup`/
- * `createSingle`) extends via spread.
+ * Foundational ticket registry ported from `@vuetify/v0` (semantics preserved;
+ * verbose per-symbol JSDoc condensed). Manages a collection of tickets with
+ * id-based access, index ordering/reindexing, value reverse-lookup, a small
+ * event bus, and per-iteration caching. It is the substrate the selection chain
+ * (`createModel` → `createSelection` → `createGroup`/`createSingle`) extends via
+ * spread.
  *
  * Differences from v0: `useLogger` → the kit logger shim; `__DEV__` →
- * `import.meta.dev`; default namespace `m3:registry`. The event subsystem is
- * kept — `useProxyRegistry` (used by `createGroup`) subscribes to it.
+ * `import.meta.dev`; default namespace `m3:registry`; the event bus, snapshot
+ * cache and value catalog live in `utils/registry/internals`. The event
+ * subsystem is kept — `useProxyRegistry` (used by `createGroup`) subscribes to it.
  *
  * @example
  * ```ts
@@ -21,130 +22,25 @@
  * registry.unregister(ticket.id)
  * ```
  */
-import { shallowReactive, useId } from 'vue'
-import { useContext } from '#kit/shared/utils/context/createContext'
-import { createTrinity } from '#kit/shared/utils/context/createTrinity'
-import type { ContextTrinity } from '#kit/shared/utils/context/createTrinity'
+import { shallowReactive } from 'vue'
 import { useLogger } from '#kit/shared/utils/logger'
 import { clamp } from '#kit/shared/utils/helpers'
 import { isUndefined } from '#kit/shared/utils/guards/guards'
-import type { Extensible, ID } from '#kit/shared/types/registry'
-
-/** User-facing input shape for registry tickets. */
-export interface RegistryTicketInput<V = unknown> {
-  /** Unique identifier. Auto-generated if omitted. */
-  id?: ID
-  /** Associated value. Defaults to the ticket index when omitted. */
-  value?: V
-}
-
-/** Output ticket shape returned by `get()`/`values()`. */
-export interface RegistryTicket<V = unknown> {
-  id: ID
-  /** Position in the registry. Managed automatically. */
-  index: number
-  value: V
-  /** Whether `value` was derived from `index` (no explicit value supplied). */
-  valueIsIndex: boolean
-  /** Remove this ticket — sugar for `registry.unregister(ticket.id)`. */
-  unregister: () => void
-}
-
-/** Valid event names for registry operations. */
-export type RegistryEventName
-  = | 'register:ticket'
-    | 'unregister:ticket'
-    | 'update:ticket'
-    | 'clear:registry'
-    | 'reindex:registry'
-
-/** Maps event names to their payload types. */
-export type RegistryEventMap<Z extends RegistryTicket> = {
-  'register:ticket': Z
-  'unregister:ticket': Z
-  'update:ticket': Z
-  'clear:registry': undefined
-  'reindex:registry': undefined
-}
-
-export type RegistryEventCallback<
-  Z extends RegistryTicket = RegistryTicket,
-  K extends Extensible<RegistryEventName> = Extensible<RegistryEventName>,
-> = K extends RegistryEventName
-  ? (data: RegistryEventMap<Z>[K]) => void
-  : (data: unknown) => void
-
-type EventPayload<Z extends RegistryTicket, K extends string>
-  = K extends RegistryEventName
-    ? RegistryEventMap<Z>[K]
-    : unknown
-
-type InternalEventCallback = (data: unknown) => void
-
-export interface RegistryContext<
-  Z extends RegistryTicketInput = RegistryTicketInput,
-  E extends RegistryTicket & Z = RegistryTicket & Z,
-> {
-  /** Read-only view of the internal collection. */
-  collection: ReadonlyMap<ID, E>
-  /** Remove all tickets. */
-  clear: () => void
-  /** Whether a ticket exists by id. */
-  has: (id: ID) => boolean
-  /** All registered ids (cached). */
-  keys: () => readonly ID[]
-  /** Ids that share `value`, or undefined. */
-  browse: (value: E['value']) => readonly ID[] | undefined
-  /** Id at `index`, or undefined. */
-  lookup: (index: number) => ID | undefined
-  /** Ticket by id, or undefined. */
-  get: (id: ID) => E | undefined
-  /** Update or insert a ticket by id. */
-  upsert: (id: ID, ticket?: Partial<Z>, event?: string) => E
-  /** All ticket values (cached). */
-  values: () => readonly E[]
-  /** All `[id, ticket]` entries (cached). */
-  entries: () => readonly [ID, E][]
-  /** Register a new ticket. */
-  register: (ticket?: Partial<Z & RegistryTicket>) => E
-  /** Unregister a ticket by id and reindex. */
-  unregister: (id: ID) => void
-  /** Rebuild index mapping and refresh ticket indexes. */
-  reindex: () => void
-  /** Move a ticket to a new index (clamped). */
-  move: (id: ID, toIndex: number) => E | undefined
-  /** Reorder the registry to a canonical permutation of ids in one pass. */
-  reorder: (ids: ID[]) => void
-  /** Scan for a ticket by direction/offset/predicate. */
-  seek: (direction?: 'first' | 'last', from?: number, predicate?: (ticket: E) => boolean) => E | undefined
-  /** Subscribe to a registry event (requires `events: true`). */
-  on: <K extends Extensible<RegistryEventName>>(event: K, cb: RegistryEventCallback<E, K>) => void
-  /** Unsubscribe from a registry event. */
-  off: <K extends Extensible<RegistryEventName>>(event: K, cb: RegistryEventCallback<E, K>) => void
-  /** Emit an event with data. */
-  emit: <K extends Extensible<RegistryEventName>>(event: K, data: EventPayload<E, K>) => void
-  /** Clear the registry and remove all listeners. */
-  dispose: () => void
-  /** Register many tickets in one batch. */
-  onboard: (registrations: Partial<Z & RegistryTicket>[]) => E[]
-  /** Unregister many tickets, returning their input shapes. */
-  offboard: (ids: ID[]) => Partial<Z>[]
-  /** Number of tickets. */
-  size: number
-  /** Run operations in a batch, deferring invalidation/events to the end. */
-  batch: <R>(fn: () => R) => R
-}
-
-export interface RegistryOptions {
-  /** Enable the event bus (`on`/`off`/`emit`). @default false */
-  events?: boolean
-  /** Track the collection with `shallowReactive`. @default false */
-  reactive?: boolean
-}
-
-export interface RegistryContextOptions extends RegistryOptions {
-  namespace?: string
-}
+import type { ID } from '#kit/shared/types/registry'
+import {
+  createEventBus,
+  createSnapshots,
+  createTicketIds,
+  createValueCatalog,
+  seekTicket,
+  toTicketInput,
+} from '#kit/utils/registry/internals'
+import type {
+  RegistryContext,
+  RegistryOptions,
+  RegistryTicket,
+  RegistryTicketInput,
+} from './types'
 
 /**
  * Creates a new registry instance.
@@ -155,63 +51,22 @@ export function createRegistry<
 >(options?: RegistryOptions): RegistryContext<Z, E> {
   const logger = useLogger()
 
-  const events = options?.events ?? false
   const reactive = options?.reactive ?? false
 
   const collection = reactive ? shallowReactive(new Map<ID, E>()) : new Map<ID, E>()
-  const catalog = new Map<unknown, ID[]>()
+  const catalog = createValueCatalog()
   const directory = new Map<number, ID>()
-  const cache = new Map<'keys' | 'values' | 'entries', unknown[]>()
-  const listeners = new Map<string, Set<InternalEventCallback>>()
+  const snapshots = createSnapshots(collection, reactive)
+  const bus = createEventBus(options?.events ?? false, logger)
+  const nextId = createTicketIds()
+  const { emit } = bus
 
   let indexDependentCount = 0
   let needsReindex = false
   let minDirtyIndex = Infinity
-  let isBatching = false
-  let batched: Array<{ event: string, data: unknown }> = []
-
-  function dispatch(event: string, data: unknown) {
-    const cbs = listeners.get(event)
-    if (!cbs) return
-    for (const cb of cbs) cb(data)
-  }
-
-  function emit(event: string, data: unknown = undefined) {
-    if (!events) return
-
-    if (isBatching) {
-      batched.push({ event, data })
-      return
-    }
-
-    dispatch(event, data)
-  }
-
-  function on(event: string, cb: InternalEventCallback) {
-    if (!events) {
-      logger.warn(`Events are disabled. Initialize with \`createRegistry({ events: true })\` to enable.`)
-      return
-    }
-
-    if (!listeners.has(event)) listeners.set(event, new Set())
-    const cbs = listeners.get(event)!
-    cbs.add(cb)
-
-    if (import.meta.dev && cbs.size === 101) {
-      logger.warn(`Event "${event}" has ${cbs.size} listeners. Possible memory leak.`)
-    }
-  }
-
-  function off(event: string, cb: InternalEventCallback) {
-    if (!events) {
-      logger.warn(`Events are disabled. Initialize with \`createRegistry({ events: true })\` to enable.`)
-      return
-    }
-    listeners.get(event)?.delete(cb)
-  }
 
   function dispose() {
-    listeners.clear()
+    bus.clear()
     clear()
   }
 
@@ -248,8 +103,8 @@ export function createRegistry<
       }
 
       if (!Object.is(value, existing.value)) {
-        unassign(existing.value, id)
-        assign(value, id)
+        catalog.unassign(existing.value, id)
+        catalog.assign(value, id)
       }
     }
 
@@ -264,8 +119,7 @@ export function createRegistry<
 
   function browse(value: unknown) {
     if (needsReindex) reindex()
-    const bucket = catalog.get(value)
-    return bucket ? bucket.slice() : undefined
+    return catalog.browse(value)
   }
 
   function lookup(index: number) {
@@ -275,63 +129,6 @@ export function createRegistry<
 
   function has(id: ID) {
     return collection.has(id)
-  }
-
-  function assign(value: unknown, id: ID) {
-    const bucket = catalog.get(value)
-    if (bucket) {
-      if (!bucket.includes(id)) bucket.push(id)
-    } else {
-      catalog.set(value, [id])
-    }
-  }
-
-  function unassign(value: unknown, id: ID) {
-    const bucket = catalog.get(value)
-    if (!bucket) return
-
-    const next = bucket.filter(v => v !== id)
-    if (next.length === 0) catalog.delete(value)
-    else catalog.set(value, next)
-  }
-
-  function keys(): readonly ID[] {
-    if (reactive) return Array.from(collection.keys())
-
-    const cached = cache.get('keys')
-    if (!isUndefined(cached)) return cached as readonly ID[]
-
-    const out = Array.from(collection.keys())
-
-    cache.set('keys', out)
-
-    return out
-  }
-
-  function values(): readonly E[] {
-    if (reactive) return Array.from(collection.values())
-
-    const cached = cache.get('values')
-    if (!isUndefined(cached)) return cached as readonly E[]
-
-    const out = Array.from(collection.values())
-
-    cache.set('values', out)
-
-    return out
-  }
-
-  function entries(): readonly [ID, E][] {
-    if (reactive) return Array.from(collection.entries())
-
-    const cached = cache.get('entries')
-    if (!isUndefined(cached)) return cached as readonly [ID, E][]
-
-    const out = Array.from(collection.entries())
-
-    cache.set('entries', out)
-
-    return out
   }
 
   function clear() {
@@ -346,30 +143,12 @@ export function createRegistry<
   }
 
   function invalidate() {
-    if (isBatching) return
-    cache.clear()
+    if (bus.holding) return
+    snapshots.clear()
   }
 
   function batch<R>(fn: () => R): R {
-    if (isBatching) return fn()
-
-    isBatching = true
-    batched = []
-
-    try {
-      const result = fn()
-
-      cache.clear()
-
-      for (const { event, data } of batched) {
-        dispatch(event, data)
-      }
-
-      return result
-    } finally {
-      isBatching = false
-      batched = []
-    }
+    return bus.hold(fn, snapshots.clear)
   }
 
   function reindex() {
@@ -396,12 +175,12 @@ export function createRegistry<
 
       if (ticket.valueIsIndex) {
         if (startIndex > 0) {
-          unassign(ticket.value, ticket.id)
+          catalog.unassign(ticket.value, ticket.id)
         }
         ticket.value = index
-        assign(ticket.value, ticket.id)
+        catalog.assign(ticket.value, ticket.id)
       } else if (startIndex === 0) {
-        assign(ticket.value, ticket.id)
+        catalog.assign(ticket.value, ticket.id)
       }
 
       ticket.index = index
@@ -419,7 +198,7 @@ export function createRegistry<
     if (needsReindex) reindex()
 
     const size = collection.size
-    const id = registration.id ?? useId()
+    const id = nextId(registration.id)
 
     if (has(id)) {
       logger.warn(`Ticket "${id}" already exists. Use \`upsert()\` to update or check \`has()\` before registering.`)
@@ -450,7 +229,7 @@ export function createRegistry<
     collection.set(ticket.id, ticket)
     directory.set(ticket.index, ticket.id)
 
-    assign(ticket.value, ticket.id)
+    catalog.assign(ticket.value, ticket.id)
     invalidate()
     emit('register:ticket', ticket)
 
@@ -468,7 +247,7 @@ export function createRegistry<
 
     collection.delete(ticket.id)
     directory.delete(ticket.index)
-    unassign(ticket.value, ticket.id)
+    catalog.unassign(ticket.value, ticket.id)
 
     const willReindex = indexDependentCount > 0 && ticket.index < collection.size
     if (!willReindex) invalidate()
@@ -487,21 +266,6 @@ export function createRegistry<
     return batch(() => registrations.map(registration => register(registration)))
   }
 
-  // Strip registry-managed fields to recover a ticket's input shape. `id` is
-  // dropped only when auto-generated (valueIsIndex), so a receiving registry can
-  // assign a fresh one.
-  function toInput(ticket: E): Partial<Z> {
-    const input = { ...ticket } as Record<string, unknown>
-    delete input.index
-    delete input.valueIsIndex
-    delete input.unregister
-    if (ticket.valueIsIndex) {
-      delete input.id
-      delete input.value
-    }
-    return input as Partial<Z>
-  }
-
   function offboard(ids: ID[]): Partial<Z>[] {
     const removed: E[] = []
 
@@ -517,7 +281,7 @@ export function createRegistry<
         minDirtyIndex = Math.min(minDirtyIndex, ticket.index)
         collection.delete(ticket.id)
         directory.delete(ticket.index)
-        unassign(ticket.value, ticket.id)
+        catalog.unassign(ticket.value, ticket.id)
         removed.push(ticket)
       }
 
@@ -530,7 +294,7 @@ export function createRegistry<
       needsReindex = true
     })
 
-    return removed.map(ticket => toInput(ticket))
+    return removed.map(ticket => toTicketInput<Z>(ticket))
   }
 
   function move(id: ID, toIndex: number): E | undefined {
@@ -539,8 +303,7 @@ export function createRegistry<
     const ticket = collection.get(id)
     if (!ticket) return undefined
 
-    const size = collection.size
-    const target = clamp(toIndex, 0, size - 1)
+    const target = clamp(toIndex, 0, collection.size - 1)
 
     if (ticket.index === target) return ticket
 
@@ -598,44 +361,21 @@ export function createRegistry<
 
     if (needsReindex) reindex()
 
-    // Fast path: simple first/last without predicate or offset.
-    if (!predicate && isUndefined(from)) {
-      const tickets = values()
-      return direction === 'first' ? tickets[0] : tickets.at(-1)
-    }
-
-    const tickets = values()
-    const index = isUndefined(from) ? undefined : clamp(from, 0, tickets.length - 1)
-
-    if (direction === 'last') {
-      const start = isUndefined(index) ? tickets.length - 1 : index
-      for (let i = start; i >= 0; i--) {
-        const ticket = tickets[i]!
-        if (!predicate || predicate(ticket)) return ticket
-      }
-    } else {
-      const start = isUndefined(index) ? 0 : index
-      for (let i = start; i < tickets.length; i++) {
-        const ticket = tickets[i]!
-        if (!predicate || predicate(ticket)) return ticket
-      }
-    }
-
-    return undefined
+    return seekTicket(snapshots.values(), direction, from, predicate)
   }
 
   return {
     collection: collection as ReadonlyMap<ID, E>,
     emit,
-    on,
-    off,
+    on: bus.on,
+    off: bus.off,
     dispose,
     has,
-    keys,
+    keys: snapshots.keys,
     clear,
     browse,
-    entries,
-    values,
+    entries: snapshots.entries,
+    values: snapshots.values,
     lookup,
     get,
     upsert,
@@ -652,28 +392,4 @@ export function createRegistry<
       return collection.size
     },
   } as RegistryContext<Z, E>
-}
-
-/**
- * Creates a registry context trinity for provide/inject usage.
- */
-export function createRegistryContext<
-  Z extends RegistryTicketInput = RegistryTicketInput,
-  E extends RegistryTicket & Z = RegistryTicket & Z,
->(_options: RegistryContextOptions = {}): ContextTrinity<RegistryContext<Z, E>> {
-  const { namespace = 'm3:registry', ...options } = _options
-
-  const context = createRegistry<Z, E>(options)
-
-  return createTrinity<RegistryContext<Z, E>>(namespace, context)
-}
-
-/**
- * Injects an existing registry from context.
- */
-export function useRegistry<
-  Z extends RegistryTicketInput = RegistryTicketInput,
-  E extends RegistryTicket & Z = RegistryTicket & Z,
->(namespace = 'm3:registry'): RegistryContext<Z, E> {
-  return useContext<RegistryContext<Z, E>>(namespace)
 }

@@ -4,6 +4,7 @@
 
     <div class="fixture-stress__narrow">
       <MDatePicker
+        v-bind="DATE_LABELS"
         v-model="narrow"
         label="Choose the first working day of the next reporting period"
         data-test="narrow"
@@ -11,6 +12,7 @@
     </div>
 
     <MDatePicker
+      v-bind="DATE_LABELS"
       v-model="russian"
       locale="ru-RU"
       label="Выберите дату"
@@ -18,6 +20,7 @@
     />
 
     <MDatePicker
+      v-bind="DATE_LABELS"
       v-model="arabic"
       locale="ar-EG"
       label="اختر التاريخ"
@@ -25,6 +28,7 @@
     />
 
     <MDatePicker
+      v-bind="DATE_LABELS"
       v-model="wide"
       :min-date="new Date(1900, 0, 1)"
       :max-date="new Date(2100, 11, 31)"
@@ -34,6 +38,7 @@
     <!-- Contradictory bounds (a dev warning) and an unreadable model: the
          picker still draws, with nothing chosen. -->
     <MDatePicker
+      v-bind="DATE_LABELS"
       v-model="unreadable"
       :min-date="new Date(2026, 9, 20)"
       :max-date="new Date(2026, 9, 10)"
@@ -43,6 +48,7 @@
     <!-- February 2026 fits in four weeks, May 2026 needs six: the grid keeps
          six rows either way, so paging never moves what is under it. -->
     <MDatePicker
+      v-bind="DATE_LABELS"
       v-model="shortMonth"
       data-test="short-month"
     />
@@ -52,6 +58,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MDatePicker from '#kit/components/ui/date-picker/index.vue'
+import { DATE_LABELS } from './labels'
 
 const narrow = ref<Date | null>(new Date(2026, 8, 30))
 const russian = ref<Date | null>(new Date(2026, 8, 14))

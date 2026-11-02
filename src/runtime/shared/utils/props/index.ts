@@ -12,24 +12,18 @@
  */
 import type { PropType } from 'vue'
 import { propsFactory } from './propsFactory'
-import type { MColor, MSize, MVariant } from '../../types/props'
+import type { MAccentColor, MVariant } from '../../types/props'
 
-/** `color` — MD3 color role (`primary | secondary | tertiary | error`). */
+/** `color` — MD3 accent role (`primary | secondary | tertiary | error`). */
 export const makeColorProps = propsFactory({
   /** Semantic Material color role used by the component scheme. */
-  color: { type: String as PropType<MColor>, default: 'primary' },
+  color: { type: String as PropType<MAccentColor>, default: 'primary' },
 })
 
 /** `variant` — MD3 surface style. Override the default per family (e.g. `'text'`). */
 export const makeVariantProps = propsFactory({
   /** Material surface treatment that controls the component emphasis. */
   variant: { type: String as PropType<MVariant>, default: 'filled' },
-})
-
-/** `size` — component size scale. */
-export const makeSizeProps = propsFactory({
-  /** Component size on the shared small, medium, and large scale. */
-  size: { type: String as PropType<MSize>, default: 'md' },
 })
 
 /** `disabled` + `loading` — shared action states. */

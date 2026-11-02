@@ -14,10 +14,11 @@ export const mDatePickerHeaderNavProps = {
   canGoPrev: { type: Boolean, default: true },
   canGoNext: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
-  prevLabel: { type: String, required: true as const },
-  nextLabel: { type: String, required: true as const },
-  switchToYearLabel: { type: String, required: true as const },
-  switchToDayLabel: { type: String, required: true as const },
+  // The app's words; the picker warns in dev for any it was not given.
+  prevLabel: { type: String, default: undefined },
+  nextLabel: { type: String, default: undefined },
+  switchToYearLabel: { type: String, default: undefined },
+  switchToDayLabel: { type: String, default: undefined },
 }
 
 export type MDatePickerHeaderNavProps = ExtractPublicPropTypes<typeof mDatePickerHeaderNavProps>

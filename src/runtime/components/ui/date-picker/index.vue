@@ -196,9 +196,10 @@ import { useDateGridControl } from '#kit/composables/date/useDateGridControl'
 import type { DateGridCell } from '#kit/composables/date/useDateGridControl'
 import { useDateViewFocus } from '#kit/composables/date/useDateViewFocus'
 import { ICONS } from '#kit/shared/constants/icons'
-import { MESSAGES } from '#kit/shared/constants/messages'
 import { toDayString } from '#kit/utils/date/value'
+import { useMissingPhrasesWarning } from '#kit/utils/phrases/missing'
 import { useDatePickerHosted } from './context'
+import { datePickerPhrases, patternOf } from './phrases'
 import { mDatePickerProps } from './props'
 import type { MDatePickerMode } from './props'
 
@@ -208,7 +209,7 @@ const modelValue = defineModel<DatePickerValue | null>({ default: null })
 const mode = defineModel<MDatePickerMode>('mode', { default: 'picker' })
 
 const slots = defineSlots<{
-  /** The title — "Select date" by default. Content only: the element names the group. */
+  /** The title, in place of `label`. Content only: the element names the group. */
   label?: () => unknown
   /** The chosen date as the headline. */
   headline?: (props: { date: Date | null }) => unknown
@@ -248,6 +249,7 @@ const {
   locale: () => props.locale,
   min: () => props.minDate,
   max: () => props.maxDate,
+  valueType: () => props.valueType,
 })
 
 const grid = useDateGridControl({
@@ -273,11 +275,9 @@ const describedBy = computed(() => {
   return (props.error || props.errorMessage) ? errorId : (props.helperText || slots.helper ? helperId : undefined)
 })
 
-const pattern = computed(() => {
-  const letters = { day: MESSAGES.datePatternDay, month: MESSAGES.datePatternMonth, year: MESSAGES.datePatternYear }
-  const { order, separator } = calendar.value.numericLayout()
-  return order.map(part => letters[part]).join(separator)
-})
+const pattern = computed(() => patternOf(props.patternLetters, calendar.value))
+
+useMissingPhrasesWarning('m-date-picker', () => datePickerPhrases(props, mode.value, Boolean(slots.label)))
 
 function toggleMode() {
   mode.value = mode.value === 'picker' ? 'input' : 'picker'

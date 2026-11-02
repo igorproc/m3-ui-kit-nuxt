@@ -24,5 +24,8 @@ export default createConfigForNuxt({
     'shell/*.ts',
     '.claude/**',
     '.cursor/**',
+    // Local design boards, kept out of git via .git/info/exclude.
+    'playground/render/**',
+    'coverage/**',
   ],
 })

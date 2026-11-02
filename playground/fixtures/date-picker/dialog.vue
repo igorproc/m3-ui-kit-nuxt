@@ -21,6 +21,7 @@
 
     <!-- One-way `:date`: the payload of `confirm` is the only way back. -->
     <MDialogDate
+      v-bind="DIALOG_LABELS"
       v-model="open.oneway"
       :date="dates.oneway"
       @confirm="payloads.oneway = describe($event)"
@@ -28,6 +29,7 @@
 
     <!-- An ISO day string as the model, as a form would hold it. -->
     <MDialogDate
+      v-bind="DIALOG_LABELS"
       v-model="open.iso"
       v-model:date="dates.iso"
       @confirm="payloads.iso = describe($event)"
@@ -35,6 +37,7 @@
 
     <!-- Nothing chosen: the first focus should land on today. -->
     <MDialogDate
+      v-bind="DIALOG_LABELS"
       v-model="open.empty"
       v-model:date="dates.empty"
       @confirm="payloads.empty = describe($event)"
@@ -42,6 +45,7 @@
 
     <!-- Opens on the typed date. -->
     <MDialogDate
+      v-bind="DIALOG_LABELS"
       v-model="open.typed"
       v-model:date="dates.typed"
       initial-mode="input"
@@ -54,6 +58,7 @@
 import { reactive } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MDialogDate from '#kit/components/ui/dialog/date/index.vue'
+import { DIALOG_LABELS } from './labels'
 
 type CaseName = 'oneway' | 'iso' | 'empty' | 'typed'
 type DateValue = Date | string | number | null

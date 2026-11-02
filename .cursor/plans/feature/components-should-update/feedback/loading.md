@@ -2,7 +2,7 @@
 
 <identity>M3: Loading indicator (Expressive: морфинг фигур, plain и contained; для ожидания до ~5 с) · Токены Compose: `LoadingIndicatorTokens` + `LoadingIndicator.kt`, `MaterialShapes.kt` · Код: `src/runtime/components/ui/loading/`, морф — `components/ui/shape/` + `composables/useShapeMorph.ts` · Аудит: `data/loading.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-19">Есть `type: circular` (CSS-спиннер) и `expressive` (последовательность `MShape` с морфом на JS-пружинах), `size: small | medium | large`, `inline`. Нет contained-варианта, токенов 48/38, reduced motion у спиннера, доступного объявления. На рендере inline-вариант даёт hydration mismatch. M3-polish (2026-10-19): только поведение (API — Q-9 у владельца): цикл стартует после монтирования (не на сервере), под reduce морф calm без поворота и цикл вдвое реже, поворот только в одну сторону (Q-5), прерывание от живой формы и угла; константы дуги в карте (Q-10); inline центрируется по высоте прописных; фикстура `loading/{matrix,stress}` + e2e.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделано: строчная SSR-разметка (unit: inline в `<p>` — только phrasing-элементы, гидратация без mismatch), `role="progressbar"` с именем `ariaLabel` без английского дефолта + dev-warn, contained 48 / 38 со смещением 5 у обоих типов (у `shape` — составной селектор `.ui-loading__shape.ui-shape`), reduced motion замедляет, forced colors, inline от шрифта, `type: spinner | shape`, `density`; e2e геометрии contained. Отменены: постоянный регион (Q44-А), `delay` / `minDuration` (S6 = Б), переименование в `label` (S7 = Б); документация отложена (вне репо кита).</implementation-status>
 
 ## Вердикт
 
@@ -89,14 +89,14 @@
 ## План работ
 
 1. **S — SSR-разметка** (EN-09): только строчные элементы.
-2. **S — объявление и имя** (DT-09, CT-13, A11-04).
+2. **S — объявление и имя** (DT-09, CT-13, A11-04). Постоянный регион **отменён** (Q44-А: `role="progressbar"`, занятый хост — `aria-busy`); переименование `ariaLabel` → `label` **отменено** (S7 = Б).
 3. **S — contained и токены 48/38** (TK-02, TK-06, LY-04).
 4. **S — reduced motion и forced colors** (A11-18, TH-04).
-5. **S — `delay` / `minDuration`** (DT-11), общий с progress.
+5. **S — `delay` / `minDuration`** (DT-11), общий с progress. **Отменено:** S6 = Б.
 6. **S — inline от шрифта** (LY-03).
 7. **S — ось `density`** (после вопроса 2) **и судьба `circular`** (после вопроса 1).
 8. **S — тесты** (TS-07) **и документация.** Документация: когда loading, а когда progress
-   (короче или длиннее ~5 с).
+   (короче или длиннее ~5 с). Документация **отложена:** вне репо кита (plans-audit-2 §6).
 
 ## Тесты
 

@@ -76,15 +76,36 @@ const thumbStyle = computed(() => ({
 
 const isRtl = () => canvasRef.value ? getComputedStyle(canvasRef.value).direction === 'rtl' : false
 
+const SHIFT_STEP = 10
+
+function shiftDirection(event: KeyboardEvent): number {
+  if (!event.shiftKey) return 0
+  const inline = isRtl() ? -1 : 1
+  const directions: Partial<Record<string, number>> = { ArrowRight: inline, ArrowLeft: -inline, ArrowUp: 1, ArrowDown: -1 }
+  return directions[event.key] ?? 0
+}
+
 function axisController(read: () => number, write: (value: number) => void) {
-  return createRangeKeyboardController({
+  const getValue = () => percent(read())
+  const setValue = (value: number) => write(value / 100)
+  const controller = createRangeKeyboardController({
     min: () => 0,
     max: () => 100,
     step: () => 1,
-    getValue: () => percent(read()),
-    setValue: value => write(value / 100),
+    getValue,
+    setValue,
     rtl: isRtl,
   })
+
+  function onKeydown(event: KeyboardEvent): boolean {
+    const direction = shiftDirection(event)
+    if (!direction) return controller.onKeydown(event)
+    event.preventDefault()
+    setValue(controller.snap(getValue() + direction * SHIFT_STEP))
+    return true
+  }
+
+  return { onKeydown }
 }
 
 const saturation = axisController(() => ctx.hsva.value.s, value => ctx.setSaturation(value))
@@ -168,8 +189,8 @@ function onPointerUp(event: PointerEvent) {
   cursor: crosshair;
   touch-action: none;
 
-  // The axis sliders are hidden, so the field shows their focus.
-  &--focused {
+  // The axis sliders are hidden, so the thumb they move shows their focus.
+  &--focused &__thumb {
     @include focus-ring;
   }
 

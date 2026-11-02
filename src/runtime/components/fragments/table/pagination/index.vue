@@ -15,8 +15,11 @@
       <span class="ui-table__page-size-control">
         <select
           class="ui-table__page-size-select"
+          :class="{ 'ui-table__page-size-select--disabled': loading }"
           :value="range.pageSize"
-          :disabled="loading"
+          :aria-disabled="loading ? 'true' : undefined"
+          @mousedown="holdWhileLoading"
+          @keydown="holdKeyWhileLoading"
           @change="onPageSize"
         >
           <option
@@ -35,7 +38,7 @@
     <div class="ui-table__pagination-actions">
       <MButtonIcon
         :aria-label="previousLabel"
-        :disabled="loading || range.page <= 1"
+        :soft-disabled="loading || range.page <= 1"
         @click="emit('update:currentPage', range.page - 1)"
       >
         <MIcon
@@ -46,7 +49,7 @@
 
       <MButtonIcon
         :aria-label="nextLabel"
-        :disabled="loading || range.page >= range.pageCount"
+        :soft-disabled="loading || range.page >= range.pageCount"
         @click="emit('update:currentPage', range.page + 1)"
       >
         <MIcon
@@ -75,7 +78,11 @@ const props = defineProps<{
   currentPage: number
   totalItems: number
   pageSizeOptions?: number[]
-  /** Navigation waits while a page loads, so one press asks for one page. */
+  /**
+   * Navigation waits while a page loads, so one press asks for one page. The
+   * buttons and the page size selector are soft-disabled meanwhile: the
+   * control that asked for the page is usually the focused one.
+   */
   loading?: boolean
   pageSizeLabel?: string
   previousLabel?: string
@@ -93,9 +100,30 @@ defineSlots<{
 
 const range = computed(() => getTablePageRange(props.currentPage, props.pageSize, props.totalItems))
 
+/** Keys that leave the selector without changing it. */
+const PASS_KEYS = new Set(['Tab', 'Escape'])
+
+// A soft-disabled select keeps its focus but must not open or change: the
+// press that would open its picker and the keys that would step its value
+// are held while a page loads.
+function holdWhileLoading(event: Event) {
+  if (props.loading) event.preventDefault()
+}
+
+function holdKeyWhileLoading(event: KeyboardEvent) {
+  if (props.loading && !PASS_KEYS.has(event.key)) event.preventDefault()
+}
+
 // A new page size starts from the first page, as a new sort or query does.
 function onPageSize(event: Event) {
-  emit('update:pageSize', Number((event.target as HTMLSelectElement).value))
+  const select = event.target as HTMLSelectElement
+
+  if (props.loading) {
+    select.value = String(range.value.pageSize)
+    return
+  }
+
+  emit('update:pageSize', Number(select.value))
   emit('update:currentPage', 1)
 }
 </script>
@@ -158,7 +186,7 @@ function onPageSize(event: Event) {
 
       // The select has no surface of its own, so the layer is its only fill.
       @include can-hover {
-        &:hover:not(:disabled) {
+        &:hover:not(#{&}--disabled) {
           background-color: color-mix(in srgb, currentcolor #{g($t, 'state.hover')}, transparent);
         }
       }
@@ -167,7 +195,7 @@ function onPageSize(event: Event) {
         @include focus-ring;
       }
 
-      &:disabled {
+      &--disabled {
         color: color-mix(in srgb, currentcolor #{g($t, 'state.disabled')}, transparent);
         cursor: default;
       }
@@ -186,7 +214,7 @@ function onPageSize(event: Event) {
     }
 
     // The arrow is part of the select's face: it dims with it.
-    &-select:disabled + #{&}-icon {
+    &-select--disabled + #{&}-icon {
       color: g($t, 'pagination.select.icon.disabled.color');
     }
   }

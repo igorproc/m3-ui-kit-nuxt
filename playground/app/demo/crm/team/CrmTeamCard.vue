@@ -27,7 +27,7 @@
             <span class="crm-team__quota">
               <MProgressCircular
                 :value="Math.min(member.percent, 100)"
-                size="small"
+                density="compact"
                 :aria-label="`План: ${member.name}`"
                 :aria-valuetext="`${member.percent} % плана`"
               />

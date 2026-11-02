@@ -81,7 +81,6 @@ if (import.meta.dev) {
   justify-content: center;
   border: none;
   cursor: pointer;
-  overflow: hidden;
   max-width: 100%;
   outline: none;
   transition: box-shadow $move, background-color $move, color $move, padding $fold;
@@ -167,6 +166,12 @@ if (import.meta.dev) {
         }
       }
     }
+  }
+
+  // Drawn 40 tall, the compact step still takes a 48 pointer target on touch.
+  // The root is not clipped for it: the label clips itself while it folds.
+  &--compact {
+    @include touch-target;
   }
 }
 </style>

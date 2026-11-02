@@ -14,11 +14,9 @@
  *   a field with a value lists everything, with the value ticked;
  * - **composition** — an IME's Enter belongs to the IME, not to the listbox.
  *
- * The built-in filter compares without case and without diacritics: "Zurich"
- * finds "Zürich", "Sao" finds "São". Missing a match is worse than showing one
- * row too many.
+ * The match itself lives in {@link matchesQuery}, shared with `<MSearch>`.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { InputHTMLAttributes, Ref } from 'vue'
 import { useDropdownControl } from '#kit/composables/dropdown/useDropdownControl'
 import type {
@@ -27,6 +25,9 @@ import type {
   DropdownResolvedItem,
   UseDropdownControlReturn,
 } from '#kit/composables/dropdown/types'
+import { matchesQuery } from '#kit/utils/dropdown/matchRows'
+import type { RowFilter, RowFilterMode } from '#kit/utils/dropdown/matchRows'
+import { isImeKeydown } from '#kit/utils/keyboard/ime'
 
 /**
  * When focus alone opens the panel: `true` for any focus, `'pointer'` only for
@@ -37,17 +38,12 @@ export type AutocompleteOpenOnFocus = boolean | 'pointer'
 
 /** Resolved configuration: the family's props plus the query-only ones. */
 export interface AutocompleteControlConfig extends DropdownControlConfig {
-  filter: false | ((item: never, query: string, title: string) => boolean) | undefined
-  filterMode: 'contains' | 'starts-with'
+  filter: RowFilter
+  filterMode: RowFilterMode
   minSearchLength: number
   hideSelected: boolean
   autoSelectFirst: boolean
   openOnFocus: AutocompleteOpenOnFocus
-}
-
-/** Lower case without combining marks: the form both sides of a match are compared in. */
-function foldForMatch(text: string): string {
-  return text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase()
 }
 
 export interface UseAutocompleteOptions<TItem extends DropdownItemBase, TValue> {
@@ -98,17 +94,9 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
   ) {
     if (!queryReady.value) return []
 
-    const query = foldForMatch(search.value.trim())
     return rows.filter((row) => {
       if (props.hideSelected && api.isSelected(row.value)) return false
-      if (props.filter === false || !query) return true
-
-      if (typeof props.filter === 'function') {
-        return (props.filter as (item: TItem, query: string, title: string) => boolean)(row.item, search.value, row.title)
-      }
-
-      const title = foldForMatch(row.title)
-      return props.filterMode === 'starts-with' ? title.startsWith(query) : title.includes(query)
+      return matchesQuery(row.item, row.title, search.value, props.filter, props.filterMode)
     })
   }
 
@@ -153,17 +141,41 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
 
   /** Put back the committed value: a draft that was never chosen is not a value. */
   function restore() {
+    wanted.value = false
     commit(props.multiple ? '' : control.displayTitle.value)
+  }
+
+  // The user typed and wants the list. What it has to show may arrive later:
+  // a remote search sets `loading` in the parent's next render, or after its
+  // own debounce. Until the panel is dismissed, it opens as soon as it can.
+  const wanted = ref(false)
+
+  function decide() {
+    if (!wanted.value) return
+    // `canOpen` already knows the hint: below the minimum it opens only to say
+    // how much more to type, never to claim "no results" for an unrun query.
+    if (canOpen()) open.value = true
+    else control.closePanel()
   }
 
   function onInput(value: string) {
     setQuery(value)
-    if (composing.value || props.disabled || props.readonly) return
-    // Below the minimum there has been no search yet, so the panel would only
-    // claim "no results" for a query nobody ran.
-    if (queryReady.value && canOpen()) open.value = true
-    else control.closePanel()
+    wantList()
   }
+
+  function wantList() {
+    if (composing.value || props.disabled || props.readonly) return
+    wanted.value = true
+    nextTick(decide)
+  }
+
+  watch(() => wanted.value && focused.value && canOpen(), (can) => {
+    if (can && !open.value) open.value = true
+  })
+
+  watch(open, (value) => {
+    if (!value && !focused.value) wanted.value = false
+  })
 
   // A field that arrives with a value shows its title from the first render,
   // the server's included — the draft alone, so no query is reported for a
@@ -198,9 +210,12 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
     },
     onCompositionstart: () => { composing.value = true },
     // An IME commits with Enter; the listbox must not read that keystroke.
-    onCompositionend: () => { composing.value = false },
+    onCompositionend: () => {
+      composing.value = false
+      wantList()
+    },
     onKeydown: (event: KeyboardEvent) => {
-      if (composing.value) return
+      if (composing.value || isImeKeydown(event)) return
       control.onKeydown(event)
     },
   }))
@@ -221,8 +236,9 @@ export function useAutocomplete<TItem extends DropdownItemBase, TValue = TItem>(
   })
 
   // An externally changed model renames the field — unless the user is in it,
-  // where their draft outranks anything arriving from outside.
-  watch(model, () => {
+  // where their draft outranks anything arriving from outside. So does a title
+  // that arrives after its value: items loaded later name a value given early.
+  watch([model, control.displayTitle], () => {
     if (!focused.value) restore()
   })
 

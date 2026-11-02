@@ -1,4 +1,5 @@
 import type { MColor } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import { formatDateTime, money, pluralize } from './format'
 import { DELIVERY_LABELS, PAYMENT_LABELS } from './model'
 import type { OrderRow, OrderStatus } from './model'
@@ -10,7 +11,7 @@ export interface OrderEvent {
   /** `YYYY-MM-DDTHH:mm`, shop-local. */
   stamp: string
   time: string
-  icon: string
+  icon: MIconName
   color: MColor
   /** Outcome word read before the title by assistive technology. */
   outcome: string

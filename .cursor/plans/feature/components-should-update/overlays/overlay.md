@@ -2,7 +2,7 @@
 
 <identity>M3: отдельного компонента нет; основа — scrim (роль `scrim`, 32%) и модальное поведение диалогов, листов, меню · Токены Compose: `ScrimTokens`, `DialogTokens`, `SheetBottomTokens` (для потребителей) · Код: `src/runtime/components/ui/overlay/`, `src/runtime/composables/overlay/` (`useTopLayer`, `useFocusTrap`), `src/runtime/composables/modal/` · Аудит: `data/overlay.json` · Тип: public примитив + внутренний рантайм</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Примитив работает на нативном top layer (`<dialog>`/`showModal`, popover). На нём стоят `MDialog`, модальный `MSheet` и `MNavigationDrawer`, `MMenu` использует общий стек. Остались дефекты фокуса и переполнения, деприкации удалённых пропов и документация.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделаны шаги 1–3, 5, 6: фокус на контейнере, затем `[autofocus]` (B4.6), `aria-haspopup` только у modal и `aria-controls` у отрисованного корня (B4.8), страховочная прокрутка панели модального слоя (`align-items: safe center` за `@supports`, `overflow-y: auto` только в покое — не во время входа и выхода), `gesture-guard` через `spacing(16)`, scrim 50 % под `prefers-contrast: more`, reduced motion (W40-Б). Закрытый слой не держит `window keydown` и click-outside (EN-10). Шаг 4 отменён (без алиасов, `decisions.md:39`), шаг 8 — S4, шаг 7 (документация) — вне репо. e2e голого `MOverlay` 360 × 350 (`overlay/panel.e2e.ts`) зелёный.</implementation-status>
 
 ## Вердикт
 
@@ -102,11 +102,11 @@
 2. **S — `aria-haspopup` от потребителя (A11-06).** Проп `activatorRole` или вывод из `mode` +
    `role` содержимого; `aria-controls` всегда.
 3. **S — прокрутка панели (CT-10, RS-10).**
-4. **S — алиасы удалённых пропов (EN-11).**
+4. **S — алиасы удалённых пропов (EN-11).** **Отменено**: без алиасов до стабильной версии (`decisions.md:39`).
 5. **S — токены.** `gesture-guard.width` через `spacing(16)`. Scrim под `prefers-contrast: more`.
 6. **S — запись решения о reduced motion** в `decisions.md`.
-7. **M — документация** (DC-02…05).
-8. **S — пружины** после S4.
+7. **M — документация** (DC-02…05). **Отложено**: документация вне репо кита.
+8. **S — пружины** после S4. **Отменено** (S4 отклонён владельцем).
 
 ## Тесты
 

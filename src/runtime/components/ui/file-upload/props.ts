@@ -54,6 +54,7 @@ export const mFileUploadProps = {
   /** Marks the group required, with a decorative `*` by its label. */
   required: { type: Boolean, default: false },
   accept: { type: String, default: undefined },
+  /** Without it the control holds one file: a new pick replaces it and stops its upload. */
   multiple: { type: Boolean, default: true },
   maxFiles: { type: Number, default: undefined },
   maxSize: { type: Number, default: undefined },
@@ -62,7 +63,8 @@ export const mFileUploadProps = {
    * A queue the app keeps (`useFileUploadQueue`), so a status outlives the
    * component: a tab or sheet that mounts it again shows the uploads where they
    * are instead of sending the files once more. With it, `upload` and
-   * `concurrency` are the queue's own.
+   * `concurrency` are the queue's own. Read once, when the component is set up;
+   * `upload` is read whenever a file starts.
    */
   queue: { type: Object as PropType<FileUploadQueue>, default: undefined },
   /** Start uploading as soon as files arrive — the ones already in `v-model` included. */
@@ -85,8 +87,8 @@ export interface MFileUploadItemSlotProps {
 export interface MFileUploadSlots {
   /** Replaces the dropzone and its drag handling. */
   dropzone?: (props: { openPicker: () => void, addFiles: (files: readonly File[]) => void }) => unknown
-  /** The text of the refusal line under the dropzone. */
-  rejection?: (props: { rejection: FileRejection }) => unknown
+  /** The text of the refusal line under the dropzone: every file the last pick or drop refused. */
+  rejection?: (props: { rejections: readonly FileRejection[] }) => unknown
   /** Replaces the whole queue. */
   list?: (props: { entries: readonly FileUploadEntry[] }) => unknown
   /** One row of the queue. */

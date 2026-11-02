@@ -7,6 +7,8 @@ import type { TimePickerControl, TimePickerLabels } from './useTimePickerControl
 /** Compose waits this long after an hour is let go before turning to minutes. */
 const MINUTES_HANDOFF = 100
 const DEGREES = 360
+/** A page of the dial: five minutes, or five hours (plan: PageUp / PageDown ±5). */
+const PAGE_STEP = 5
 
 export interface TimeDialControlOptions {
   clock: ComputedRef<Clock>
@@ -31,7 +33,7 @@ export interface TimeDialHand {
 export interface TimeDialAttrs {
   'role': 'slider'
   'tabindex': 0 | -1
-  'aria-label': string
+  'aria-label': string | undefined
   'aria-valuemin': number
   'aria-valuemax': number
   'aria-valuenow': number
@@ -57,7 +59,7 @@ const nearest = (angle: number, reference: number) =>
 
 /**
  * The dial of `<MTimePicker>` as one slider: arrows turn the active part by
- * one and wrap past the top, Page keys by ten, a pointer picks and drags.
+ * one and wrap past the top, Page keys by five, a pointer picks and drags.
  * Returns the slider's attribute bag, the hand and the numbers to draw —
  * no class, no `data-*`.
  */
@@ -116,6 +118,27 @@ export function useTimeDialControl(options: TimeDialControlOptions): UseTimeDial
     // The dial turns clockwise in any writing direction.
     rtl: () => false,
   })
+
+  // The shared controller pages by ten steps; the dial pages by five, wrapping
+  // past the top like the arrows do.
+  function page(direction: 1 | -1) {
+    const view = control.view.value
+    const clock = options.clock.value
+    const time = control.time.value
+    const index = time ? clock.indexOf(view, time) : 0
+    const next = (((index + direction * PAGE_STEP) % count()) + count()) % count()
+    control.setPart(view, clock.fromIndex(view, next, control.period.value))
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    if (locked()) return
+    if (event.key === 'PageUp' || event.key === 'PageDown') {
+      event.preventDefault()
+      page(event.key === 'PageUp' ? 1 : -1)
+      return
+    }
+    keyboard.onKeydown(event)
+  }
 
   let rect: DOMRect | null = null
   let handoff: ReturnType<typeof setTimeout> | undefined
@@ -195,9 +218,7 @@ export function useTimeDialControl(options: TimeDialControlOptions): UseTimeDial
       'aria-valuetext': time ? clock.valueText(view, time) : undefined,
       'aria-disabled': options.disabled() || undefined,
       'aria-readonly': options.readonly() || undefined,
-      'onKeydown': (event: KeyboardEvent) => {
-        if (!locked()) keyboard.onKeydown(event)
-      },
+      'onKeydown': onKeydown,
       'onPointerdown': onPointerdown,
       'onPointermove': onPointermove,
       'onPointerup': onPointerup,

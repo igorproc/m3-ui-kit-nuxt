@@ -11,7 +11,7 @@
         <h2>{{ state.name }}</h2>
         <MDatePicker
           v-model="values[state.name]"
-          v-bind="state.props"
+          v-bind="{ ...DATE_LABELS, ...state.props }"
           :data-test="state.name"
         />
       </div>
@@ -29,8 +29,10 @@
       <output data-test="dialog-value">{{ dialogValue ? dialogValue.toDateString() : 'none' }}</output>
       <output data-test="dialog-outcome">{{ outcome }}</output>
       <MDialogDate
+        v-bind="DIALOG_LABELS"
         v-model="dialogOpen"
         v-model:date="dialogValue"
+        mode-toggle
         :min-date="new Date(2026, 0, 1)"
         :max-date="new Date(2027, 11, 31)"
         @cancel="outcome = 'cancelled'"
@@ -45,6 +47,7 @@ import { reactive, ref } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MDatePicker from '#kit/components/ui/date-picker/index.vue'
 import MDialogDate from '#kit/components/ui/dialog/date/index.vue'
+import { DATE_LABELS, DIALOG_LABELS } from './labels'
 
 // Fixed dates keep the matrix comparable run to run; only the today ring moves.
 const states = [

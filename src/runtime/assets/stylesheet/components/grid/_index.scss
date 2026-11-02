@@ -65,6 +65,20 @@ $grid-breakpoints: map.merge($breakpoints, cfg.$material-kit-breakpoints);
   @return $value;
 }
 
+/// Как bp-up, но от ширины ближайшего `<m-container container>`, а не окна
+/// (`m-container` — имя size-контейнера, которое ставит его корень)
+@mixin cq-up($key) {
+  $min: bp-min($key);
+
+  @if $min == 0 {
+    @content;
+  } @else {
+    @container m-container (min-width: #{$min}) {
+      @content;
+    }
+  }
+}
+
 /// Mobile-first обёртка: порог 0 → стили без медиа, иначе min-width
 @mixin bp-up($key) {
   $min: bp-min($key);
@@ -73,6 +87,19 @@ $grid-breakpoints: map.merge($breakpoints, cfg.$material-kit-breakpoints);
     @content;
   } @else {
     @media only screen and (min-width: $min) {
+      @content;
+    }
+  }
+}
+
+/// `bp-up` or `cq-up` by what the breakpoints measure: `window` or `container`.
+@mixin up($query, $key) {
+  @if $query == container {
+    @include cq-up($key) {
+      @content;
+    }
+  } @else {
+    @include bp-up($key) {
       @content;
     }
   }

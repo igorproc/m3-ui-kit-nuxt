@@ -1,0 +1,35 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// POPOVER PANEL TOKENS (private fragment)
+// ==========================================
+
+// The panel a dropdown, an autocomplete or a colour input floats; it draws
+// the same baseline surface the menu does, so moving them off `MMenu` changes
+// nothing on screen.
+$tokens: (
+  surface: (
+    border: (
+      radius: map.get($theme-shape-link, 'extra-small'),
+    ),
+    bg: (
+      color: map.get($theme-color-link, 'surface-container'),
+    ),
+    color: map.get($theme-color-link, 'on-surface'),
+    shadow: elevation(2),
+  ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-emphasized-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-3),
+      easing: var(--sys-motion-easing-emphasized-accelerate),
+    ),
+    scale: (
+      from: 0.8,
+    ),
+  ),
+);

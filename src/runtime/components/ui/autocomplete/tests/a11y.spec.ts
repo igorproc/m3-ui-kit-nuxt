@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { nextTick } from 'vue'
+import type { DOMWrapper } from '@vue/test-utils'
 import MAutocomplete from '../index.vue'
 
 interface City { id: number, name: string, off?: boolean }
@@ -209,5 +210,22 @@ describe('m-autocomplete · a11y', () => {
       expect(wrapper.find('.ui-autocomplete__chip--active').exists()).toBe(false)
       expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([[1]])
     })
+  })
+})
+
+// W17-Б: the chip of a value is one button that removes it, named by the app.
+describe('m-autocomplete · a11y · chips', () => {
+  it('names each chip as its removal, with the title of its value', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1, 3], messages: { ...messages, remove: 'Remove {title}' } })
+
+    expect(wrapper.findAll('.ui-autocomplete__chip').map((chip: DOMWrapper<Element>) => chip.attributes('aria-label'))).toEqual(['Remove Alpha', 'Remove Gamma'])
+  })
+
+  it('removes the value on a click and keeps the field', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1, 3], messages: { ...messages, remove: 'Remove {title}' } })
+
+    await wrapper.find('.ui-autocomplete__chip').trigger('click')
+
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([[3]])
   })
 })

@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MBreadcrumbs](index.md)) · Код: `src/runtime/components/fragments/breadcrumbs/item/index.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-16: активная крошка — `MButton variant="text" tag="link"`, текущая и disabled — текст с `aria-current` / `aria-disabled`. Меняется вид текущей и поведение в forced colors.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Три ветки: ссылка (`MButton` text-link), текущая 700 с `aria-current`, disabled 38% с `aria-disabled`; различимы в forced colors (LinkText + подчёркивание / CanvasText 700 / GrayText).</implementation-status>
 
 ## Вердикт
 

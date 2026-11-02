@@ -3,12 +3,13 @@
  *
  * @remarks
  * Headless selection logic for `<MToolbar>`. M3 toolbars are action containers,
- * so selection is **opt-in**: the orchestrator only builds a selection instance
- * when a `v-model` is bound. Single mode uses `createSingle({ mandatory: false })`,
+ * so selection is **opt-in**: the orchestrator lets the instance drive its items
+ * only while a `v-model` is bound. Single mode uses `createSingle({ mandatory: false })`,
  * multiple mode uses `createGroup()`. The orchestrator provides the resulting
- * context (namespace `m3:toolbar`, `null` default — children render fine without
- * a model bound) so future slotted `<MToolbarItem>`s can register and reflect the
- * active value(s).
+ * context (namespace `m3:toolbar`, `null` default — children render fine outside
+ * a toolbar) so future slotted `<MToolbarItem>`s can register and reflect the
+ * active value(s). An item that registers while the model already holds its
+ * value is selected at once, so a preset model is in the server HTML.
  */
 import { computed, toValue, watch } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue'
@@ -24,7 +25,7 @@ export interface ToolbarContext {
   /** Whether multi-select is active. */
   multiple: ComputedRef<boolean>
   /** Register a toolbar item ticket. */
-  register: (ticket: { value: ToolbarValue, disabled?: MaybeRefOrGetter<boolean> }) => { id: ID, isSelected: Readonly<Ref<boolean>> }
+  register: (ticket: { id?: ID, value: ToolbarValue, disabled?: MaybeRefOrGetter<boolean> }) => { id: ID, isSelected: Readonly<Ref<boolean>> }
   /** Unregister a ticket by id. */
   unregister: (id: ID) => void
   /** Select / toggle a ticket by id (respects single vs multiple). */
@@ -71,7 +72,11 @@ export function useToolbar(model: Ref<ToolbarModel>, options: UseToolbarOptions)
 
     return {
       multiple,
-      register: ticket => sel.register(ticket),
+      register: (ticket) => {
+        const registered = sel.register(ticket)
+        if (Array.isArray(model.value) && model.value.includes(ticket.value)) sel.select(registered.id)
+        return registered
+      },
       unregister: id => sel.unregister(id),
       toggle: id => sel.toggle(id),
       isSelected: value => Array.from(sel.selectedValues.value).includes(value),
@@ -98,7 +103,11 @@ export function useToolbar(model: Ref<ToolbarModel>, options: UseToolbarOptions)
 
   return {
     multiple,
-    register: ticket => sel.register(ticket),
+    register: (ticket) => {
+      const registered = sel.register(ticket)
+      if (model.value === ticket.value) sel.select(registered.id)
+      return registered
+    },
     unregister: id => sel.unregister(id),
     toggle: id => sel.toggle(id),
     isSelected: value => sel.selectedValue.value === value,

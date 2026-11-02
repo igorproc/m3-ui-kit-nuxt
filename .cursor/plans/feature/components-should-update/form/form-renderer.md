@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет; поля и кнопки — M3 Text fields, Checkbox, Switch, Radio, Buttons · Токены Compose: только через составные компоненты · Код: `src/runtime/components/ui/form-renderer/`, `src/runtime/components/fragments/form-renderer/field/`, `src/runtime/composables/useFormSchema.ts` · Аудит: `data/form-renderer.json` · Тип: public, составной примитив</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Рендерит колонку полей из `FormFieldConfig[]` поверх адаптера валидации. Типы `textarea` и `number` рисуются однострочным `MTextField`. Нет `v-model`, событий, `aria-busy`, сводки ошибок. Подпись кнопки зашита по-английски.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: постоянный `role="status"` с `statusText` (F2-12); сводка ошибок `MAlert` над полями с фокусом и ссылками на поля — карта ошибок из `onValidationError`, контракт адаптера не менялся (F2-13); dev-предупреждение о безымянных степперах `number` (F2-14); радиогруппа в `fieldset` названа легендой (F2-15); фикстуры `form-renderer/{matrix,stress}` + e2e. Ранее (G1): поля по типам, `v-model`, события, `aria-busy`. Осталось: `onError` (B6.10f), документация в `docs`.</implementation-status>
 
 ## Вердикт
 
@@ -94,13 +94,13 @@
 ## План работ
 
 1. **S — поля по типам** (FM-08). Спека: каждый тип даёт свой компонент и нужный нативный `type`.
-2. **M — модель и события** (EN-02, EN-05). `useFormSchema` принимает геттер конфигурации.
+2. **M — модель и события** (EN-02, EN-05). `useFormSchema` принимает геттер конфигурации — **отменено** (Q36-А: `config` читается один раз, `decisions.md:140`); модель и события сделаны.
 3. **S — `aria-busy`, `loading`, `role="status"`** (DT-09).
 4. **M — сводка ошибок** (FM-11). Использует `MAlert` и общий реестр полей адаптера, нового
    реестра не заводит.
 5. **S — карта токенов и логические свойства** (TK-02, LY-04, LY-10).
 6. **S — `submitLabel`** (CT-13), после ответа на Q13.
-7. **M — документация и тесты** (DC-01, DC-04, TS-07).
+7. **M — документация и тесты** (DC-01, DC-04, TS-07). Документация — **отложено** (репозиторий `docs`).
 
 ## Тесты
 

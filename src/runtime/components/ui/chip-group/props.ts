@@ -26,6 +26,12 @@ export interface MChipGroupProps<TItem, TValue = TItem> {
   direction?: MChipGroupDirection
   wrap?: boolean
   valueComparator?: (left: TValue, right: TValue) => boolean
+  label?: string
+  required?: boolean
+  path?: string
+  helperText?: string
+  error?: boolean
+  errorMessage?: string
 }
 
 export const mChipGroupProps = {
@@ -51,6 +57,18 @@ export const mChipGroupProps = {
   wrap: { type: Boolean, default: true },
   /** Custom value equality (defaults to `===`). */
   valueComparator: { type: Function as PropType<(left: unknown, right: unknown) => boolean>, default: undefined },
+  /** Visible name above the row; names the group (`aria-labelledby`). */
+  label: { type: String, default: undefined },
+  /** Marks the label; the rule itself lives in the validation adapter. */
+  required: { type: Boolean, default: false },
+  /** Validation-adapter path: the group's model is the field value. */
+  path: { type: String, default: undefined },
+  /** Text under the row; replaced by the error while there is one. */
+  helperText: { type: String, default: undefined },
+  /** Forces the error state on, with or without a message. */
+  error: { type: Boolean, default: false },
+  /** The error shown under the row. */
+  errorMessage: { type: String, default: undefined },
 }
 
 export type MChipGroupRuntimeProps = ExtractPublicPropTypes<typeof mChipGroupProps>

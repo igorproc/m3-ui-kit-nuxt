@@ -1,35 +1,27 @@
 <template>
-  <slot v-bind="groupSlot" />
+  <slot v-bind="groupScope()" />
 
-  <template v-if="props.items">
-    <SelectionDataItem
-      v-for="entry in entries"
-      :key="entry.key"
-      :item="entry.item"
-      :value="entry.value"
-      :disabled="entry.disabled"
-      :index="entry.index"
-    >
-      <template #default="itemSlot">
-        <slot
-          name="item"
-          v-bind="itemSlot"
-        />
-      </template>
-    </SelectionDataItem>
-
-    <slot
-      v-if="!entries.length"
-      name="empty"
-      v-bind="groupSlot"
-    />
-  </template>
+  <component
+    :is="rowsNode()"
+    v-if="props.items && !rowsTaken()"
+  />
 </template>
 
 <script setup lang="ts" generic="TItem, TValue = TItem">
-import { computed } from 'vue'
+/**
+ * Headless selection: one model, a registry of items, and the state each item
+ * needs — no element of its own. The markup, and with it every attribute
+ * (`class`, `role`, `aria-*`), belongs to the consumer's wrapper and items;
+ * an attribute passed to the group itself has nowhere to land and is dropped
+ * (Vue warns in development).
+ */
+import { Fragment, computed, h } from 'vue'
+import type { Component, VNodeArrayChildren } from 'vue'
 import SelectionDataItem from '#kit/components/fragments/selection-group/data-item.vue'
 import { useSelectionGroup } from '#kit/composables/selection/useSelectionGroup'
+import { resolveEntries } from '#kit/utils/selection/resolveEntries'
+import { groupPatternAttrs } from '#kit/utils/selection/patternAttrs'
+import type { MSelectionPattern } from '#kit/utils/selection/patternAttrs'
 import { provideSelectionContext } from '#kit/composables/selection/context'
 import type {
   MSelectionContext,
@@ -61,6 +53,8 @@ const props = withDefaults(
     max?: number
     /** Custom value equality (defaults to `===`). */
     valueComparator?: (left: TValue, right: TValue) => boolean
+    /** ARIA to hand out: `groupAttrs` for the wrapper, `attrs` for each item. */
+    pattern?: MSelectionPattern
   }>(),
   {
     multiple: false,
@@ -71,54 +65,18 @@ const props = withDefaults(
 
 const model = defineModel<TValue | TValue[] | undefined>()
 
-defineSlots<{
+const slots = defineSlots<{
   default: (slot: SelectionGroupSlot<TValue>) => unknown
   item: (slot: SelectionItemSlot<TItem, TValue>) => unknown
   empty: (slot: SelectionGroupSlot<TValue>) => unknown
 }>()
 
-function resolveValue(item: TItem, index: number): TValue {
-  const resolver = props.itemValue
-  if (resolver === undefined) return item as unknown as TValue
-  if (typeof resolver === 'function') return resolver(item, index)
-  return item[resolver] as unknown as TValue
-}
-
-function resolveDisabled(item: TItem, index: number): boolean {
-  const resolver = props.itemDisabled
-  if (resolver === undefined) return false
-  if (typeof resolver === 'function') return !!resolver(item, index)
-  return !!item[resolver]
-}
-
-function keyFromValue(value: TValue, index: number): PropertyKey {
-  if (value !== null && typeof value === 'object') {
-    if (import.meta.dev) {
-      console.warn(
-        '[m3:selection] object item value without `item-key`; falling back to index. '
-        + 'Provide `item-key` for stable identity.',
-      )
-    }
-    return index
-  }
-  return value as unknown as PropertyKey
-}
-
-function resolveKey(item: TItem, index: number): PropertyKey {
-  const resolver = props.itemKey
-  if (resolver === undefined) return keyFromValue(resolveValue(item, index), index)
-  if (typeof resolver === 'function') return resolver(item, index)
-  return item[resolver] as unknown as PropertyKey
-}
-
 const entries = computed(() => {
-  const list = (props.items ?? []).map((item, index) => ({
-    item,
-    index,
-    value: resolveValue(item, index),
-    disabled: resolveDisabled(item, index),
-    key: resolveKey(item, index),
-  }))
+  const list = resolveEntries<TItem, TValue>(props.items ?? [], {
+    itemValue: props.itemValue,
+    itemDisabled: props.itemDisabled,
+    itemKey: props.itemKey,
+  }, 'm3:selection')
 
   if (import.meta.dev) {
     const seen = new Set<PropertyKey>()
@@ -147,9 +105,10 @@ const group = useSelectionGroup<TValue>({
   },
 })
 
-provideSelectionContext(group.context as MSelectionContext<unknown>)
+provideSelectionContext({ ...group.context, pattern: computed(() => props.pattern) } as MSelectionContext<unknown>)
 
 const groupSlot = computed<SelectionGroupSlot<TValue>>(() => ({
+  groupAttrs: groupPatternAttrs(props.pattern, props.multiple, props.disabled),
   selected: group.context.selected.value,
   isAllSelected: group.isAllSelected.value,
   isMixed: group.isMixed.value,
@@ -158,4 +117,32 @@ const groupSlot = computed<SelectionGroupSlot<TValue>>(() => ({
   unselectAll: group.context.unselectAll,
   toggleAll: group.context.toggleAll,
 }))
+
+function rowsNode() {
+  if (!entries.value.length) return h(Fragment, null, (slots.empty?.(groupSlot.value) ?? []) as VNodeArrayChildren)
+
+  return h(Fragment, null, entries.value.map(entry => h(SelectionDataItem as unknown as Component, {
+    key: entry.key,
+    item: entry.item,
+    value: entry.value,
+    disabled: entry.disabled,
+    index: entry.index,
+  }, { default: (itemSlot: SelectionItemSlot<TItem, TValue>) => slots.item?.(itemSlot) })))
+}
+
+let taken = false
+const rowsTaken = () => taken
+
+function groupScope(): SelectionGroupSlot<TValue> {
+  taken = false
+  const scope = { ...groupSlot.value }
+  if (!props.items) return scope
+
+  return Object.defineProperty(scope, 'rows', {
+    get: () => {
+      taken = true
+      return rowsNode()
+    },
+  })
+}
 </script>

@@ -3,3 +3,5 @@
 @forward "mixins";
 @forward "helpers";
 
+// The consumer's generated config: `$material-kit-breakpoints`, `$material-kit-typeface`.
+@forward "~material-kit-config";

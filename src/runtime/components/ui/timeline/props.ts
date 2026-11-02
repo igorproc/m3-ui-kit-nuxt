@@ -10,6 +10,7 @@
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MColor } from '#kit/shared/types/props'
 import type { MSurfaceVariant } from '#kit/components/ui/surface/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
 
 export type MTimelineSide = 'start' | 'end' | 'alternate'
@@ -42,7 +43,7 @@ export const mTimelineItemProps = {
   /** Machine-readable timestamp of `time`, rendered as `<time datetime>`. */
   datetime: { type: String, default: undefined },
   /** Decorative marker icon. */
-  icon: { type: String, default: undefined },
+  icon: { type: String as PropType<MIconName>, default: undefined },
   /**
    * Colour role of the marker. Colour alone carries no meaning to everyone:
    * pair a meaningful role with `icon` and `status`.

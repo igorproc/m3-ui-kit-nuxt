@@ -62,7 +62,7 @@
         ref="drawer"
         :popover.attr="supportsPopover() ? 'manual' : undefined"
         class="ui-fab-menu__drawer"
-        :class="[`ui-fab-menu__drawer--${edge}`, { 'ui-fab-menu__drawer--open': expanded }]"
+        :class="[`ui-fab-menu__drawer--${align}`, { 'ui-fab-menu__drawer--open': expanded }]"
         :style="popover.popoverStyle.value"
         :inert="!expanded"
         v-bind="listAttrs"
@@ -119,14 +119,11 @@ const { open, toggle, close, select, activatorAttrs, listAttrs } = useFabMenu<MF
 
 const selectItem = (item: MFabMenuItem) => select(item, emit)
 
-// `usePopover` places by physical side, so the logical edge is resolved
-// against the direction the menu is laid out in when it opens.
-const isRtl = ref(false)
-const edge = ref<'left' | 'right'>(props.align === 'end' ? 'right' : 'left')
+// Logical, like `align`: the popover resolves it against the FAB's direction.
 const popover = usePopover(isOpen, {
   trigger: anchor,
   surface: drawer,
-  placement: () => (edge.value === 'right' ? 'top-end' : 'top-start'),
+  placement: () => (props.align === 'end' ? 'top-end' : 'top-start'),
 })
 const topLayer = useTopLayer(drawer, () => false)
 const morph = useFabMenuMorph()
@@ -138,8 +135,6 @@ const morph = useFabMenuMorph()
 const expanded = ref(isOpen.value)
 
 function showDrawer() {
-  if (root.value) isRtl.value = getComputedStyle(root.value).direction === 'rtl'
-  edge.value = (props.align === 'end') !== isRtl.value ? 'right' : 'left'
   topLayer.show()
   // Measuring also commits the actions' closed style, so they move from it.
   popover.reposition()
@@ -153,17 +148,21 @@ async function settled() {
   await Promise.allSettled(running.map(animation => animation.finished))
 }
 
+// Opening runs in the flush that mounts the drawer, so the popover is shown and
+// no longer inert by the time that flush settles: ArrowDown focuses the top
+// action right after it (`useFabMenu`), and a later show would leave the
+// hidden popover unfocusable.
 watch(isOpen, async (value) => {
-  if (value) {
-    await nextTick()
-    showDrawer()
-    expanded.value = true
-    await nextTick()
-    await settled()
-    popover.onAfterEnter()
-    return
-  }
+  if (!value) return
+  showDrawer()
+  expanded.value = true
+  await nextTick()
+  await settled()
+  popover.onAfterEnter()
+}, { flush: 'post' })
 
+watch(isOpen, async (value) => {
+  if (value) return
   expanded.value = false
   await nextTick()
   await settled()
@@ -204,7 +203,10 @@ watch(isOpen, (value) => {
   else stackTicket.unselect()
 }, { immediate: true })
 
-useClickOutside(root, () => close())
+// A closed menu has nothing to dismiss: it listens for outside presses only while open.
+const outside = useClickOutside(root, () => close())
+
+watch(isOpen, value => (value ? outside.resume() : outside.pause()), { immediate: true })
 
 if (import.meta.dev) {
   watchEffect(() => {
@@ -309,12 +311,20 @@ $roles: ('primary', 'secondary', 'tertiary', 'error');
     overflow-y: auto;
     overscroll-behavior: contain;
 
-    &--right {
+    &--end {
       translate: g($t, 'list.room') 0;
+
+      &:dir(rtl) {
+        translate: calc(-1 * #{g($t, 'list.room')}) 0;
+      }
     }
 
-    &--left {
+    &--start {
       translate: calc(-1 * #{g($t, 'list.room')}) 0;
+
+      &:dir(rtl) {
+        translate: g($t, 'list.room') 0;
+      }
     }
 
     // Content of the consumer's own (no default actions) fades as one block.

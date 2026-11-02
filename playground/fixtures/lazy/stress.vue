@@ -23,6 +23,24 @@
       </template>
     </MLazy>
 
+    <h2>Releases without a bound model or a reserved height</h2>
+    <MLazy
+      :once="false"
+      error-text="Failed"
+      retry-label="Try again"
+      data-test="release-unbound"
+    >
+      <div class="fixture-lazy-stress__card fixture-lazy-stress__card--tall">
+        Released content
+      </div>
+
+      <template #placeholder>
+        <div class="fixture-lazy-stress__skeleton">
+          Released placeholder
+        </div>
+      </template>
+    </MLazy>
+
     <h2>Height stays reserved on activation</h2>
     <MLazy
       mode="on-interaction"

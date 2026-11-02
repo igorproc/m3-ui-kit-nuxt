@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Swatches.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: listbox на `useListbox` (activedescendant, стрелки, Home/End), сравнение по цвету, галочка и кольцо выбранного.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: listbox на `useListbox` (activedescendant, стрелки, Home/End), сравнение по цвету, галочка и кольцо выбранного. Фаза 2 (2026-10-30): мишень 48 на `pointer: coarse` (N1), ряд на таче раздвигается до зазора 16 — мишени смыкаются; hover — слой `::before` 8 % плюс `scale` вне reduced motion; цвет образца инлайном (N6).</implementation-status>
 
 ## Вердикт
 

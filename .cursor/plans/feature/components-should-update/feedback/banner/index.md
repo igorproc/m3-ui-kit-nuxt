@@ -2,7 +2,7 @@
 
 <identity>M3: компонента нет (banner был в Material 2); авторский компонент кита на системе M3 · Токены Compose: нет · Код: `src/runtime/components/ui/banner/`, дочерняя часть `src/runtime/components/fragments/banner/actions/` ([actions.md](actions.md)) · Аудит: `data/banner.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-16: `variant` surface/tonal, `layout` auto/inline/stacked (auto по `@media` окна), действия, закрытие, `announce` polite/off. Открыты: порядок фокуса в stacked, `auto` от окна, живой регион, forced colors, переполнение, имя варианта `surface`.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделано: разделитель `box-shadow` + `border-block-end` в forced colors, рамка у tonal, перенос, `'aria-label'` в слоте `close`, имя закрытия «`closeLabel`: `title`», отступы через `spacing()`, колонка иконки по модификатору `ui-banner--icon` вместо `:has(>)`, мишень 48, fade, `plain` вместо `surface` (B13.2b), регион и фокус общие с alert; e2e `fixtures/feedback/blocks.e2e.ts`. Шаги 1–2 отменены (Q41 А+В, Q42-А); документация (шаг 9) — вне репо кита, отложена.</implementation-status>
 
 ## Вердикт
 
@@ -93,15 +93,15 @@
 
 ## План работ
 
-1. **S — порядок закрытия в DOM и сетка областей** (A11-09).
-2. **S — `auto` по контейнеру** (RS-03).
+1. **S — порядок закрытия в DOM и сетка областей** (A11-09). **Отменено:** Q41 А+В — DOM «действия → закрытие», в stacked закрытие в конце ряда действий.
+2. **S — `auto` по контейнеру** (RS-03). **Отменено:** Q42-А — `@media` окна.
 3. **S — разделитель, forced colors, перенос** (TH-04, CT-04).
 4. **S — слот `close`, имя** (A11-02, A11-04).
 5. **S — токены и цель 48** (ST-05, TK-02, TK-04, LY-04).
 6. **S — переход** (MO-01).
 7. **S — переименование варианта** (после вопроса 1).
 8. **M — регион и фокус** — общие с alert, после их вопросов.
-9. **M — документация** (DC-01…05).
+9. **M — документация** (DC-01…05). **Отложено:** вне репо кита (plans-audit-2 §6).
 
 ## Тесты
 

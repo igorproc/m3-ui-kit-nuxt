@@ -13,7 +13,7 @@
       v-bind="fieldError()"
       @blur="commit"
       @keydown.enter="commit"
-      @update:model-value="error = undefined"
+      @update:model-value="refusal = null"
     />
   </div>
 </template>
@@ -31,10 +31,10 @@ const props = defineProps<{
   calendar: Calendar
   value: Date | null
   bounds: CalendarBounds
-  label: string
-  placeholder: string
-  errorPattern: string
-  errorRange: string
+  label?: string
+  placeholder?: string
+  errorPattern?: string
+  errorRange?: string
   disabled?: boolean
   readonly?: boolean
   required?: boolean
@@ -46,12 +46,14 @@ const emit = defineEmits<{ (e: 'commit', date: Date | null): void }>()
 
 const format = (date: Date | null) => date ? props.calendar.numeric(date) : ''
 const text = ref(format(props.value))
-const error = ref<string>()
+// Why the typed date was refused. Kept apart from its words: an app that gave
+// none still gets the error state and its glyph.
+const refusal = ref<'pattern' | 'range' | null>(null)
 
 // The field reserves its support line only when there is an error to show
 // (decision 2026-10-19): the picker's own, or a typed date just refused.
-const fieldError = () => (props.invalid || error.value
-  ? { error: props.invalid, errorMessage: error.value }
+const fieldError = () => (props.invalid || refusal.value
+  ? { error: true, errorMessage: refusal.value === 'pattern' ? props.errorPattern : refusal.value === 'range' ? props.errorRange : undefined }
   : {})
 
 watch(() => [props.value, props.calendar] as const, ([value]) => {
@@ -68,11 +70,11 @@ function commit(): boolean {
 
   const date = props.calendar.parse(text.value)
   if (!date) {
-    error.value = props.errorPattern
+    refusal.value = 'pattern'
     return false
   }
   if (props.calendar.isOutside(date, props.bounds)) {
-    error.value = props.errorRange
+    refusal.value = 'range'
     return false
   }
 

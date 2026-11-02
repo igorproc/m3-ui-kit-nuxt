@@ -33,6 +33,7 @@
     <MSurface
       :tag="contentTag"
       :variant="variant"
+      :shape="contained ? 'medium' : 'none'"
       class="ui-timeline-item__content"
     >
       <span
@@ -78,6 +79,9 @@ const ticket = context.register({
 const hasOpposite = computed(() => !props.hideOpposite && Boolean(slots.opposite || props.time))
 const hasTitle = computed(() => Boolean(slots.title || props.title))
 const hasBody = computed(() => Boolean(slots.default || props.text))
+// A filled, elevated or outlined surface is a container: it pads its text
+// and rounds its corners; plain content stays flush with the rail.
+const contained = computed(() => props.variant !== 'plain')
 
 // The timeline's own axes travel as the item's modifiers: the item styles
 // itself, with no child combinator reaching in from the list.
@@ -89,6 +93,7 @@ const itemClasses = computed(() => [
     'ui-timeline-item--alternate': context.side.value === 'alternate',
     'ui-timeline-item--untitled': !hasTitle.value,
     'ui-timeline-item--no-dot': props.hideDot,
+    'ui-timeline-item--contained': contained.value,
   },
 ])
 
@@ -187,7 +192,7 @@ $t: t.$tokens;
     align-items: flex-start;
     grid-row: 1;
     padding-block-end: g($t, 'content.padding.block');
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   // The dot, the time and the ends of the rail sit on the centre of the first
@@ -218,6 +223,39 @@ $t: t.$tokens;
     }
   }
 
+  // A contained surface pads its text, so its first line, and everything set
+  // on it, sits lower by that padding.
+  &--contained {
+    @include first-line('contained.titled');
+
+    .ui-timeline-divider__dot {
+      margin-block-start: g($t, 'first-line.contained.titled.dot');
+    }
+
+    .ui-timeline-item__content {
+      padding-block: g($t, 'content.contained.padding.block');
+      padding-inline: g($t, 'content.contained.padding.inline');
+      border-width: g($t, 'content.contained.edge');
+    }
+
+    &.ui-timeline-item--untitled {
+      @include first-line('contained.untitled');
+
+      .ui-timeline-divider__dot {
+        margin-block-start: g($t, 'first-line.contained.untitled.dot');
+      }
+    }
+  }
+
+  // Without a dot a contained item still meets the rail at its first line.
+  &--no-dot.ui-timeline-item--contained {
+    @include rail-through-dot('contained.titled');
+
+    &.ui-timeline-item--untitled {
+      @include rail-through-dot('contained.untitled');
+    }
+  }
+
   &--line-dashed {
     &::before,
     &::after {
@@ -237,10 +275,13 @@ $t: t.$tokens;
     grid-row: 1;
   }
 
+  // `break-word`, not `anywhere`: the columns are `minmax(0, 1fr)`, so a long
+  // string wraps at the edge either way, and `anywhere` would be inherited by
+  // the slots and cut a row of equal columns there to one glyph per word.
   &__content {
     grid-row: 1;
     padding-block: g($t, 'content.padding.block');
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   // Resolved end side: content in the trailing column, opposite in the leading.

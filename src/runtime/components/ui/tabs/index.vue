@@ -1,9 +1,17 @@
 <template>
-  <div class="ui-tabs">
+  <component
+    :is="isRoutes() ? 'nav' : 'div'"
+    class="ui-tabs"
+    :aria-label="routes ? ariaLabel : undefined"
+    :aria-labelledby="routes ? ariaLabelledby : undefined"
+  >
     <div
       class="ui-tabs__list"
-      role="tablist"
-      @keydown="onKeydown"
+      :class="[`ui-tabs__list--${hierarchy}`, { 'ui-tabs__list--scrollable': layout === 'scrollable' }]"
+      :role="routes ? undefined : 'tablist'"
+      :aria-label="routes ? undefined : ariaLabel"
+      :aria-labelledby="routes ? undefined : ariaLabelledby"
+      @keydown="routes ? undefined : onKeydown($event)"
     >
       <m-tab
         v-for="item in items"
@@ -11,112 +19,100 @@
         :value="item.value"
         :label="item.label"
         :icon="item.icon"
+        :active-icon="item.activeIcon"
         :disabled="item.disabled"
         :to="item.to"
-      />
+        :badge="item.badge"
+        :badge-label="item.badgeLabel"
+      >
+        <template
+          v-if="$slots.tab"
+          #default="{ selected }"
+        >
+          <slot
+            name="tab"
+            :item="item"
+            :selected="selected"
+          />
+        </template>
+      </m-tab>
 
       <slot name="tabs" />
     </div>
 
-    <slot name="panels" />
+    <template v-if="!routes">
+      <slot name="panels" />
 
-    <div
-      v-if="$slots.default"
-      class="ui-tabs__content"
-      role="tabpanel"
-    >
-      <slot :value="selectedValue" />
-    </div>
-  </div>
+      <TabsContent
+        v-if="$slots.default"
+        v-slot="{ value }"
+      >
+        <slot :value="value" />
+      </TabsContent>
+    </template>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { ref, toValue } from 'vue'
-import { createSingle } from '#kit/composables/registry/createSingle'
+import { useId, useSlots } from 'vue'
 import { provideTabsContext } from '#kit/composables/tabs/useTabs'
 import type { TabValue } from '#kit/composables/tabs/useTabs'
+import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
+import TabsContent from '#kit/components/fragments/tabs/content/index.vue'
 import MTab from './tab/index.vue'
+import { useTabsControl } from './control'
+import { hasRouteTab } from './routes'
 import { mTabsProps } from './props'
+import type { MTabsSlots } from './props'
 
-defineProps(mTabsProps)
+const props = defineProps(mTabsProps)
+const slots = useSlots()
+defineSlots<MTabsSlots>()
 
+/**
+ * Value of the selected tab. Left empty, the first enabled tab is selected and
+ * written back here, so the parent always knows which tab is shown. Route tabs
+ * ignore it: the current route is their selection.
+ */
 const modelValue = defineModel<TabValue | null>({ default: null })
 
-// `'force'` keeps one tab always active (auto-selects the first non-disabled
-// tab on registration), matching the legacy default-to-first behavior. An
-// external `v-model` value still overrides it via the apply watch below.
-const sel = createSingle<{ value: TabValue, disabled?: boolean }>({ mandatory: 'force' })
+const { sel, selectedValue, register, registerElement, onKeydown } = useTabsControl(modelValue)
 
-const selectedValue = computed(() => sel.selectedValue.value ?? null)
+// Route tabs are known only from the items and the slotted vnodes, read in this
+// render: the landmark has to be right in the server HTML, before any tab mounts.
+// The tabs rendered right after read the same answer through the context.
+let routes = false
+function isRoutes() {
+  routes = Boolean(props.items?.some(item => item.to != null)) || hasRouteTab(slots.tabs?.(), MTab)
+  return routes
+}
 
-watch(
-  [() => modelValue.value, () => sel.size],
-  ([v]) => {
-    if (v === null || v === undefined) return
-    if (sel.selectedValue.value !== v) sel.apply([v])
-  },
-  { immediate: true },
-)
+useButtonNameWarning('m-tabs', () => props.ariaLabel ?? props.ariaLabelledby, '`ariaLabel` or `ariaLabelledby`')
 
-watch(sel.selectedValue, (v) => {
-  if (v !== undefined && v !== modelValue.value) modelValue.value = v
-})
-
-// --- Keyboard navigation + ARIA id wiring ---------------------------------
-// Roving focus: arrows move between non-disabled tabs (activation follows
-// focus, per the M3 automatic-activation pattern); Home/End jump to the ends.
 const idBase = useId()
-const focusedValue = ref<TabValue | null>(null)
-
 const safeId = (value: TabValue) => String(value).replace(/[^\w-]/g, '_')
-const tabId = (value: TabValue) => `${idBase}-tab-${safeId(value)}`
-const panelId = (value: TabValue) => `${idBase}-panel-${safeId(value)}`
-
-function focusByOffset(target: 'next' | 'prev' | 'first' | 'last') {
-  const tickets = sel.values().filter(ticket => !toValue(ticket.disabled))
-  if (tickets.length === 0) return
-
-  const currentIndex = tickets.findIndex(ticket => ticket.id === sel.selectedId.value)
-
-  let nextIndex: number
-  if (target === 'first') nextIndex = 0
-  else if (target === 'last') nextIndex = tickets.length - 1
-  else if (target === 'next') nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % tickets.length
-  else nextIndex = currentIndex <= 0 ? tickets.length - 1 : currentIndex - 1
-
-  const ticket = tickets[nextIndex]
-  if (!ticket) return
-
-  sel.select(ticket.id)
-  focusedValue.value = ticket.value as TabValue
-}
-
-function onKeydown(event: KeyboardEvent) {
-  const handlers: Record<string, 'next' | 'prev' | 'first' | 'last'> = {
-    ArrowRight: 'next',
-    ArrowLeft: 'prev',
-    Home: 'first',
-    End: 'last',
-  }
-
-  const target = handlers[event.key]
-  if (!target) return
-
-  event.preventDefault()
-  focusByOffset(target)
-}
 
 provideTabsContext({
-  register: sel.register,
+  register,
   unregister: sel.unregister,
   select: sel.select,
   get size() {
     return sel.size
   },
   selectedValue: sel.selectedValue,
-  focusedValue,
-  tabId,
-  panelId,
+  registerElement,
+  tabId: value => `${idBase}-tab-${safeId(value)}`,
+  panelId: value => `${idBase}-panel-${safeId(value)}`,
+  hasPanels: () => Boolean(slots.panels || slots.default),
+  get routes() {
+    return routes
+  },
+  get hierarchy() {
+    return props.hierarchy
+  },
+  get iconPlacement() {
+    return props.iconPlacement ?? (props.hierarchy === 'secondary' ? 'start' : 'top')
+  },
 })
 
 defineExpose({ selectedValue })
@@ -126,22 +122,66 @@ defineExpose({ selectedValue })
 @use '#kit/assets/stylesheet/components/tabs/index' as t;
 
 .ui-tabs {
-  $prefix: 'md-tabs';
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'md-tabs');
 
   display: flex;
   flex-direction: column;
-  gap: g($t, 'list-gap');
+  gap: g($t, 'list.gap');
+  min-width: 0;
 
+  // The row never pushes its container: in `fixed` too it scrolls when the
+  // tabs outgrow it (a scroll container adds nothing to its parent's minimum).
   &__list {
+    position: relative;
     display: flex;
     align-items: stretch;
-    border-bottom: g($t, 'list-border-width') solid g($t, 'list-border-color');
+    border-bottom: g($t, 'list.border.width') solid g($t, 'list.border.color');
     width: 100%;
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    anchor-scope: --ui-tabs-active;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &--scrollable {
+      padding-inline-start: g($t, 'list.scrollable.padding.start');
+    }
   }
 
   &__content {
-    padding: g($t, 'content-padding');
+    padding: g($t, 'content.padding.block') g($t, 'content.padding.inline');
+  }
+
+  // One indicator for the row, tethered to the selected tab: it slides to the
+  // next one instead of growing under it. Without anchor positioning each tab
+  // draws its own (tab/index.vue).
+  @supports (position-anchor: --a) {
+    &__list::before {
+      content: '';
+      position: absolute;
+      position-anchor: --ui-tabs-active;
+      inset-block-end: 0;
+      inset-inline: anchor(start) anchor(end);
+      pointer-events: none;
+      transition: inset-inline g($t, 'motion.indicator.duration') g($t, 'motion.indicator.easing');
+    }
+
+    @each $hierarchy in (primary, secondary) {
+      &__list--#{$hierarchy}::before {
+        block-size: g($t, '#{$hierarchy}.indicator.height');
+        border-radius: g($t, '#{$hierarchy}.indicator.shape');
+        background-color: g($t, '#{$hierarchy}.selected.container.color');
+      }
+    }
+
+    @include forced-colors {
+      &__list::before {
+        background-color: Highlight;
+      }
+    }
   }
 }
 </style>

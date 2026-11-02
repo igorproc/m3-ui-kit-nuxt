@@ -31,8 +31,7 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
   &--label-inset {
     .ui-number-input__label {
       position: absolute;
-      top: var(--ui-number-input-label-top);
-      inset-inline-start: var(--ui-number-input-inset);
+      inset-inline-start: g($t, 'box.filled.inset');
       z-index: 1;
       max-width: g($t, 'label.max-width');
       overflow: hidden;
@@ -47,6 +46,14 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
       &:dir(rtl) {
         transform-origin: right center;
       }
+
+      @include family.steps('number-input', $density: true) using ($density) {
+        top: g($t, 'density.#{$density}.label.top');
+      }
+
+      @include family.inset-boxes('number-input', $underline: false) using ($box) {
+        inset-inline-start: g($t, '#{$box}.inset');
+      }
     }
   }
 
@@ -54,18 +61,26 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
   // start it where the value does. The placement sits in `:where()`, so the
   // notch rule below still wins for `float` on outlined.
   &--split#{$overlay} .ui-number-input__label {
-    inset-inline-start: g($t, 'label.split.left');
-    max-width: g($t, 'label.split.max-width');
+    @include family.steps('number-input', $density: true) using ($density) {
+      inset-inline-start: g($t, 'density.#{$density}.label.split.left');
+      max-width: g($t, 'density.#{$density}.label.split.max-width');
+    }
   }
 
   &--prepend#{$overlay} .ui-number-input__label {
-    inset-inline-start: g($t, 'label.prepend.left');
+    inset-inline-start: g($t, 'box.filled.label.prepend.left');
     max-width: g($t, 'label.prepend.max-width');
+
+    @include family.inset-boxes('number-input', $underline: false) using ($box) {
+      inset-inline-start: g($t, '#{$box}.label.prepend.left');
+    }
   }
 
   &--prepend.ui-number-input--split#{$overlay} .ui-number-input__label {
-    inset-inline-start: g($t, 'label.prepend.split.left');
-    max-width: g($t, 'label.prepend.split.max-width');
+    @include family.steps('number-input', $density: true) using ($density) {
+      inset-inline-start: g($t, 'density.#{$density}.label.split-prepend.left');
+      max-width: g($t, 'density.#{$density}.label.split-prepend.max-width');
+    }
   }
 
   &--label-hidden .ui-number-input__label {
@@ -77,12 +92,17 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
   &--label-float.ui-number-input--outlined {
     .ui-number-input__label {
       top: 0;
-      inset-inline-start: var(--ui-number-input-inset);
-      max-width: g($t, 'label.notch.max-width');
+
+      @include family.outlined-boxes('number-input') using ($box) {
+        inset-inline-start: g($t, '#{$box}.inset');
+        max-width: g($t, '#{$box}.label.notch.max-width');
+      }
     }
 
     .ui-number-input__notch {
-      max-width: g($t, 'outlined.notch.open');
+      @include family.outlined-boxes('number-input') using ($box) {
+        max-width: g($t, '#{$box}.notch.open');
+      }
     }
   }
 
@@ -93,23 +113,31 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
   &--label-float.ui-number-input--filled:not(.ui-number-input--scrub),
   &--label-inset:not(.ui-number-input--scrub) {
     .ui-number-input__input {
-      padding-top: var(--ui-number-input-input-padding-top);
-      padding-bottom: var(--ui-number-input-input-padding-bottom);
+      @include family.steps('number-input', $density: true) using ($density) {
+        padding-top: g($t, 'density.#{$density}.input.padding.top');
+        padding-bottom: g($t, 'density.#{$density}.input.padding.bottom');
+      }
     }
 
     // A centred part moves by half its top margin: the whole imbalance puts
     // its centre on the value's.
     .ui-number-input__unit {
-      margin-top: calc(var(--ui-number-input-input-padding-top) - var(--ui-number-input-input-padding-bottom));
+      @include family.steps('number-input', $density: true) using ($density) {
+        margin-top: g($t, 'density.#{$density}.unit.offset');
+      }
     }
 
     .ui-number-input__stacked {
-      margin-top: var(--ui-number-input-stacked-offset);
+      @include family.steps('number-input', $density: true) using ($density) {
+        margin-top: g($t, 'density.#{$density}.stepper.offset.stacked');
+      }
     }
 
     // Only the split zones: the stacked column rides as one, its halves inside it don't.
     &.ui-number-input--split .ui-number-input__stepper {
-      margin-top: var(--ui-number-input-zone-offset);
+      @include family.steps('number-input', $density: true) using ($density) {
+        margin-top: g($t, 'density.#{$density}.stepper.offset.split');
+      }
     }
   }
 
@@ -125,7 +153,6 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
     inset: 0;
     min-width: 0;
     padding-block: 0;
-    padding-inline: g($t, 'outlined.outline.padding.start') 0;
     margin: 0;
     border-width: g($t, 'container.border.width');
     border-style: solid;
@@ -133,6 +160,10 @@ $overlay: ':where(.ui-number-input--label-float, .ui-number-input--label-inset)'
     border-radius: inherit;
     pointer-events: none;
     transition: border-color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include family.outlined-boxes('number-input') using ($box) {
+      padding-inline: g($t, '#{$box}.outline.start') 0;
+    }
   }
 
   @include family.notch($t);

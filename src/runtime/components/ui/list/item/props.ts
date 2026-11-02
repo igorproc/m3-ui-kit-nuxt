@@ -43,8 +43,8 @@ export const mListItemProps = {
   interactive: { type: Boolean, default: false },
   /**
    * Selection state. Left `undefined` for a plain row; a boolean makes the row
-   * part of a selection, which an interactive row announces — a link as the
-   * current page, a button as pressed.
+   * part of a selection, which the row announces by its element — a link as
+   * the current page, a button as pressed, a static row as the current item.
    */
   selected: { type: Boolean, default: undefined },
   /**

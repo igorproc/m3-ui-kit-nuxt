@@ -71,16 +71,11 @@ $tokens: (
 
 `g()` splits the path and walks the map, so **map nesting must mirror the path**.
 
-- The canonical separator is a **dot**: `'container.padding.inline'`.
-- A **dash** is still accepted as a legacy form (`'text-color'`) and much of the codebase
-  predates the change. `g()` picks the separator per call — if the path contains a `.`, it
-  splits on dots, otherwise on dashes. Never mix both in one path.
-- New and migrated components use dots. The dash form stays supported; it is not deprecated
-  loudly, but it cannot express a key that itself contains a dash.
+- The only separator is a **dot**: `'container.padding.inline'`. A dash is part of a key
+  (`'height.center-aligned'` reads the key `center-aligned`), never a separator.
 
-A path that resolves to nothing yields `null`, and Sass then **drops the declaration
-silently** — no build error. When a style mysteriously does not apply, a typo'd token path
-is the first thing to check.
+A path that misses a key is a build error: `g()` `@error`s with the segment that broke and
+the keys available beside it, so a typo'd path cannot silently drop a declaration.
 
 ### Color roles
 
@@ -174,7 +169,8 @@ set of configured themes pays for a flexibility it does not use.
 ### `<MApp>` and apps without it
 
 `<MApp>` is optional. Besides the head payload above, it mounts `<core-scope />` — the single
-`#ui-overlay-host` that overlays teleport into, plus the container for `useModal()` dialogs —
+`#ui-overlay-host` that overlays teleport into (with the persistent live regions announcements
+go through), plus the container for `useModal()` and `$material.modal.confirm()` / `.alert()` dialogs —
 and passes the route's loading state to its `#loading` slot as `{ progress, isLoading }`. It
 adds no layout, landmark or route announcer, and a second `<MApp>` warns in development.
 

@@ -137,6 +137,29 @@
       </MCol>
     </MContainer>
 
+    <h2>Columns from the container's width</h2>
+    <div class="fixture-layout-stress__pane">
+      <MContainer
+        container
+        data-test="grid-container"
+      >
+        <MCol
+          desktop-xs="6"
+          data-test="container-cell"
+        >
+          Half a wide window, the whole of a narrow pane
+        </MCol>
+      </MContainer>
+      <MContainer data-test="grid-window">
+        <MCol
+          desktop-xs="6"
+          data-test="window-cell"
+        >
+          Half the columns of a wide window
+        </MCol>
+      </MContainer>
+    </div>
+
     <h2>Spacer</h2>
     <div
       class="fixture-layout-stress__toolbar"
@@ -145,6 +168,26 @@
       <span>Start</span>
       <MSpacer />
       <span>End</span>
+    </div>
+
+    <h2>App bars outside a layout</h2>
+    <div
+      class="fixture-layout-stress__bars"
+      data-test="bars"
+    >
+      <MAppBar
+        title="Sticky by default"
+        :heading-level="3"
+        data-test="bar-sticky"
+      />
+      <MAppBar
+        title="Not sticky"
+        :sticky="false"
+        data-test="bar-static"
+      />
+      <p class="fixture-layout-stress__copy fixture-layout-stress__copy--tall">
+        {{ longCopy }}
+      </p>
     </div>
   </section>
 </template>
@@ -156,6 +199,7 @@ import MCol from '#kit/components/ui/col/index.vue'
 import MResponsive from '#kit/components/ui/responsive/index.vue'
 import MSpacer from '#kit/components/ui/spacer/index.vue'
 import MButton from '#kit/components/ui/button/index.vue'
+import MAppBar from '#kit/components/ui/app-bar/index.vue'
 
 const longText = 'A column holds whatever the page puts into it, so a paragraph that keeps going well past the width of its track has to wrap inside the track instead of widening it and pushing the page sideways.'
 const longCopy = Array.from({ length: 6 }, () => longText).join(' ')
@@ -192,6 +236,24 @@ const longWord = 'Unbreakable'.repeat(12)
   margin: 0;
   padding: 8rem;
   color: var(--md-sys-color-on-surface);
+}
+
+// Flex, not grid: a grid item's containing block is its own track, where sticky cannot move.
+.fixture-layout-stress__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16rem;
+}
+
+.fixture-layout-stress__copy--tall {
+  min-block-size: 1200rem;
+}
+
+.fixture-layout-stress__pane {
+  display: grid;
+  gap: 16rem;
+  inline-size: 480rem;
+  max-inline-size: 100%;
 }
 
 .fixture-layout-stress__toolbar {

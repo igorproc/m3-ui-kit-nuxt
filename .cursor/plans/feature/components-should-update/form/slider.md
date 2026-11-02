@@ -2,7 +2,7 @@
 
 <identity>M3: Sliders (Expressive: ручка-полоска, зазор, stop indicator, centered, inset icon, размеры) · Токены Compose: `SliderTokens`, `StateTokens`; поведение и раскладка — `Slider.kt` (`Slider`, `RangeSlider`, `VerticalSlider`, `SliderDefaults.{Track, CenteredTrack, Thumb, drawStopIndicator}`, `drawTrack`); baseline-цвета для сравнения — material-web `tokens/versions/v0_192/_md-comp-slider.scss`, `m3-reference/docs/components/slider.md` · Код: `src/runtime/components/ui/slider/`, фрагменты `src/runtime/components/fragments/slider/{root,track,range,thumb,hidden-input}/`, поведение `src/runtime/composables/slider/{createSlider,useSliderControl}.ts`, карты `src/runtime/assets/stylesheet/components/slider/{root,track,range,thumb}/_index.scss` · Аудит: `data/slider.json` · Тип: public (+ публичный control-композабл)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Поведенческий слой (`createSlider` → `useSliderControl` → `MSlider`) — эталон кита и сохраняется; двойной emit, `can-hover`, кольцо фокуса, forced colors и тень через `elevation()` закрыты фазами A–D. Презентация — гибрид baseline-2022 (круглая ручка 20 с тенью, капля значения) и Expressive (трек 16). Ждут СЛ-1…СЛ-4.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: dev-предупреждение `origin` на `range` (F2-08); `--dragging *` с `!important` заменён BEM-модификаторами трека и ручки (F2-09); `stress.vue` (0…1 000 000, шаг 0.01, рубли через `Intl`) + e2e. Ранее (G1): Expressive-трек, капсула значения, `density`, поле формы. Осталось: событие `commit` (UX, не шаг); `rangeAttrs` презентацией не потребляется — отменено (G1-30).</implementation-status>
 
 ## Вердикт
 
@@ -187,7 +187,7 @@ IN-01, IN-04 (кольцо), TK-01 (тень через `elevation()`), TH-04. �
    `assets/stylesheet/components/slider/*`, `slider/index.vue`.
 4. **M** — Value indicator: капсула, правила показа и скрытия (Esc, blur), `format`, `#value`,
    `aria-valuetext` из форматтера. Файлы: `fragments/slider/thumb/*`, `slider/*`.
-5. **M** — `density` и inset-иконка (СЛ-1). Перенос иконки на неактивную сторону, когда активный
+5. **M** — `density` и inset-иконка (СЛ-1); `useResizeObserver` — **отменено**: две копии иконки в `cqi` (G1-22, `decisions.md:129`). Перенос иконки на неактивную сторону, когда активный
    участок короче иконки + 16, требует ширины трека: `useResizeObserver` (VueUse уже в
    зависимостях) в компоненте, без чтения геометрии на каждое движение. Файлы: `slider/*`,
    `fragments/slider/*`, карты.

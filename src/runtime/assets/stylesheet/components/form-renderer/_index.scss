@@ -1,0 +1,14 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// FORM RENDERER TOKENS
+// ==========================================
+// Layout only: every field keeps its own tokens.
+
+$tokens: (
+  gap: spacing(16),
+  actions: (gap: spacing(8)),
+  group: (gap: spacing(8)),
+  legend: (margin: (bottom: spacing(4))),
+  summary: (gap: spacing(16), indent: spacing(16)),
+);

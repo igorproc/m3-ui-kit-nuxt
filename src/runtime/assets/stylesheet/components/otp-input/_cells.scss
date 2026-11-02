@@ -36,6 +36,7 @@ $hovered: ':not(.ui-otp-input--caret-past) .ui-otp-input__visual:hover .ui-otp-i
     justify-content: center;
     width: g($t, 'field.size');
     min-width: 0;
+    min-height: 0;
     aspect-ratio: 1;
     border: g($t, 'field.border.width') solid transparent;
     border-radius: g($t, 'field.shape');

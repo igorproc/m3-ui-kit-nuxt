@@ -7,7 +7,7 @@
 
 | Группа M3 | Компонент M3 | В ките | Вердикт | План |
 |---|---|---|---|---|
-| Buttons | Button groups | — | нет в ките | [group](button/group.md) |
+| Buttons | Button groups | `MButtonGroup` | нет в ките → сделан | [group](button/group.md) |
 | Buttons | Buttons | `MButton` | переработка | [button](button/index.md) |
 | Buttons | Extended FABs | `MButtonExtendedFab` | переработка | [extended-fab](button/extended-fab.md) |
 | Buttons | FAB menu | `MFabMenu` | переработка | [fab-menu](button/fab-menu.md) |
@@ -42,12 +42,12 @@
 | Прочие | Tabs | `MTabs` | дрейф | [tabs](navigation/tabs.md) |
 | Прочие | Text fields | `MTextField`, `MTextarea`, `MDropdown`, `MAutocomplete` | дрейф | [text-field](inputs/text-field.md), [textarea](inputs/textarea.md), [dropdown](inputs/dropdown.md), [autocomplete](inputs/autocomplete.md) |
 | Прочие | Toolbars | `MToolbar` | переработка | [toolbar](navigation/toolbar.md) |
-| Прочие | Tooltips | `MTooltip` (plain; rich нет) | дрейф | [tooltip](overlays/tooltip.md) |
+| Прочие | Tooltips | `MTooltip` (plain, rich) | дрейф | [tooltip](overlays/tooltip.md) |
 
 **Итог по каталогу M3:**
-- 32 из 35 компонентов в ките есть;
-- 3 отсутствуют: button groups, side sheets, carousel;
-- rich tooltip — вариант внутри tooltips;
+- 33 из 35 компонентов в ките есть (button groups добавлены после исследования);
+- 2 отсутствуют: side sheets (отвергнут без заказчика — `docs/system/ru-RU/decisions.md`), carousel;
+- rich tooltip — вариант внутри tooltips, сделан;
 - совпадения «как есть» нет ни у одного компонента из каталога.
 
 Главные системные причины расхождений — шкалы масштаба, формы и цвета состояний (S1–S9 в

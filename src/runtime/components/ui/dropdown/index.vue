@@ -23,7 +23,6 @@
       :shape="shape"
       :label-placement="labelPlacement"
       :density="density"
-      :name="name ?? path"
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
@@ -56,6 +55,7 @@
             :focus="control.chipFocus.value"
             :disabled="disabled"
             :readonly="readonly"
+            :remove-label="messages?.remove"
             @remove="control.removeEntry"
           >
             <template
@@ -94,13 +94,14 @@
       </template>
     </MTextField>
 
-    <MMenu
+    <!-- A listbox is not a menu: the panel carries no role and no keys, and
+         focus stays in the combobox, which drives the list. -->
+    <Popover
       v-model="open"
       class="ui-dropdown__menu"
-      absolute
       match-width
       :anchor="fieldControl"
-      :origin="menuPlacement"
+      :placement="menuPlacement"
       @click-outside="control.closePanel"
     >
       <slot
@@ -152,7 +153,17 @@
           </template>
         </DropdownPanel>
       </slot>
-    </MMenu>
+    </Popover>
+
+    <!-- The form gets the value, not the title in the box: one per choice, as a select. -->
+    <input
+      v-for="(value, index) in formValues"
+      :key="index"
+      type="hidden"
+      :name="formName"
+      :value="value"
+      :disabled="disabled || undefined"
+    >
 
     <span
       class="ui-dropdown__status"
@@ -164,20 +175,21 @@
 <script setup lang="ts" generic="TItem extends DropdownItemBase, TValue = TItem">
 import { computed, ref } from 'vue'
 import { mDropdownProps } from './props'
-import type { DropdownChipSlotProps, DropdownItemSlotProps, MDropdownEmits, MDropdownSlots } from './props'
+import type { DropdownChipSlotProps, DropdownItemSlotProps, MDropdownEmits, MDropdownPropsOptions, MDropdownSlots } from './props'
 import { provideDropdownContext } from './context'
 import { useDropdownControl } from '#kit/composables/dropdown/useDropdownControl'
-import type { DropdownContext, DropdownItemBase, UseDropdownControlReturn } from '#kit/composables/dropdown/types'
+import type { DropdownContext, DropdownControlConfig, DropdownItemBase, UseDropdownControlReturn } from '#kit/composables/dropdown/types'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 import { panelHasContent, panelState } from '#kit/utils/dropdown/panelState'
 import type { DropdownPanelState } from '#kit/utils/dropdown/panelState'
 import { usePanelStatus } from '#kit/utils/dropdown/usePanelStatus'
 import { useSelectionShell, useUnnamedControlWarning } from '#kit/utils/dropdown/useSelectionShell'
 import { useBoundProp } from '#kit/utils/text-field/supportLine'
+import { toFormValues } from '#kit/utils/dropdown/formValues'
 import { ICONS } from '#kit/shared/constants/icons'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
-import MMenu from '#kit/components/ui/menu/index.vue'
+import Popover from '#kit/components/fragments/popover/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import DropdownChips from '#kit/components/fragments/dropdown/Chips.vue'
 import DropdownPanel from '#kit/components/fragments/dropdown/Panel.vue'
@@ -186,7 +198,7 @@ import DropdownPanel from '#kit/components/fragments/dropdown/Panel.vue'
 defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
-const props = defineProps(mDropdownProps)
+const props = defineProps(mDropdownProps as MDropdownPropsOptions<TItem, TValue>)
 const emit = defineEmits<MDropdownEmits<TItem>>()
 const slots = defineSlots<MDropdownSlots<TItem, TValue>>()
 
@@ -215,7 +227,7 @@ const state = computed<DropdownPanelState>(() => panelState({
 }))
 
 const control: UseDropdownControlReturn<TItem, TValue> = useDropdownControl<TItem, TValue>({
-  props,
+  props: props as DropdownControlConfig,
   model,
   open,
   pending: () => field.meta.pending,
@@ -239,6 +251,9 @@ const status = usePanelStatus({
   loadingText: () => props.messages?.loading,
   state: () => panelRef.value?.stateEl,
 })
+
+const formName = computed(() => props.name ?? props.path)
+const formValues = computed(() => formName.value ? toFormValues(control.selectedEntries.value.map(entry => entry.value)) : [])
 
 // The field passes a press anywhere in its box on to the input, and a label's
 // click reaches it natively: the input's click is the one that toggles — the

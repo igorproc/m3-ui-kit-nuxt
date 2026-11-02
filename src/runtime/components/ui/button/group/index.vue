@@ -36,6 +36,7 @@
 import UiButton from '#kit/components/ui/button/index.vue'
 import UiIcon from '#kit/components/ui/icon/index.vue'
 import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
+import { useSegmentNameWarning } from '#kit/utils/button/segmentNames'
 import { useSegmentedButton } from '#kit/composables/button/useSegmentedButton'
 import { useReducedMotion } from '#kit/composables/useReducedMotion'
 import { toggleTransition } from '../morph'
@@ -53,6 +54,7 @@ const value = defineModel<MButtonGroupModelValue>()
 const { isSelected, groupAttrs, segmentAttrs, segmentRef } = useSegmentedButton(value, props)
 
 useButtonNameWarning('m-button-group', () => undefined, '`aria-label` or `aria-labelledby`')
+useSegmentNameWarning('m-button-group', () => props.items)
 
 // Every button of a connected group is a toggle: a selected one becomes a pill on a spring.
 const reducedMotion = useReducedMotion()
@@ -60,6 +62,8 @@ const reducedMotion = useReducedMotion()
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/button/group' as t;
+
+$icon-only: '.ui-button--icon-only';
 
 .ui-button-group {
   $t: material-map(t.$tokens, 'md-button-group');
@@ -95,6 +99,13 @@ const reducedMotion = useReducedMotion()
 
   &__item.ui-button:focus-visible {
     z-index: 1;
+  }
+
+  // Neighbours sit 2 apart: an icon-only button's 48 target grows only along
+  // the block axis, so it never takes a press meant for the next one. The
+  // doubled class outranks the both-axis target of a compact MButton.
+  &__item#{$icon-only} {
+    @include touch-target(block);
   }
 }
 </style>

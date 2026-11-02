@@ -3,54 +3,80 @@
 
 // ==========================================
 // NAVIGATION RAIL M3 COMPONENT TOKENS
-// (shared by navigation-rail/index.vue and navigation-rail/item/index.vue)
 // ==========================================
+// The destinations are the shared navigation item (`navigation-item/_index.scss`).
 
 $width: 96rem;
+
+// W64-А: a fixed width inside M3's 220–360; a longer label ends in an ellipsis.
 $width-expanded: 256rem;
+$surface-container: map.get($theme-color-link, 'surface-container');
+$layout-top: var(--m3-layout-inset-top, 0rem);
+$ring: map.get($theme-focus-link, 'width') + map.get($theme-focus-link, 'offset');
 $tokens: (
   container: (
     width: $width,
     width-expanded: $width-expanded,
     padding: (
-      block: 12rem,
-      inline: 8rem,
+      block: calc(#{spacing(40)} + #{spacing(4)}),
     ),
-    shape: var(--sys-shape-corner-large),
-    color: map.get($theme-color-link, 'surface'),
-    shadow: 0 0 0 1rem color-mix(in srgb, #{map.get($theme-color-link, 'outline-variant')} 40%, transparent),
-    gap: 8rem,
+    // Flat, as in M3: no corner, no shadow, set apart by its tone.
+    color: $surface-container,
     text: (
       color: map.get($theme-color-link, 'on-surface-variant'),
     ),
+    in-page: (
+      top: $layout-top,
+      height: calc(100dvh - #{$layout-top}),
+    ),
+    // Inside the scrolling main: the window minus every band of its layout.
+    in-scroller: (
+      height: calc(100dvh - #{$layout-top} - var(--m3-layout-inset-bottom, 0rem)),
+    ),
+    standalone: (
+      height: 100%,
+      max-height: 100dvh,
+    ),
+    motion: (
+      duration: var(--sys-motion-duration-medium-2),
+      easing: var(--sys-motion-easing-standard),
+    ),
+  ),
+  header: (
+    gap: spacing(40),
+    items: (
+      gap: spacing(4),
+    ),
+  ),
+  list: (
+    gap: spacing(4),
+    ring: (
+      padding: $ring,
+      margin: $ring * -1,
+    ),
+    expanded: (
+      gap: 0rem,
+    ),
   ),
   item: (
-    color: map.get($theme-color-link, 'on-surface-variant'),
-    active: (
-      color: map.get($theme-color-link, 'primary'),
-    ),
-    typography: 'label-small',
-    indicator: (
-      color: map.get($theme-color-link, 'secondary-container'),
-      hover: (
-        color: map.get($theme-color-link, 'on-surface'),
-        opacity: state-opacity(hover),
-      ),
-      active: (
-        hover: (
-          opacity: state-opacity(pressed),
-        ),
-      ),
-    ),
-    hover: (
-      color: map.get($theme-color-link, 'on-surface'),
+    padding: (
+      inline: spacing(20),
     ),
   ),
-  icon: (
-    size: 24rem,
-  ),
-  badge: (
-    top: -12rem,
-    right: -24rem,
+  // The expanded rail over the content (`mode="modal" | "dismissible"`).
+  modal: (
+    color: $surface-container,
+    shadow: elevation(2),
+    shape: map.get($theme-shape-link, 'large'),
+    motion: (
+      enter: (
+        duration: var(--sys-motion-duration-medium-1),
+        easing: var(--sys-motion-easing-emphasized-decelerate),
+      ),
+      exit: (
+        duration: var(--sys-motion-duration-short-4),
+        easing: var(--sys-motion-easing-emphasized-accelerate),
+      ),
+    ),
   ),
 );

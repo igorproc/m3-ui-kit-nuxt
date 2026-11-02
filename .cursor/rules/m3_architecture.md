@@ -14,7 +14,7 @@ Before writing any code, you MUST:
 Create or update `_index.scss` in the component's directory.
 
 - **Rule**: NO abstract logic in the component CSS. Every value must be a "Pick" from this map.
-- **Nesting Rule**: The `g()` helper splits paths by `-`. You MUST nest maps to match the intended path.
+- **Nesting Rule**: The `g()` helper splits paths by `.` (a dash is part of a key). You MUST nest maps to match the intended path.
   - Path `primary-filled-container-color` -> `primary: ( filled: ( container: ( color: ... ) ) )`.
 - **Helper Usage**: If the component is button-like, use `m3-button-scheme($main, $on-main, $container, $on-container, $outline)` to generate the collection.
 

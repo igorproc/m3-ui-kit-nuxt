@@ -12,14 +12,21 @@
  */
 import { clamp } from '#kit/shared/utils/helpers'
 
-/** Primary side the surface is placed on, relative to the trigger. */
-export type PopoverSide = 'top' | 'bottom' | 'left' | 'right'
+/**
+ * Primary side the surface is placed on, relative to the trigger. `start` and
+ * `end` are inline sides: they follow the writing direction, as the native
+ * `position-area` logical keywords do.
+ */
+export type PopoverSide = 'top' | 'bottom' | 'start' | 'end'
 
-/** Cross-axis alignment against the trigger. */
+/** Cross-axis alignment against the trigger, in the logical direction of that axis. */
 export type PopoverAlign = 'start' | 'center' | 'end'
 
-/** `'bottom'` (centered) or `'bottom-start'`/`'bottom-end'`, etc. */
+/** `'bottom'` (centered) or `'bottom-start'`/`'bottom-end'`, `'end-start'`, etc. */
 export type PopoverPlacement = PopoverSide | `${PopoverSide}-${PopoverAlign}`
+
+/** Inline direction the logical placement resolves against. */
+export type PopoverDirection = 'ltr' | 'rtl'
 
 /** Viewport-relative geometry of the trigger. `height` is derived when omitted. */
 export interface PopoverRect {
@@ -46,6 +53,8 @@ export interface PopoverPositionInput {
   /** Minimum gap kept from the viewport edges. */
   margin: number
   flip: boolean
+  /** @default 'ltr' */
+  direction?: PopoverDirection
 }
 
 export interface PopoverPosition {
@@ -57,7 +66,10 @@ export interface PopoverPosition {
   align: PopoverAlign
 }
 
-const OPPOSITE_SIDE: Record<PopoverSide, PopoverSide> = {
+/** The geometry below works on screen sides; `start` alignment is the left or top edge. */
+type PhysicalSide = 'top' | 'bottom' | 'left' | 'right'
+
+const OPPOSITE_SIDE: Record<PhysicalSide, PhysicalSide> = {
   top: 'bottom',
   bottom: 'top',
   left: 'right',
@@ -76,25 +88,54 @@ export function parsePlacement(placement: PopoverPlacement): [PopoverSide, Popov
   return [side, align]
 }
 
-/** Map a placement to a CSS `position-area` value. */
-export function placementToArea(side: PopoverSide, align: PopoverAlign): string {
-  if (align === 'center') return side
-
-  // For a vertical side the surface spans horizontally and vice-versa.
-  const spanByAlign: Record<PopoverSide, Record<'start' | 'end', string>> = {
-    top: { start: 'span-right', end: 'span-left' },
-    bottom: { start: 'span-right', end: 'span-left' },
-    left: { start: 'span-bottom', end: 'span-top' },
-    right: { start: 'span-bottom', end: 'span-top' },
-  }
-
-  return `${side} ${spanByAlign[side][align]}`
+const AREA_SIDE: Record<PopoverSide, string> = {
+  top: 'block-start',
+  bottom: 'block-end',
+  start: 'inline-start',
+  end: 'inline-end',
 }
 
-const isVertical = (side: PopoverSide) => side === 'top' || side === 'bottom'
+const MIRRORED_SIDE: Record<PopoverSide, PopoverSide> = { top: 'top', bottom: 'bottom', start: 'end', end: 'start' }
+
+/**
+ * Map a placement to a CSS `position-area` value, in logical keywords only —
+ * mixing them with physical ones is invalid. The keywords resolve against the
+ * root's direction (the surface's containing block); `mirrored` says the trigger
+ * runs the other way, so its inline start is the root's inline end.
+ */
+export function placementToArea(side: PopoverSide, align: PopoverAlign, mirrored = false): string {
+  const areaSide = mirrored ? MIRRORED_SIDE[side] : side
+  if (align === 'center') return AREA_SIDE[areaSide]
+
+  // Aligned to the anchor's start edge, the surface spans towards the end.
+  const axis = side === 'top' || side === 'bottom' ? 'inline' : 'block'
+  const towards = align === 'start' ? 'end' : 'start'
+  const span = mirrored && axis === 'inline' ? OPPOSITE_ALIGN[towards] : towards
+
+  return `${AREA_SIDE[areaSide]} span-${axis}-${span}`
+}
+
+function toPhysicalSide(side: PopoverSide, rtl: boolean): PhysicalSide {
+  if (side === 'start') return rtl ? 'right' : 'left'
+  if (side === 'end') return rtl ? 'left' : 'right'
+  return side
+}
+
+function toLogicalSide(side: PhysicalSide, rtl: boolean): PopoverSide {
+  if (side === 'left') return rtl ? 'end' : 'start'
+  if (side === 'right') return rtl ? 'start' : 'end'
+  return side
+}
+
+/** Only an inline cross axis mirrors in RTL; the block axis never does. */
+function mirrorAlign(side: PhysicalSide, align: PopoverAlign, rtl: boolean): PopoverAlign {
+  return rtl && isVertical(side) ? OPPOSITE_ALIGN[align] : align
+}
+
+const isVertical = (side: PhysicalSide) => side === 'top' || side === 'bottom'
 
 /** Room between the anchor and the viewport edge on `side`, net of offset and margin. */
-function spaceOn(side: PopoverSide, { anchor, viewport, offset, margin }: PopoverPositionInput): number {
+function spaceOn(side: PhysicalSide, { anchor, viewport, offset, margin }: PopoverPositionInput): number {
   switch (side) {
     case 'top': return anchor.top - offset - margin
     case 'bottom': return viewport.height - anchor.bottom - offset - margin
@@ -104,7 +145,7 @@ function spaceOn(side: PopoverSide, { anchor, viewport, offset, margin }: Popove
 }
 
 /** Main-axis coordinate of the surface's leading edge (`top` or `left`). */
-function mainStart(side: PopoverSide, { anchor, surface, offset }: PopoverPositionInput): number {
+function mainStart(side: PhysicalSide, { anchor, surface, offset }: PopoverPositionInput): number {
   switch (side) {
     case 'top': return anchor.top - surface.height - offset
     case 'bottom': return anchor.bottom + offset
@@ -114,7 +155,7 @@ function mainStart(side: PopoverSide, { anchor, surface, offset }: PopoverPositi
 }
 
 /** Cross-axis coordinate of the surface's leading edge for a given alignment. */
-function crossStart(side: PopoverSide, align: PopoverAlign, { anchor, surface }: PopoverPositionInput): number {
+function crossStart(side: PhysicalSide, align: PopoverAlign, { anchor, surface }: PopoverPositionInput): number {
   const [start, end, size] = isVertical(side)
     ? [anchor.left, anchor.right, surface.width]
     : [anchor.top, anchor.bottom, surface.height]
@@ -124,7 +165,7 @@ function crossStart(side: PopoverSide, align: PopoverAlign, { anchor, surface }:
   return start + (end - start - size) / 2
 }
 
-function fitsCross(side: PopoverSide, align: PopoverAlign, input: PopoverPositionInput): boolean {
+function fitsCross(side: PhysicalSide, align: PopoverAlign, input: PopoverPositionInput): boolean {
   const [size, limit] = isVertical(side)
     ? [input.surface.width, input.viewport.width]
     : [input.surface.height, input.viewport.height]
@@ -133,14 +174,14 @@ function fitsCross(side: PopoverSide, align: PopoverAlign, input: PopoverPositio
   return start >= input.margin && start + size <= limit - input.margin
 }
 
-function resolveSide(side: PopoverSide, input: PopoverPositionInput): PopoverSide {
+function resolveSide(side: PhysicalSide, input: PopoverPositionInput): PhysicalSide {
   const extent = isVertical(side) ? input.surface.height : input.surface.width
   const opposite = OPPOSITE_SIDE[side]
 
   return spaceOn(side, input) < extent && spaceOn(opposite, input) >= extent ? opposite : side
 }
 
-function resolveAlign(side: PopoverSide, align: PopoverAlign, input: PopoverPositionInput): PopoverAlign {
+function resolveAlign(side: PhysicalSide, align: PopoverAlign, input: PopoverPositionInput): PopoverAlign {
   const opposite = OPPOSITE_ALIGN[align]
 
   return !fitsCross(side, align, input) && fitsCross(side, opposite, input) ? opposite : align
@@ -155,7 +196,10 @@ function resolveAlign(side: PopoverSide, align: PopoverAlign, input: PopoverPosi
  * fits; otherwise the preferred side is kept and the shift clamps it in.
  */
 export function computePopoverPosition(input: PopoverPositionInput): PopoverPosition {
-  const [preferredSide, preferredAlign] = parsePlacement(input.placement)
+  const rtl = input.direction === 'rtl'
+  const [logicalSide, logicalAlign] = parsePlacement(input.placement)
+  const preferredSide = toPhysicalSide(logicalSide, rtl)
+  const preferredAlign = mirrorAlign(preferredSide, logicalAlign, rtl)
   const { surface, viewport, margin } = input
   const isMeasured = surface.width > 0 && surface.height > 0
 
@@ -179,5 +223,52 @@ export function computePopoverPosition(input: PopoverPositionInput): PopoverPosi
     top = clamp(top, margin, Math.max(margin, viewport.height - surface.height - margin))
   }
 
-  return { top, left, side, align }
+  return { top, left, side: toLogicalSide(side, rtl), align: mirrorAlign(side, align, rtl) }
+}
+
+/** `'bottom'` for a centered surface, `'bottom-start'` otherwise. */
+export function joinPlacement(side: PopoverSide, align: PopoverAlign): PopoverPlacement {
+  return align === 'center' ? side : `${side}-${align}`
+}
+
+/** The side of `anchor` the laid-out `surface` sits on, or `null` while they overlap. */
+function sideOf(anchor: PopoverRect, surface: PopoverRect, tolerance: number): PhysicalSide | null {
+  if (surface.top >= anchor.bottom - tolerance) return 'bottom'
+  if (surface.bottom <= anchor.top + tolerance) return 'top'
+  if (surface.left >= anchor.right - tolerance) return 'right'
+  if (surface.right <= anchor.left + tolerance) return 'left'
+  return null
+}
+
+/**
+ * The placement a surface actually took, read off the two laid-out boxes: the
+ * native path flips in CSS (`position-try-fallbacks`) and never says where to.
+ * Where the boxes cannot tell — the surface is not laid out, they overlap, or
+ * both edges line up because the surface is as wide as its anchor — the
+ * requested side or edge stands.
+ */
+export function observePlacement(
+  anchor: PopoverRect,
+  surface: PopoverRect,
+  requested: PopoverPlacement,
+  direction: PopoverDirection = 'ltr',
+  tolerance = 1,
+): PopoverPlacement {
+  const isLaidOut = surface.width > 0 && (surface.height ?? surface.bottom - surface.top) > 0
+  const side = isLaidOut ? sideOf(anchor, surface, tolerance) : null
+  if (!side) return requested
+
+  const rtl = direction === 'rtl'
+
+  const [anchorStart, anchorEnd, surfaceStart, surfaceEnd] = isVertical(side)
+    ? [anchor.left, anchor.right, surface.left, surface.right]
+    : [anchor.top, anchor.bottom, surface.top, surface.bottom]
+  const startsTogether = Math.abs(surfaceStart - anchorStart) <= tolerance
+  const endsTogether = Math.abs(surfaceEnd - anchorEnd) <= tolerance
+
+  const align = startsTogether === endsTogether
+    ? parsePlacement(requested)[1]
+    : mirrorAlign(side, startsTogether ? 'start' : 'end', rtl)
+
+  return joinPlacement(toLogicalSide(side, rtl), align)
 }

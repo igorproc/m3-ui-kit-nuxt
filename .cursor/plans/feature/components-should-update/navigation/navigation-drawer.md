@@ -2,7 +2,7 @@
 
 <identity>M3: Navigation drawer (baseline; в Expressive его роль забирает expanded navigation rail, но в каталоге M3 drawer остаётся) · Токены Compose: `NavigationDrawerTokens`, `ScrimTokens`; поведение — `NavigationDrawer.kt` (`ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer`, `NavigationDrawerItem`) · Код: `src/runtime/components/ui/navigation-drawer/` · Аудит: `data/navigation-drawer.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Drawer переехал на `MOverlay` (`overlay-top-layer-vfm-removal_2026-10-01_1200.md`): нативный `<dialog>`, inert, фокус-трап и возврат фокуса уже работают. Объём дальнейшей работы зависит от вопроса 1.</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Токены (`spacing()`, атомарные поля шапки, ширина 360/240/100% − 56, логические углы), прокрутка и safe-area, сторона `start`/`end`, `#activator` с `aria-controls`, reduced motion без локального `0s`, пункт 56 с секциями (общий пункт), роль — модальный baseline (W61-А). Остались ссылки `to` у пункта (B5.1a, отложено Q56-А) и документация (вне репо).</implementation-status>
 
 ## Вердикт
 
@@ -136,11 +136,11 @@
 4. **Доступность оболочки** (S). `ariaLabel`, `#activator` с `aria-controls`, `defineEmits`.
    Закрывает CT-13, A11-06, EN-02.
 5. **Движение** (S). Убрать локальный `0s` под reduced motion; переходы остаются на токенах `--sys-motion-*`.
-6. **Пункт drawer** (M). По вопросу 2: таблетка 56, индикатор `secondary-container`, ссылка с
+6. **частично, `to` отложено** (B5.1a, Q56-А). **Пункт drawer** (M). По вопросу 2: таблетка 56, индикатор `secondary-container`, ссылка с
    `aria-current`, текст бейджа; рецепт заголовка секции и разделителя.
 7. **Вариант / роль** (M–L). По вопросу 1: либо ничего, либо `mode: 'modal' | 'standard'`, либо
    документированная миграция на модальный рейл.
-8. **Документация** (S). `docs/server/data/en/navigation-drawer.json`: убрать несуществующие
+8. **отложено**: документация вне репо кита (docs_v2/v3, `plans-audit-2/report.md` §6). **Документация** (S). `docs/server/data/en/navigation-drawer.json`: убрать несуществующие
    permanent / persistent и `open` / `variant`, описать `side`, модальные пропы, клавиатуру,
    «когда брать рейл» (DC-01…05).
 

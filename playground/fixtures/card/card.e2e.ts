@@ -228,6 +228,20 @@ test.describe('MCard', () => {
     expect((await card.boundingBox())!.width).toBeCloseTo((await neighbour.boundingBox())!.width, 0)
   })
 
+  // N.3/N.4: `overflow-wrap: anywhere` on the card inherited into its slots and
+  // cut every word's min-content to one glyph, so equal columns broke words.
+  test('equal columns in a narrow card scroll instead of breaking words', async ({ page }) => {
+    await openFixture(page, 'card/stress')
+
+    const lines = await page.getByTestId('word-row-item').evaluateAll(items => items.map((item) => {
+      const range = document.createRange()
+      range.selectNodeContents(item)
+      return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size
+    }))
+
+    expect(lines).toEqual([1, 1])
+  })
+
   // CT-07: a lone subhead renders, and an empty body leaves no gap.
   test('a subhead renders alone and an empty body leaves no gap', async ({ page }) => {
     await openFixture(page, 'card/stress')
@@ -263,7 +277,7 @@ test.describe('MCard', () => {
   // The dev server reports it; CI serves a production build, where dev
   // warnings are compiled out.
   test('a link card with actions still renders them and warns in dev', async ({ page }) => {
-    test.skip(Boolean(process.env.CI), 'dev-only warning; CI runs a production build')
+    test.skip(Boolean(process.env.CI || process.env.E2E_PROD), 'dev-only warning; a production build compiles it out')
 
     const warnings: string[] = []
     page.on('console', (message) => {

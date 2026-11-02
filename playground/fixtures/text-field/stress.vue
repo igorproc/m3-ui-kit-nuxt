@@ -65,6 +65,15 @@
 
     <div class="fixture-stress__narrow">
       <MTextField
+        v-model="query"
+        type="search"
+        label="Search the archive"
+        data-test="search-type"
+      />
+    </div>
+
+    <div class="fixture-stress__narrow">
+      <MTextField
         v-model="toggled"
         label="Username"
         :error-message="showError ? 'That name is taken' : undefined"
@@ -93,6 +102,7 @@ const count = ref(0 as unknown as string)
 const empty = ref('')
 const mixed = ref('Сохранить 保存 حفظ 🙂')
 const toggled = ref('')
+const query = ref('Tolkien')
 const showError = ref(false)
 </script>
 

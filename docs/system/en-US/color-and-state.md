@@ -2,7 +2,9 @@
 
 ## Colour is a role, never a hue
 
-`MColor` is `primary | secondary | tertiary | error`. A component asks for a *role* and the
+`MColor` is `primary | secondary | tertiary | error` plus the theme's semantic roles
+`info | success | warning`; a component narrows it with `Extract<MColor, …>`, and most take
+`MAccentColor`, the first four. A component asks for a *role* and the
 theme decides the pixels. There is no place in a component where a colour is chosen because
 it looks right.
 
@@ -99,10 +101,9 @@ button and card 1 → 2 on hover, FAB 3 → 4); `elevation()` fails the build on
 
 Colour and state values come out of the component's own `$tokens` map via `g($t, 'a.b.c')`.
 
-**Use the dot separator.** The legacy dash form cannot address a key that itself contains a
-dash (`active-outline`, `min-height`, `hover-color`) — it splits the key and resolves to
-`null` silently. That is how all four `<MOtpInput>` cell states shipped rendering nothing.
-Convert a file wholly when you touch it; mixing the two separators in one file is the exact
-mechanism that produced the bug.
+**The dot is the only separator.** A dash belongs to the key (`active-outline`, `min-height`,
+`hover-color`). The old dash form split such keys and resolved to `null` silently — that is
+how all four `<MOtpInput>` cell states once shipped rendering nothing — so it was removed:
+every miss is now a build error.
 
 `npm run lint:scss` is what catches this. Run it after any `<style>` or token-map change.

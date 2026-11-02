@@ -32,6 +32,12 @@ export const OTP_ALPHABET = {
   alphanumeric: /[0-9a-z]/i,
 } as const
 
+/**
+ * What a code copied from an SMS or an e-mail is formatted with ("123-456",
+ * "123 456"): dropped from a paste without calling it a mistake.
+ */
+export const OTP_PASTE_SEPARATOR = /[\s‐‑-]/u
+
 /** Virtual keyboard each mode asks for. */
 export const OTP_INPUT_MODE = {
   numeric: 'numeric',

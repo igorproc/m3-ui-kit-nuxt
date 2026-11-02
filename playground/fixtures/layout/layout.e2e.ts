@@ -163,6 +163,23 @@ test.describe('MLayout', () => {
       expect(await px(container, 'padding-right')).toBeGreaterThanOrEqual(47 - 0.5)
     })
 
+    // The side zones used to be left out: a rail at the window edge ran under the notch in landscape.
+    for (const dir of DIRECTIONS) {
+      test(`in landscape the first zone of each side clears that side's cutout (${dir})`, async ({ page }) => {
+        await page.setViewportSize({ width: 1366, height: 600 })
+        await emulateCutouts(page, { left: 47, right: 31 })
+        await openFixture(page, 'layout/matrix', { dir })
+        const [startEdge, endEdge] = dir === 'ltr' ? ['left', 'right'] as const : ['right', 'left'] as const
+        const cutout = { left: 47, right: 31 }
+
+        for (const [zone, edge, inner] of [['aside-start', startEdge, endEdge], ['aside-end', endEdge, startEdge]] as const) {
+          const aside = page.getByTestId(zone)
+          expect(await px(aside, `border-${edge}-width`), zone).toBeCloseTo(cutout[edge], 0)
+          expect(await px(aside, `border-${inner}-width`), zone).toBe(0)
+        }
+      })
+    }
+
     test('without a cutout the bars keep their own geometry', async ({ page }) => {
       await page.setViewportSize({ width: 1366, height: 800 })
       await openFixture(page, 'layout/full-height')
@@ -170,12 +187,33 @@ test.describe('MLayout', () => {
       const appBar = page.getByTestId('app-bar')
 
       expect(await px(appBar, 'border-top-width')).toBe(0)
-      expect(await px(appBar, 'padding-top')).toBeCloseTo(8 * rem, 0)
+      expect((await box(appBar)).height).toBeCloseTo(64 * rem, 0)
     })
   })
 })
 
 test.describe('MContainer', () => {
+  // Layout step 10: `container` takes the columns from its own width, not the window's.
+  test('a container grid in a narrow pane counts columns by the pane, a window grid by the window', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 800 })
+    await openFixture(page, 'layout/stress')
+    const tracks = (locator: Locator) =>
+      locator.evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length)
+    const containerGrid = page.getByTestId('grid-container').locator('.m-container__grid')
+
+    expect(await tracks(containerGrid)).toBe(4)
+    expect(await tracks(page.getByTestId('grid-window'))).toBe(12)
+
+    const cell = await box(page.getByTestId('container-cell'))
+    const grid = await box(containerGrid)
+    const margin = await px(containerGrid, 'padding-left')
+    expect(cell.width).toBeCloseTo(grid.width - margin * 2, 0)
+
+    const windowCell = await box(page.getByTestId('window-cell'))
+    const windowGrid = await box(page.getByTestId('grid-window'))
+    expect(windowCell.width).toBeLessThan(windowGrid.width / 2)
+  })
+
   for (const [width, margin] of [[360, 16], [768, 24], [1366, 24]] as const) {
     test(`side margin is ${margin} at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 })

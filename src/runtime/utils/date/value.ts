@@ -3,6 +3,9 @@ import dayjs from 'dayjs'
 /** What a date model may hold: a `Date`, a day string (`YYYY-MM-DD`, or any string dayjs reads) or a timestamp. */
 export type DateModelValue = Date | string | number
 
+/** The type an empty model is written in: a `Date`, a day string or a timestamp. */
+export type DateValueType = 'date' | 'string' | 'number'
+
 const DAY_FORMAT = 'YYYY-MM-DD'
 
 /**
@@ -20,13 +23,14 @@ export function toDate(value: DateModelValue | null | undefined): Date | null {
 
 /**
  * Writes a chosen date back in the type the model came in: a string model
- * gets a day string (`YYYY-MM-DD`), a number gets a timestamp, anything else
- * (a `Date`, or nothing yet) gets a `Date`.
+ * gets a day string (`YYYY-MM-DD`), a number gets a timestamp, a `Date` gets
+ * a `Date`. An empty model has no type to keep and gets `empty`'s.
  */
-export function toModelValue(date: Date | null, like: DateModelValue | null | undefined): DateModelValue | null {
+export function toModelValue(date: Date | null, like: DateModelValue | null | undefined, empty: DateValueType = 'date'): DateModelValue | null {
   if (!date) return null
-  if (typeof like === 'string') return dayjs(date).format(DAY_FORMAT)
-  if (typeof like === 'number') return date.getTime()
+  const type = like === null || like === undefined ? empty : typeof like
+  if (type === 'string') return dayjs(date).format(DAY_FORMAT)
+  if (type === 'number') return date.getTime()
   return date
 }
 

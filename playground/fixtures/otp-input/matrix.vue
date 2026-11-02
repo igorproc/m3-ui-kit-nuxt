@@ -97,6 +97,7 @@ const states = [
   { name: 'error-message', props: { errorMessage: 'The code is wrong' } },
   { name: 'error-only', props: { error: true } },
   { name: 'disabled', props: { disabled: true } },
+  { name: 'disabled-grouped', props: { disabled: true, groups: [3, 3], separator: '–' } },
   { name: 'readonly', props: { readonly: true } },
   { name: 'loading', props: { loading: true } },
   { name: 'label-hidden', props: { labelPlacement: 'hidden' as const } },
@@ -110,6 +111,7 @@ const values = reactive<Record<string, string>>({
   'error-message': '111111',
   'error-only': '111111',
   'disabled': '12',
+  'disabled-grouped': '1234',
   'readonly': '123456',
   'loading': '123456',
 })

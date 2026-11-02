@@ -4,15 +4,15 @@
     class="ui-loading"
     :class="[
       `ui-loading--${type}`,
-      `ui-loading--${size}`,
-      { 'ui-loading--inline': inline },
+      `ui-loading--density-${density}`,
+      { 'ui-loading--inline': inline, 'ui-loading--contained': contained },
     ]"
-    role="status"
+    role="progressbar"
     :aria-label="ariaLabel"
   >
     <!-- Classic Circular Spinner -->
     <span
-      v-if="type === 'circular'"
+      v-if="type === 'spinner'"
       class="ui-loading__spinner"
     >
       <span class="ui-loading__left">
@@ -26,8 +26,8 @@
 
     <!-- M3 Expressive Morphing Shape -->
     <m-shape
-      v-else-if="type === 'expressive'"
-      class="ui-loading__expressive"
+      v-else-if="type === 'shape'"
+      class="ui-loading__shape"
       :name="currentShape"
       :sequence="expressiveSequence"
       :transition="transition"
@@ -43,7 +43,7 @@ import { resolveTransition } from '#kit/utils/motion'
 import { mLoadingProps } from './props'
 import type { M3ShapeName } from '#kit/assets/icon/shapes'
 
-// Loaded only for the expressive type: the shape paths and the morph weigh far
+// Loaded only for the shape type: the shape paths and the morph weigh far
 // more than the circular spinner, which every loading button renders.
 const MShape = defineAsyncComponent(() => import('#kit/components/ui/shape/index.vue'))
 
@@ -100,7 +100,7 @@ const cycle = useTimer(() => {
 })
 
 function runCycle(type: string) {
-  if (type === 'expressive') cycle.start()
+  if (type === 'shape') cycle.start()
   else cycle.stop()
 }
 
@@ -125,13 +125,13 @@ watch(() => props.type, runCycle)
   content-visibility: auto;
   color: g($t, 'spinner.color');
 
-  @each $size in ('small', 'medium', 'large') {
-    &--#{$size} {
-      width: g($t, 'size.#{$size}');
-      height: g($t, 'size.#{$size}');
+  @each $step in ('compact', 'default', 'comfortable') {
+    &--density-#{$step} {
+      width: g($t, 'density.#{$step}.size');
+      height: g($t, 'density.#{$step}.size');
 
       .ui-loading__circle {
-        border-width: g($t, 'thickness.#{$size}');
+        border-width: g($t, 'density.#{$step}.thickness');
       }
     }
   }
@@ -149,8 +149,28 @@ watch(() => props.type, runCycle)
     }
   }
 
+  // Whatever the density, the container is 48 and the indicator 38 inside it.
+  &--contained {
+    width: g($t, 'contained.size');
+    height: g($t, 'contained.size');
+    border-radius: g($t, 'contained.shape');
+    background-color: g($t, 'contained.bg.color');
+    color: g($t, 'contained.color');
+
+    .ui-loading__spinner {
+      inset: g($t, 'contained.inset');
+    }
+
+    .ui-loading__shape.ui-shape {
+      inset-block: g($t, 'contained.inset') auto;
+      inset-inline: g($t, 'contained.inset') auto;
+      width: g($t, 'contained.indicator.size');
+      height: g($t, 'contained.indicator.size');
+    }
+  }
+
   // 3. linear-rotate wrapper
-  &--circular {
+  &--spinner {
     animation: linear infinite ui-loading-linear-rotate;
     animation-duration: g($t, 'motion.loop.turn');
   }
@@ -159,14 +179,14 @@ watch(() => props.type, runCycle)
   &__left,
   &__right,
   &__circle,
-  &__expressive {
+  &__shape {
     position: absolute;
     inset: 0;
   }
 
-  // The expressive indicator's rotation rides on the morph itself (each
+  // The shape indicator's rotation rides on the morph itself (each
   // transition carries its own turn), so no CSS rotation is layered on top.
-  &__expressive {
+  &__shape {
     display: block;
   }
 
@@ -212,7 +232,7 @@ watch(() => props.type, runCycle)
   }
 
   @media (prefers-reduced-motion: reduce) {
-    &--circular {
+    &--spinner {
       animation-duration: g($t, 'motion.reduced.turn');
     }
 
@@ -237,7 +257,7 @@ watch(() => props.type, runCycle)
       border-color: Highlight Highlight transparent transparent;
     }
 
-    &__expressive {
+    &__shape {
       forced-color-adjust: none;
       color: Highlight;
     }

@@ -7,27 +7,27 @@
 
 @mixin selection-and-disabled($t) {
   &--selected {
-    border-radius: g($t, 'container.selected.shape');
-    background-color: g($t, 'container.selected.color');
-    color: g($t, 'label.text.selected.color');
+    border-radius: g($t, 'selected.shape');
+    background-color: g($t, 'selected.container.color');
+    color: g($t, 'selected.content.label.color');
 
     .ui-list-item__overline {
-      color: g($t, 'overline.selected.color');
+      color: g($t, 'selected.content.overline.color');
     }
 
     .ui-list-item__supporting {
-      color: g($t, 'supporting.text.selected.color');
+      color: g($t, 'selected.content.supporting.color');
     }
 
     .ui-list-item__leading {
-      color: g($t, 'leading.icon.selected.color');
+      color: g($t, 'selected.content.leading.icon.color');
     }
 
     .ui-list-item__trailing {
-      color: g($t, 'trailing.icon.selected.color');
+      color: g($t, 'selected.content.trailing.icon.color');
 
       &-supporting {
-        color: g($t, 'trailing.supporting.text.selected.color');
+        color: g($t, 'selected.content.trailing.supporting.color');
       }
     }
   }

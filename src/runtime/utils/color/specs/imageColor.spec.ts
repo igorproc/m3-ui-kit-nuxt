@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { seedFromPixels, argbPixelsFromImageData } from '#kit/utils/color/imageColor'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { argbPixelsFromImageData, seedFromImage, seedFromPixels } from '#kit/utils/color/imageColor'
 
 describe('argbPixelsFromImageData', () => {
   it('converts opaque RGBA bytes to ARGB ints and skips transparent pixels', () => {
@@ -24,5 +24,29 @@ describe('seedFromPixels', () => {
     const red = (255 << 24) | (200 << 16) | (20 << 8) | 40
     const seed = seedFromPixels(Array.from({ length: 200 }, () => red))
     expect(seed).toMatch(/^#[0-9a-f]{6}$/i)
+  })
+})
+
+// B2.5a: a cross-origin image without CORS taints the canvas; reading it throws.
+describe('seedFromImage', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('returns null for a tainted (cross-origin) image instead of throwing', () => {
+    const context = {
+      drawImage: () => undefined,
+      getImageData: () => {
+        throw new DOMException('The canvas has been tainted by cross-origin data.', 'SecurityError')
+      },
+    }
+    const create = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const element = create(tag)
+      if (tag === 'canvas') Object.assign(element, { getContext: () => context })
+      return element
+    })
+
+    expect(seedFromImage({ width: 10, height: 10 } as unknown as CanvasImageSource & { width: number, height: number })).toBeNull()
   })
 })

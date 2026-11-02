@@ -3,14 +3,6 @@ import { expect, test } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
 import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx, waitForMotion } from '../../e2e/support'
 
-/**
- * MMenu draws its surface as role="menu", so the listbox sits inside a menu
- * that owns no menuitems. That is MMenu's to fix; pinning it exactly keeps
- * every other violation of the open panel visible, and the day MMenu hosts a
- * listbox properly this expectation fails and should become `[]`.
- */
-const KNOWN_MENU_VIOLATION = ['aria-required-children: .ui-menu__surface']
-
 async function openPanelViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page })
     .exclude('nuxt-devtools-frame')
@@ -56,7 +48,8 @@ test.describe('MDropdown', () => {
       test(`an open ${id} panel has no axe violations of its own (${theme})`, async ({ page }) => {
         await openFixture(page, `dropdown/${fixture}`, { theme })
         await openWithKeyboard(page, id)
-        expect(await openPanelViolations(page)).toEqual(KNOWN_MENU_VIOLATION)
+        // Q16-Б: the listbox no longer sits inside a role="menu" surface.
+        expect(await openPanelViolations(page)).toEqual([])
       })
     }
   }
@@ -73,6 +66,19 @@ test.describe('MDropdown', () => {
       await expectNoHorizontalOverflow(page)
     })
   }
+
+  // N.10 (Q52-А): a panel as narrow as a narrow field broke its rows mid-word.
+  test('the panel of a narrow field takes a readable width of its own', async ({ page }) => {
+    await openFixture(page, 'dropdown/stress')
+    await openWithKeyboard(page, 'tiny')
+    const unit = await remInPx(page)
+
+    const field = (await combobox(page, 'tiny').locator('xpath=ancestor::div[contains(@class, "ui-text-field__control")][1]').boundingBox())!
+    const panel = (await page.locator('.ui-dropdown__menu').boundingBox())!
+
+    expect(field.width / unit).toBeLessThan(130)
+    expect(panel.width / unit).toBeCloseTo(200, 0)
+  })
 
   test('a panel of long rows scrolls only vertically', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 })
@@ -453,7 +459,9 @@ test.describe('MDropdown · a press anywhere on the box', () => {
       test(`${id}: a click at the ${where} of the box opens once and focuses the field`, async ({ page }) => {
         await openFixture(page, 'dropdown/matrix')
         const control = page.locator(`.ui-dropdown:has([data-test="${id}"]) .ui-text-field__control`)
-        await control.scrollIntoViewIfNeeded()
+        // Centred: scrolled only "into view" the field sits at the bottom edge,
+        // under the dev server's devtools button, which then takes the click.
+        await control.evaluate(el => el.scrollIntoView({ block: 'center' }))
         const box = (await control.boundingBox())!
         await page.mouse.click(box.x + box.width * at, box.y + box.height / 2)
 

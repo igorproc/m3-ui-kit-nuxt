@@ -71,9 +71,11 @@ $variant-classes: ();
   // No role (set by MButtonIcon when it has no `color`): a standard or outlined
   // button takes its container's content colour (Compose LocalContentColor)
   // until it is selected, which needs one. Kept at the role schemes'
-  // specificity, so a host that recolours the button still wins.
+  // specificity, so a host that recolours the button still wins. A selected
+  // text button has no rule of its own (it wears the resting colours), so it
+  // is left out here; the selected outlined rule outranks this one.
   &--current {
-    &.ui-button--text,
+    &.ui-button--text:where(:not(.ui-button--selected)),
     &.ui-button--outlined {
       color: inherit;
 

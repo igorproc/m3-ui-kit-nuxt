@@ -29,6 +29,7 @@
           :columns="columns"
           :selectable="selectable"
           :is-all-selected="isAllSelected"
+          :is-mixed="isMixed"
           :select-all-label="selectAllLabel"
           :sort="sortState"
           @update:sort="sortState = $event"
@@ -60,11 +61,13 @@
               v-if="selectable"
               class="ui-table__cell ui-table__cell--checkbox"
             >
-              <MCheckbox
-                :model-value="isSelected(row)"
-                v-bind="getRowCheckboxAttrs(rowIndex)"
-                @update:model-value="toggleRow(row)"
-              />
+              <div class="ui-table__checkbox">
+                <MCheckbox
+                  :model-value="isSelected(row)"
+                  v-bind="getRowCheckboxAttrs(rowIndex)"
+                  @update:model-value="toggleRow(row)"
+                />
+              </div>
             </td>
 
             <td
@@ -104,6 +107,8 @@
         </tbody>
       </table>
     </div>
+
+    <div class="ui-table-container__ring" />
 
     <!-- Rows stay readable while their replacement loads; the indicator is only seen. -->
     <div
@@ -186,7 +191,7 @@ const sortState = defineModel<SortState<T> | null>('sort', { default: null })
 const viewport = useTemplateRef<HTMLElement>('viewport')
 const tableElement = useTemplateRef<HTMLElement>('table')
 
-const { isSelected, toggleRow, isAllSelected, toggleAll } = useTableSelection<T>({
+const { isSelected, toggleRow, isAllSelected, isMixed, toggleAll } = useTableSelection<T>({
   data: () => props.data,
   selectedRows: () => props.selectedRows,
   onChange: rows => emit('update:selectedRows', rows),
@@ -245,16 +250,9 @@ useTableWarnings(() => ({
 
 $t: t.$tokens;
 
-// The fade's width, animated by the scroll position (progressive: see below).
-@property --ui-table-fade {
-  syntax: '<length>';
-  inherits: false;
-  initial-value: 0;
-}
-
 @keyframes ui-table-fade {
-  from { --ui-table-fade: #{g($t, 'fade.size')}; }
-  to { --ui-table-fade: 0; }
+  from { mask-position: g($t, 'fade.mask.shift') 0; }
+  to { mask-position: 0 0; }
 }
 
 .ui-table-container {
@@ -268,13 +266,12 @@ $t: t.$tokens;
   background-color: g($t, 'container.color');
 
   &__viewport {
-    --ui-scrollbar-inset-block: #{g($t, 'container.shape')};
-    --ui-scrollbar-inset-inline: #{g($t, 'container.shape')};
-
     grid-area: 1 / 1;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-padding-inline-end: g($t, 'fade.size');
+
+    @include scrollbar-inset($block: g($t, 'container.shape'), $inline: g($t, 'container.shape'));
 
     // Its ring is the frame's (below): the browser's own would fade under the mask.
     &:focus-visible {
@@ -285,20 +282,32 @@ $t: t.$tokens;
     // position in CSS alone; where scroll timelines are missing the table just
     // scrolls, and a table that fits never animates at all.
     @supports (animation-timeline: scroll()) {
-      mask-image: linear-gradient(to left, transparent, currentcolor var(--ui-table-fade));
+      mask-image: linear-gradient(to left, transparent, currentcolor g($t, 'fade.size'));
+      mask-size: g($t, 'fade.mask.width') 100%;
+      mask-repeat: no-repeat;
+      mask-position: 0 0;
       animation: ui-table-fade auto var(--sys-motion-easing-linear) both;
       animation-timeline: scroll(self inline);
 
       &:dir(rtl) {
-        mask-image: linear-gradient(to right, transparent, currentcolor var(--ui-table-fade));
+        mask-image: linear-gradient(to right, transparent, currentcolor g($t, 'fade.size'));
+        mask-position: g($t, 'fade.mask.shift') 0;
+        animation-direction: reverse;
       }
     }
   }
 
   // The focus ring of the scroll region is drawn here, outside the region:
   // its edge fade is a mask, and a mask fades the region's own outline too.
-  // `>`: a table nested in a cell must not light this frame.
-  &:has(> .ui-table-container__viewport:focus-visible) {
+  // A sibling of its own viewport: a table nested in a cell must not light this frame.
+  &__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  &__viewport:focus-visible ~ &__ring {
     @include focus-ring(inset);
   }
 

@@ -29,8 +29,8 @@ The repository root is the module package only. `playground/` is a minimal consu
 and what boots the Vitest Nuxt environment. Keep it that way: re-declaring components, imports
 or aliases there lets the test environment drift away from what consumers actually install.
 
-Specs sit next to the code they cover: `foo.ts` → `foo.spec.ts`; a component with several
-specs keeps them in `<component>/tests/`. There is no root test folder.
+Specs sit next to the code they cover: `foo.ts` → `foo.spec.ts`, a component's specs in
+`<component>/tests/` (see [Tests](#tests)). There is no root test folder.
 
 ## Commands
 
@@ -45,7 +45,7 @@ npm run lint           # ESLint — must pass with 0 errors
 npm run lint:style     # Stylelint over **/*.{vue,css,scss} — must pass with 0 errors
 ```
 
-Run a single spec with `npm run test -- src/runtime/components/ui/button/index.spec.ts`.
+Run a single spec with `npm run test -- src/runtime/components/ui/button/tests/variants.spec.ts`.
 
 `npm run dev` serves the playground straight from `src/`, so kit edits hot-reload there. The docs
 site consumes the built package by path: after editing kit sources, run `npm run build`
@@ -74,16 +74,81 @@ run go green.
 1. Create the public root at `src/runtime/components/ui/<name>/index.vue`.
 2. Create `src/runtime/assets/stylesheet/components/<name>/_index.scss` with a `$tokens` map.
 3. In the `<style>` block, `@use '#kit/assets/stylesheet/components/<name>/index' as t;` and
-   resolve every value with `g($t, 'path.to.token')` — dots, not dashes, in new code.
+   resolve every value with `g($t, 'path.to.token')` — the dot is the only separator.
 4. Handle all five MD3 states via `color-mix()` at 8% hover / 12% pressed. No hardcoded
    colors, no local `$color` variables, no per-component custom properties.
 5. Put private leaves under `src/runtime/components/fragments/<name>/` and import them
    explicitly.
 6. Expose `<slot />`s for anything a consumer may want to customize.
-7. Add unit tests next to the component as `index.spec.ts` (or in a `specs/` folder).
+7. Add its specs in `src/runtime/components/ui/<name>/tests/` — see [Tests](#tests).
 8. `npm run lint && npm run lint:style` — both must report 0 errors.
 
 See [architecture.md](architecture.md) for the token system in detail.
+
+## Tests
+
+Unit specs run in Vitest inside the playground's Nuxt environment (happy-dom); e2e specs run
+in Playwright over `playground/fixtures/`, in a 1366-wide window like the fixtures' `WIDTHS`.
+The reference layout is the field family — `textarea/tests/`, `number-input/tests/`,
+`dropdown/tests/`, `otp-input/tests/`.
+
+**Where.** A component's specs live in `src/runtime/components/ui/<name>/tests/`, at least
+three files:
+
+- `variants.spec.ts` — the matrix: every axis (`variant`, `color`, `density`, `shape`, `type`,
+  placements, modes) over all its values with `it.each`; the defaults; the combinations that
+  change the markup; slots; state modifier classes.
+- `interaction.spec.ts` — behaviour: events and `v-model`, disabled / readonly / loading,
+  focus, timers, and the server's first frame through `renderToString` where it matters.
+- `a11y.spec.ts` — accessibility as explicit assertions: the role (native first); the name
+  (`label`, `aria-label`, `aria-labelledby`); states (`aria-checked`, `-pressed`,
+  `-expanded`, `-selected`, `-current`, `-disabled`, `-invalid`, `-busy`); relations
+  (`aria-describedby`, and `aria-controls` pointing at an id that exists); hidden decoration
+  (`aria-hidden`); live regions; focus order.
+
+An aspect that outgrows its file gets its own: `keyboard.spec.ts`, `form.spec.ts`, and so
+on. A sub-component (`tab`, `item`, `group`) gets its own `describe` in the same files or a
+`tests/` folder of its own. There is no `index.spec.ts` beside a component. A composable or
+util keeps its spec beside itself (`composables/<x>/useX.spec.ts`, `utils/<x>/x.spec.ts`),
+not in the component's folder.
+
+**Shape.** One `mount()` helper at the top of the file — or in `tests/helpers.ts` when the
+files share it — mounts with `mountSuspended`, unmounts the previous wrapper first, and is
+cleaned up in `afterEach`:
+
+```ts
+let current: { unmount: () => void } | null = null
+
+async function mount(props: Record<string, unknown> = {}) {
+  current?.unmount()
+  current = await mountSuspended(MTextarea, { props })
+
+  return current as VueWrapper
+}
+
+afterEach(() => {
+  current?.unmount()
+  current = null
+})
+```
+
+Describes are named `'m-<name> · variants'` (`· interaction`, `· a11y`), with nested describes
+per axis or aspect; a matrix is an `it.each` table, not a loop of `it`.
+
+**What stays in e2e.** axe runs only in e2e (`expectNoAxeViolations` in
+`playground/e2e/support.ts`), never in a unit spec. So does whatever happy-dom does not
+compute: geometry, layout, `:dir(rtl)`, `(pointer: coarse)`. happy-dom also has DOM globals
+the server lacks, so code that runs during render is proven by `renderToString` or by e2e,
+not by a mounted spec.
+
+`import.meta.dev` is `false` in Vitest, so a dev-only warning (a missing name, a missing
+phrase) cannot be asserted in a unit spec. The e2e checks it on the dev server through
+`page.on('console')` and skips itself under `CI || E2E_PROD`, because a production build
+compiles the warning out; the unit spec leaves a one-line note where the case would be.
+
+**Rules.** A test states the expected behaviour. A bug it finds outside the change at hand
+stays as an `it.todo('…')` with the bug described in the change summary — never an
+`it.fails`, never an assertion bent until it is green.
 
 ## Conventions
 

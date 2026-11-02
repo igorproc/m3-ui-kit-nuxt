@@ -24,7 +24,8 @@ export const argbPixelsFromImageData = (data: Uint8ClampedArray): number[] => {
 
 /**
  * Extracts a seed HEX from an image element by drawing it to an offscreen canvas.
- * Browser-only; returns `null` on the server or when no color can be resolved.
+ * Browser-only; returns `null` on the server or when no color can be resolved —
+ * including a cross-origin image without CORS, whose pixels cannot be read.
  * `sampleSize` downscales the draw for speed (quantization is O(pixels)).
  */
 export const seedFromImage = (image: CanvasImageSource & { width: number, height: number }, sampleSize = 128): string | null => {
@@ -41,5 +42,16 @@ export const seedFromImage = (image: CanvasImageSource & { width: number, height
   if (!context) return null
 
   context.drawImage(image, 0, 0, width, height)
-  return seedFromPixels(argbPixelsFromImageData(context.getImageData(0, 0, width, height).data))
+
+  // A cross-origin image served without CORS (`crossorigin` + `Access-Control-Allow-Origin`)
+  // taints the canvas, and reading its pixels throws a `SecurityError`: no colour can be
+  // resolved from it.
+  let data: Uint8ClampedArray
+  try {
+    data = context.getImageData(0, 0, width, height).data
+  } catch {
+    return null
+  }
+
+  return seedFromPixels(argbPixelsFromImageData(data))
 }

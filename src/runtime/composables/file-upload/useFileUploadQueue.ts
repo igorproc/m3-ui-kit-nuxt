@@ -151,7 +151,11 @@ export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOp
     if (id) {
       const entry = find(id)
       if (entry && (entry.status === 'queued' || entry.status === 'error' || entry.status === 'cancelled')) {
+        // A fresh attempt, as with `retry`: a row that waits for a slot must
+        // not show the last failure meanwhile.
         entry.status = 'queued'
+        entry.error = undefined
+        entry.progress = null
         requested.add(entry.id)
       }
     } else {
@@ -216,5 +220,17 @@ export function useFileUploadQueue<TResult = unknown>(options: FileUploadQueueOp
   // DeepReadonly would freeze the File objects' own types; the rows are what is read-only.
   const view = readonly(entries) as Readonly<Ref<readonly FileUploadEntry<TResult>[]>>
 
-  return { entries: view, canUpload: Boolean(options.upload), add, start, cancel, retry, remove, subscribe }
+  return {
+    entries: view,
+    // A getter: `options.upload` may itself be read live (a component's prop).
+    get canUpload() {
+      return Boolean(options.upload)
+    },
+    add,
+    start,
+    cancel,
+    retry,
+    remove,
+    subscribe,
+  }
 }

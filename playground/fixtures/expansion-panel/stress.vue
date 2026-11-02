@@ -96,6 +96,19 @@
       </MExpansionPanel>
     </MExpansionPanels>
     <output data-test="twenty-model">{{ Array.isArray(twenty) ? twenty.join(',') : twenty }}</output>
+
+    <h2>Words in a row of equal columns in a 200 header</h2>
+    <div class="fixture-expansion-panel-stress__tight">
+      <MExpansionPanel data-test="panel-word-row">
+        <template #header>
+          <span class="fixture-expansion-panel-stress__words">
+            <span data-test="word-row-item">Heartbeat</span>
+            <span data-test="word-row-item">Breathing</span>
+          </span>
+        </template>
+        Pace
+      </MExpansionPanel>
+    </div>
   </section>
 </template>
 
@@ -126,6 +139,18 @@ const twenty = ref<PanelValue | PanelValue[] | undefined>(['p1', 'p3'])
     display: flex;
     flex-wrap: wrap;
     gap: 12rem;
+  }
+
+  &__tight {
+    width: 200rem;
+  }
+
+  // Equal columns, as a segmented button lays out its labels: each column may
+  // shrink to its content's minimum, which the header must not cut to one glyph.
+  &__words {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow: clip;
   }
 
   &__form label {

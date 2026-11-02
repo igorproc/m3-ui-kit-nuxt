@@ -4,10 +4,10 @@
 // ==========================================
 // TIME PICKER · DISPLAY, PERIOD, DIAL
 // ==========================================
-// Included inside `.ui-time-picker`. Selectors and period options carry the
-// MD3 state layer in their own ink (`::before`); focus is the kit's ring on
-// buttons and the dial, and a colour change on the typed fields. The time
-// reads left to right in any writing direction, as in Compose.
+// Included inside `.ui-time-picker`. Selectors carry the MD3 state layer in
+// their own ink (`::before`), period options are toggle buttons; focus is the
+// kit's ring on buttons and the dial, and a colour change on the typed fields.
+// The time reads left to right in any writing direction, as in Compose.
 
 @mixin display($t) {
   // A grid of `part separator part`: each part grows up to its spec width and
@@ -40,8 +40,8 @@
     @include state-layer($t);
 
     &--selected {
-      background-color: g($t, 'selector.selected.container');
-      color: g($t, 'selector.selected.label');
+      background-color: g($t, 'selector.selected.container.color');
+      color: g($t, 'selector.selected.content.color');
     }
   }
 
@@ -130,24 +130,34 @@
     height: g($t, 'period.input.height');
   }
 
+  @media (pointer: coarse) {
+    &__period {
+      gap: g($t, 'period.coarse.gap');
+    }
+  }
+
   // The selected option squares off; the change is instant (no morph).
-  &__period-option {
+  &__period-option.ui-button {
     flex: 1 1 0;
     min-height: 0;
-    padding: 0;
-    border: none;
-    border-radius: g($t, 'period.shape');
-    background-color: g($t, 'period.color.container');
-    color: g($t, 'period.color.label');
+    padding-inline: 0;
 
     @include typescale(g($t, 'period.typography'));
-    @include state-layer($t);
+    @include touch-target(block);
 
-    &--selected {
-      border-radius: g($t, 'period.selected.shape');
-      background-color: g($t, 'period.selected.container');
-      color: g($t, 'period.selected.label');
-      font-weight: g($t, 'period.selected.weight');
+    @each $state in ('unselected', 'selected') {
+      &.ui-button--#{$state} {
+        border-radius: g($t, 'period.#{$state}.shape');
+      }
+
+      &.ui-button--#{$state}:not(.ui-button--disabled) {
+        background-color: g($t, 'period.#{$state}.container.color');
+        color: g($t, 'period.#{$state}.content.color');
+      }
+    }
+
+    &.ui-button--selected {
+      font-weight: g($t, 'period.selected.content.weight');
     }
   }
 }
@@ -244,7 +254,7 @@
     @include typescale(g($t, 'dial.number.typography'));
 
     &--selected {
-      color: g($t, 'dial.number.selected');
+      color: g($t, 'dial.selected.content.color');
     }
   }
 
@@ -267,11 +277,90 @@
       color: HighlightText;
     }
 
-    &__selector--selected,
-    &__period-option--selected {
+    &__selector--selected {
       forced-color-adjust: none;
       background-color: Highlight;
       color: HighlightText;
+    }
+
+    &__period-option.ui-button.ui-button--selected:not(.ui-button--disabled) {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+}
+
+@mixin disabled($t) {
+  &--disabled &__headline {
+    color: g($t, 'disabled.headline');
+  }
+
+  &--disabled &__selector {
+    background-color: g($t, 'disabled.selector.container');
+    color: g($t, 'disabled.selector.label');
+  }
+
+  &--disabled &__selector--selected {
+    background-color: g($t, 'disabled.selector.selected.container.color');
+    color: g($t, 'disabled.selector.selected.content.color');
+  }
+
+  &--disabled &__separator {
+    color: g($t, 'disabled.separator');
+  }
+
+  &--disabled &__dial {
+    background-color: g($t, 'disabled.dial.color');
+  }
+
+  &--disabled &__center,
+  &--disabled &__hand,
+  &--disabled &__handle {
+    background-color: g($t, 'disabled.dial.hand');
+  }
+
+  &--disabled &__number {
+    color: g($t, 'disabled.dial.number');
+  }
+
+  &--disabled &__number--selected {
+    color: g($t, 'disabled.dial.selected.content.color');
+  }
+
+  &--disabled &__handle-dot {
+    background-color: g($t, 'disabled.dial.selected.content.color');
+  }
+
+  &--disabled &__field {
+    background-color: g($t, 'disabled.field.container');
+    color: g($t, 'disabled.field.label');
+  }
+
+  &--disabled &__field-label,
+  &--disabled &__support {
+    color: g($t, 'disabled.support');
+  }
+
+  @include forced-colors {
+    &--disabled &__headline,
+    &--disabled &__selector,
+    &--disabled &__separator,
+    &--disabled &__number,
+    &--disabled &__field,
+    &--disabled &__field-label {
+      color: GrayText;
+    }
+
+    &--disabled &__selector--selected,
+    &--disabled &__center,
+    &--disabled &__hand,
+    &--disabled &__handle {
+      background-color: GrayText;
+    }
+
+    &--disabled &__selector--selected,
+    &--disabled &__number--selected {
+      color: Canvas;
     }
   }
 }

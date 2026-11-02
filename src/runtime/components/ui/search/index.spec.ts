@@ -2,20 +2,20 @@ import { describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MSearch from './index.vue'
 
-describe('m-search', () => {
-  it('renders the root with a type="search" input and a leading slot', async () => {
+const messages = { clear: 'Clear search' }
+
+describe('m-search · bar', () => {
+  it('renders a bar with a type="search" input and the search glyph in front', async () => {
     const wrapper = await mountSuspended(MSearch)
 
-    expect(wrapper.find('.ui-search').exists()).toBe(true)
-
-    const input = wrapper.find('input.ui-search__input')
+    const input = wrapper.find('.ui-search__bar input.ui-search__input')
 
     expect(input.exists()).toBe(true)
     expect(input.attributes('type')).toBe('search')
-    expect(wrapper.find('.ui-search__leading').exists()).toBe(true)
+    expect(wrapper.find('.ui-search__leading .ui-icon').exists()).toBe(true)
   })
 
-  it('starts empty and forwards placeholder and aria-label', async () => {
+  it('forwards placeholder and aria-label', async () => {
     const wrapper = await mountSuspended(MSearch, {
       props: { placeholder: 'Find', ariaLabel: 'Find products' },
     })
@@ -60,7 +60,7 @@ describe('m-search', () => {
   })
 
   it('empties the query on Escape and says so; an empty bar lets Escape go on', async () => {
-    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'abc', clearLabel: 'Clear search' } })
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'abc', messages } })
 
     await wrapper.find('input').trigger('keydown', { key: 'Escape' })
     expect(wrapper.emitted('update:modelValue')!.at(-1)).toEqual([''])
@@ -77,15 +77,11 @@ describe('m-search', () => {
     expect(wrapper.find('input').attributes('id')).toBe('archive-search')
   })
 
-  it('clears the model with a named clear button and says so', async () => {
-    const wrapper = await mountSuspended(MSearch, {
-      props: { modelValue: 'abc', clearLabel: 'Clear search' },
-    })
+  it('clears the query with a named clear button and says so', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'abc', messages } })
 
     const clear = wrapper.find('button.ui-search__clear')
-
     expect(clear.attributes('aria-label')).toBe('Clear search')
-    expect(clear.classes()).not.toContain('ui-search__clear--hidden')
 
     await clear.trigger('click')
 
@@ -93,22 +89,17 @@ describe('m-search', () => {
     expect(wrapper.emitted('clear')).toHaveLength(1)
   })
 
-  it('keeps the clear button in place but hidden and inert while there is nothing to clear', async () => {
+  it('has no clear button, and keeps no place for one, while there is nothing to clear', async () => {
     const wrapper = await mountSuspended(MSearch)
-    const clear = wrapper.find('.ui-search__clear')
 
-    expect(clear.exists()).toBe(true)
-    expect(clear.classes()).toContain('ui-search__clear--hidden')
-    expect(clear.attributes('disabled')).toBeDefined()
+    expect(wrapper.find('.ui-search__clear').exists()).toBe(false)
   })
 
-  it('disables the input and the clear button when disabled', async () => {
-    const wrapper = await mountSuspended(MSearch, {
-      props: { modelValue: 'abc', disabled: true },
-    })
+  it('disables the input, drops the clear button and marks the root when disabled', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { modelValue: 'abc', disabled: true } })
 
     expect(wrapper.find('input.ui-search__input').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('.ui-search__clear').classes()).toContain('ui-search__clear--hidden')
+    expect(wrapper.find('.ui-search__clear').exists()).toBe(false)
     expect(wrapper.classes()).toContain('ui-search--disabled')
   })
 
@@ -136,14 +127,36 @@ describe('m-search', () => {
     expect(wrapper.find('.ui-search__avatar').exists()).toBe(false)
   })
 
-  it('reflects focus on the root, for the focus ring', async () => {
+  it('lets the query run to the text edge only while no target closes the bar', async () => {
+    const bare = await mountSuspended(MSearch)
+    expect(bare.classes()).toContain('ui-search--text-end')
+
+    const typed = await mountSuspended(MSearch, { props: { modelValue: 'abc' } })
+    expect(typed.classes()).not.toContain('ui-search--text-end')
+
+    const avatar = await mountSuspended(MSearch, { slots: { avatar: () => 'A' } })
+    expect(avatar.classes()).not.toContain('ui-search--text-end')
+  })
+
+  it('wears the ring for keyboard focus only', async () => {
     const wrapper = await mountSuspended(MSearch)
+    const input = wrapper.find('input')
 
-    await wrapper.find('input').trigger('focus')
-    expect(wrapper.classes()).toContain('ui-search--focused')
+    await input.trigger('focus')
+    expect(wrapper.classes()).toContain('ui-search--keyboard')
 
-    await wrapper.find('input').trigger('blur')
-    expect(wrapper.classes()).not.toContain('ui-search--focused')
+    await input.trigger('blur')
+    expect(wrapper.classes()).not.toContain('ui-search--keyboard')
+
+    await input.trigger('pointerdown')
+    await input.trigger('focus')
+    expect(wrapper.classes()).not.toContain('ui-search--keyboard')
+  })
+
+  it('marks the density step on the root', async () => {
+    const wrapper = await mountSuspended(MSearch, { props: { density: 'compact' } })
+
+    expect(wrapper.classes()).toContain('ui-search--compact')
   })
 
   it('passes attributes to the input and keeps class on the root', async () => {
@@ -151,5 +164,13 @@ describe('m-search', () => {
 
     expect(wrapper.classes()).toContain('consumer')
     expect(wrapper.find('input').attributes('aria-labelledby')).toBe('heading')
+  })
+
+  it('is a plain field, not a combobox, without results to show', async () => {
+    const wrapper = await mountSuspended(MSearch)
+
+    expect(wrapper.find('input').attributes('role')).toBeUndefined()
+    expect(wrapper.find('input').attributes('aria-expanded')).toBeUndefined()
+    expect(wrapper.find('.ui-search-view').exists()).toBe(false)
   })
 })

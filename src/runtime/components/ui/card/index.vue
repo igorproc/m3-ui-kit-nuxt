@@ -113,7 +113,11 @@ $variants: ('elevated', 'filled', 'outlined');
   border: g($t, 'container.outline.width') solid transparent;
   border-radius: g($t, 'container.shape');
   color: g($t, 'content.color');
-  overflow-wrap: anywhere;
+
+  // Inherited by every slot: `break-word` wraps a long string at the card's
+  // edge but leaves each word's min-content whole, so a row of equal columns
+  // inside (segmented labels, a chip row) scrolls instead of breaking words.
+  overflow-wrap: break-word;
 
   @each $variant in $variants {
     &--#{$variant} {

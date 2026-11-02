@@ -1,29 +1,78 @@
 @use '../../abstracts/forward.scss' as *;
 @use 'sass:map';
 
+// ==========================================
+// TOOLBAR M3 COMPONENT TOKENS
+// ==========================================
+// Two axes: the container (`floating` beside the content, `docked` across the
+// bottom edge) and the colour scheme (`standard`, `vibrant`). Items are the
+// button family; the toolbar only recolours them for its scheme.
+
 $tokens: (
-  standard: (container: (color: map.get($theme-color-link, surface-container),
+  floating: (
+    container: (
       shape: map.get($theme-shape-link, full),
       elevation: elevation(3),
       height: 64rem,
+      padding: (
+        inline: spacing(8),
+        block: spacing(8),
+      ),
+      gap: spacing(4),
     ),
-    icon: (color: (default: map.get($theme-color-link, on-surface-variant),
-        selected: map.get($theme-color-link, on-secondary-container),
+    // A FAB sits beside the floating bar, not in it.
+    fab: (
+      gap: spacing(8),
+    ),
+    vertical: (
+      padding: (
+        inline: spacing(8),
+        block: spacing(16),
       ),
     ),
   ),
-  baseline: (container: (color: map.get($theme-color-link, surface-container),
+  docked: (
+    container: (
       shape: 0,
-      // Docked toolbar (MD3 Expressive): separated by surface tone, no shadow.
+      // Separated by its tone, no shadow (M3 Expressive docked toolbar).
       elevation: elevation(0),
-      height: 80rem,
+      height: 64rem,
+      padding: (
+        inline: spacing(16),
+      ),
+      // The items spread across the edge; this is the least space between them.
+      gap: spacing(4),
     ),
-    with-fab: (container: (height: 72rem,
+  ),
+  scheme: (
+    standard: (
+      container: (
+        color: map.get($theme-color-link, surface-container),
+      ),
+      // A selected item is MButton's tonal secondary (secondary-container).
+      content: (
+        color: map.get($theme-color-link, on-surface-variant),
       ),
     ),
-    icon: (color: (default: map.get($theme-color-link, on-surface-variant),
-        selected: map.get($theme-color-link, on-secondary-container),
+    vibrant: (
+      container: (
+        color: map.get($theme-color-link, primary-container),
+      ),
+      content: (
+        color: map.get($theme-color-link, on-primary-container),
+      ),
+      selected: (
+        container: (
+          color: map.get($theme-color-link, surface-container),
+        ),
+        content: (
+          color: map.get($theme-color-link, on-surface),
+        ),
       ),
     ),
+  ),
+  motion: (
+    duration: var(--sys-motion-duration-short-4),
+    easing: var(--sys-motion-easing-standard),
   ),
 );

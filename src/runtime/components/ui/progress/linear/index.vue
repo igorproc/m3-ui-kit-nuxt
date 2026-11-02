@@ -2,230 +2,251 @@
   <div
     class="ui-progress ui-progress--linear"
     :class="[
-      `ui-progress--${size}`,
+      `ui-progress--density-${density}`,
+      `ui-progress--${shape}`,
       {
         'ui-progress--indeterminate': indeterminate,
-        'ui-progress--expressive': expressive,
+        'ui-progress--started': !indeterminate && percent > 0,
+        'ui-progress--labelled': !!$slots.default,
       },
     ]"
-    role="progressbar"
-    :aria-valuemin="0"
-    :aria-valuemax="100"
-    :aria-valuenow="indeterminate ? undefined : clampedValue"
-    :aria-label="ariaLabel"
+    :style="indeterminate ? undefined : { '--ui-progress-value': `${percent}%` }"
+    v-bind="rootAttrs()"
   >
+    <!-- Mirrored as a whole in RTL; the label beside it is not. -->
     <div
-      v-if="showTrack"
-      class="ui-progress__track"
+      ref="control"
+      class="ui-progress__indicator"
+      v-bind="controlAttrs(progressbarAttrs())"
     >
-      <svg
-        v-if="expressive"
-        class="ui-progress__wave"
-        preserveAspectRatio="none"
-      >
-        <path
-          :d="linearWavePath"
-          class="ui-progress__wavetrack"
+      <template v-if="shape === 'wavy'">
+        <div
+          v-if="showTrack && !indeterminate"
+          class="ui-progress__track"
         />
-      </svg>
-    </div>
+        <div class="ui-progress__wave" />
+      </template>
 
-    <!-- Active Bar -->
-    <div
-      class="ui-progress__bar ui-progress__primary-bar"
-      :style="indeterminate ? '' : { transform: `scaleX(${clampedValue / 100})` }"
-    >
-      <div
-        v-if="!expressive"
-        class="ui-progress__bar-inner"
-      ></div>
-      <svg
-        v-else
-        class="ui-progress__wave"
-        preserveAspectRatio="none"
-      >
-        <path
-          :d="linearWavePath"
-          class="ui-progress__waveactive"
+      <template v-else>
+        <div
+          v-if="showTrack"
+          class="ui-progress__track"
         />
-      </svg>
+        <div
+          class="ui-progress__bar ui-progress__primary-bar"
+          :style="indeterminate ? undefined : { transform: `scaleX(${percent / 100})` }"
+        >
+          <div class="ui-progress__bar-inner" />
+        </div>
+        <div
+          v-if="indeterminate"
+          class="ui-progress__bar ui-progress__secondary-bar"
+        >
+          <div class="ui-progress__bar-inner" />
+        </div>
+      </template>
     </div>
 
-    <div
-      v-if="indeterminate && !expressive"
-      class="ui-progress__bar ui-progress__secondary-bar"
+    <span
+      v-if="$slots.default"
+      :id="labelId"
+      class="ui-progress__label"
     >
-      <div class="ui-progress__bar-inner"></div>
-    </div>
-
-    <slot />
+      <slot />
+    </span>
   </div>
 </template>
 
 <script setup lang="ts">
+import { shallowRef } from 'vue'
 import { useProgress } from '#kit/composables/progress/useProgress'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useProgressbar } from '#kit/utils/progress/useProgressbar'
+import { useProgressNameWarning } from '#kit/utils/progress/useProgressNameWarning'
 import { mProgressLeafProps } from '../props'
 
-const props = defineProps(mProgressLeafProps)
+defineOptions({ inheritAttrs: false })
 
-const { clampedValue, linearWavePath } = useProgress({
-  get variant() {
-    return 'linear' as const
-  },
-  get value() {
-    return props.value
-  },
-  get indeterminate() {
-    return props.indeterminate
-  },
-  get size() {
-    return props.size
-  },
-  get expressive() {
-    return props.expressive
-  },
-})
+const props = defineProps(mProgressLeafProps)
+const { rootAttrs, controlAttrs } = useControlAttrs()
+
+const control = shallowRef<HTMLElement | null>(null)
+useProgressNameWarning(control, () => props.ariaLabel)
+
+const { valueNow, percent } = useProgress(props)
+
+const { labelId, progressbarAttrs } = useProgressbar(props, valueNow)
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/progress' as t;
 
+$t: material-map(t.$tokens, 'md-progress');
+
 .ui-progress {
-  $prefix: 'md-progress';
-  $t: material-map(t.$tokens, $prefix);
-
-  contain: content;
-  display: inline-flex;
-  vertical-align: middle;
-
   &--linear {
-    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: g($t, 'linear.label.gap');
     width: 100%;
+    vertical-align: middle;
+    contain: layout style;
+  }
+
+  &--linear.ui-progress--labelled {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  // Drawn left to right inside; RTL mirrors the whole box, not its parts.
+  &__indicator {
+    position: relative;
+    flex: 1 1 auto;
     overflow: hidden;
-    border-radius: 999rem;
-    background: transparent;
+    border-radius: g($t, 'linear.shape');
+    direction: ltr;
 
-    &.ui-progress--small {
-      height: g($t, 'linear-height-small');
-    }
-
-    &.ui-progress--medium {
-      height: g($t, 'linear-height-medium');
-    }
-
-    &.ui-progress--large {
-      height: g($t, 'linear-height-large');
-    }
-
-    &.ui-progress--expressive {
-      height: auto;
-      min-height: 12rem;
-      overflow: visible; // Allow waves to breathe
+    &:dir(rtl) {
+      scale: -1 1;
     }
   }
 
+  @each $step in ('compact', 'default', 'comfortable') {
+    &--linear.ui-progress--density-#{$step} &__indicator {
+      height: g($t, 'linear.density.#{$step}.thickness');
+    }
+
+    &--wavy.ui-progress--density-#{$step} &__indicator {
+      height: g($t, 'wave.density.#{$step}.height');
+    }
+
+    &--density-#{$step} &__wave {
+      mask-image: g($t, 'wave.density.#{$step}.mask.determinate');
+    }
+
+    &--indeterminate.ui-progress--density-#{$step} &__wave {
+      mask-image: g($t, 'wave.density.#{$step}.mask.indeterminate');
+    }
+  }
+
+  &--wavy &__indicator {
+    border-radius: g($t, 'wave.shape');
+  }
+
+  // `--ui-progress-value` is the share done, written by the component.
   &__track {
     position: absolute;
     inset: 0;
-    background: g($t, 'linear-track-color');
+    background: g($t, 'linear.track.color');
+    border-radius: g($t, 'linear.shape');
+  }
+
+  &--wavy &__track {
+    inset-block: g($t, 'wave.track.inset');
+  }
+
+  // M3 2024: once the bar has started, the track begins a gap after it and
+  // ends in a stop indicator.
+  &--started &__track {
+    clip-path: inset(0 0 0 g($t, 'linear.track.start'));
+    transition: clip-path g($t, 'motion.value.duration') g($t, 'motion.value.easing');
+  }
+
+  &--linear:not(&--indeterminate) &__track::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    aspect-ratio: 1;
     border-radius: inherit;
+    background: g($t, 'linear.bar.color');
   }
 
   &__bar {
     position: absolute;
     inset: 0;
     transform-origin: left center;
-    transition: transform 400ms var(--sys-motion-easing-emphasized);
+    transition: transform g($t, 'motion.value.duration') g($t, 'motion.value.easing');
   }
 
   &__bar-inner {
     position: absolute;
     inset: 0;
-    background: g($t, 'linear-bar-color');
+    background: g($t, 'linear.bar.color');
     border-radius: inherit;
   }
 
-  // Linear Expressive (Wave)
-  &--linear.ui-progress--expressive {
-    background: none;
-    border-radius: 0;
+  // One tileable period of the wave, painted by a mask in the bar's colour.
+  &__wave {
+    position: absolute;
+    inset: 0;
+    background: g($t, 'linear.bar.color');
+    mask-repeat: repeat-x;
+    mask-size: g($t, 'wave.period.determinate') 100%;
+    clip-path: inset(0 calc(100% - var(--ui-progress-value, 100%)) 0 0);
+    transition: clip-path g($t, 'motion.value.duration') g($t, 'motion.value.easing');
+  }
 
-    .ui-progress__track {
-      background: none;
-    }
-
-    .ui-progress__wave {
-      width: 100%;
-      height: 24rem;
-      overflow: visible;
-    }
-
-    .ui-progress__wavetrack {
-      fill: none;
-      stroke: g($t, 'linear-track-color');
-      stroke-width: 4;
-      stroke-linecap: round;
-    }
-
-    .ui-progress__waveactive {
-      fill: none;
-      stroke: g($t, 'linear-bar-color');
-      stroke-width: 6;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    &.ui-progress--indeterminate .ui-progress__waveactive {
-      animation: ui-progress-linear-wave-move 1s linear infinite;
-    }
+  &--indeterminate &__wave {
+    mask-size: g($t, 'wave.period.indeterminate') 100%;
+    animation: ui-progress-linear-wave-move g($t, 'motion.loop.wave') linear infinite;
   }
 
   // Linear Indeterminate
-  &--linear.ui-progress--indeterminate:not(.ui-progress--expressive) &__bar {
-    transition: none;
-  }
-
-  &--linear.ui-progress--indeterminate:not(.ui-progress--expressive) &__primary-bar {
+  &--indeterminate &__primary-bar {
     left: -145.167%;
-    animation: ui-progress-linear-primary 2s infinite linear;
+    transition: none;
+    animation: ui-progress-linear-primary g($t, 'motion.loop.linear') infinite linear;
   }
 
-  &--linear.ui-progress--indeterminate:not(.ui-progress--expressive) &__primary-bar &__bar-inner {
-    animation: ui-progress-linear-primary-scale 2s infinite linear;
+  &--indeterminate &__primary-bar &__bar-inner {
+    animation: ui-progress-linear-primary-scale g($t, 'motion.loop.linear') infinite linear;
   }
 
-  &--linear.ui-progress--indeterminate:not(.ui-progress--expressive) &__secondary-bar {
+  &--indeterminate &__secondary-bar {
     left: -54.8889%;
-    animation: ui-progress-linear-secondary 2s infinite linear;
+    transition: none;
+    animation: ui-progress-linear-secondary g($t, 'motion.loop.linear') infinite linear;
   }
 
-  &--linear.ui-progress--indeterminate:not(.ui-progress--expressive) &__secondary-bar &__bar-inner {
-    animation: ui-progress-linear-secondary-scale 2s infinite linear;
+  &--indeterminate &__secondary-bar &__bar-inner {
+    animation: ui-progress-linear-secondary-scale g($t, 'motion.loop.linear') infinite linear;
+  }
+
+  &__label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &--indeterminate &__wave {
+      animation-duration: g($t, 'motion.reduced.wave');
+    }
+
+    &--indeterminate &__bar,
+    &--indeterminate &__bar &__bar-inner {
+      animation-duration: g($t, 'motion.reduced.linear');
+    }
   }
 
   // Track and bar are bare backgrounds, which forced colors paint as Canvas:
   // the track becomes an edge, the bar a Highlight fill.
   @include forced-colors {
-    &--linear:not(.ui-progress--expressive) &__track {
+    &__track {
       border: 1px solid CanvasText;
     }
 
-    &__bar-inner {
+    &__bar-inner,
+    &__wave {
       forced-color-adjust: none;
       background: Highlight;
-    }
-
-    &--linear.ui-progress--expressive {
-      .ui-progress__wavetrack { stroke: CanvasText; }
-      .ui-progress__waveactive { stroke: Highlight; }
     }
   }
 }
 
 // --- KEYFRAMES ---
 @keyframes ui-progress-linear-wave-move {
-  from { transform: translateX(0); }
-  to { transform: translateX(-40rem); }
+  to { mask-position: calc(-1 * #{g($t, 'wave.period.indeterminate')}) 0; }
 }
 
 @keyframes ui-progress-linear-primary {

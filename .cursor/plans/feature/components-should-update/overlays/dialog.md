@@ -2,7 +2,7 @@
 
 <identity>M3: Dialogs — basic (с hero-иконкой или без) и full-screen · Токены Compose: `DialogTokens.kt`, `ScrimTokens.kt`; поведение — `AlertDialog.kt` (`AlertDialogDefaults`, `AlertDialogContent`, `AlertDialogFlowRow`). У full-screen dialog токенов в Compose 1.5 нет · Код: `src/runtime/components/ui/dialog/index.vue` (без `dialog/date/` — это [date-picker.md](../inputs/date-picker.md)), токены `src/runtime/assets/stylesheet/components/dialog/_index.scss`, слой — `components/ui/overlay/` · Аудит: `data/dialog.json` (части MDialog; пункты `dialog/date` разобраны в date-picker.md) · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. MDialog — тонкая обёртка над `MOverlay` (нативный `<dialog>`, `showModal()`, inert, scroll lock), модальная механика работает. Шаги 1–6 не ломают API; full-screen и роль `alertdialog` ждут вопросов 1–2. Программный API `$modals` — отдельный план [modals.md](modals.md), инфраструктура слоя — [overlay.md](overlay.md).</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Шаги 1–6 сделаны: `surface-container-high`, ритм 16 / 16 / 24, логические свойства, `max-block-size` + прокрутка тела, разделители над и под телом на scroll-driven CSS (за `@supports`), имя без английского fallback, `cancel` / `confirm`, reduced motion, `role="alertdialog"`. Шаг 7 (full-screen) отменён (W31-В), шаг 8 (документация) — вне репо кита. Фикстуры `dialog/{matrix,stress}` и `dialog.e2e.ts` (17 тестов) зелёные.</implementation-status>
 
 ## Вердикт
 
@@ -177,7 +177,8 @@
    `assets/stylesheet/components/dialog/_index.scss`, `components/ui/dialog/index.vue`. После
    правки — `npm run lint:scss`.
 2. **M — высота и прокрутка.** `max-block-size`, прокручиваемое тело, разделители через
-   scroll-driven CSS, вставка скроллбара. Закрывает CT-10, RS-08, RS-10. Файлы: те же.
+   scroll-driven CSS, вставка скроллбара. Закрывает CT-10, RS-08, RS-10. Файлы: те же. Вставка
+   скроллбара **отменено**: CSS-переменные только у layout (`--ui-scrollbar-inset-*` из кита удалены).
 3. **S — имя.** Убрать английский fallback, dev-предупреждение, слот `#title`, `props.ts`. Файлы:
    `dialog/index.vue`, `dialog/props.ts`.
 4. **S — события.** Мост modals.md: `cancel` / `confirm`, scoped-пропы `#actions`. Зависимости:
@@ -185,12 +186,12 @@
 5. **S — движение.** Reduced motion — короткий fade. Переходы остаются на `--sys-motion-*` (S4 отклонён). Файлы:
    `dialog/_index.scss`, `dialog/index.vue`.
 6. **S — роль `alertdialog`.** По вопросу 2: роль на `<dialog>`, `aria-describedby` на тело.
-7. **L — full-screen.** По вопросу 1: верхняя панель (закрыть, заголовок, подтверждение из
+7. **L — full-screen.** **Отменено** (W31-В, `decisions.md`). По вопросу 1: верхняя панель (закрыть, заголовок, подтверждение из
    `#actions`), токены `fullscreen.*`, переход «выезд снизу», переключение по брейкпойнтам кита
    (`$material-kit-breakpoints`, без JS). Переиспользование: `MButtonIcon`, `MButton`,
    `MDivider`, `MOverlay`. Файлы: `dialog/index.vue` (или подкомпонент `dialog/fullscreen/`, если
    SFC выходит за 400 строк), `dialog/_index.scss`, `shared/constants/messages.ts`.
-8. **M — документация (DC-02…05).** Анатомия и токены из `_index.scss`, пропы `mModalLayerProps` +
+8. **M — документация (DC-02…05).** **Отложено**: документация живёт в docs_v2/v3 вне репо кита. Анатомия и токены из `_index.scss`, пропы `mModalLayerProps` +
    свои. Рецепты: подтверждение, список во всю ширину, форма. Фокус, Esc, прокрутка, что
    настраивается токенами. Старые `click:outside` / `dismiss` из документации убрать.
 

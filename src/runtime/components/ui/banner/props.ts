@@ -8,12 +8,13 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import type { MIconName } from '#kit/components/ui/icon/props'
+import type { MVariant } from '#kit/shared/types/props'
 
 /** Presentation of content and actions. `auto` switches on a CSS threshold. */
 export type MBannerLayout = 'auto' | 'inline' | 'stacked'
 
 /** Neutral surface presets. No accent container exists by design. */
-export type MBannerVariant = 'surface' | 'tonal'
+export type MBannerVariant = Extract<MVariant, 'plain' | 'tonal'>
 
 /** Live-region behavior. `off` suits permanent content already in SSR HTML. */
 export type MBannerAnnounce = 'polite' | 'off'
@@ -30,14 +31,19 @@ export const mBannerProps = {
   icon: { type: [String, Boolean] as PropType<MIconName | false>, default: undefined },
   /** Presentation of the actions row. */
   layout: { type: String as PropType<MBannerLayout>, default: 'auto' },
-  /** Neutral surface preset. */
-  variant: { type: String as PropType<MBannerVariant>, default: 'surface' },
+  /** Neutral surface preset: `plain` is the page's surface with a divider, `tonal` a tinted container. */
+  variant: { type: String as PropType<MBannerVariant>, default: 'plain' },
   /** Renders the dismiss control. */
   closable: { type: Boolean, default: false },
-  /** Accessible name of the dismiss control. */
-  closeLabel: { type: String, default: 'Close' },
-  /** Live-region politeness. */
+  /**
+   * Accessible name of the dismiss control. No default: copy the kit would
+   * invent cannot be in the app's language.
+   */
+  closeLabel: { type: String, default: undefined },
+  /** Announcement when the banner appears. */
   announce: { type: String as PropType<MBannerAnnounce>, default: 'polite' },
+  /** Closing from inside moves focus to what follows the banner; `false` leaves it to the caller. */
+  returnFocus: { type: Boolean, default: true },
 }
 
 export type MBannerProps = ExtractPublicPropTypes<typeof mBannerProps>
@@ -50,10 +56,11 @@ export interface MBannerActionsSlot {
 /** Payload of the whole-control `close` slot. */
 export interface MBannerCloseSlot {
   close: () => void
+  /** Kebab-case keys: the SSR renderer lowercases a camelCase attribute. */
   props: {
-    type: 'button'
-    class: string
-    ariaLabel: string
-    onClick: () => void
+    'type': 'button'
+    'class': string
+    'aria-label': string | undefined
+    'onClick': () => void
   }
 }

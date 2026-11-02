@@ -9,11 +9,11 @@
             Type
           </th>
           <th
-            v-for="size in sizes"
-            :key="size"
+            v-for="density in densities"
+            :key="density"
             scope="col"
           >
-            {{ size }}
+            {{ density }}
           </th>
         </tr>
       </thead>
@@ -26,19 +26,31 @@
             {{ type }}
           </th>
           <td
-            v-for="size in sizes"
-            :key="size"
+            v-for="density in densities"
+            :key="density"
           >
             <MLoading
               :type="type"
-              :size="size"
-              :aria-label="`Loading, ${type} ${size}`"
-              :data-test="`${type}-${size}`"
+              :density="density"
+              :aria-label="`Loading, ${type} ${density}`"
+              :data-test="`${type}-${density}`"
             />
           </td>
         </tr>
       </tbody>
     </table>
+
+    <h2>Contained</h2>
+    <div class="fixture-loading__row">
+      <MLoading
+        v-for="type in types"
+        :key="type"
+        :type="type"
+        contained
+        :aria-label="`Loading, contained ${type}`"
+        :data-test="`contained-${type}`"
+      />
+    </div>
 
     <h2>Inline in text</h2>
     <p
@@ -103,10 +115,10 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import MShape from '#kit/components/ui/shape/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import type { M3ShapeName } from '#kit/assets/icon/shapes'
-import type { MLoadingSize, MLoadingType } from '#kit/components/ui/loading/props'
+import type { MLoadingDensity, MLoadingType } from '#kit/components/ui/loading/props'
 
-const types: MLoadingType[] = ['circular', 'expressive']
-const sizes: MLoadingSize[] = ['small', 'medium', 'large']
+const types: MLoadingType[] = ['spinner', 'shape']
+const densities: MLoadingDensity[] = ['compact', 'default', 'comfortable']
 
 const shapes: M3ShapeName[] = ['circle', 'flower', 'square', 'heart']
 const shape = ref<M3ShapeName>('circle')

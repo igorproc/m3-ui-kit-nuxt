@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { REDUCED_MOTION_QUERY, prefersReducedMotion } from '#kit/utils/motion/shared/reduced-motion'
 import { useReducedMotion } from './useReducedMotion'
 
 const listeners = new Set<(event: MediaQueryListEvent) => void>()
@@ -47,6 +48,22 @@ describe('useReducedMotion', () => {
     second.unmount()
     expect(listeners.size).toBe(0)
 
+    vi.unstubAllGlobals()
+  })
+
+  // B13.3c: one source for the preference — the ref and the instant predicate
+  // that `useVirtualScroll` reads at scroll time ask the same query.
+  it('agrees with the shared predicate and asks the same query', async () => {
+    stubMatchMedia(true)
+    const wrapper = await mountSuspended(Probe)
+    const asked = vi.mocked(window.matchMedia).mock.calls.map(([query]) => query)
+
+    expect(asked).toEqual([REDUCED_MOTION_QUERY])
+    expect(prefersReducedMotion()).toBe(true)
+    expect(vi.mocked(window.matchMedia).mock.calls.at(-1)).toEqual([REDUCED_MOTION_QUERY])
+    expect(wrapper.text()).toBe('true')
+
+    wrapper.unmount()
     vi.unstubAllGlobals()
   })
 })

@@ -39,8 +39,10 @@ export const semanticToTokens = (groups: CustomColorGroup[], isDark: boolean): R
   return tokens
 }
 
-const buildBlock = (definition: 'light' | 'dark', key: string, tokens: Record<string, string>): string => {
-  let css = `[data-definition="${definition}"][data-palette="${key}"] {\n`
+const selector = (definition: string, key: string) => `[data-definition="${definition}"][data-palette="${key}"]`
+
+const buildBlock = (selectors: string, definition: 'light' | 'dark', tokens: Record<string, string>): string => {
+  let css = `${selectors} {\n`
   css += `  color-scheme: ${definition};\n`
   for (const [token, hex] of Object.entries(tokens)) {
     css += `  --md-sys-color-${token}: ${hex};\n`
@@ -54,6 +56,10 @@ const buildBlock = (definition: 'light' | 'dark', key: string, tokens: Record<st
  * Renders the `light` + `dark` `[data-definition][data-palette]` CSS blocks for the
  * active palette. Contrast is already baked into the scheme values (no `[data-contrast]`
  * selector). Semantic colors are merged into both blocks.
+ *
+ * `system` shares the light block and takes the dark one under
+ * `prefers-color-scheme: dark`: the server cannot know the reader's scheme, so the
+ * stylesheet resolves it and the first paint is already right, without script.
  */
 export const buildThemeBlocks = (key: string, scheme: ISchemePair | null | undefined): string => {
   if (!scheme?.light || !scheme?.dark) {
@@ -63,5 +69,9 @@ export const buildThemeBlocks = (key: string, scheme: ISchemePair | null | undef
   const light = { ...schemeToTokens(scheme.light), ...semanticToTokens(scheme.semantic, false) }
   const dark = { ...schemeToTokens(scheme.dark), ...semanticToTokens(scheme.semantic, true) }
 
-  return `${buildBlock('light', key, light)}\n${buildBlock('dark', key, dark)}\n`
+  const lightBlock = buildBlock(`${selector('light', key)},\n${selector('system', key)}`, 'light', light)
+  const darkBlock = buildBlock(selector('dark', key), 'dark', dark)
+  const systemDarkBlock = buildBlock(selector('system', key), 'dark', dark)
+
+  return `${lightBlock}\n${darkBlock}\n@media (prefers-color-scheme: dark) {\n${systemDarkBlock}}\n`
 }

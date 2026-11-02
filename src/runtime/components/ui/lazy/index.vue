@@ -19,6 +19,7 @@
     <div
       v-else-if="view === 'fallback'"
       class="ui-lazy__fallback"
+      :class="{ 'ui-lazy__reveal': isAnimated }"
     >
       <slot
         name="fallback"
@@ -29,6 +30,7 @@
     <div
       v-else-if="view === 'error' && $slots.error"
       class="ui-lazy__error"
+      :class="{ 'ui-lazy__reveal': isAnimated }"
     >
       <slot
         name="error"
@@ -42,7 +44,10 @@
       :key="attempt"
       v-bind="suspenseAttrs"
     >
-      <div class="ui-lazy__content">
+      <div
+        class="ui-lazy__content"
+        :class="{ 'ui-lazy__reveal': isAnimated }"
+      >
         <slot v-bind="slotState" />
       </div>
     </Suspense>
@@ -50,6 +55,7 @@
     <div
       v-if="!$slots.error"
       class="ui-lazy__alert"
+      :class="{ 'ui-lazy__reveal': isAnimated && status === 'error' }"
     >
       <div
         v-bind="alertAttrs"
@@ -72,8 +78,8 @@
 <script setup lang="ts">
 import { computed, onMounted, shallowRef } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
-import { useLazyControl } from '#kit/composables/lazy/useLazyControl'
-import { useLazyWarnings } from '#kit/composables/lazy/useLazyWarnings'
+import { useLazyControl } from '#kit/utils/lazy/useLazyControl'
+import { useLazyWarnings } from '#kit/utils/lazy/useLazyWarnings'
 import { mLazyProps } from './props'
 import type { MLazyEmits, MLazySlots, MLazySlotState } from './props'
 
@@ -114,10 +120,12 @@ onMounted(() => {
   waitedOnClient.value = status.value === 'idle'
 })
 
+const isAnimated = computed(() => props.transition && (waitedOnClient.value || attempt.value > 0))
+
 const rootClasses = computed(() => [
   `ui-lazy--${status.value}`,
   {
-    'ui-lazy--animated': props.transition && (waitedOnClient.value || attempt.value > 0),
+    'ui-lazy--animated': isAnimated.value,
     'ui-lazy--activator': isActivator.value,
   },
 ])
@@ -176,13 +184,12 @@ function toCssSize(value: string | number | undefined) {
     color: g($t, 'alert.message.color');
     overflow-wrap: anywhere;
 
-    @include typescale('body-medium');
+    @include typescale(g($t, 'alert.message.typography'));
   }
 
-  &--animated > &__fallback,
-  &--animated > &__error,
-  &--animated > &__content,
-  &--animated#{&}--error > &__alert {
+  // On the child itself, not under the root modifier, so a nested lazy
+  // does not inherit its parent's reveal.
+  &__reveal {
     animation: ui-lazy-reveal g($t, 'reveal.duration') g($t, 'reveal.easing');
   }
 }

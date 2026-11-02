@@ -3,14 +3,24 @@
     v-if="type === 'linear'"
     v-bind="leafProps"
   >
-    <slot />
+    <template
+      v-if="$slots.default"
+      #default
+    >
+      <slot />
+    </template>
   </ProgressLinear>
 
   <ProgressCircular
     v-else
     v-bind="leafProps"
   >
-    <slot />
+    <template
+      v-if="$slots.default"
+      #default
+    >
+      <slot />
+    </template>
   </ProgressCircular>
 </template>
 
@@ -24,10 +34,12 @@ const props = defineProps(mProgressProps)
 
 const leafProps = computed(() => ({
   value: props.value,
+  max: props.max,
+  valueText: props.valueText,
   indeterminate: props.indeterminate,
-  size: props.size,
+  density: props.density,
   showTrack: props.showTrack,
   ariaLabel: props.ariaLabel,
-  expressive: props.expressive,
+  shape: props.shape,
 }))
 </script>

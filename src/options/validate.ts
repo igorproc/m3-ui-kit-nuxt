@@ -1,3 +1,4 @@
+import { HEX_SEED_PATTERN } from '../runtime/shared/constants/theme'
 import type { MaterialKitOptions } from '../runtime/shared/types/kit'
 
 export interface UndeclaredDefaultPalette {
@@ -24,4 +25,20 @@ export function findUndeclaredDefaultPalette(options: MaterialKitOptions): Undec
     .filter((key): key is string => Boolean(key))
 
   return declared.includes(palette) ? null : { palette, declared }
+}
+
+export interface InvalidSeed {
+  key: string
+  color: string
+}
+
+/**
+ * Lists the themes whose `color` the palette generator cannot parse (it takes a HEX
+ * seed of 3, 6 or 8 digits). At runtime such a seed throws inside the theme plugin,
+ * which degrades to "no palette", so the module refuses to build instead.
+ */
+export function findInvalidSeeds(options: MaterialKitOptions): InvalidSeed[] {
+  return (options.theme?.themes ?? [])
+    .filter(theme => theme?.color !== undefined && !HEX_SEED_PATTERN.test(theme.color))
+    .map(theme => ({ key: theme.key, color: theme.color! }))
 }

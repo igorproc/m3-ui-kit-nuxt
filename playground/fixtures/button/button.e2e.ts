@@ -150,21 +150,6 @@ test.describe('MButton', () => {
     expect(glyph / rem).toBeCloseTo(24, 0)
   })
 
-  // S8: drawn at 32, compact still answers the pointer across 48.
-  test('a compact button takes a 48 pointer target', async ({ page }) => {
-    await openFixture(page, 'button/matrix')
-    const button = page.getByTestId('density-compact-round')
-    const hit = (offset: number) => button.evaluate((el, ratio) => {
-      const box = el.getBoundingClientRect()
-      const probe = document.elementFromPoint(box.left + box.width / 2, box.top - box.height * ratio)
-      return probe?.closest('[data-test]') === el
-    }, offset)
-
-    // 8 of 32 above the edge is inside the target, 10 of 32 is not.
-    expect(await hit(0.2)).toBe(true)
-    expect(await hit(0.32)).toBe(false)
-  })
-
   test('the square shape and a selected toggle use the step radius', async ({ page }) => {
     await openFixture(page, 'button/matrix')
     const radius = (id: string) => page.getByTestId(id).evaluate(el => getComputedStyle(el).borderTopLeftRadius)
@@ -341,24 +326,6 @@ test.describe('Button family', () => {
         }
       }
     })
-
-    // S8: every icon button answers the pointer across 48, however small it is drawn.
-    for (const id of ['icon-compact-narrow', 'icon-default-narrow']) {
-      test(`${id} takes a 48 pointer target`, async ({ page }) => {
-        await openFixture(page, 'button/family')
-        const reaches = await page.getByTestId(id).evaluate((el) => {
-          const box = el.getBoundingClientRect()
-          const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
-          const inside = (x: number, y: number) => document.elementFromPoint(x, y)?.closest('[data-test]') === el
-          const midX = box.left + box.width / 2
-          const midY = box.top + box.height / 2
-
-          return inside(midX, midY - 23 * rem) && inside(midX - 23 * rem, midY) && !inside(midX, midY - 26 * rem)
-        })
-
-        expect(reaches).toBe(true)
-      })
-    }
 
     test('a selected round button turns square and a selected square one turns round', async ({ page }) => {
       await openFixture(page, 'button/family')

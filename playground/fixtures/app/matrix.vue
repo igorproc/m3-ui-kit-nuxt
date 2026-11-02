@@ -1,5 +1,8 @@
 <template>
-  <section class="fixture-app-matrix">
+  <section
+    id="main"
+    class="fixture-app-matrix"
+  >
     <h1>MApp — application boundary</h1>
 
     <h2>Theme definition</h2>

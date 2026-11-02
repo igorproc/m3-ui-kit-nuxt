@@ -15,7 +15,6 @@
 import type { ExtractPublicPropTypes, PropType, VNode } from 'vue'
 import { fieldDensityProp, mFieldProps } from '#kit/components/ui/text-field/props'
 import type { MFieldMessageSlotProps } from '#kit/components/ui/text-field/props'
-import { MESSAGES } from '#kit/shared/constants/messages'
 import type { NumberStepperAttrs } from '#kit/composables/number-input/useNumberInputControl'
 
 export type MNumberInputVariant = 'filled' | 'outlined'
@@ -61,12 +60,15 @@ export const mNumberInputProps = {
    * silently rescaling a value the user typed is worse than not converting.
    */
   units: { type: Array as PropType<MNumberInputUnit[]>, default: undefined },
-  /** Accessible name of the unit menu trigger. */
-  unitLabel: { type: String, default: MESSAGES.numberUnit },
-  /** Accessible name of the increase control. */
-  incrementLabel: { type: String, default: MESSAGES.numberIncrement },
-  /** Accessible name of the decrease control. */
-  decrementLabel: { type: String, default: MESSAGES.numberDecrement },
+  /**
+   * Leads the accessible name of the unit menu trigger, before the unit it
+   * shows. The kit ships no copy of its own: without it dev warns.
+   */
+  unitLabel: { type: String, default: undefined },
+  /** Accessible name of the increase control. No default: without it dev warns. */
+  incrementLabel: { type: String, default: undefined },
+  /** Accessible name of the decrease control. No default: without it dev warns. */
+  decrementLabel: { type: String, default: undefined },
 }
 
 export type MNumberInputProps = ExtractPublicPropTypes<typeof mNumberInputProps>

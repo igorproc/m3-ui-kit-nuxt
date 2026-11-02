@@ -52,6 +52,16 @@
       data-test="segmented-many"
     />
 
+    <!-- N.4: a table cell or a timeline item breaks its content anywhere; a segment label must not. -->
+    <div class="fixture-stress__narrow fixture-stress__narrow--anywhere">
+      <MButtonSegmented
+        v-model="segment"
+        :items="manySegments"
+        aria-label="Segments in a column that breaks anywhere"
+        data-test="segmented-anywhere"
+      />
+    </div>
+
     <h2>Loading keeps the width</h2>
     <MButton
       data-test="toggle-loading"
@@ -155,6 +165,10 @@ function submit() {
 
   &__narrow {
     width: 160rem;
+
+    &--anywhere {
+      overflow-wrap: anywhere;
+    }
   }
 }
 

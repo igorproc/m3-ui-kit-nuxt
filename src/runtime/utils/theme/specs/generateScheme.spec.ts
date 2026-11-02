@@ -53,6 +53,18 @@ describe('generateScheme', () => {
     expect(css).toContain('--md-sys-color-on-warning-container:')
     expect(css).toContain('--md-sys-color-info-container:')
   })
+
+  // Q5-А: a seed set to `false` is removed, globally or for one theme.
+  it('drops a semantic seed set to false', () => {
+    const global = generateScheme({ key: 't', name: 't', color: SEED }, { semanticColors: { success: '#2e7d32', info: false } })!
+    expect(global.semantic.map(group => group.color.name)).toEqual(['success'])
+
+    const perTheme = generateScheme(
+      { key: 't', name: 't', color: SEED, semanticColors: { success: false } },
+      { semanticColors: { success: '#2e7d32', warning: '#ed6c02' } },
+    )!
+    expect(perTheme.semantic.map(group => group.color.name)).toEqual(['warning'])
+  })
 })
 
 describe('buildThemeBlocks', () => {
@@ -70,6 +82,19 @@ describe('buildThemeBlocks', () => {
     expect(light).toContain('color-scheme: light;')
     expect(light).not.toContain('color-scheme: dark;')
     expect(dark).toContain('color-scheme: dark;')
+  })
+
+  // Q1-Б: `system` is resolved by the stylesheet, so the first paint follows the reader.
+  it('resolves the system definition with prefers-color-scheme', () => {
+    const scheme = generateScheme({ key: 't', name: 't', color: SEED })!
+    const css = buildThemeBlocks('brand', scheme)
+    const lightBlock = css.slice(0, css.indexOf('}'))
+    const media = css.slice(css.indexOf('@media (prefers-color-scheme: dark)'))
+
+    expect(lightBlock).toContain('[data-definition="system"][data-palette="brand"]')
+    expect(media).toContain('[data-definition="system"][data-palette="brand"]')
+    expect(media).toContain('color-scheme: dark;')
+    expect(media).toContain(`--md-sys-color-primary: ${schemeToTokens(scheme.dark).primary};`)
   })
 
   it('returns empty string for a null scheme', () => {

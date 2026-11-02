@@ -3,9 +3,6 @@ import { expect, test } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
 import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture } from '../../e2e/support'
 
-/** See dropdown.e2e.ts: MMenu's role="menu" surface around the listbox. */
-const KNOWN_MENU_VIOLATION = ['aria-required-children: .ui-menu__surface']
-
 async function openPanelViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page })
     .exclude('nuxt-devtools-frame')
@@ -43,7 +40,8 @@ test.describe('MAutocomplete', () => {
         // Focus alone opens only from a pointer (`openOnFocus: 'pointer'`).
         await combobox(page, id).click()
         await expect(combobox(page, id)).toHaveAttribute('aria-expanded', 'true')
-        expect(await openPanelViolations(page)).toEqual(KNOWN_MENU_VIOLATION)
+        // Q16-Б: the listbox no longer sits inside a role="menu" surface.
+        expect(await openPanelViolations(page)).toEqual([])
       })
     }
   }
@@ -98,6 +96,22 @@ test.describe('MAutocomplete', () => {
     await expect(field).toHaveValue('Berlin')
     await expect(field).toHaveAttribute('aria-expanded', 'false')
     await expect(field).toBeFocused()
+  })
+
+  test('a finished IME composition opens the list it typed', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'CDP composition is Chromium-only')
+    await openFixture(page, 'autocomplete/matrix')
+    const field = combobox(page, 'enabled-filled')
+    await field.focus()
+    await page.keyboard.press('Escape')
+
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send('Input.imeSetComposition', { text: 'be', selectionStart: 2, selectionEnd: 2 })
+    await expect(field).toHaveAttribute('aria-expanded', 'false')
+    await cdp.send('Input.insertText', { text: 'ber' })
+
+    await expect(field).toHaveAttribute('aria-expanded', 'true')
+    await expect(listbox(page).getByRole('option')).toHaveText([/Berlin/, /Bern/])
   })
 
   test('Home and End stay with the caret', async ({ page }) => {
@@ -244,12 +258,12 @@ test.describe('MAutocomplete · behaviour that used to slip (M3-polish)', () => 
     await openFixture(page, 'autocomplete/matrix')
     await rootOf(page, 'min-length-filled').locator('.ui-autocomplete__toggle').click()
     await expect(combobox(page, 'min-length-filled')).toHaveAttribute('aria-expanded', 'false')
-    await expect(page.locator('.ui-menu__surface')).toHaveCount(0)
+    await expect(page.locator('.ui-popover__surface')).toHaveCount(0)
 
     await openFixture(page, 'autocomplete/cases')
     await rootOf(page, 'hint').locator('.ui-autocomplete__toggle').click()
     await expect(combobox(page, 'hint')).toHaveAttribute('aria-expanded', 'true')
-    await expect(page.locator('.ui-menu__surface')).toContainText('Type 2 more')
+    await expect(page.locator('.ui-popover__surface')).toContainText('Type 2 more')
   })
 
   for (const key of ['Enter', 'Space']) {

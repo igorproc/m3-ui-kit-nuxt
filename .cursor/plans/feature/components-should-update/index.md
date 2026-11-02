@@ -18,7 +18,7 @@
 |---|---|
 | Эталон — последняя M3 (Material You / Expressive); планы про компоненты кита, не про docs | [common.md](common.md) §1 |
 | Компоненты, которых нет в M3, развиваются в текущем видении (вердикт `авторский`), без редизайна | [common.md](common.md) §1, §3 |
-| Expressive-анимации в вебе не делаем: пружины (S4) и морф формы (S3) отклонены; статичная форма состояния допустима | [common.md](common.md) S3, S4 |
+| Expressive-анимации в вебе не делаем: пружины (S4) и морф формы (S3) отклонены; статичная форма состояния допустима. Исключения — toggle-кнопки и FAB menu (пружины в CSS `linear()`) | [common.md](common.md) S3, S4; `docs/system/ru-RU/decisions.md` |
 | Ось масштаба — только `density` с тремя ступенями `compact \| default \| comfortable`; XS–XL нет. Кнопки: 32 / 40 / 56 | [common.md](common.md) S5 |
 | `tonal` у кнопок — `<role>-container`, как в ките | [button/index.md](button/index.md) |
 | Split-кнопка без «круглого» открытого состояния | [button/split.md](button/split.md) |
@@ -32,7 +32,7 @@
 | `совпадает` | 1 | shape |
 | `дрейф` | 20 | layout, icon, tabs, card, divider, sheet (bottom), dialog, tooltip (plain), checkbox, radio, switch, badge, text-field, textarea, dropdown, autocomplete, app-bar, progress, loading, segmented |
 | `переработка` | 18 | button, icon button, FAB, extended FAB, split, fab-menu, chip, slider, navigation-bar, navigation-rail, navigation-drawer, menu, list, toolbar, snackbar, search, date-picker, time-picker |
-| `нет в ките` | 4 | button group, side sheet, rich tooltip, carousel |
+| `нет в ките` | 4 | button group, side sheet, rich tooltip, carousel (на 2026-10-07; с тех пор сделаны button group — `MButtonGroup` — и rich tooltip — `MTooltip variant="rich"`) |
 | `авторский` | 27 | list-subheader, surface, overlay, app, lazy, form-renderer, system-bar, chip-group, rating, selection-group, selection-item, otp-input, number-input, expansion-panel(s), alert, banner, table, pagination, breadcrumbs, timeline, avatar, color-picker, color-input, file-input, file-upload, hotkey, confirm-edit (снят) |
 
 ## Дефекты, найденные рендерами (не было в аудите)
@@ -68,7 +68,7 @@
 | MButtonExtendedFab | переработка | [extended-fab](button/extended-fab.md) | `button-fab` |
 | MButtonSplit | переработка | [split](button/split.md) | `button-split` |
 | MButtonSegmented | дрейф | [segmented](button/segmented.md) | `button` |
-| MButtonGroup | нет в ките | [group](button/group.md) | `button-group` |
+| MButtonGroup | нет в ките → сделан | [group](button/group.md) | `button-group` |
 | MFabMenu | переработка | [fab-menu](button/fab-menu.md) | `fab-menu` |
 
 ### Поля и пикеры — `components-should-update/inputs/`
@@ -124,7 +124,7 @@
 | MDialog | дрейф | [dialog](overlays/dialog.md) | `dialog` |
 | MSheet (+ side sheet) | дрейф / нет в ките | [sheet](overlays/sheet.md) | `sheet` |
 | MMenu | переработка | [menu](overlays/menu.md) | `menu` |
-| MTooltip | дрейф / rich нет в ките | [tooltip](overlays/tooltip.md) | `tooltip` |
+| MTooltip | дрейф / rich сделан | [tooltip](overlays/tooltip.md) | `tooltip` |
 | `$modals` | — | [modals](overlays/modals.md) (прежний план API) | — |
 | MOverlay | авторский | [overlay](overlays/overlay.md) | — |
 

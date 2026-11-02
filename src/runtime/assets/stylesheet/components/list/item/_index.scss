@@ -13,6 +13,11 @@
 $-on-surface: map.get($theme-color-link, on-surface);
 $-on-surface-variant: map.get($theme-color-link, on-surface-variant);
 $-on-secondary-container: map.get($theme-color-link, on-secondary-container);
+
+// 10 (`ItemTopSpace` / `ItemBottomSpace`) is off the 4-unit scale. M3 drops
+// it to 12 for a precise pointer; the kit does not, because density is a
+// choice and not something derived from the device (decisions.md).
+$-padding-block: calc(#{spacing(8)} + #{spacing(2)});
 $tokens: (
   // Vertical scale. The steps mirror the field family's density ladder
   // (-12rem / +8rem around `default`), so a one-line row and a field of the
@@ -21,32 +26,44 @@ $tokens: (
   density: (
     compact: (
       height: (one: 44rem, two: 60rem, three: 76rem),
+      padding: (block: calc(#{spacing(4)} + #{spacing(2)})),
+      supporting: (gap: spacing(0)),
     ),
     default: (
       height: (one: 56rem, two: 72rem, three: 88rem),
+      padding: (block: $-padding-block),
+      supporting: (gap: spacing(4)),
     ),
     comfortable: (
       height: (one: 64rem, two: 80rem, three: 96rem),
+      padding: (block: $-padding-block),
+      supporting: (gap: spacing(4)),
     ),
   ),
-  // 10 (`ItemTopSpace` / `ItemBottomSpace`) is off the 4-unit scale. M3 drops
-  // it to 12 for a precise pointer; the kit does not, because density is a
-  // choice and not something derived from the device (decisions.md).
   padding: (
     leading: spacing(16),
     trailing: spacing(16),
-    top: calc(#{spacing(8)} + #{spacing(2)}),
-    bottom: calc(#{spacing(8)} + #{spacing(2)}),
     between: spacing(12),
   ),
 
   container: (
     color: transparent,
     shape: map.get($theme-shape-link, extra-small),
-    selected: (
-      color: map.get($theme-color-link, secondary-container),
-      shape: map.get($theme-shape-link, large),
+  ),
+
+  selected: (
+    container: (color: map.get($theme-color-link, secondary-container)),
+    content: (
+      label: (color: $-on-secondary-container),
+      supporting: (color: $-on-secondary-container),
+      overline: (color: $-on-secondary-container),
+      leading: (icon: (color: $-on-secondary-container)),
+      trailing: (
+        icon: (color: $-on-secondary-container),
+        supporting: (color: $-on-secondary-container),
+      ),
     ),
+    shape: map.get($theme-shape-link, large),
   ),
 
   // Every part dims on its own; a selected row keeps a faint container so
@@ -68,41 +85,39 @@ $tokens: (
     text: (
       color: $-on-surface,
       typography: map.get($theme-typography-link, body, large),
-      selected: (color: $-on-secondary-container),
     ),
   ),
   supporting: (
-    gap: spacing(4),
     text: (
       color: $-on-surface-variant,
       typography: map.get($theme-typography-link, body, medium),
-      selected: (color: $-on-secondary-container),
     ),
   ),
   overline: (
     gap: spacing(4),
     color: $-on-surface-variant,
     typography: map.get($theme-typography-link, label, small),
-    selected: (color: $-on-secondary-container),
   ),
 
   leading: (
     icon: (
       color: $-on-surface-variant,
       size: 24rem,
-      selected: (color: $-on-secondary-container),
     ),
     // `<MAvatar>` sizes itself: its default density and shape (40, full) are
     // the M3 leading avatar, and a consumer's own density and shape hold.
+    // Bare media rests on a tone until its pixels arrive (CT-09).
     image: (
       width: 56rem,
       height: 56rem,
       shape: map.get($theme-shape-link, small),
+      placeholder: map.get($theme-color-link, surface-container-highest),
     ),
     video: (
       width: 100rem,
       height: 56rem,
       shape: map.get($theme-shape-link, small),
+      placeholder: map.get($theme-color-link, surface-container-highest),
     ),
   ),
   trailing: (
@@ -110,13 +125,11 @@ $tokens: (
     icon: (
       color: $-on-surface-variant,
       size: 24rem,
-      selected: (color: $-on-secondary-container),
     ),
     supporting: (
       text: (
         color: $-on-surface-variant,
         typography: map.get($theme-typography-link, label, small),
-        selected: (color: $-on-secondary-container),
       ),
     ),
   ),

@@ -47,25 +47,37 @@ $tokens: (
   ),
 
   unselected: (
-    content: (
-      color: $on-surface,
-      disabled: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
-    ),
+    content: (color: $on-surface),
   ),
 
   // Selected segment per MD3 role: its container.
   selected: (
-    primary: (container: map.get($theme-color-link, 'primary-container'), content: map.get($theme-color-link, 'on-primary-container')),
-    secondary: (container: map.get($theme-color-link, 'secondary-container'), content: map.get($theme-color-link, 'on-secondary-container')),
-    tertiary: (container: map.get($theme-color-link, 'tertiary-container'), content: map.get($theme-color-link, 'on-tertiary-container')),
-    error: (container: map.get($theme-color-link, 'error-container'), content: map.get($theme-color-link, 'on-error-container')),
+    container: (
+      color: (
+        primary: map.get($theme-color-link, 'primary-container'),
+        secondary: map.get($theme-color-link, 'secondary-container'),
+        tertiary: map.get($theme-color-link, 'tertiary-container'),
+        error: map.get($theme-color-link, 'error-container'),
+      ),
+    ),
+    content: (
+      color: (
+        primary: map.get($theme-color-link, 'on-primary-container'),
+        secondary: map.get($theme-color-link, 'on-secondary-container'),
+        tertiary: map.get($theme-color-link, 'on-tertiary-container'),
+        error: map.get($theme-color-link, 'on-error-container'),
+      ),
+    ),
   ),
 
   // A disabled segment that is also selected keeps its check mark but loses the
   // role colour, so it cannot pass for an active choice.
   disabled: (
-    selected: (container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent))),
-    content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
+    unselected: (content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent))),
+    selected: (
+      container: (color: color-mix(in srgb, $on-surface state-opacity(disabled-container), transparent)),
+      content: (color: color-mix(in srgb, $on-surface state-opacity(disabled-content), transparent)),
+    ),
   ),
 
   motion: (

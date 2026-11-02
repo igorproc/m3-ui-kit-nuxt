@@ -5,12 +5,15 @@
  * Relative paths on purpose: the `#kit` alias is only known inside a Nuxt app.
  */
 
-export type { MButtonDensity, MButtonProps, MButtonShape, MButtonTag, MButtonType, MIconButtonVariant, MIconButtonWidth } from '../../components/ui/button/props'
+export type { MButtonDensity, MButtonProps, MButtonShape, MButtonTag, MButtonType, MButtonVariant, MIconButtonVariant, MIconButtonWidth } from '../../components/ui/button/props'
 export type { MFabProps, MFabVariant } from '../../components/ui/button/fab/props'
 export type { MExtendedFabProps } from '../../components/ui/button/extended-fab/props'
 export type { MSplitButtonProps, MSplitButtonVariant } from '../../components/ui/button/split/props'
 export type { MSegmentedItem, MSegmentedModelValue, MSegmentedProps } from '../../components/ui/button/segmented/props'
 export type { MButtonGroupItem, MButtonGroupModelValue, MButtonGroupProps, MButtonGroupVariant } from '../../components/ui/button/group/props'
 export type { MFabMenuAlign, MFabMenuItem, MFabMenuProps } from '../../components/ui/fab-menu/props'
-export type { MLoadingProps, MLoadingSize, MLoadingType } from '../../components/ui/loading/props'
+export type { MLoadingDensity, MLoadingProps, MLoadingType } from '../../components/ui/loading/props'
 export type { MTableAlign, MTableDensity, MTablePageRange, MTableProps, SortDirection, SortState, TableColumn, TableData } from '../../components/ui/table/types'
+export type { MSearchEmits, MSearchItem, MSearchItemResolver, MSearchMessages, MSearchProps, MSearchView } from '../../components/ui/search/props'
+export type { MSearchListProps } from '../../components/ui/search/list/props'
+export type { MSearchListItemEmits, MSearchListItemProps } from '../../components/ui/search/list/item/props'

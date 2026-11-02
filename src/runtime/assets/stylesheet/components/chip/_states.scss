@@ -1,0 +1,309 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// CHIP · PARTS, ROLES AND STATES
+// ==========================================
+// Included inside `.ui-chip`. One state layer (`::before`) in the content
+// colour answers hover, focus and press for every type, variant and the
+// selection; the container keeps its own tone, so no state swaps the fill.
+
+$types: (assist, filter, input, suggestion);
+
+@mixin layer($t) {
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentcolor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity g($t, 'motion.state.duration') g($t, 'motion.state.easing');
+  }
+
+  @include can-hover {
+    &:hover:not(.ui-chip--disabled, .ui-chip--blocked)::before {
+      opacity: g($t, 'state.layer.opacity.hover');
+    }
+  }
+
+  &:focus-visible::before,
+  &:has(.ui-chip__action:focus-visible)::before {
+    opacity: g($t, 'state.layer.opacity.focus');
+  }
+
+  &:active:not(.ui-chip--disabled, .ui-chip--blocked)::before {
+    opacity: g($t, 'state.layer.opacity.active');
+  }
+}
+
+// Start and end padding follow what stands at the edge (`Chip.kt`).
+@mixin padding($t) {
+  &--leading {
+    padding-inline-start: g($t, 'padding.beside');
+  }
+
+  &--trailing {
+    padding-inline-end: g($t, 'padding.beside');
+  }
+
+  &--input {
+    padding-inline: g($t, 'padding.input.plain');
+  }
+
+  &--input.ui-chip--leading {
+    padding-inline-start: g($t, 'padding.beside');
+  }
+
+  &--input.ui-chip--avatar {
+    padding-inline-start: g($t, 'padding.input.avatar');
+  }
+
+  &--input.ui-chip--trailing {
+    padding-inline-end: g($t, 'padding.beside');
+  }
+
+  &__leading {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    inline-size: g($t, 'icon.size');
+    margin-inline-end: g($t, 'gap');
+    font-size: g($t, 'icon.size');
+    transition:
+      inline-size g($t, 'motion.enter.duration') g($t, 'motion.enter.easing'),
+      margin g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
+  }
+
+  // An unselected filter chip without an icon keeps the box at zero width.
+  &:not(.ui-chip--leading) .ui-chip__leading {
+    inline-size: 0;
+    margin-inline-end: 0;
+  }
+
+  &--avatar .ui-chip__leading {
+    inline-size: g($t, 'avatar.size');
+  }
+
+  &__check,
+  &__icon {
+    display: inline-flex;
+  }
+
+  &__check {
+    animation: ui-chip-check g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
+  }
+
+  &__avatar {
+    display: inline-flex;
+    inline-size: g($t, 'avatar.size');
+    block-size: g($t, 'avatar.size');
+    overflow: hidden;
+    border-radius: g($t, 'avatar.shape');
+  }
+
+  &__label {
+    display: block;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__trailing {
+    margin-inline-start: g($t, 'gap');
+  }
+
+  // The tooltip of a cut-off label stands between the chip and its label: it
+  // shrinks as the label does, or the ellipsis is lost. Compound selector: a
+  // class on another component's root must outrank its own rules in any order.
+  &__tip.ui-tooltip,
+  &__tip .ui-tooltip__trigger {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  @keyframes ui-chip-check {
+    from {
+      opacity: 0;
+      scale: 0.5;
+    }
+  }
+}
+
+@mixin roles($t) {
+  @each $type in $types {
+    &--#{$type} {
+      color: g($t, 'label.#{$type}');
+    }
+
+    &--#{$type} .ui-chip__icon {
+      color: g($t, 'icon.#{$type}');
+    }
+  }
+
+  &--outlined {
+    border-color: g($t, 'outlined.color');
+  }
+
+  &--outlined:focus-visible,
+  &--outlined:has(.ui-chip__action:focus-visible) {
+    border-color: g($t, 'outlined.focus.other');
+  }
+
+  &--assist.ui-chip--outlined:focus-visible {
+    border-color: g($t, 'outlined.focus.assist');
+  }
+
+  &--elevated {
+    background-color: g($t, 'elevated.color');
+    box-shadow: g($t, 'elevated.rest');
+
+    @include can-hover {
+      &:hover:not(.ui-chip--disabled, .ui-chip--blocked) {
+        box-shadow: g($t, 'elevated.hover');
+      }
+    }
+
+    &:active:not(.ui-chip--disabled, .ui-chip--blocked) {
+      box-shadow: g($t, 'elevated.pressed');
+    }
+  }
+
+  &--selected {
+    border-color: transparent;
+    background-color: g($t, 'selected.container.color');
+    color: g($t, 'selected.content.color');
+
+    .ui-chip__check {
+      color: g($t, 'selected.content.icon.color');
+    }
+  }
+
+  &--selected.ui-chip--input .ui-chip__icon {
+    color: g($t, 'selected.content.icon.input');
+  }
+
+  @include can-hover {
+    &--selected.ui-chip--outlined:hover:not(.ui-chip--disabled, .ui-chip--blocked) {
+      box-shadow: g($t, 'selected.container.elevation.hover');
+    }
+  }
+
+  // Disabled by roles: content and edge fade, a filled container turns to a
+  // faint on-surface, and nothing is raised.
+  &--disabled,
+  &--disabled .ui-chip__icon,
+  &--disabled .ui-chip__check {
+    color: g($t, 'disabled.content');
+  }
+
+  &--disabled.ui-chip--outlined {
+    border-color: g($t, 'disabled.outline');
+  }
+
+  &--disabled:is(.ui-chip--elevated, .ui-chip--selected) {
+    background-color: g($t, 'disabled.container');
+    box-shadow: none;
+  }
+
+  &--disabled .ui-chip__avatar {
+    opacity: state-opacity(disabled-content);
+  }
+}
+
+// `removal="button"`: the main action spans the chip (its `::after` is the
+// hit area and carries the ring), the remove action sits on top of it.
+@mixin multi($t) {
+  &__action,
+  &__remove {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: inherit;
+    outline: none;
+  }
+
+  &__action {
+    min-inline-size: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+    }
+
+    &:focus-visible::after {
+      @include focus-ring;
+    }
+
+    @include touch-target($pseudo: before);
+  }
+
+  &__remove {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-inline-start: g($t, 'gap');
+    border-radius: g($t, 'avatar.shape');
+    font-size: g($t, 'icon.size');
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: calc((100% - #{g($t, 'remove.layer.size')}) / 2);
+      border-radius: inherit;
+      background-color: currentcolor;
+      opacity: 0;
+      transition: opacity g($t, 'motion.state.duration') g($t, 'motion.state.easing');
+    }
+
+    @include can-hover {
+      &:hover:not(:disabled)::before {
+        opacity: g($t, 'state.layer.opacity.hover');
+      }
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    @include touch-target;
+  }
+}
+
+// The transparent border turns into the chip's edge; selection is only a
+// fill, and opacity would dim GrayText below the user's palette.
+@mixin forced {
+  @include forced-colors {
+    &--elevated {
+      border-color: ButtonText;
+    }
+
+    &--selected {
+      background-color: Highlight;
+      border-color: Highlight;
+      color: HighlightText;
+    }
+
+    &--disabled,
+    &--blocked {
+      opacity: 1;
+      border-color: GrayText;
+      color: GrayText;
+    }
+
+    &--selected.ui-chip--disabled {
+      background-color: GrayText;
+      color: Canvas;
+    }
+  }
+}

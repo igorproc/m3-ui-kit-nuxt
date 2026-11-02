@@ -39,10 +39,10 @@ The list of selectable palettes. Each entry:
 | :--- | :--- | :--- |
 | `key` | `string` | Identifier; becomes `data-palette="<key>"` on `<html>` |
 | `name` | `string` | Display name, for your own theme picker |
-| `color` | `string` | HEX **seed**; the whole MD3 tonal palette is derived from it |
+| `color` | `string` | HEX **seed** (3, 6 or 8 digits, `#` optional); the whole MD3 tonal palette is derived from it. Anything else stops the build |
 | `definedInScss` | `boolean` | The palette is already written by hand in static SCSS — skip generation |
 | `variant` | `TThemeVariant` | MCU scheme variant, default `tonalSpot` |
-| `contrast` | `TThemeContrast` | Build-time contrast for this palette; runtime may override |
+| `contrast` | `TThemeContrast` | This palette's contrast, used while the visitor has not chosen one (see below) |
 | `neutralChroma` | `number` | Chroma of the neutral palettes, overriding the variant's |
 | `chroma` | `number` | Overall chroma for primary/secondary/tertiary |
 | `semanticColors` | `TSemanticColors` | Per-theme semantic overrides, merged over the global map |
@@ -54,7 +54,13 @@ Available variants: `tonalSpot`, `neutral`, `vibrant`, `expressive`, `monochrome
 The kit always ships one built-in palette, `_m3-fallback` — a grey `definedInScss` theme that
 keeps the app rendering when nothing else matches. Because Nuxt merges module defaults with
 your config by concatenating arrays, it stays in the list next to yours; set
-`theme.default.palette` to your own key so it is not the one that shows up first.
+`theme.default.palette` to your own key so it is not the one that shows up first. It defines
+every role a generated palette has, `scrim` and the `success`/`warning`/`info` roles included.
+
+A palette that cannot be rendered is never used: a cookie naming a key that is not in
+`theme.themes`, or a custom seed that is not a HEX colour, resolves to `theme.default.palette`
+(and `setCustomColor()` ignores a value that is not a HEX seed), so the page never loses its
+colour tokens.
 
 ### `theme.default`
 
@@ -64,20 +70,32 @@ Build-time defaults, used until the visitor's cookies say otherwise.
 | :--- | :--- | :--- |
 | `definition` | `'light' \| 'dark' \| 'system'` | `'dark'` |
 | `palette` | `string` | `'_m3-fallback'` |
-| `contrast` | `'standard' \| 'medium' \| 'high' \| number` | `'medium'` |
+| `contrast` | `'standard' \| 'medium' \| 'high' \| number` | `'standard'` |
 
-`'system'` resolves against the visitor's `prefers-color-scheme`. A numeric contrast is
-passed through to MCU clamped to `-1..1`; the named levels map to `0`, `0.5` and `1`.
+`'system'` follows the visitor's `prefers-color-scheme` in CSS: `<html>` keeps
+`data-definition="system"`, and each palette ships its dark tokens for it under
+`@media (prefers-color-scheme: dark)`. The server cannot know the setting, so this is what
+makes the first paint right without a flash; `theme.resolvedDefinition` still reports the
+resolved `light`/`dark` to script once the page is mounted. Your own CSS that keys on
+`[data-definition="dark"]` should use the same media query for `system`. Palettes written
+with the `theme-definition` mixin (the `definedInScss` way) cover `system` themselves.
 
-> `theme.default.variant` and `theme.default.neutralChroma` exist in the types but are not
-> read by the runtime yet — set them per theme in `theme.themes` instead.
+Contrast is resolved in this order: the visitor's choice (the contrast cookie, written by
+`setContrast()`), then the active palette's own `contrast`, then `theme.default.contrast`,
+then `standard`. A numeric contrast is passed through to MCU clamped to `-1..1`; the named
+levels map to `0`, `0.5` and `1`.
+
+The variant and the neutral chroma have no app-wide default: set them per theme in
+`theme.themes`.
 
 ### `theme.semanticColors` / `theme.semanticBlend`
 
 Extra named seeds harmonized into every palette, so `success`/`warning`/`info` shift with
-the active theme instead of staying fixed brand colors. Defaults are
-`{ success: '#2e7d32', warning: '#ed6c02', info: '#0288d1' }` with blending on. Pass
-`{ color, blend }` per entry to keep one of them unharmonized.
+the active theme instead of staying fixed brand colors. The built-in seeds are
+`{ success: '#2e7d32', warning: '#ed6c02', info: '#0288d1' }` with blending on; your map is
+merged over them, so it adds seeds or replaces one by name, and `false` removes one
+(`{ info: false }`). A theme's own `semanticColors` is merged over the result the same way.
+Pass `{ color, blend }` per entry to keep one of them unharmonized.
 
 ---
 
@@ -135,7 +153,10 @@ cookie: {
 ```
 
 Cookies are written with `path: '/'` and a one-year `maxAge`. Their contents are trusted as
-written — there is no dictionary validation — with one exception, described next.
+written — there is no dictionary validation — except for the palette: one that cannot be
+rendered falls back to the default (see [`theme.themes`](#themethemes)), and `restrict`
+narrows it further, described next. The contrast cookie is not written until the visitor
+chooses a contrast, so the palette's own contrast applies until then.
 
 ---
 
@@ -150,8 +171,8 @@ restrict: { customPalette: true }
 `customPalette` turns off runtime palettes generated from an arbitrary HEX seed or an image.
 
 The lock is enforced at resolve time, not just in the UI. Under it only palettes declared in
-`theme.themes` may be used: a cookie claiming a custom seed — or naming a key that is not
-declared — resolves to `theme.default.palette` instead. `setCustomColor()` and
+`theme.themes` may be used: a cookie claiming a custom seed, even a valid one, resolves to
+`theme.default.palette` instead (an undeclared key does so with or without the lock). `setCustomColor()` and
 `setColorFromImage()` become no-ops that leave the cookie untouched, and `setVariant()` /
 `setNeutralChroma()` write through the sanitized state, so the cookie cannot accumulate
 custom-palette flags the runtime is required to ignore.

@@ -2,7 +2,7 @@
 
 <identity>M3: Styles → Shape → Shape library (M3 Expressive, 35 фигур) · Исходник: Compose `MaterialShapes.kt`, пружины `ExpressiveMotionTokens` · Код: `src/runtime/components/ui/shape/index.vue`, `src/runtime/assets/icon/shapes.ts`, `src/runtime/composables/useShapeMorph.ts`, `src/runtime/utils/motion/` · Аудит: `data/shape.json` · Тип: public, декоративный примитив</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Сделано: фигура по умолчанию скрыта от AT, проп `label` даёт `role="img"` и имя; общий кэш интерполяторов (только на клиенте, ограничен 64 парами); reduced motion укорачивает морф до `short2` без крена вместо мгновенного скачка; viewBox — константа `M3_SHAPE_SIZE`; таблица сверки `M3_SPRING` в спеке (не сверена с Compose). Перенесены ClamShell (нет кэша Gradle) и документация (docs_v2 вне репо).</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделано: ClamShell по геометрии Compose `MaterialShapes.clamShell()` (36 фигур: 35 Compose + `hexagon`), фигура скрыта от AT / `label` → `role="img"`, общий кэш интерполяторов, reduced motion по правилу кита (`reduceTransition`: дольше `short4` → `short2`, без крена), пружины сверены с `StandardMotionTokens`/`ExpressiveMotionTokens` material3 1.5.0-alpha22 (переход `expressive` — сознательно 0.6/380 против 0.8/380). Шаг 5 (документация) отменён: docs_v2 вне репо.</implementation-status>
 
 ## Вердикт
 
@@ -53,8 +53,8 @@ ClamShell, плюс собственный `hexagon`. Есть морф межд
 
 | Часть | M3 | Кит сейчас | Действие |
 |---|---|---|---|
-| Пружина expressive default spatial | damping 0.8, stiffness 380 (по плану, не сверено с исходником) | В `M3_SPRING` схемы Expressive нет; переход `expressive` намеренно настроен сверх спецификации (0.6 / 380) | Сверить с `ExpressiveMotionTokens`, когда будет кэш Gradle (`it.todo` в спеке `utils/motion`) |
-| Пружина standard | damping 0.9, stiffness 700 / 1400 / 300 | `M3_SPRING.spatial` + `effects` 1 / 3800 / 1600 / 800 | Таблица в спеке `utils/motion` по константам кита, помечена «not verified against Compose» |
+| Пружина expressive default spatial | damping 0.8, stiffness 380 (сверено с `ExpressiveMotionTokens` 1.5.0-alpha22) | В `M3_SPRING` схемы Expressive нет; переход `expressive` намеренно настроен сверх спецификации (0.6 / 380) | Расхождение сознательное, закреплено спекой `utils/motion` |
+| Пружина standard | damping 0.9, stiffness 700 / 1400 / 300 | `M3_SPRING.spatial` + `effects` 1 / 3800 / 1600 / 800 | Совпадает со `StandardMotionTokens` (сверено 2026-10-30) |
 | CSS-токены пружин | — | нет | Появятся по S4. `MShape` их не потребляет (морф в JS), но значения должны совпасть |
 
 ## Поведение и доступность
@@ -75,8 +75,10 @@ ClamShell, плюс собственный `hexagon`. Есть морф межд
 
 ## План работ
 
-1. **S — ClamShell.** **Перенесено:** в окружении нет кэша Gradle с исходниками
-   `material3-android-1.5.0-alpha22`, а геометрию не выдумываем. Существующие фигуры — экспорт
+1. **S — ClamShell.** Сделано 2026-10-30: геометрия `MaterialShapes.clamShell()` из исходников
+   `material3-android-1.5.0-alpha22` (кэш Gradle) построена алгоритмом `RoundedPolygon`
+   (`graphics-shapes` 1.0.1, сглаживание 0), нормализована и положена на сетку 380 с полями 30, как
+   `circle`/`square`; ключ `clamShell`, исходник `Shape=Clam shell.svg`. Прежняя заметка: Существующие фигуры — экспорт
    SVG из Figma (`assets/icon/shapes/Shape=*.svg`, сетка 380) → `shell/extract-shapes.js` →
    `shapes.ts`; ClamShell нужно довести до такого же SVG и прогнать генератор (у генератора
    устаревшие пути `app/assets/...`).
@@ -85,11 +87,14 @@ ClamShell, плюс собственный `hexagon`. Есть морф межд
 3. **M — общий кэш интерполяторов.** Сделано: модульный `Map` в `useShapeMorph.ts` создаётся
    только при `IN_BROWSER`, ключ — `samples`, флаги геометрии и пара канонических путей;
    пара из середины прерванного морфа не кэшируется; не больше 64 пар, старые вытесняются.
-4. **S — сверка пружин.** Сделано частично: таблица `M3_SPRING` ↔ `StandardMotionTokens` по
-   константам кита («not verified against Compose»); `ExpressiveMotionTokens` — `it.todo`.
-5. **S — документация.** **Перенесено** решением владельца: docs_v2 живёт вне репозитория.
+4. **S — сверка пружин.** Сделано 2026-10-30 по исходникам material3 1.5.0-alpha22: `M3_SPRING`
+   совпадает со `StandardMotionTokens`; effects-пружины общие с `ExpressiveMotionTokens`; переход
+   `expressive` берёт жёсткость `SpringDefaultSpatial` (380), а затухание 0.6 вместо 0.8 —
+   сознательный перелёт кита.
+5. **S — документация.** **Отменено** решением владельца: docs_v2 живёт вне репозитория.
 6. **S — reduced motion.** Сделано: морф не пропускается, а укорачивается по правилу кита
-   (длительность больше `short4` → `short2`) и идёт без крена.
+   (длительность больше `short4` → `short2`, `reduceTransition`) и идёт без крена; кривая
+   перехода остаётся (2026-10-30, раньше бралась calm-пружина 262 мс).
 
 ## Тесты
 
@@ -142,7 +147,7 @@ Compose взяты из плана и по памяти, с `MaterialShapes.kt` 
 | `pill` | `Pill` |
 | `triangle` | `Triangle` |
 | `diamond` | `Diamond` |
-| — | `ClamShell` (в ките нет, шаг 1) |
+| `clamShell` | `ClamShell` |
 | `pentagon` | `Pentagon` |
 | `gem` | `Gem` |
 | `verySunny` | `VerySunny` |

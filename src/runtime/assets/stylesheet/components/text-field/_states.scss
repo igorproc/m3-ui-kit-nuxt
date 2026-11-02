@@ -72,8 +72,6 @@ $indicator-hovered: ':where(.ui-text-field--filled, .ui-text-field--underline)';
 
   // ── underline · a single bottom rule, no container ──
   &--underline {
-    --ui-text-field-inset: #{g($t, 'underline.inset')};
-
     .ui-text-field__control {
       border: none;
       border-bottom: g($t, 'container.border.width') solid g($t, 'underline.indicator.color');

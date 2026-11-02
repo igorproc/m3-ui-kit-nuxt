@@ -5,44 +5,113 @@
 // SNACKBAR M3 COMPONENT TOKENS
 // ==========================================
 
+// Gap kept above whatever is pinned to the bottom of the window.
+$gap: spacing(16);
+$inverse-surface: map.get($theme-color-link, 'inverse-surface');
+$inverse-on-surface: map.get($theme-color-link, 'inverse-on-surface');
+$inverse-primary: map.get($theme-color-link, 'inverse-primary');
 $tokens: (
-  bottom: (
-    offset: 16rem,
+  inset: (
+    // `--m3-layout-inset-*` are published on <html> by the outer MLayout; the
+    // bottom one already includes the safe area when a zone sits at the edge.
+    block: (
+      end: calc(max(var(--m3-layout-inset-bottom, 0rem), env(safe-area-inset-bottom, 0rem)) + #{$gap}),
+    ),
+    inline: (
+      start: var(--m3-layout-inset-inline-start, 0rem),
+      end: var(--m3-layout-inset-inline-end, 0rem),
+    ),
   ),
   surface: (
     max: (
-      width: 560rem,
+      width: 600rem,
+    ),
+    // One line of body-medium plus its block padding is 48; two lines are 68.
+    min: (
+      height: 48rem,
     ),
     margin: (
-      inline: 16rem,
+      inline: spacing(16),
     ),
-    padding: 12rem 16rem,
+    padding: (
+      inline: (
+        start: spacing(16),
+        end: spacing(16),
+        trailing: spacing(8),
+      ),
+    ),
     border: (
-      radius: var(--sys-shape-corner-large),
+      radius: map.get($theme-shape-link, 'extra-small'),
     ),
     bg: (
-      color: map.get($theme-color-link, 'surface'),
+      color: $inverse-surface,
     ),
-    color: map.get($theme-color-link, 'on-surface'),
+    color: $inverse-on-surface,
     shadow: elevation(3),
-    gap: 16rem,
+    gap: spacing(8),
   ),
   label: (
+    padding: (
+      block: calc(#{spacing(12)} + #{spacing(2)}),
+    ),
     text: (
       type: 'body-medium',
     ),
   ),
+  controls: (
+    gap: spacing(4),
+  ),
   action: (
-    padding: 8rem 12rem,
-    border: (
-      radius: var(--sys-shape-corner-small),
+    min: (
+      height: 40rem,
     ),
-    color: map.get($theme-color-link, 'primary'),
+    padding: (
+      block: spacing(0),
+      inline: spacing(12),
+    ),
+    border: (
+      radius: map.get($theme-shape-link, 'full'),
+    ),
+    color: $inverse-primary,
     text: (
       type: 'label-large',
     ),
     hover: (
-      bg: color-mix(in srgb, #{map.get($theme-color-link, 'primary')} state-opacity(hover), transparent),
+      bg: color-mix(in srgb, #{$inverse-primary} state-opacity(hover), transparent),
     ),
+    pressed: (
+      bg: color-mix(in srgb, #{$inverse-primary} state-opacity(pressed), transparent),
+    ),
+  ),
+  close: (
+    size: 40rem,
+    border: (
+      radius: map.get($theme-shape-link, 'full'),
+    ),
+    color: $inverse-on-surface,
+    icon: (
+      size: 24rem,
+    ),
+    hover: (
+      bg: color-mix(in srgb, #{$inverse-on-surface} state-opacity(hover), transparent),
+    ),
+    pressed: (
+      bg: color-mix(in srgb, #{$inverse-on-surface} state-opacity(pressed), transparent),
+    ),
+  ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-medium-2),
+      easing: var(--sys-motion-easing-standard-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-standard-accelerate),
+    ),
+    state: (
+      duration: var(--sys-motion-duration-short-3),
+      easing: var(--sys-motion-easing-standard),
+    ),
+    rise: spacing(12),
   ),
 );

@@ -38,8 +38,8 @@ import type { UseTimeFieldsControlReturn } from '#kit/composables/time/useTimeFi
 
 defineProps<{
   fields: UseTimeFieldsControlReturn
-  hourLabel: string
-  minuteLabel: string
+  hourLabel?: string
+  minuteLabel?: string
   error?: boolean
 }>()
 

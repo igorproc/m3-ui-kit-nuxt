@@ -11,6 +11,14 @@ $-rail: spacing(40);
 $-line: spacing(2);
 $-dot: spacing(16);
 $-content-padding: spacing(4);
+
+// A filled, elevated or outlined surface holds its text off its edge and its
+// corners. Each reserves one hairline of edge, drawn only by `outlined`, so the
+// first line sits at the same height whichever surface holds it.
+$-contained-padding-block: spacing(12);
+$-contained-padding-inline: spacing(16);
+$-contained-edge: max(1px, 1rem);
+$-contained-first-line: calc(#{$-contained-padding-block} + #{$-contained-edge});
 $-title: map.get($theme-typography-link, 'title', 'medium');
 $-body: map.get($theme-typography-link, 'body', 'medium');
 $-time: map.get($theme-typography-link, 'label', 'large');
@@ -19,28 +27,34 @@ $-time: map.get($theme-typography-link, 'label', 'large');
 $-line-gap: spacing(2);
 
 // Everything that sits on the centre of an item's first line, for a first
-// line of the given height: the dot (the content's top padding plus half of
-// what the line has over the dot), where the rail stops short of it, where
-// the two halves meet without a dot, and the time's own top padding.
-@function -first-line($line-height) {
-  $dot: calc(#{$-content-padding} + (#{$line-height} - #{$-dot}) / 2);
+// line of the given height below the given top padding of the content: the
+// dot (the padding plus half of what the line has over the dot), where the
+// rail stops short of it, where the two halves meet without a dot, and the
+// time's own top padding.
+@function -first-line($line-height, $padding: $-content-padding) {
+  $dot: calc(#{$padding} + (#{$line-height} - #{$-dot}) / 2);
 
   @return (
     dot: $dot,
     before: calc(#{$dot} - #{$-line-gap}),
     after: calc(#{$dot} + #{$-dot} + #{$-line-gap}),
     center: calc(#{$dot} + #{$-dot} / 2),
-    time: calc(#{$-content-padding} + (#{$line-height} - #{map.get($-time, 'line-height')}) / 2),
+    time: calc(#{$padding} + (#{$line-height} - #{map.get($-time, 'line-height')}) / 2),
   );
 }
 
 $tokens: (
   // Column that holds the marker between the two content columns.
   rail: (width: $-rail),
-  // The first line is the title's, or the body's in an item without a title.
+  // The first line is the title's, or the body's in an item without a title;
+  // a contained surface moves it down by its own padding.
   first-line: (
     titled: -first-line(map.get($-title, 'line-height')),
     untitled: -first-line(map.get($-body, 'line-height')),
+    contained: (
+      titled: -first-line(map.get($-title, 'line-height'), $-contained-first-line),
+      untitled: -first-line(map.get($-body, 'line-height'), $-contained-first-line),
+    ),
   ),
   dot: (
     size: $-dot,
@@ -51,6 +65,9 @@ $tokens: (
       secondary: (container: map.get($theme-color-link, 'secondary'), content: map.get($theme-color-link, 'on-secondary')),
       tertiary: (container: map.get($theme-color-link, 'tertiary'), content: map.get($theme-color-link, 'on-tertiary')),
       error: (container: map.get($theme-color-link, 'error'), content: map.get($theme-color-link, 'on-error')),
+      info: (container: map.get($theme-color-link, 'info'), content: map.get($theme-color-link, 'on-info')),
+      success: (container: map.get($theme-color-link, 'success'), content: map.get($theme-color-link, 'on-success')),
+      warning: (container: map.get($theme-color-link, 'warning'), content: map.get($theme-color-link, 'on-warning')),
     ),
   ),
   // One line per item, drawn over the item's whole height so consecutive
@@ -72,6 +89,10 @@ $tokens: (
   content: (
     gap: spacing(12),
     padding: (block: $-content-padding),
+    contained: (
+      padding: (block: $-contained-padding-block, inline: $-contained-padding-inline),
+      edge: $-contained-edge,
+    ),
   ),
   time: (
     color: map.get($theme-color-link, 'on-surface-variant'),

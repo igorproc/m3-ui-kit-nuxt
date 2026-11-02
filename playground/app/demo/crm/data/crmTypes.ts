@@ -1,4 +1,5 @@
 import type { MColor } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 export type CrmStageId = 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'won'
 export type CrmDealStatus = CrmStageId | 'lost'
@@ -77,7 +78,7 @@ export interface CrmActivity {
   at: string
   title: string
   text: string
-  icon: string
+  icon: MIconName
   color: MColor
   /** Visually hidden outcome word read before the title. */
   status: string
@@ -122,7 +123,7 @@ export const CRM_PERIODS: readonly { value: CrmPeriod, label: string, days: numb
   { value: 'quarter', label: 'Квартал', days: 90 },
 ]
 
-export const CRM_SECTIONS: readonly { id: CrmSection, label: string, icon: string }[] = [
+export const CRM_SECTIONS: readonly { id: CrmSection, label: string, icon: MIconName }[] = [
   { id: 'deals', label: 'Сделки', icon: 'outline-handshake' },
   { id: 'contacts', label: 'Контакты', icon: 'outline-contacts' },
   { id: 'companies', label: 'Компании', icon: 'outline-business' },

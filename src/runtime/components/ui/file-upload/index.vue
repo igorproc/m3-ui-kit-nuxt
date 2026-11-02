@@ -49,7 +49,7 @@
       class="ui-file-upload__rejection"
       role="alert"
     >
-      <template v-if="lastRejection">
+      <template v-if="rejections.length">
         <MIcon
           :name="ICONS.error"
           class="ui-file-upload__rejection-icon"
@@ -57,7 +57,7 @@
         />
         <slot
           name="rejection"
-          :rejection="lastRejection"
+          :rejections="rejections"
         >
           {{ rejectionText }}
         </slot>
@@ -122,7 +122,7 @@ import MIcon from '#kit/components/ui/icon/index.vue'
 import FileUploadDropzone from '#kit/components/fragments/file-upload/Dropzone.vue'
 import FileUploadList from '#kit/components/fragments/file-upload/List.vue'
 import { ICONS } from '#kit/shared/constants/icons'
-import { createFilePolicy, syncInputFiles } from '#kit/shared/utils/file'
+import { createFilePolicy, describeRejection, syncInputFiles } from '#kit/shared/utils/file'
 import { provideFileUploadContext } from '#kit/utils/file-upload/context'
 import { useFileUploadQueue } from '#kit/composables/file-upload/useFileUploadQueue'
 import { mFileUploadProps } from './props'
@@ -142,20 +142,25 @@ defineSlots<MFileUploadSlots>()
 const labelId = useId()
 const hintId = useId()
 const picker = ref<HTMLInputElement | null>(null)
-const lastRejection = ref<FileRejection>()
+// The refused files of the last pick or drop, said together.
+const rejections = ref<FileRejection[]>([])
 const announcement = ref('')
 
-// One evaluation, against what is left of `maxFiles` once the model's files count.
+// One evaluation, against what is left of `maxFiles` once the model's files
+// count. A single upload's file is replaced, so it does not count.
 const policy = computed(() => createFilePolicy({
   accept: props.accept,
-  maxFiles: props.maxFiles === undefined ? undefined : Math.max(0, props.maxFiles - model.value.length),
+  maxFiles: props.maxFiles === undefined ? undefined : Math.max(0, props.maxFiles - (props.multiple ? model.value.length : 0)),
   maxSize: props.maxSize,
 }))
 
 // The app's queue outlives this component; without one, the component keeps
 // its own for as long as it is mounted.
+// `queue` is read once, at setup; `upload` is read whenever a file starts.
 const queue: FileUploadQueue<TResult> = (props.queue as FileUploadQueue<TResult> | undefined) ?? useFileUploadQueue<TResult>({
-  upload: props.upload as ((file: File, context: Parameters<NonNullable<typeof props.upload>>[1]) => Promise<TResult>) | undefined,
+  get upload() {
+    return props.upload as ((file: File, context: Parameters<NonNullable<typeof props.upload>>[1]) => Promise<TResult>) | undefined
+  },
   concurrency: () => props.concurrency,
 })
 const canUpload = computed(() => queue.canUpload)
@@ -185,19 +190,15 @@ const sameFile = (left: File, right: File) => toRaw(left) === toRaw(right)
 
 const hasQueued = computed(() => queue.entries.value.some(entry => entry.status === 'queued'))
 
-const rejectionText = computed(() => {
-  const rejection = lastRejection.value
-  if (!rejection) return ''
-  const reasons = rejection.reasons.map(reason => props.messages.reject?.[reason]).filter(Boolean)
-  return reasons.length ? `${rejection.file.name}: ${reasons.join(', ')}` : rejection.file.name
-})
+const rejectionText = computed(() => rejections.value
+  .map(rejection => describeRejection(rejection, props.messages.reject))
+  .join('; '))
 
 function openPicker() {
   if (!props.disabled && !props.readonly) picker.value?.click()
 }
 
 function onReject(rejection: FileRejection) {
-  lastRejection.value = rejection
   emit('reject', rejection)
 }
 
@@ -212,13 +213,17 @@ function startNew(added: readonly FileUploadEntry<TResult>[]) {
 function addFiles(files: readonly File[]) {
   if (props.disabled || props.readonly) return
   const result = policy.value.evaluate(files)
+  rejections.value = result.rejected
   result.rejected.forEach(onReject)
   const accepted = props.multiple ? result.accepted : result.accepted.slice(0, 1)
   if (!accepted.length) return
-  if (!result.rejected.length) lastRejection.value = undefined
+  // One file, as a native single input: a new pick takes the old one's place
+  // and stops its upload. The model is written once, from what is kept.
+  const kept = props.multiple ? model.value : []
+  if (!props.multiple) queue.entries.value.forEach(entry => dropEntry(entry))
   const added = queue.add(accepted)
   if (!added.length) return
-  model.value = [...model.value, ...added.map(entry => entry.file)]
+  model.value = [...kept, ...added.map(entry => entry.file)]
   emit('add', added.map(entry => entry.file))
   startNew(added)
 }
@@ -233,12 +238,16 @@ function onPick() {
   syncPicker()
 }
 
+function dropEntry(entry: FileUploadEntry<TResult>) {
+  queue.remove(entry.id)
+  emit('remove', entry.file)
+}
+
 function remove(id: string) {
   const entry = queue.entries.value.find(item => item.id === id)
   if (!entry) return
-  queue.remove(id)
+  dropEntry(entry)
   model.value = model.value.filter(file => !sameFile(file, entry.file))
-  emit('remove', entry.file)
 }
 
 provideFileUploadContext({

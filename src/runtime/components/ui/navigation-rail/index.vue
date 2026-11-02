@@ -1,174 +1,155 @@
 <template>
   <nav
-    ref="navEl"
     class="ui-navigation-rail"
-    :class="{
-      'ui-navigation-rail--expanded': isExpanded,
-      'ui-navigation-rail--hosted': isLayoutHostChild,
-    }"
+    :class="[
+      `ui-navigation-rail--${mode}`,
+      {
+        'ui-navigation-rail--expanded': expandedInPlace,
+        'ui-navigation-rail--concealed': mode === 'dismissible',
+        'ui-navigation-rail--hosted': isAsideHosted,
+        'ui-navigation-rail--in-scroller': hostIsScroller,
+        'ui-navigation-rail--standalone': standalone,
+      },
+    ]"
     :aria-label="ariaLabel"
     v-bind="layoutItemAttrs"
     :style="layoutItemStyles"
-    @keydown="onKeydown"
   >
-    <div class="ui-navigation-rail__list">
-      <m-navigation-rail-item
-        v-for="(item, index) in items"
-        :key="item.id"
-        :active="item.id === selectedValue"
-        :icon="item.icon"
-        :label="item.label"
-        :badge="item.badge"
-        :expanded="isExpanded"
-        :aria-current="item.id === selectedValue ? 'page' : undefined"
-        :tabindex="rovingIndex === index ? 0 : -1"
-        @select="onSelect(item.id)"
-        @focus="rovingIndex = index"
-      />
-    </div>
+    <RailContent
+      :items="items"
+      :selected-value="selectedValue"
+      :expanded="expandedInPlace"
+      :list-id="listId"
+      :fade-label="toggled"
+      @select="onSelect"
+    >
+      <template
+        v-if="$slots.header"
+        #header
+      >
+        <slot
+          name="header"
+          :expanded="expanded"
+          :toggle-attrs="toggleAttrs"
+        />
+      </template>
+    </RailContent>
+
+    <MOverlay
+      v-if="mode !== 'standard'"
+      :id="dialogId"
+      v-model="expanded"
+      mode="modal"
+      content-transition="ui-navigation-rail-modal"
+      content-class="ui-navigation-rail__modal-panel"
+      :aria-label="ariaLabel"
+    >
+      <nav
+        class="ui-navigation-rail__modal"
+        :aria-label="ariaLabel"
+      >
+        <RailContent
+          :items="items"
+          :selected-value="selectedValue"
+          expanded
+          @select="onSelect"
+        >
+          <template
+            v-if="$slots.header"
+            #header
+          >
+            <slot
+              name="header"
+              :expanded="expanded"
+              :toggle-attrs="toggleAttrs"
+            />
+          </template>
+        </RailContent>
+      </nav>
+    </MOverlay>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
-import { createSingle } from '#kit/composables/registry/createSingle'
+import { computed, shallowRef, useId, watch } from 'vue'
+import MOverlay from '#kit/components/ui/overlay/index.vue'
+import RailContent from '#kit/components/fragments/navigation-rail/content.vue'
 import { provideNavigationRailContext } from '#kit/composables/navigation/useNavigationRail'
-import type { ID } from '#kit/shared/types/registry'
+import { useNavigationModel } from '#kit/utils/navigation/useNavigationModel'
 import { mNavigationRailProps } from './props'
+import type { MNavigationRailEmits, MNavigationRailSlots, MNavigationRailToggleAttrs } from './props'
 
 const props = defineProps(mNavigationRailProps)
+const emit = defineEmits<MNavigationRailEmits>()
+defineSlots<MNavigationRailSlots>()
 
-const isExpanded = computed(() => props.expanded)
+const modelValue = defineModel<string | null>({ default: null })
+const expanded = defineModel<boolean>('expanded', { default: false })
 
-// Self-register in layout system — size token changes based on expanded state
-const sizeToken = computed(() =>
-  isExpanded.value
-    ? '--ui-navigation-rail-width-expanded'
-    : '--ui-navigation-rail-width',
-)
+// Only a standard rail expands in the grid; the off-grid modes expand over the
+// content and keep the grid rail collapsed (modal) or hidden (dismissible).
+const expandedInPlace = computed(() => props.mode === 'standard' && expanded.value)
+
+// The width the layout reserves follows what stays in the grid: an expanded
+// standard rail pushes the content, a modal one never does.
+const sizeToken = computed(() => {
+  if (props.mode === 'dismissible') return '0rem'
+  return expandedInPlace.value ? '--ui-navigation-rail-width-expanded' : '--ui-navigation-rail-width'
+})
 
 // Первый уровень m-layout → start-зона (прижат sticky); внутри m-layout-aside —
 // вклад ширины в зону (раскрытие меняет токен → грид анимируется)
-const { layoutItemStyles, layoutItemAttrs, isLayoutHostChild } = useLayoutItem({
+const { layoutItemStyles, layoutItemAttrs, hostKind, hostIsScroller } = useLayoutItem({
   kind: 'start',
   sizeToken,
   sticky: true,
 })
 
-const modelValue = defineModel<string | null>({ default: null })
+const standalone = !useLayoutZone()
 
-// Single-select, non-mandatory: clicking a different destination selects it,
-// matching the previous `item.id === modelValue` behavior.
-const single = createSingle<{ value: string }>({ mandatory: false })
+// Заполняет только боковую зону; в main рейл — обычный контент своей ширины
+const isAsideHosted = computed(() => hostKind.value === 'start' || hostKind.value === 'end')
 
-// The flat `items[]` path drives the registry directly: each entry is a ticket
-// keyed by its `id`. Tickets are kept in sync as `items` changes.
-const ticketIds = new Map<string, ID>()
-
-function syncTickets() {
-  const wanted = new Set(props.items.map(item => item.id))
-
-  for (const item of props.items) {
-    if (ticketIds.has(item.id)) continue
-    const ticket = single.register({ value: item.id })
-    ticketIds.set(item.id, ticket.id)
-  }
-
-  for (const [value, id] of ticketIds) {
-    if (wanted.has(value)) continue
-    single.unregister(id)
-    ticketIds.delete(value)
-  }
-}
-
-watch(() => props.items, syncTickets, { immediate: true, deep: true })
-
-// Keep the registry in sync with the bound model.
-watch(
-  [() => modelValue.value, () => single.size],
-  ([value]) => {
-    if (value === null || value === undefined) {
-      if (single.selectedValue.value !== undefined) single.apply([])
-      return
-    }
-    if (single.selectedValue.value !== value) single.apply([value])
-  },
-  { immediate: true },
-)
-
-// Reflect registry selection back to the model.
-watch(single.selectedValue, (value) => {
-  if (value !== modelValue.value) modelValue.value = (value ?? null)
-})
-
-const selectedValue = computed(() => single.selectedValue.value ?? null)
+const { single, selectedValue, select } = useNavigationModel(() => props.items, modelValue)
 
 provideNavigationRailContext({
   register: ticket => single.register(ticket),
   unregister: id => single.unregister(id),
   select: id => single.select(id),
   selectedValue: single.selectedValue,
-  expanded: isExpanded,
+  expanded: expandedInPlace,
 })
 
-function onSelect(id: string) {
-  const ticketId = ticketIds.get(id)
-  if (ticketId !== undefined) single.select(ticketId)
-}
+const listId = useId()
+const dialogId = useId()
 
-// --- Roving focus (APG: arrow keys move between destinations) -------------
-const navEl = ref<HTMLElement | null>(null)
-const rovingIndex = ref(0)
+// Labels fade between the two layouts only once the rail has been toggled: on
+// the first render they are already where they belong.
+const toggled = shallowRef(false)
+watch(expanded, () => {
+  toggled.value = true
+})
 
-// Keep the tabbable item in sync with the selected destination.
-watch(
-  selectedValue,
-  (value) => {
-    const idx = props.items.findIndex(item => item.id === value)
-    if (idx >= 0) rovingIndex.value = idx
+const toggleAttrs = computed<MNavigationRailToggleAttrs>(() => ({
+  'aria-expanded': expanded.value,
+  'aria-controls': props.mode === 'standard' ? listId : dialogId,
+  'onClick': () => {
+    expanded.value = !expanded.value
   },
-  { immediate: true },
-)
+}))
 
-function focusItem(index: number) {
-  rovingIndex.value = index
-  nextTick(() => {
-    const buttons = navEl.value?.querySelectorAll<HTMLButtonElement>('.ui-navigation-rail-item')
-    buttons?.[index]?.focus()
-  })
-}
-
-function onKeydown(event: KeyboardEvent) {
-  const count = props.items.length
-  if (count === 0) return
-
-  let next = rovingIndex.value
-  switch (event.key) {
-    case 'ArrowDown':
-    case 'ArrowRight':
-      next = (rovingIndex.value + 1) % count
-      break
-    case 'ArrowUp':
-    case 'ArrowLeft':
-      next = (rovingIndex.value - 1 + count) % count
-      break
-    case 'Home':
-      next = 0
-      break
-    case 'End':
-      next = count - 1
-      break
-    default:
-      return
-  }
-
-  event.preventDefault()
-  focusItem(next)
+// Every activation is reported, the active destination's too: pressing it
+// again is how an app scrolls a section back to its top or resets it.
+function onSelect(id: string, event: MouseEvent) {
+  select(id)
+  emit('select', id, event)
 }
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/navigation-rail/index' as t;
+
+$t: material-map(t.$tokens, 'md-navigation-rail');
 
 // Width tokens exported globally (consumed by layouts and the rail's own width).
 :root {
@@ -177,43 +158,47 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 .ui-navigation-rail {
-  $t: material-map(t.$tokens, 'md-navigation-rail');
-
   width: var(--ui-navigation-rail-width);
-  border-radius: g($t, 'container-shape');
-  background-color: g($t, 'container-color');
-  box-shadow: g($t, 'container-shadow');
+  background-color: g($t, 'container.color');
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: g($t, 'container-gap');
-  color: g($t, 'container-text-color');
-  transition: width var(--sys-motion-duration-medium-2) var(--sys-motion-easing-standard);
+  color: g($t, 'container.text.color');
+  transition: width g($t, 'container.motion.duration') g($t, 'container.motion.easing');
   overflow: hidden;
 
   // Вложенный в зону случай (m-layout-aside): прижат с учётом прибитых краёв
   // лейаута; на первом уровне generated-правило движка (#id > [data-m3-zone])
   // специфичнее и переопределяет это per-item оффсетами
   position: sticky;
-  top: var(--m3-layout-inset-top, 0);
-  height: calc(100dvh - var(--m3-layout-inset-top, 0px));
+  top: g($t, 'container.in-page.top');
+  height: g($t, 'container.in-page.height');
   z-index: z(aside);
 
-  &__list {
-    padding-block: g($t, 'container-padding-block');
-    padding-inline: g($t, 'container-padding-inline');
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+  &--standalone {
+    height: g($t, 'container.standalone.height');
+    max-height: g($t, 'container.standalone.max-height');
   }
 
   &--expanded {
     width: var(--ui-navigation-rail-width-expanded);
   }
 
-  // A hosting layout zone already owns viewport anchoring and receives this
-  // component's width contribution. Inside that zone the rail is ordinary
-  // content, so it must not create a second sticky viewport box.
+  // A dismissible rail is not in the grid while collapsed; it only opens over the content.
+  &--concealed {
+    display: none;
+  }
+
+  // Page content of a `full-height` main: main is the scroller and already
+  // sits between the pinned bands, so the rail sticks to main's own top and is
+  // as tall as main's visible height.
+  &--in-scroller {
+    top: 0;
+    height: g($t, 'container.in-scroller.height');
+  }
+
+  // A hosting side zone (m-layout-aside) already owns viewport anchoring and
+  // receives this component's width contribution. Inside it the rail fills the
+  // zone and must not create a second sticky viewport box.
   &--hosted {
     width: 100%;
     min-height: 0;
@@ -222,10 +207,55 @@ function onKeydown(event: KeyboardEvent) {
     z-index: auto;
   }
 
-  // The container edge is a shadow ring, which forced colors drop.
+  // The container is set apart by its tone alone, which forced colors drop.
   @include forced-colors {
     outline: 1px solid CanvasText;
     outline-offset: -1px;
   }
+}
+
+// The expanded rail over the content: a flex child of the <MOverlay> panel,
+// full height, pinned to the start edge.
+.ui-navigation-rail__modal {
+  align-self: stretch;
+  margin-inline-end: auto;
+  display: flex;
+  flex-direction: column;
+  width: var(--ui-navigation-rail-width-expanded);
+  max-width: 100%;
+  height: 100%;
+  background-color: g($t, 'modal.color');
+  color: g($t, 'container.text.color');
+  box-shadow: g($t, 'modal.shadow');
+  border-start-end-radius: g($t, 'modal.shape');
+  border-end-end-radius: g($t, 'modal.shape');
+
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+}
+
+// Slides in from the start edge, as the drawer; the panel carries the same
+// timing because Vue ends the phase by the panel's duration.
+.ui-navigation-rail-modal {
+  &-enter-active,
+  &-enter-active .ui-navigation-rail__modal {
+    transition: transform g($t, 'modal.motion.enter.duration') g($t, 'modal.motion.enter.easing');
+  }
+
+  &-leave-active,
+  &-leave-active .ui-navigation-rail__modal {
+    transition: transform g($t, 'modal.motion.exit.duration') g($t, 'modal.motion.exit.easing');
+  }
+}
+
+.ui-navigation-rail-modal-enter-from .ui-navigation-rail__modal,
+.ui-navigation-rail-modal-leave-to .ui-navigation-rail__modal {
+  transform: translateX(-100%);
+}
+
+.ui-navigation-rail-modal-enter-from .ui-navigation-rail__modal:dir(rtl),
+.ui-navigation-rail-modal-leave-to .ui-navigation-rail__modal:dir(rtl) {
+  transform: translateX(100%);
 }
 </style>

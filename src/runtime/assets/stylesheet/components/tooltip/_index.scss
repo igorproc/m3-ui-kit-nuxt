@@ -4,23 +4,67 @@
 // ==========================================
 // TOOLTIP M3 COMPONENT TOKENS
 // ==========================================
+// The gap to the anchor (4) lives once, in the component: `usePopover` takes
+// it as a CSS length.
 
+$on-surface-variant: map.get($theme-color-link, 'on-surface-variant');
 $tokens: (
-  content: (
-    offset: 8rem,
-    // M3 plain tooltip: long text wraps instead of running off the screen.
-    max-width: 200rem,
+  // `PlainTooltipTokens`: an inverse label, wrapped at 200.
+  plain: (
+    min: (
+      width: 40rem,
+      height: 24rem,
+    ),
+    max: (
+      width: 200rem,
+    ),
     padding: 4rem 8rem,
     border: (
-      radius: var(--sys-shape-corner-small),
+      radius: map.get($theme-shape-link, 'extra-small'),
     ),
     bg: (
-      color: map.get($theme-color-link, 'on-surface'),
+      color: map.get($theme-color-link, 'inverse-surface'),
     ),
-    color: map.get($theme-color-link, 'surface'),
+    color: map.get($theme-color-link, 'inverse-on-surface'),
     shadow: elevation(0),
     text: (
       type: 'body-small',
+    ),
+  ),
+  // `RichTooltipTokens`, without actions.
+  rich: (
+    gap: 4rem,
+    max: (
+      width: 320rem,
+    ),
+    padding: 12rem 16rem 16rem,
+    border: (
+      radius: map.get($theme-shape-link, 'medium'),
+    ),
+    bg: (
+      color: map.get($theme-color-link, 'surface-container'),
+    ),
+    color: $on-surface-variant,
+    shadow: elevation(2),
+    text: (
+      type: 'body-medium',
+    ),
+    subhead: (
+      color: $on-surface-variant,
+      type: 'title-small',
+    ),
+  ),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-short-2),
+      easing: var(--sys-motion-easing-standard-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-1),
+      easing: var(--sys-motion-easing-standard-accelerate),
+    ),
+    scale: (
+      from: 0.8,
     ),
   ),
 );

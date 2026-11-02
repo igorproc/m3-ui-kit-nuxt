@@ -8,6 +8,7 @@
     :shape="shape"
     :selected="selected"
     :disabled="disabled"
+    :soft-disabled="softDisabled"
     :loading="loading"
     :type="type"
     :to="to"
@@ -24,6 +25,7 @@
 <script setup lang="ts">
 import UiButton from '#kit/components/ui/button/index.vue'
 import { useButtonNameWarning } from '#kit/utils/button/useButtonNameWarning'
+import { provideGlyphFill } from '#kit/utils/icon/glyphFill'
 import { mIconButtonProps } from '../props'
 
 const props = defineProps(mIconButtonProps)
@@ -32,6 +34,7 @@ const emit = defineEmits<{
 }>()
 
 useButtonNameWarning('m-button-icon', () => props.ariaLabel)
+provideGlyphFill(() => props.selected === true)
 </script>
 
 <style lang="scss">

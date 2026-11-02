@@ -169,6 +169,16 @@ const {
 const box = createFieldBoxPress(inputRef)
 const hasSupport = useSupportLine(props, slots)
 
+// The kit ships no default label (no English copy); an unnamed input is worse,
+// so say it in dev rather than in a broken form.
+if (import.meta.dev) {
+  const attrs = useAttrs()
+
+  if (!props.label && !attrs['aria-label'] && !attrs['aria-labelledby']) {
+    console.warn('[m-text-field] has no accessible name: pass `label`, `aria-label` or `aria-labelledby`.')
+  }
+}
+
 // Slots are not reactive: a computed over them keeps the first render's
 // answer, so a composite's chips that arrived later never got a row. Their
 // presence is read on every render instead.
@@ -218,30 +228,12 @@ defineExpose({ control: controlRef, input: inputRef })
 .ui-text-field {
   $t: material-map(t.$tokens, 'm-text-field');
 
-  --ui-text-field-inset: #{g($t, 'container.padding.inline')};
-
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: g($t, 'container.gap');
   min-width: 0;
-
-  // ── axes · a modifier only picks values; every rule reads them once ──
-  @each $d in compact, default, comfortable {
-    &--density-#{$d} {
-      --ui-text-field-height: #{g($t, 'density.#{$d}.height')};
-      --ui-text-field-label-top: #{g($t, 'density.#{$d}.label.top')};
-      --ui-text-field-input-padding-top: #{g($t, 'density.#{$d}.input.padding.top')};
-      --ui-text-field-input-padding-bottom: #{g($t, 'density.#{$d}.input.padding.bottom')};
-    }
-  }
-
-  @include family.shape-axis($t, 'text-field');
-
-  &--outlined {
-    --ui-text-field-inset: #{g($t, 'outlined.inset')};
-  }
 
   @include label.label($t);
 
@@ -253,14 +245,22 @@ defineExpose({ control: controlRef, input: inputRef })
     isolation: isolate;
     display: flex;
     align-items: center;
-    min-height: var(--ui-text-field-height);
-    padding-inline: var(--ui-text-field-inset);
+    padding-inline: g($t, 'box.filled.inset');
     border: g($t, 'container.border.width') solid transparent;
-    border-radius: var(--ui-text-field-radius);
     cursor: text;
     transition:
       border-color g($t, 'state.duration') g($t, 'state.easing'),
       background-color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include family.steps('text-field', $density: true) using ($density) {
+      min-height: g($t, 'density.#{$density}.height');
+    }
+
+    @include family.inset-boxes('text-field') using ($box) {
+      padding-inline: g($t, '#{$box}.inset');
+    }
+
+    @include family.shape-axis($t, 'text-field');
   }
 
   &--prepend .ui-text-field__control {
@@ -291,6 +291,13 @@ defineExpose({ control: controlRef, input: inputRef })
 
     &::placeholder {
       color: g($t, 'input.placeholder.color');
+    }
+
+    // The native clear has no name, locale or tokens of the kit: clearing a
+    // query belongs to `MSearch` or to an `#append` button.
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+      appearance: none;
     }
   }
 

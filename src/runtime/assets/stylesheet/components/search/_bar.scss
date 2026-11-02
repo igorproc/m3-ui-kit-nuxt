@@ -1,0 +1,199 @@
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// SEARCH BAR AND ITS VIEW STATES
+// ==========================================
+// The bar of `<MSearch>` and how it joins its view. Included inside the
+// component's block, so the BEM prefix stays the component's own.
+
+@mixin bar($t) {
+  &__bar {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: g($t, 'container.gap');
+    background-color: g($t, 'container.color');
+    color: g($t, 'input.color');
+    cursor: text;
+
+    // MD3 state layer: the content's ink over the container, under the parts.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: g($t, 'layer.color');
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity g($t, 'state.duration') g($t, 'state.easing');
+    }
+  }
+
+  &__leading,
+  &__trailing,
+  &__avatar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    font-size: g($t, 'icon.size');
+  }
+
+  &__leading {
+    color: g($t, 'icon.leading.color');
+  }
+
+  &__trailing {
+    gap: g($t, 'container.gap');
+    color: g($t, 'icon.color');
+  }
+
+  &__clear {
+    flex: 0 0 auto;
+  }
+
+  @each $step in compact, default, comfortable {
+    &--#{$step} &__bar {
+      min-height: g($t, 'density.#{$step}.height');
+      padding-inline: g($t, 'density.#{$step}.padding');
+      border-radius: g($t, 'density.#{$step}.round');
+    }
+
+    &--#{$step} &__leading,
+    &--#{$step} &__avatar {
+      min-width: g($t, 'density.#{$step}.target');
+      min-height: g($t, 'density.#{$step}.target');
+    }
+  }
+
+  // Nothing closes the bar: the query runs to the text's own edge.
+  &--text-end &__bar {
+    padding-inline-end: g($t, 'container.text-end');
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: g($t, 'input.color');
+    caret-color: g($t, 'input.caret.color');
+
+    @include typescale(g($t, 'input.typography'));
+
+    &::placeholder {
+      color: g($t, 'input.placeholder.color');
+      opacity: 1;
+    }
+
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+      appearance: none;
+    }
+
+    // Autofill paints an !important background of its own, light even in a
+    // dark theme; clipped to the glyphs, the bar's container shows through.
+    &:autofill {
+      // Safari clips to text only under the prefix.
+      /* stylelint-disable-next-line property-no-vendor-prefix */
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: g($t, 'input.color');
+    }
+  }
+
+  @include can-hover {
+    &:not(.ui-search--disabled) &__bar:hover::before {
+      opacity: g($t, 'layer.hover');
+    }
+
+    // One layer at a time: over a nested button its own layer is the one.
+    // Without `:has()` the two stack, as they did before.
+    &:not(.ui-search--disabled) &__bar:has(.ui-button:hover)::before {
+      opacity: 0;
+    }
+  }
+
+  // A control, not a form field: keyboard focus is the ring every other control
+  // wears. A pointer press opens the view instead.
+  &--keyboard &__bar {
+    @include focus-ring;
+  }
+
+  &--disabled {
+    color: g($t, 'disabled.content');
+
+    .ui-search__bar {
+      cursor: default;
+    }
+
+    .ui-search__leading,
+    .ui-search__trailing,
+    .ui-search__input,
+    .ui-search__input::placeholder {
+      color: g($t, 'disabled.content');
+    }
+  }
+
+  // The container is drawn by its fill alone, which forced colours drop. The
+  // edge is for rest only: a bar under keyboard focus keeps the ring's width.
+  @include forced-colors {
+    &:not(.ui-search--keyboard) &__bar {
+      outline: 1px solid CanvasText;
+    }
+
+    &--keyboard &__bar {
+      outline-color: Highlight;
+    }
+
+    &--disabled &__bar {
+      outline-color: GrayText;
+    }
+  }
+}
+
+@mixin views($t) {
+  // Docked and open, the bar is the header of one surface with the panel: its
+  // lower corners square off with the panel's arrival — a static state, not a
+  // morph — and both cast the view's shadow.
+  &--open:not(.ui-search--inline) &__bar {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    box-shadow: g($t, 'view.shadow');
+  }
+
+  // Inline, the view shows only with something in it — known from the server's
+  // markup, so the first frame is already right.
+  &--inline:not(:has(.ui-search-list-item, .ui-search-view__message, .ui-search-view__progress)) .ui-search-view {
+    display: none;
+  }
+
+  &--inline:has(.ui-search-list-item, .ui-search-view__message, .ui-search-view__progress) &__bar {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  @supports not selector(:has(*)) {
+    &--inline:not(.ui-search--open) .ui-search-view {
+      display: none;
+    }
+
+    &--inline.ui-search--open &__bar {
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
+    }
+  }
+}
+
+// The docked panel: the rest of the bar's surface, below its header. Its own
+// shadow would fall on the bar, so it is cut at the seam.
+@mixin docked-surface($t) {
+  border-radius: 0 0 g($t, 'view.shape') g($t, 'view.shape');
+  background-color: g($t, 'container.color');
+  box-shadow: g($t, 'view.shadow');
+  clip-path: g($t, 'view.clip');
+}

@@ -45,6 +45,20 @@ test.describe('MExpansionPanel', () => {
     })
   }
 
+  // N.4 (G6): `overflow-wrap: anywhere` on the header content inherited into
+  // `#header` and cut every word's min-content to one glyph.
+  test('equal columns in a narrow header keep their words whole', async ({ page }) => {
+    await openFixture(page, 'expansion-panel/stress')
+
+    const lines = await page.locator('.ui-expansion-panel').filter({ has: page.getByTestId('word-row-item') }).getByTestId('word-row-item').evaluateAll(items => items.map((item) => {
+      const range = document.createRange()
+      range.selectNodeContents(item)
+      return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size
+    }))
+
+    expect(lines).toEqual([1, 1])
+  })
+
   test('Tab skips the fields of a collapsed panel', async ({ page }) => {
     await openFixture(page, 'expansion-panel/stress')
 

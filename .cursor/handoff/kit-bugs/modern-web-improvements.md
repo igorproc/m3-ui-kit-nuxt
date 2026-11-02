@@ -1,0 +1,82 @@
+# modern-web-guidance × баги и развилки кита (2026-10-23)
+
+Прочитано ~60 гайдов (skill 2026_10_12-dacb5911, на сервере уже 2026_10_16). Кит не менял. Пути — от `src/runtime/`. Усилие: S/M/L.
+Политика владельца соблюдена: полифиллы гайдов не берём, везде свой фолбэк (в ките уже есть `shared/utils/support.ts`); vw-rem не трогаю.
+Цитаты: по правилу «одна цитата на ответ» — только одна (Q25); у остальных пунктов указан id гайда и раздел, чтобы сверить.
+Оговорка: гайды дают для CSS Anchor Positioning «Safari 27, не Chrome/Edge/Firefox» — это расходится с реальностью (Chrome 125+) и с `supportsAnchorPositioning()` кита; цифры по anchor из гайдов не использую. Пометка «(память)» — не из гайда, проверить.
+
+## 1. Меняет или усиливает рекомендацию
+
+**Q1 · dark-mode (+dark-mode-toggle, раздел Fallback).** Усиливает Б, уточняет форму. Для `system` не резолвить в JS, а отдать в `utils/theme/themeScss.ts` селектор `[data-definition="system"]` общим со светлым блоком плюс `@media (prefers-color-scheme: dark){ …тёмный блок; color-scheme: dark }`; `htmlAttrs['data-definition']` остаётся `system` (сейчас `createMaterialTheme.ts:36` даёт light на SSR). Поддержка: media-запрос универсален — фолбэк не нужен. `light-dark()` (Baseline 2024-05) для Q1 не нужен: один блок не короче двух; пригодится для `color-scheme: dark` на поддереве. Рекомендация Б не меняется. S–M.
+
+**Q13 / Q16 / B4.8 · viewport-aware-dropdowns (раздел 1, NOTE).** Усиливает А (Q13) и Б (Q16): гайд отличает «popover с кнопками» от ARIA-меню — `role=menu` только при полном контракте клавиатуры, `aria-haspopup` на триггере не ставить, если цель не обещает роль. Для панели ColorInput/dropdown — `popover` без `role=menu`. Popover — Baseline 2025-01-27; в ките своя реализация (`popover=manual`+`useStack`), полифилл не нужен. Рекомендации не меняет; в B4.8 из «`dialog` (or omit)» выбрать «omit» для popover-режима. S.
+
+**Q18 · drag, accessibility §Touch targets.** Подтверждает А: `touch-action:none` только на ручке, остальное — осевое (`pan-y` для горизонтальных свайпов). Расширить: `composables/overlay/useOverlaySwipe.ts` сам ставит `touch-action` по оси (down/up: ручка none; left/right: панель `pan-y`); drawer сейчас без swipe. S.
+
+**Q19 / B4.7a · interest-triggered-tooltips.** Меняет «авто-запасной» путь в В. Вместо `setAttribute` на первом фокусируемом потомке — держать поверхность в DOM всегда (скрытый `popover=manual`) и отдавать `aria-describedby` постоянно через slot-props: так связывает браузер при `interestfor`. Нативный `interestfor`+`popover=hint` — только Chrome/Edge 142 (hint: Chrome 151, FF 153; Safari нет): добавлять как улучшение, если есть `HTMLButtonElement.prototype.interestForElement` (slot-props тогда отдаёт `interestfor`); путь без него и есть фолбэк. Слот остаётся основным (В). `tooltip/index.vue:12`. S–M.
+
+**Q24 · accessibility §ARIA (disabled vs aria-disabled).** Подтверждает А: `disabled` убирает кнопку из порядка фокуса, `aria-disabled` — нет; для Prev/Next так и надо. Заготовка есть: `utils/button/useButton.ts:93` (loading). S–M.
+
+**Q25 / B5.8b · scroll-target-on-load.** МЕНЯЕТ механизм Б. `scroll-snap proximity` не двинет стартовую позицию издалека, `mandatory` запрёт скролл назад. Вместо него — `scroll-initial-target: nearest` на `li` текущей крошки (нужен модификатор `--current`, `breadcrumbs/index.vue:130`). Гайд: «sets the position instantly during the layout phase» — то есть SSR-first-paint честный. Поддержка: Chrome/Edge 133; Firefox/Safari — остаётся начало списка (как сейчас, без регресса). Свой JS-фолбэк (`scrollIntoView` в onMounted) = прыжок после гидрации, против SSR-правила: без фолбэка либо решение владельца. Выбор «Б, без JS» сохраняется, реализация другая. S.
+
+**Q26 / Q23 / Q27 · viewport-aware-dropdowns §2, slider (`:dir(rtl)`).** Усиливает А. Гайд: логические ключи `position-area` (`block-end span-inline-end`), не смешивать с физическими. В ките `placementToArea` (`composables/popover/placement.ts:80-92`) выдаёт физические `bottom span-right` — в RTL ломается и нативный путь. Q26-А делать вместе с переводом `placementToArea` на логические слова и направлением в JS-фолбэке (`getComputedStyle(trigger).direction`). `position-try-fallbacks: flip-block, flip-inline…` уже логические. `:dir(rtl)` гайды применяют без фолбэка (Q27-А). M.
+
+**Q28 · color §Accessible color, forms §2.** Усиливает Б: состояние ошибки нельзя нести одним цветом+`aria-invalid`; нужен текст/иконка, связанный через `aria-describedby`. Не меняет. S.
+
+**Q40 · accessibility §Touch targets.** Уточняет Б: минимум 24×24 (WCAG 2.5.8), увеличивать на `@media (pointer: coarse)`. Сейчас 48-мишень (`::after`, `button/index.vue:266-271`) для всех указателей. Б + обернуть в `(pointer: coarse)`: на мыши соседи не перехватывают клик. S.
+
+**Q41 · html §6 (Focus Boundaries).** Подтверждает А+В: гайд запрещает менять порядок фокуса через CSS (`order`, row-reverse), не выравнивая DOM. В (в stacked визуально подогнать под DOM) — единственный вариант без расхождения. S.
+
+**Q42 · size-aware-styling.** Не меняет А. Подтверждает ограничение: `@container` стилизует только потомков, корень-грид сам себя не переключит (Б = +обёртка). Без нового узла — `container-type:inline-size` на корне и раскладка детей линиями вместо `grid-template-areas` (M); оставить А.
+
+**Q43 / Q44 · accessibility §Live Regions, progress §Accessibility.** Подтверждает А/А: живой регион на каждый экземпляр и на «Loading…» — шум. Поправка в доводе Q44: гайд прямо называет `aria-busy` ненадёжным у скринридеров, на «busy озвучит хост» опираться нельзя; `role=progressbar`+имя остаётся. S.
+
+**Q52 / N.10 · typography §Text wrapping.** Меняет «А + Б» → «А». Б не поможет: при заданной ширине панели (`width: anchor-size(width)`) `anywhere` и `break-word` рвут строку одинаково, отличается только вклад в min-content (спецификация CSS Text, (память)). Остаётся `min-width` (А); мягкий перенос — `hyphens:auto` (нужен `lang`). `fragments/dropdown/Panel.vue:246`. S.
+
+**Прочее.** Q6: View Transitions (`same-document`/`scoped-component-transitions`) блокируют указатель и перекрывают popover'ы — Б (deferred) остаётся. Q48 (`KeyboardEvent.code`), Q2–Q5, Q7–Q12, Q14–Q15, Q17, Q20–Q22, Q29–Q39, Q45–Q47, Q49–Q51: гайды не покрывают.
+
+## 2. Лучший способ починить баг
+
+- **N.3 + N.4 (корень общий).** `overflow-wrap: anywhere` на корне `card/index.vue:116` и `list/item/index.vue:167` наследуется в слоты и сводит min-content к 1 символу. Дешевле: `anywhere` → `break-word` на этих двух корнях (в `expansion-panel` кит уже так сделал по той же причине) вместо правок `.ui-chip` и `.ui-segmented-button`. typography. Проверить chips/tabs/button как потребителей. S.
+- **B4.4a / B4.4b / B5.4a.** К эскизу добавить `overscroll-behavior: contain` на прокручиваемые `.ui-dialog__content`, `.ui-sheet__content` (у drawer есть, у dialog/sheet нет; у `Panel.vue:195`, `search/View.vue:131`, `fab-menu:310` уже есть). prevent-page-scroll-under-modal-dialog. S.
+- **B4.5f.** `touch-action` по оси в `useOverlaySwipe` (см. Q18); drag. S.
+- **B8.10b.** `pan-y` подтверждён (accessibility §Touch targets); тот же дефект у слайдера и scrub в number-input — см. 3.2.
+- **B4.5b (autofocus).** Альтернатива эскизу: вызывать `showModal()` после того, как панель стала видимой (после `v-show`) — тогда нативные dialog-focusing-steps сами берут `[autofocus]`, кастомный поиск в trap не нужен; контейнер-по-умолчанию (B4.6) остаётся за trap. Риск: порядок `topLayer.show()` в `overlay/index.vue:show()`. M.
+- **B4.8.** «omit» вместо `dialog` для popover-режима (viewport-aware-dropdowns). `overlay/index.vue:205`. S.
+- **B4.1d.** `aria-disabled` + пункт остаётся в порядке стрелок — прямо по accessibility §ARIA; эскиз верен.
+- **B4.9b.** Персистентный `role=status` должен жить в том же `useOverlayTeleportTarget()`, что и снекбар: гайд (Live Regions): «не обновляй live-регион в inert DOM», а под открытым модалом `#ui-overlay-host` inert. S.
+- **B5.9c / B8.8c / B5.9d.** `:dir(rtl)` без `[dir=rtl]`-фолбэка (так в гайдах progress/slider) — убрать фолбэк из эскиза. S.
+- **B8.8b.** Не `animation:none` (в Chromium оставляет нулевую заливку), а замедление; примеры гайда ×4 (spinner 1.5→6 s) … ×20 (progress); «×2» в эскизе мягковат. S.
+- **B6.1f (indeterminate).** `input.indeterminate = true` отдаёт «mixed» в a11y-дерево сам + стиль `:indeterminate` (checkbox); `aria-checked="mixed"` в эскизе не нужен — ARIA-in-HTML не рекомендует `aria-checked` на нативном checkbox. Заодно убрать избыточный `:aria-checked` у `checkbox/index.vue:15`, `radio/index.vue:16`, `switch/index.vue:16`. S.
+- **N.6.** Эскиз верен: гайд progress — длину задавать не `scale` (искажает рисунок), `clip-path` — штатный «после-paint» эффект.
+- **B4.2a / B4.2b (clamp).** В `position-area` containing block = выбранная область → `max-block-size:100%`+`overflow:auto` на панели ограничивает высоту свободным местом без JS; `position-try-order: most-height` (уже в эскизе) выбирает сторону. JS-фолбэк `computePopoverPosition` остаётся. Не из гайда — сверить e2e. M.
+- **N.8.** `tabindex=0` на скроллере — как в responsive-table (+`role=region`+имя), но Chrome ≥130/Firefox фокусируют скроллер без фокусируемых потомков сами (память): ставить только под `--scroll` и только если внутри нет фокусируемого — иначе лишний tab-stop. S.
+- **B9.7d.** icons: ядровые иконки лучше встраивать (рендер с первой отрисовкой). Кит знает свои глифы (`ICONS`) — в дефолты `@nuxt/icon` (`module.ts:93`) добавить `clientBundle.icons` только для внутренних ключей (close, check, error, шевроны, add/remove, search); пользовательские — как сейчас (опции @nuxt/icon — память, проверить). S–M.
+
+## 3. Новые возможности оптимизации (не в списке)
+
+1. **IME + Enter в MAutocomplete (Safari).** `composables/autocomplete/useAutocomplete.ts` — keydown гасится только по `composing.value`; в Safari `compositionend` приходит раньше подтверждающего Enter (WebKit 165004), и Enter выбирает опцию/Arrow перехватывают выбор кандидатов IME. В `utils/search/useSearchControl.ts:188` защита полная (`isComposing || keyCode===229`). Решение: общий предикат `isImeKeydown(e)` в обоих местах (+`hotkey/registry.ts:122`, там нет 229). ime-safe-enter-submit: `isComposing` — Chrome/FF/Edge, не Safari → `keyCode===229` как фолбэк. S. Приоритет: высокий (a11y/i18n).
+2. **`touch-action:none` блокирует прокрутку страницы** на `ui/slider/index.vue:125` (контейнер 48rem во всю ширину), `fragments/slider/track/index.vue:64`, scrub-метка number-input (`assets/stylesheet/components/number-input/_zones.scss:120`, `ew-resize`). Решение: `pan-y` для horizontal, `pan-x` для vertical (в слайдере есть `orientation`); pointercancel `useDrag` обрабатывает. Нюанс: click-jump слайдера срабатывает на pointerdown (`useSliderControl.ts` `onTrackPointerdown`) — для touch перенести на pointerup, иначе скролл поверх трека сдвинет значение. accessibility §Touch targets. S. Приоритет: высокий (мобильный UX).
+3. **`*`-сброс переменных** (`assets/stylesheet/base/_scrollbar.scss`: `--ui-scrollbar-inset-*` на каждом элементе) → `@property … inherits:false; initial-value:0px` (прецедент: `table/index.vue:249`). Сброс на `*` объявляет кастомное свойство на каждом узле, а у кита сотни унаследованных `--md-sys-*` (в Blink, по памяти, это копия карты унаследованных переменных на узел). Baseline 2024-07; в старых — лишь утечка inset (косметика). Сначала замерить Recalculate Style на большой странице. S.
+4. **`hidden="until-found"` для свёрнутых expansion-панелей.** Сейчас контент `inert` + grid 0fr (`composables/expansion-panel/useExpansionPanelControl.ts:126`) — не ищется Ctrl+F и не открывается по якорю. search-hidden-content: атрибут снимать перед раскрытием, ставить после transitionend, синхронизировать `aria-expanded` в `beforematch`. Chrome 102, FF 148; Safari нет — остаётся как сейчас. M.
+5. **Тайминг валидации (развилка владельца).** `useField.ts:63` + `adapters/vee-validate/index.ts:36`: `validateOnValueUpdate=true`, `handleBlur` нигде не вызывается — ошибка появляется с первого символа, `meta.touched` не бывает true. forms §4 (матрица), validate-input-after-interaction: проверять на blur, на input только снимать ошибку. Бизнес-правило — спросить. Для полей без `path` отдельно: `:user-invalid` (Baseline 2023-11) даёт вид ошибки native-ограничениям без JS. S–M.
+6. **`text-wrap: balance`** на заголовках без собственного бокса: headline диалога, title alert/banner/snackbar, card title (в ките 0 использований). typography: не на `*`, не на боксах с фоном. Нет поддержки — просто как сейчас (прогрессивно). S.
+7. **WebOTP в MOtpInput.** Одно нативное поле + `one-time-code` уже есть (ровно как требует sms-otp-form). Добавить `OTPCredential` с `AbortController` (abort на unmount/ручной ввод), результат → `setValue`+`complete`. Chrome/Edge 93, Safari 27; Firefox нет — за `'OTPCredential' in window`. Новая фича — согласовать. S.
+8. **`prefers-contrast: more` → `contrast: 'system'`.** В ките 0 использований; контраст вшит в схему при сборке. `system` = standard + блок `@media (prefers-contrast: more){high}` (как Q1-Б); заодно thumb скроллбара в этом режиме (adapt-scrollbar-to-contrast-preferences). Лишние ~3 KB CSS на палитру при `system`. M. Связано с Q3.
+9. **Скользящий индикатор Tabs** — anchor-positioning-tab-underline: индикатор сейчас на `::after` каждой вкладки (`tabs/tab/index.vue:139`), без перехода. `anchor-name` активной + `inset` переход через `--sys-motion-*`, под `@supports (anchor-name:--a)`; без поддержки — как сейчас. Не «пружина». Опционально. S–M.
+10. **`<search>` у MSearch.** Корень — `div` (`search/index.vue:2`), ландмарка нет. `<search>` — Baseline 2023, гайд html §1. Лучше пропом `landmark` (гайд: не злоупотреблять ландмарками). S.
+11. **Метрики fallback-шрифта** (visually-stable-font-fallbacks): для дефолтного Roboto задать `size-adjust`/`ascent-override` или `font-size-adjust`; числа считать (capsize), не гадать — `from-font` до загрузки шрифта не помогает. Низкий приоритет. S.
+12. **Низкий приоритет:** `app-bar/index.vue:60` — `scrolled` через window-scroll; для sticky-режима есть `@container scroll-state(stuck:top)` (Chrome/Edge 133; фолбэк — текущий слушатель; для fixed-зон layout не применим). Эффект минимален.
+
+Проверено — кит уже делает, не предлагать: `field-sizing` у textarea с фолбэком, `isComposing` в search/hotkey, одно поле OTP, `inputmode`/`enterkeyhint` на search, anchor positioning + JS-фолбэк, `popover=manual`, scroll-driven fade у table, `interpolate-size` у extended FAB, `overscroll-behavior` у панелей, счётчик textarea озвучивается только у лимита, reduced-motion через сжатие токенов, scrollbar с `@supports not selector(::-webkit-scrollbar)`.
+
+## 4. Конфликты с правилами владельца (без рекомендаций)
+
+- **respect-os-text-scale** (`<meta name="text-scale">`, «не задавать root font-size») конфликтует с принятым решением vw-rem.
+- **Полифиллы** в гайдах (popover, css-anchor-positioning, invokers, interestfor, input-switch) — не берём; своё есть, где поддержки нет — прогрессивное улучшение.
+- **A4 (scrollbar).** Кит: `::-webkit-scrollbar` первичен, стандартные свойства под `@supports not selector(::-webkit-scrollbar)` (`abstracts/_mixins.scss:69-78`). Гайд customize-scrollbar: наоборот — стандартные первичны, WebKit под `@supports not (scrollbar-color: auto)`. По сути не противоречат (оба разводят движки, чтобы Chrome ≥121 не отбросил стиль); гайд теряет inset дорожки (его не выразить стандартными свойствами). A4 остаётся.
+- **a11y: «не делать focus trap для нативного модального `<dialog>`».** У кита trap (focus на контейнер, Tab внутри) — решение владельца.
+- **prevent-page-scroll-under-modal-dialog:** `overflow:hidden` на `<html>` запрещён, замена — `overscroll-behavior`; но поддержку на нескроллящихся контейнерах нельзя определить feature detection (Safari нет) → по правилу «detection+фолбэк» заменить `useScrollLock` нельзя; оставить.
+- **navigation-drawer** (scroll-snap + IntersectionObserver вместо `useOverlaySwipe`) — другая архитектура, `scroll-initial-target` только Chrome; не вписывается в `MOverlay`/`useStack`.
+- **slider / progress / spinner / switch** предлагают нативные `<input range>`, `<progress>`, `switch`: у кита авторские компоненты (два бегунка, expressive) — «authored keep vision»; берём из гайдов только a11y-семантику.
+- **animate-to-from-top-layer** (`overlay`, `allow-discrete`) — Vue `<transition>` кита работает во всех браузерах; не мигрировать. Длительности гайда — литералы; у кита `--sys-motion-*`.

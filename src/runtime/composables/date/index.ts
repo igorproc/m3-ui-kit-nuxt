@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import { createCalendar } from '#kit/utils/date/createCalendar'
 import type { Calendar, CalendarBounds } from '#kit/utils/date/createCalendar'
 import { toDate, toModelValue } from '#kit/utils/date/value'
-import type { DateModelValue } from '#kit/utils/date/value'
+import type { DateModelValue, DateValueType } from '#kit/utils/date/value'
 
 export type DatePickerView = 'calendar' | 'year'
 export type DatePickerValue = DateModelValue
@@ -26,6 +26,8 @@ export interface UseDatePickerOptions {
   locale: () => string
   min: () => DatePickerValue | undefined
   max: () => DatePickerValue | undefined
+  /** The type an empty model is written in; a model with a value keeps its own. */
+  valueType?: () => DateValueType
 }
 
 export interface UseDatePickerReturn {
@@ -100,8 +102,14 @@ export function useDatePicker(options: UseDatePickerOptions): UseDatePickerRetur
     view.value = view.value === 'calendar' ? 'year' : 'calendar'
   }
 
+  // The same month of another year can fall outside the bounds; it lands on
+  // the nearest month inside them, so the grid never opens on no choice at all.
   function selectYear(year: number) {
-    month.value = dayjs(month.value).year(year).toDate()
+    const { min, max } = bounds.value
+    let next = dayjs(month.value).year(year)
+    if (min && next.isBefore(min, 'month')) next = dayjs(min)
+    if (max && next.isAfter(max, 'month')) next = dayjs(max)
+    month.value = next.startOf('month').toDate()
     view.value = 'calendar'
   }
 
@@ -109,7 +117,7 @@ export function useDatePicker(options: UseDatePickerOptions): UseDatePickerRetur
   // day string back, not a `Date`.
   function select(date: Date) {
     if (calendar.value.isOutside(date, bounds.value)) return
-    options.model.value = toModelValue(date, options.model.value)
+    options.model.value = toModelValue(date, options.model.value, options.valueType?.())
   }
 
   return { calendar, selected, month, view, today, bounds, years, canGoPrev, canGoNext, prevMonth, nextMonth, toggleView, selectYear, select }

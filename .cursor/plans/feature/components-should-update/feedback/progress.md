@@ -2,7 +2,7 @@
 
 <identity>M3: Progress indicators (linear, circular; wavy — Expressive) · Токены Compose: `LinearProgressIndicatorTokens`, `CircularProgressIndicatorTokens`, `ProgressIndicatorTokens` + `ProgressIndicator.kt`, `WavyProgressIndicator.kt` · Код: `src/runtime/components/ui/progress/` (`linear/`, `circular/`), `src/runtime/composables/progress/useProgress.ts` · Аудит: `data/progress.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Есть linear и circular, determinate и indeterminate, `size: small | medium`, волнистый режим `expressive`. Нет зазора между активной частью и треком, stop indicator, роли трека `secondary-container`, RTL, reduced motion, ошибки.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Сделано: анатомия M3 (зазор и stop у linear и у wavy, трек `secondary-container`, у circular видимый зазор 4 — к штриху прибавлена толщина под круглые концы, как в Compose, — и старт в 12 часов по часовой), волна linear по Compose (высота 10, период 40 / 20, амплитуда 3, трек плоский), токены кольца в TS-карте `composables/progress/circularTokens.ts`, радиус `corner-full`, `contain: layout style`, `max` / `valueText`, `aria-valuenow` округлён, подпись-слот вне `role="progressbar"` с `aria-labelledby`, ARIA-атрибуты потребителя — на элемент с ролью, RTL, reduced motion, forced colors; ось `shape: 'flat' | 'wavy'` вместо флага `wavy` (S10 = А, без алиаса). Отменено: `delay` (S6 = Б), ошибка (W45-Б); документация отложена (вне репо кита).</implementation-status>
 
 ## Вердикт
 
@@ -113,9 +113,9 @@
 3. **S — RTL и reduced motion** (LY-10, A11-18).
 4. **S — доступность:** `max`, `valueText`, имя, подпись вне роли (ST-01, DT-09, CT-13, A11-04, EN-03).
 5. **S — forced colors** (TH-04), **`contain`** (CT-01), **зажим `NaN`** (CT-07).
-6. **S — переименование `expressive` → `wavy`.**
-7. **S — `delay`** (DT-11).
-8. **S — тесты** (TS-07) **и документация** (DC-01…05).
+6. **S — переименование `expressive` → `wavy`.** Флаг `wavy` затем **заменён** осью `shape: 'flat' | 'wavy'` (S10 = А, без алиаса).
+7. **S — `delay`** (DT-11). **Отменено:** S6 = Б.
+8. **S — тесты** (TS-07) **и документация** (DC-01…05). Документация **отложена:** вне репо кита (plans-audit-2 §6).
 
 ## Тесты
 

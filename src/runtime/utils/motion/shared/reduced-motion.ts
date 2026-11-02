@@ -9,14 +9,18 @@ import { M3_DURATION } from '../standard/tokens'
 // Types
 import type { MorphTransition } from './types'
 
+/** The media query of the preference; `useReducedMotion` subscribes to the same one. */
+export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
 /**
- * Whether the viewer asked the platform to reduce motion.
+ * Whether the viewer asked the platform to reduce motion, read at call time —
+ * for code that acts on it once (a scroll), with or without a component.
  *
  * @returns `true` when `prefers-reduced-motion: reduce` matches. Always `false`
  *   off the browser, where nothing animates anyway.
  */
 export function prefersReducedMotion(): boolean {
-  return IN_BROWSER && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+  return IN_BROWSER && window.matchMedia?.(REDUCED_MOTION_QUERY).matches === true
 }
 
 export function reduceTransition(transition: MorphTransition): MorphTransition {

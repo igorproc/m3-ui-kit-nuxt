@@ -46,7 +46,7 @@ const dialogRoot = () => document.querySelector('dialog.ui-overlay') as HTMLDial
 /** Listeners the handle binds on its component — what the dialog would emit. */
 function listenersOf(modal: UseModalReturn<typeof MDialog>) {
   const record = useNuxtApp().$material.modal.dynamicModals.find(entry => entry.id === modal.id)!
-  return record.props as { onConfirm: (payload?: unknown) => void, onCancel: () => void }
+  return record.props as { onConfirm: (payload?: unknown) => void, onCancel: (reason?: string) => void }
 }
 
 describe('useModal', () => {
@@ -79,25 +79,76 @@ describe('useModal', () => {
     listenersOf(modal).onConfirm('yes')
     await settle()
 
-    await expect(result).resolves.toBe('yes')
+    await expect(result).resolves.toEqual({ status: 'confirmed', value: 'yes' })
     expect(received).toEqual(['yes'])
     expect(modal.status.value).toBe('closed')
     expect(useNuxtApp().$material.modal.dynamicModals).toHaveLength(0)
   })
 
-  it('resolves false on cancel and null on a plain close', async () => {
+  it('resolves a cancel with its reason and a plain close as programmatic', async () => {
     const modal = await setup()
 
     const cancelled = modal.open()
     await settle()
     listenersOf(modal).onCancel()
     await settle()
-    await expect(cancelled).resolves.toBe(false)
+    await expect(cancelled).resolves.toEqual({ status: 'cancelled', reason: 'cancel' })
 
     const dismissed = modal.open()
     await settle()
     await Promise.all([modal.close(), settle()])
-    await expect(dismissed).resolves.toBeNull()
+    await expect(dismissed).resolves.toEqual({ status: 'cancelled', reason: 'programmatic' })
+  })
+
+  // W41-Б: a falsy payload is a payload, not a cancel.
+  it.each([false, 0, '', null])('keeps a falsy confirm payload (%o) as it is', async (payload) => {
+    const modal = await setup()
+
+    const result = modal.open()
+    await settle()
+    listenersOf(modal).onConfirm(payload)
+    await settle()
+
+    await expect(result).resolves.toEqual({ status: 'confirmed', value: payload })
+  })
+
+  it('confirms without a payload as an undefined value', async () => {
+    const modal = await setup()
+
+    const result = modal.open()
+    await settle()
+    listenersOf(modal).onConfirm()
+    await settle()
+
+    await expect(result).resolves.toEqual({ status: 'confirmed', value: undefined })
+  })
+
+  it('resolves false when the dialog is dismissed with Escape', async () => {
+    const modal = await setup()
+
+    const result = modal.open()
+    await settle()
+    dialogRoot()!.dispatchEvent(new Event('cancel', { cancelable: true }))
+    await settle()
+
+    await expect(result).resolves.toEqual({ status: 'cancelled', reason: 'escape' })
+  })
+
+  it('resolves with the payload the dialog’s actions slot confirms', async () => {
+    const modal = await setup({
+      slots: {
+        actions: defineComponent({
+          setup: (_, { attrs }) => () => h('button', { class: 'ok', onClick: () => (attrs.confirm as (v: unknown) => void)?.('yes') }, 'OK'),
+        }),
+      },
+    })
+
+    const result = modal.open()
+    await settle()
+    ;(document.querySelector('.ok') as HTMLElement).click()
+    await settle()
+
+    await expect(result).resolves.toEqual({ status: 'confirmed', value: 'yes' })
   })
 
   it('is addressable by id through $material.modal', async () => {

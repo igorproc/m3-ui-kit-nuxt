@@ -10,6 +10,10 @@
  * 'interactive'`) has no `inert` at all. This composable covers both: it loops
  * Tab / Shift+Tab, moves focus in on activation and returns it on deactivation.
  *
+ * Activation focuses the container itself, not its first control: a dialog
+ * whose first control is "Delete" must not have Enter land on it. The content
+ * says what deserves focus (`autofocus`) and the surface applies it.
+ *
  * @example
  * ```ts
  * const trap = useFocusTrap(panel, { initialFocus: '[autofocus]' })
@@ -23,7 +27,7 @@ import type { MaybeRefOrGetter, Ref } from 'vue'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 
 export interface UseFocusTrapOptions {
-  /** Where focus goes on activation: a selector inside the target, an element, or `false` to leave it. @default first focusable, else the target */
+  /** Where focus goes on activation: a selector inside the target, an element, or `false` to leave it. @default the target */
   initialFocus?: MaybeRefOrGetter<string | HTMLElement | false | undefined>
   /** Return focus to the element that had it before activation. @default true */
   returnFocus?: MaybeRefOrGetter<boolean>
@@ -68,7 +72,7 @@ function resolveInitialFocus(root: HTMLElement, initial: string | HTMLElement | 
   if (initial === false) return null
   if (initial instanceof HTMLElement) return initial
   if (typeof initial === 'string') return root.querySelector<HTMLElement>(initial)
-  return getFocusableElements(root)[0] ?? root
+  return root
 }
 
 export function useFocusTrap(

@@ -2,7 +2,7 @@
 
 <identity>M3: Text fields (filled, outlined) · Токены Compose: `FilledTextFieldTokens.kt`, `OutlinedTextFieldTokens.kt`; поведение и раскладка — `TextField.kt`, `OutlinedTextField.kt`, `TextFieldDefaults.kt` (`TextFieldLabelPosition`), `internal/TextFieldImpl.kt`, `SecureTextField.kt` · Код: `src/runtime/components/ui/text-field/` (+ `composables/text-field/useTextField.ts`, токены `assets/stylesheet/components/text-field/_index.scss`) · Аудит: `data/text-field.json` · Тип: public; база композитов (`dropdown`, `autocomplete`, `file-input`, `color-input`, `fragments/color-picker/Edit.vue`, `fragments/form-renderer/field`)</identity>
 
-<implementation-status state="done" updated="2026-10-19">Реализовано: шаги 1–7, 9–12. Лейбл всегда поднят статично, высота filled 56 (LY-02), inset внутри коробки на всех формах, строка поддержки 16, prefix/suffix, `useTextFieldControl`, `rounded` → `shape` с алиасом на релиз, dev-предупреждение на `type="number"`. Шаг 8 (счётчик) и reveal не делаются по ответам на вопросы 4 и 6. 4% disabled-контейнера filled — системный ключ `disabled-container-subtle` по решению владельца (ST-05). M3-polish 2026-10-19: слоты читаются в рендере (первый чип композита появляется), коробка — цель нажатия, лейбл на строке значения (центр = верх значения − 9), поддержка в 4 от коробки, hairline `max(1px, 1rem)` с паддингами ряда через calc (ряд не растит поле), вырез не шире обрезанного лейбла, лейбл между иконками и underline + prepend от начала значения, ряд чипов не расширяет поле и держит высоту чипа, многоточие у длинного значения, `defineSlots`; сняты `rounded`/`useFieldShape`, `populated`, `type="number"`, `loading`; `useTextField` → внутренний `utils/text-field/useFieldValidation`; общая SCSS семьи `text-field/_family.scss`.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–7, 9–12. Лейбл всегда поднят статично, высота filled 56 (LY-02), inset внутри коробки на всех формах, строка поддержки 16, prefix/suffix, `useTextFieldControl`, `rounded` → `shape` с алиасом на релиз, dev-предупреждение на `type="number"`. Шаг 8 (счётчик) и reveal не делаются по ответам на вопросы 4 и 6. 4% disabled-контейнера filled — системный ключ `disabled-container-subtle` по решению владельца (ST-05). M3-polish 2026-10-19: слоты читаются в рендере (первый чип композита появляется), коробка — цель нажатия, лейбл на строке значения (центр = верх значения − 9), поддержка в 4 от коробки, hairline `max(1px, 1rem)` с паддингами ряда через calc (ряд не растит поле), вырез не шире обрезанного лейбла, лейбл между иконками и underline + prepend от начала значения, ряд чипов не расширяет поле и держит высоту чипа, многоточие у длинного значения, `defineSlots`; сняты `rounded`/`useFieldShape`, `populated`, `type="number"`, `loading`; `useTextField` → внутренний `utils/text-field/useFieldValidation`; общая SCSS семьи `text-field/_family.scss`. Фаза 2 (2026-10-30): пунктов кода нет; открыт только рендер не переснят — инфраструктура съёмки вне git (`common.md` §4).</implementation-status>
 
 ## Вердикт
 
@@ -180,9 +180,9 @@ outlined стоит в вырезе, как `float`; кнопка в `append` к
    плейсхолдер виден в покое (`:664-671` упрощается). Тот же шаг в number-input. Обновить e2e
    «a numeric 0 raises the floating label».
 7. **S — Типографика лейбла `top`** (после Q3), общая для трёх полей.
-8. **M — Счётчик** (после Q4): переиспользовать логику `useTextareaControl` (UTF-16 как
+8. **Отменено** (Q4 → 2, `decisions.md` «Счётчик символов у `MTextField`»). **M — Счётчик** (после Q4): переиспользовать логику `useTextareaControl` (UTF-16 как
    `maxlength`, live-регион только у лимита), вынести её в общий композабл, а не копировать.
-9. **M — Prefix / suffix** (после Q5). **S — reveal** (после Q6).
+9. **M — Prefix / suffix** (после Q5). **S — reveal** (после Q6) — **отменено** (Q6 → 2).
 10. **M — `useTextFieldControl`** (по §6 `common.md` и `behavior.md`): бэги `inputAttrs`,
     `labelAttrs`, `supportAttrs`, `alertAttrs`; `MTextField` становится потребителем, как
     textarea и number-input. Спека «без `class`/`data-*`». Можно отдельной задачей.

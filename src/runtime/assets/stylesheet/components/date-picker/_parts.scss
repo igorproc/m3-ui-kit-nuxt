@@ -137,20 +137,33 @@
     }
 
     &--selected {
-      background-color: g($t, 'day.selected.container');
-      color: g($t, 'day.selected.color');
+      background-color: g($t, 'day.selected.container.color');
+      color: g($t, 'day.selected.content.color');
     }
 
     // Unavailable stays focusable and announced; it only recedes and takes no
     // press.
     &--unavailable {
-      opacity: g($t, 'day.disabled.opacity');
+      color: g($t, 'day.disabled.color');
       cursor: default;
 
       &::before {
         display: none;
       }
     }
+
+    &--unavailable#{&}--today {
+      border-color: g($t, 'day.disabled.today');
+      color: g($t, 'day.disabled.today');
+    }
+
+    &--unavailable#{&}--selected {
+      background-color: g($t, 'day.disabled.selected.container.color');
+      color: g($t, 'day.disabled.selected.content.color');
+    }
+
+    // Drawn 40 in a 48 cell: a finger gets the whole cell (S8).
+    @include touch-target;
 
     // Forcing drops the selected fill; the system highlight restates it.
     @include forced-colors {
@@ -175,9 +188,21 @@
     }
   }
 
-  &--disabled &__grid,
-  &--disabled &__years {
-    opacity: g($t, 'day.disabled.opacity');
+  &--disabled &__weekday {
+    color: g($t, 'weekday.disabled.color');
+  }
+
+  &--disabled &__day {
+    color: g($t, 'day.disabled.color');
+  }
+
+  &--disabled &__day--today {
+    border-color: g($t, 'day.disabled.today');
+  }
+
+  &--disabled &__day--selected {
+    background-color: g($t, 'day.disabled.selected.container.color');
+    color: g($t, 'day.disabled.selected.content.color');
   }
 }
 
@@ -213,8 +238,8 @@
     }
 
     &--selected {
-      background-color: g($t, 'year.selected.container');
-      color: g($t, 'year.selected.color');
+      background-color: g($t, 'year.selected.container.color');
+      color: g($t, 'year.selected.content.color');
     }
 
     @include forced-colors {
@@ -228,5 +253,21 @@
         border-color: CanvasText;
       }
     }
+
+    // Rows sit 16 apart: the target grows to 48 in the block axis alone (S8).
+    @include touch-target(block);
+  }
+
+  &--disabled &__year {
+    color: g($t, 'year.disabled.color');
+  }
+
+  &--disabled &__year--current {
+    border-color: g($t, 'year.disabled.current');
+  }
+
+  &--disabled &__year--selected {
+    background-color: g($t, 'year.disabled.selected.container.color');
+    color: g($t, 'year.disabled.selected.content.color');
   }
 }

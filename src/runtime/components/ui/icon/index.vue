@@ -1,10 +1,12 @@
 <template>
   <span
     class="ui-icon"
+    :class="{ 'ui-icon--mirror': mirror }"
     v-bind="rootAttrs"
   >
     <icon
       v-if="glyph"
+      class="ui-icon__glyph"
       :name="glyph"
       v-bind="glyphAttrs"
     />
@@ -12,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { useIconControl } from '#kit/composables/icon/useIconControl'
+import { useIconControl } from '#kit/utils/icon/useIconControl'
 import { mIconProps } from './props'
 
 const props = defineProps(mIconProps)
@@ -36,8 +38,11 @@ $prefix: 'md-icon';
   height: g($t, 'size');
   line-height: 0;
 
-  .iconify {
+  &__glyph {
+    width: g($t, 'size');
+    height: g($t, 'size');
     font-size: inherit;
+    fill: g($t, 'fill');
 
     // CSS-mode icons paint a mask with `background-color: currentcolor`, which
     // forced colors replaces with Canvas — every glyph would vanish.
@@ -46,10 +51,10 @@ $prefix: 'md-icon';
     }
   }
 
-  svg {
-    width: g($t, 'size');
-    height: g($t, 'size');
-    fill: g($t, 'fill');
+  // `scale`, not `transform`: a consumer's own transform (a rotated chevron)
+  // composes with the mirror instead of replacing it.
+  &--mirror:dir(rtl) {
+    scale: g($t, 'mirror.scale');
   }
 }
 </style>

@@ -30,24 +30,42 @@
 }
 
 $alert-token-overrides: () !default;
+
+// The close control (40) sits 8 in from the corner; the text keeps clear of it.
+$close-inset: spacing(8);
+$close-size: 40rem;
 $alert-default-tokens: (
   root: (
-    gap: 12rem,
-    padding: 12rem 16rem,
-    closable: (padding-inline-end: 56rem),
+    gap: spacing(12),
+    padding: (
+      block: spacing(12),
+      inline: spacing(16),
+    ),
+    closable: (padding-inline-end: calc(#{$close-inset} + #{$close-size} + #{$close-inset})),
   ),
-  outline: (width: 1rem),
+  // A hairline stays one device pixel at least, whatever the rem scale.
+  outline: (width: max(1px, 1rem)),
   content: (
-    gap: 4rem,
+    gap: spacing(4),
     min: (width: 240rem),
   ),
   title: (typography: map.get($theme-typography-link, 'title', 'small')),
   body: (typography: map.get($theme-typography-link, 'body', 'medium')),
   icon: (size: 24rem),
+  motion: (
+    enter: (
+      duration: var(--sys-motion-duration-short-4),
+      easing: var(--sys-motion-easing-standard-decelerate),
+    ),
+    exit: (
+      duration: var(--sys-motion-duration-short-3),
+      easing: var(--sys-motion-easing-standard-accelerate),
+    ),
+  ),
   close: (
     inset: (
-      block: 8rem,
-      inline: 8rem,
+      block: $close-inset,
+      inline: $close-inset,
     ),
     focus: (
       width: 2rem,

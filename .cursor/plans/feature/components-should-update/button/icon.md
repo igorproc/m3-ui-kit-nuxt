@@ -2,7 +2,7 @@
 
 <identity>M3: Icon buttons (standard, filled, tonal, outlined; toggle) · Токены Compose: `XSmallIconButtonTokens`, `SmallIconButtonTokens`, `MediumIconButtonTokens`, `IconButtonTokens` (`StandardIconButtonTokens`), `FilledIconButtonTokens`, `FilledTonalIconButtonTokens`, `OutlinedIconButtonTokens`; поведение — `IconButton.kt`, `IconButtonDefaults.kt` · Код: `src/runtime/components/ui/button/icon/` · Аудит: `data/button.json` (общий с семьёй) · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-19">Реализовано. В-1 ось `width`; В-2 `elevated` снят из типа (dev-предупреждение, рендер сохранён на релиз); В-3 без `color` — цвет контента контейнера (`ui-button--current`), явный `color` — роль; В-4 MButton без подписи = геометрия кнопки-иконки. `density` × `width`, `shape`, toggle (round → square, square → round на пружине), слот `{ selected }`, цель 48 у всех ступеней. M3-polish (2026-10-19): выбранная square → круг ступени (`round`), без снапа; шим `elevated` удалён.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано. В-1 ось `width`; В-2 `elevated` снят из типа; В-3 без `color` — цвет контента контейнера, явный `color` — роль; В-4 MButton без подписи = геометрия кнопки-иконки. `density` × `width`, `shape`, toggle (round → square, square → round на пружине), слот `{ selected }`, цель 48 на таче. 2026-10-30 W70-А: выбранная кнопка рисует залитую пару глифа — `MIcon` в слоте получает `filled` через контекст `utils/icon/glyphFill`.</implementation-status>
 
 ## Вердикт
 
@@ -88,8 +88,9 @@ comfortable) × ширина с выносками ширины и отступ�
 - Toggle — `aria-pressed` на нативной кнопке (index.md В-4). Если потребителю нужно другое имя в
   выбранном состоянии (material-web `aria-label-selected`), он меняет `ariaLabel` сам — кит не
   добавляет второй проп без заказчика.
-- Выбранный глиф — залитая форма (S7). До решения СВ-3 потребитель передаёт пару иконок сам через
-  слот, а компонент отдаёт `selected` в слот: `<slot :selected="selected" />`.
+- Выбранный глиф — залитая форма (S7, W70-А). Выбранная кнопка заливает `MIcon` в своём слоте
+  (`outline-x` → `baseline-x`) через контекст `utils/icon/glyphFill`; слот по-прежнему получает
+  `{ selected }` для своей пары иконок (2026-10-30).
 - Цель 48 (S8) особенно важна здесь: `compact` 32 и narrow `default` 32 — самые маленькие цели семьи.
 - Внутри тулбаров (`toolbar/index.vue`) и пагинации (`pagination/index.vue:188`) кнопка-иконка
   переопределяется — при появлении `density` проверить их.

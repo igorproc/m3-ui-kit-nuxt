@@ -75,6 +75,12 @@ export function useSelectionGroup<TValue>(
     return left.every((value, index) => equal(value, right[index] as TValue))
   }
 
+  function sameSet(left: readonly TValue[], right: readonly TValue[]) {
+    if (left.length !== right.length) return false
+    const equal = comparator()
+    return right.every(value => left.some(entry => equal(entry, value)))
+  }
+
   // Reference-stable selected values: only produce a new array when the content
   // actually changes, so the registry→model emit watch below does not fire (and
   // clobber a still-unapplied preset model) merely because a child registered.
@@ -118,6 +124,16 @@ export function useSelectionGroup<TValue>(
     else selectById(id)
   }
 
+  /** Whether the external model holds `value` (one of its values in multiple). */
+  function modelNames(value: TValue) {
+    const raw = model()
+    if (isUndefined(raw)) return false
+    const equal = comparator()
+    return multiple()
+      ? toArray(raw).some(entry => equal(entry as TValue, value))
+      : equal(raw as TValue, value)
+  }
+
   function isSelected(value: TValue) {
     const ticket = ticketByValue(value)
     return ticket ? group.selectedIds.has(ticket.id) : false
@@ -138,11 +154,28 @@ export function useSelectionGroup<TValue>(
     if (ticket) toggleById(ticket.id)
   }
 
+  // Through `selectById`, so the bulk path keeps the rules a single press
+  // keeps: disabled items and the group stay out, and `max` stops it.
+  function selectAll() {
+    for (const ticket of proxy.values) selectById(ticket.id)
+  }
+
+  // Under a `max` "all" can never be reached, so a full group clears instead.
+  function toggleAll() {
+    if (group.isAllSelected.value || selectionLimitReached.value) group.unselectAll()
+    else selectAll()
+  }
+
   function register(registration: SelectionItemRegistration<TValue>): SelectionItemTicket<TValue> {
     const ticket = group.register({
       value: registration.value,
       disabled: registration.disabled,
     })
+
+    // An item registers in its own setup, before it renders: one the model
+    // names is selected right there, so the server's first frame already shows
+    // it (`applyExternal` re-runs on registration only on the client).
+    if (modelNames(toValue(registration.value) as TValue)) group.select(ticket.id)
 
     const value = computed(() => toValue(registration.value) as TValue)
     const isSelectedRef = computed(() => group.selectedIds.has(ticket.id))
@@ -177,9 +210,9 @@ export function useSelectionGroup<TValue>(
     select,
     unselect,
     toggle,
-    selectAll: () => group.selectAll(),
+    selectAll,
     unselectAll: () => group.unselectAll(),
-    toggleAll: () => group.toggleAll(),
+    toggleAll,
   }
 
   // --- external model → registry -------------------------------------------
@@ -206,10 +239,13 @@ export function useSelectionGroup<TValue>(
   watch([() => model(), () => proxy.size], applyExternal, { immediate: true })
 
   // --- registry → external model -------------------------------------------
+  // A multiple model is a set: the same values in another order are no change,
+  // so a preset is never echoed back reordered. A real change emits DOM order,
+  // as `<select multiple>` does.
   watch(selected, (values) => {
     if (multiple()) {
       const current = toArray(model()) as TValue[]
-      if (!sameValues(current, values)) emitModel([...values])
+      if (!sameSet(current, values)) emitModel([...values])
       return
     }
 

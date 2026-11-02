@@ -28,8 +28,11 @@ export interface MBreadcrumbItem {
 export const mBreadcrumbsProps = {
   /** Ordered crumbs, root first. Input objects are never mutated. */
   items: { type: Array as PropType<MBreadcrumbItem[]>, required: true as const },
-  /** Accessible name of the navigation landmark. */
-  ariaLabel: { type: String, default: 'Breadcrumbs' },
+  /**
+   * Name of the navigation landmark. A trail sits beside the app's main
+   * navigation, so it needs one; the kit ships none and warns in development.
+   */
+  ariaLabel: { type: String, default: undefined },
   /**
    * Separator between crumbs. Icon-like values render through `MIcon`; any
    * other value (for example `/`) renders as text.

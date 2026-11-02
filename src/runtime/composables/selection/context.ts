@@ -12,9 +12,10 @@
  * every public operation is expressed in terms of the consumer's `TValue`.
  */
 import { inject } from 'vue'
-import type { ComputedRef, MaybeRefOrGetter } from 'vue'
+import type { ComputedRef, MaybeRefOrGetter, VNode } from 'vue'
 import { createContext } from '#kit/shared/utils/context/createContext'
 import type { ID } from '#kit/shared/types/registry'
+import type { MSelectionPattern, PatternAttrs } from '#kit/utils/selection/patternAttrs'
 
 /** Namespace for the selection-group provide/inject pair. */
 export const SELECTION_GROUP_KEY = 'm3:selection-group'
@@ -50,6 +51,8 @@ export interface SelectionItemTicket<TValue> {
 
 /** Reactive per-item state exposed to selectable children via slot scope. */
 export interface SelectionItemState<TValue> {
+  /** ARIA of the group's `pattern` for this item (empty without one). */
+  attrs: PatternAttrs
   value: TValue
   isSelected: boolean
   isDisabled: boolean
@@ -68,6 +71,8 @@ export interface SelectionItemSlot<TItem, TValue> extends SelectionItemState<TVa
 
 /** `#default`/`#empty` group-level slot scope. */
 export interface SelectionGroupSlot<TValue> {
+  /** ARIA of the group's `pattern` for the wrapping element (empty without one). */
+  groupAttrs: PatternAttrs
   selected: TValue[]
   isAllSelected: boolean
   isMixed: boolean
@@ -75,6 +80,11 @@ export interface SelectionGroupSlot<TValue> {
   selectAll: () => void
   unselectAll: () => void
   toggleAll: () => void
+  /**
+   * The `items` rows (`#item` each, or `#empty`), to render inside the element that carries
+   * `groupAttrs` with `<component :is="rows" />`. Taken from `#default`, they are not rendered after it; data mode only.
+   */
+  rows?: VNode
 }
 
 /** Public selection facade injected by descendants of `<MSelectionGroup>`. */
@@ -95,6 +105,8 @@ export interface MSelectionContext<TValue> {
   selectAll: () => void
   unselectAll: () => void
   toggleAll: () => void
+  /** The ARIA pattern the group hands out; absent outside `MSelectionGroup`. */
+  pattern?: Readonly<ComputedRef<MSelectionPattern | undefined>>
 }
 
 const [, provideSelectionContext] = createContext<MSelectionContext<unknown>>(SELECTION_GROUP_KEY)

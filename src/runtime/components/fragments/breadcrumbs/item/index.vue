@@ -77,26 +77,39 @@ if (import.meta.dev) {
   // variant colours already weigh two classes (`.ui-button.ui-button--text`),
   // and its sheet may load after this one in a production build.
   & &__link.ui-button {
-    min-height: g($t, 'item-height');
-    padding-inline: g($t, 'item-padding-inline');
-    border-radius: g($t, 'item-shape');
-    color: g($t, 'item-color');
+    min-height: g($t, 'item.height');
+    padding-inline: g($t, 'item.padding.inline');
+    border-radius: g($t, 'item.shape');
+    color: g($t, 'item.color');
 
-    @include apply-typography(g($t, 'item-typography'));
+    @include apply-typography(g($t, 'item.typography'));
+
+    // Its inline neighbours (a divider, the next crumb) sit too close for a
+    // grown inline axis: only the block axis reaches 48 on touch.
+    @include touch-target(block);
+
+    // Forced colors drop the shade that sets a link apart from plain text.
+    @include forced-colors {
+      text-decoration: underline;
+    }
   }
 
   &__text {
     display: inline-flex;
     align-items: center;
-    min-height: g($t, 'item-height');
-    padding-inline: g($t, 'item-padding-inline');
-    color: g($t, 'item-color');
+    min-height: g($t, 'item.height');
+    padding-inline: g($t, 'item.padding.inline');
+    color: g($t, 'item.color');
     white-space: nowrap;
 
-    @include apply-typography(g($t, 'item-typography'));
+    @include apply-typography(g($t, 'item.typography'));
 
-    &--current { color: g($t, 'item-current-color'); }
-    &--disabled { color: g($t, 'item-disabled-color'); }
+    &--current {
+      color: g($t, 'item.current.color');
+      font-weight: g($t, 'item.current.weight');
+    }
+
+    &--disabled { color: g($t, 'item.disabled.color'); }
 
     // Forcing turns every non-link crumb CanvasText; links become LinkText.
     // GrayText keeps a disabled crumb from reading as the current page.

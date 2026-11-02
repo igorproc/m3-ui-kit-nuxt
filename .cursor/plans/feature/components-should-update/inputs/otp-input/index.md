@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 — авторский компонент; системные правила берутся из семейства полей (`color-and-state.md`, таблица ролей «ячейки, чипы, шаги…») и из ролей `OutlinedTextFieldTokens` / `FilledTextFieldTokens` (кромка, disabled 12 / 38 %) · Токены Compose: прямых нет · Код: `src/runtime/components/ui/otp-input/` (`index.vue`, `props.ts`), `src/runtime/composables/otp-input/{useOtpValue,useOtpControl}.ts`, `src/runtime/shared/constants/otp.ts`, токены `src/runtime/assets/stylesheet/components/otp-input/_index.scss` · Аудит: `data/otp-input.json` · Тип: public. Дочерние части — [field.md](field.md) (ячейка), [group.md](group.md) (группа), [separator.md](separator.md) (разделитель): отдельными компонентами они больше не существуют</identity>
 
-<implementation-status state="done" updated="2026-10-18">Реализовано: шаги 1–5, 7–9. Ось `variant` (outlined по умолчанию), `placeholder` через `OtpCell.hint`, `mask: false | last | always`, `required`, `path` → `useField`, загрузка — `MLoading` в строке сообщения. Шаг 6 (фокус заполненного кода) — вопрос лиду. M3-polish (2026-10-18, w5): шаг 6 — код, набранный до конца, в фокусе показывает фокус на всех кромках (`--caret-past`), кольцо активной ячейки — вторым rem inset-тени (ширина кромки и глиф не меняются, переход плавный), символ в полном коде заменяет ячейку под кареткой, сняты `mask: true|глиф`, каретка вынесена в `useOtpCaret`.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–5, 7–9. Ось `variant` (outlined по умолчанию), `placeholder` через `OtpCell.hint`, `mask: false | last | always`, `required`, `path` → `useField`, загрузка — `MLoading` в строке сообщения. Шаг 6 (фокус заполненного кода) — вопрос лиду. M3-polish (2026-10-18, w5): шаг 6 — код, набранный до конца, в фокусе показывает фокус на всех кромках (`--caret-past`), кольцо активной ячейки — вторым rem inset-тени (ширина кромки и глиф не меняются, переход плавный), символ в полном коде заменяет ячейку под кареткой, сняты `mask: true|глиф`, каретка вынесена в `useOtpCaret`. Фаза 2 (2026-10-30): пунктов кода нет; открыт только рендер не переснят — инфраструктура съёмки вне git (`common.md` §4).</implementation-status>
 
 ## Вердикт
 
@@ -179,7 +179,7 @@ escape hatch без классов и `data-*`.
 7. **S — вид `loading`** (после вопроса 4). Рекомендуемый вариант — `MProgressLinear` в строке
    сообщения. Файлы: `index.vue`, `_index.scss`.
 8. **S — `required`** (после вопроса 6), **M — `path` → `useField`** (после вопроса 7, по образцу
-   `useNumberInputControl`), **M — `density`** (если вопрос 5 = да).
+   `useNumberInputControl`), **M — `density`** (если вопрос 5 = да) — **отменено** (5 → 1, `decisions.md` «У `MOtpInput` нет оси `density`»).
 9. **M — тесты** (раздел ниже).
 
 ## Тесты

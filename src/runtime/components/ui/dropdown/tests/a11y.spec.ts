@@ -4,6 +4,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import MDropdown from '../index.vue'
 import { base, createHost, destroyHost, input, mount, open, options } from './helpers'
 import type { Wrapper } from './helpers'
+import type { DOMWrapper } from '@vue/test-utils'
 import { provideValidationAdapter } from '#kit/composables/validation/context'
 import type { ValidationAdapter } from '#kit/composables/validation/types'
 
@@ -11,6 +12,16 @@ beforeEach(createHost)
 afterEach(destroyHost)
 
 describe('m-dropdown · a11y', () => {
+  // Q16-Б: a listbox does not sit inside a menu.
+  it('opens its listbox in a panel with no menu role', async () => {
+    const wrapper = await mount({ ...base, messages: { empty: 'None' } })
+    await input(wrapper).trigger('keydown', { key: 'ArrowDown' })
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[role="listbox"]')).not.toBeNull()
+    expect(document.querySelector('[role="menu"]')).toBeNull()
+  })
+
   it('puts the combobox contract on the real input, not on a wrapper', async () => {
     const wrapper = await mount({ ...base, label: 'City' })
     const field = input(wrapper)
@@ -209,3 +220,38 @@ describe('m-dropdown · a11y', () => {
 function optionsById(): Record<string, HTMLElement> {
   return Object.fromEntries(options().map(option => [option.id.split('-option-')[1]!, option]))
 }
+
+// W17-Б: the chip of a value is one button that removes it, named by the app.
+describe('m-dropdown · a11y · chips', () => {
+  beforeEach(createHost)
+  afterEach(destroyHost)
+
+  it('names each chip as its removal, with the title of its value', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1, 3], messages: { remove: 'Remove {title}' } })
+    const chips = wrapper.findAll('.ui-dropdown__chip')
+
+    expect(chips.map((chip: DOMWrapper<Element>) => chip.element.tagName)).toEqual(['BUTTON', 'BUTTON'])
+    expect(chips.map((chip: DOMWrapper<Element>) => chip.attributes('aria-label'))).toEqual(['Remove Alpha', 'Remove Gamma'])
+  })
+
+  it('leaves the chip named by its title without a phrase', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1] })
+
+    expect(wrapper.find('.ui-dropdown__chip').attributes('aria-label')).toBeUndefined()
+    expect(wrapper.find('.ui-dropdown__chip').text()).toContain('Alpha')
+  })
+
+  it('draws the close glyph at the end, hidden from assistive tech', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1] })
+
+    expect(wrapper.find('.ui-dropdown__chip').classes()).toContain('ui-chip--trailing')
+    expect(wrapper.find('.ui-dropdown__chip .ui-chip__trailing .ui-icon').attributes('aria-hidden')).toBe('true')
+  })
+
+  it('offers no removal and no removal name on a read-only field', async () => {
+    const wrapper = await mount({ ...base, multiple: true, modelValue: [1], readonly: true, messages: { remove: 'Remove {title}' } })
+
+    expect(wrapper.find('.ui-dropdown__chip').attributes('aria-label')).toBeUndefined()
+    expect(wrapper.find('.ui-dropdown__chip .ui-chip__trailing').exists()).toBe(false)
+  })
+})

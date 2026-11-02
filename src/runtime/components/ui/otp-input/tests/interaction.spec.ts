@@ -57,6 +57,30 @@ describe('m-otp-input · interaction', () => {
       expect(last(wrapper, 'complete')).toEqual(['123456'])
     })
 
+    // Q34-А: a code copied from an SMS or an e-mail comes formatted; its
+    // separators are not mistakes of the user.
+    it.each([
+      ['a hyphen', '123-456'],
+      ['a space', '123 456'],
+      ['a no-break space', '123 456'],
+      ['a non-breaking hyphen', '123‑456'],
+    ])('says nothing is wrong with %s in a pasted code', async (_, pasted) => {
+      const wrapper = await mount({ length: 6 })
+
+      await wrapper.find('input').trigger('paste', { clipboardData: { getData: () => pasted } })
+
+      expect(last(wrapper, 'update:modelValue')).toEqual(['123456'])
+      expect(wrapper.emitted('invalid')).toBeUndefined()
+    })
+
+    it('still names the other characters a paste carried', async () => {
+      const wrapper = await mount({ length: 6 })
+
+      await wrapper.find('input').trigger('paste', { clipboardData: { getData: () => '12a-456' } })
+
+      expect(last(wrapper, 'invalid')).toEqual(['12a-456', ['a']])
+    })
+
     it('splices a paste in at the caret', async () => {
       const wrapper = await mount({ length: 6, modelValue: '12' })
       const input = wrapper.find('input').element as HTMLInputElement

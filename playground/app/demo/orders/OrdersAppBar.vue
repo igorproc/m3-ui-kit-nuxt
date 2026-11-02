@@ -25,7 +25,7 @@
           v-model="query"
           aria-label="Поиск по заказам и покупателям"
           :placeholder="compact ? 'Поиск' : 'Номер заказа, имя или e-mail'"
-          clear-label="Очистить поиск"
+          :messages="{ clear: 'Очистить поиск' }"
         />
       </div>
 

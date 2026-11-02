@@ -2,7 +2,7 @@
 
 <identity>M3: Menus (Expressive: standard / vibrant, группы с разделением, выбираемые пункты; baseline — одна поверхность с разделителями) · Токены Compose: `MenuTokens.kt`, `StandardMenuTokens.kt`, `VibrantMenuTokens.kt`, `SegmentedMenuTokens.kt`; поведение — `Menu.kt` (`DropdownMenu`, `DropdownMenuPopup`, `DropdownMenuGroup`, `DropdownMenuItem`), `MenuDefaults.kt` · Код: `src/runtime/components/ui/menu/`, `src/runtime/composables/menu/useMenu.ts`, `src/runtime/composables/popover/{usePopover,placement}.ts`, токены `src/runtime/assets/stylesheet/components/menu/_index.scss` · Аудит: `data/menu.json` · Тип: public (+ инфраструктура для dropdown, autocomplete, color-input, number-input unit, split button)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Позиционирование (CSS anchor + `position-try-fallbacks`, JS flip/shift), top layer и scroll lock сделаны (`overlay-popover-collision_2026-10-01_0300.md`, `overlay-top-layer-vfm-removal_2026-10-01_1200.md`). Шаги 1–3 чинят дефекты и межкомпонентные долги без смены API. Анатомия Expressive (шаг 5) и ломающие изменения (шаги 4, 6) ждут вопросов 1–5.</implementation-status>
+<implementation-status state="partial" updated="2026-10-30">Сделаны шаги 1, 3, 4, 5, 6 и из шага 2 логические стороны, RTL и `--ui-menu-origin` по фактической стороне после переворота (`usePopover.placement`); вопросы 1–5 закрыты (Q13-А, Q16-Б, Q14-А, 4 → 1, 5 → 1). Phase 2 (2026-10-30): смонтированное открытым показано (`appear`), `#activator` + `useMenuControl` на бэгах (A11-06), Expressive-анатомия standard / vibrant, строка пункта по токенам, `DEFAULT_Z_INDEX` удалён, фикстуры `menu/{matrix,stress}` + `menu.e2e.ts`. Осталось: кламп высоты (шаг 2, отложен Q56-А / B4.2), рецепт разделителя, документация (шаг 7, вне репо). Журнал — `.cursor/handoff/plans-audit-2/decisions-menu.md`.</implementation-status>
 
 ## Вердикт
 
@@ -219,29 +219,37 @@
    `cursor: default`). CT-03, CT-04, LY-10. Длительности на токенах и reduced motion. Файлы:
    `components/ui/menu/index.vue`, `assets/stylesheet/components/menu/_index.scss`,
    `composables/menu/useMenu.ts`, `composables/popover/usePopover.ts`, `composables/useStack.ts`.
+   Сделано, кроме базы `useStack` (2000) → `z()` — файл вне группы menu (отчёт фазы 2).
 2. **M — размещение и кламп.** Долг 4: логические `start` / `end`, RTL, `position-try-order`,
    JS-кламп с запасом 48 / 8 и safe area, `ResizeObserver`, прокрутка группы, `--ui-menu-origin`
    после переворота. Зависимости: `decisions.md` (кламп — работа MMenu); сверить с dropdown
    (`--m-dropdown-panel-max-height`). Задевает тултип. Файлы: `composables/popover/placement.ts`,
    `placement.spec.ts`, `usePopover.ts`, `menu/index.vue`.
+   Сделано: логические стороны, RTL, `--ui-menu-origin` по фактической стороне. Кламп высоты
+   (`position-try-order`, запас 48 / 8, `ResizeObserver`, прокрутка группы) — **отложено** (Q56-А, B4.2).
 3. **M — клавиатура и ARIA.** `useMenuControl` с бэгами, `#activator`, имя через триггер, typeahead
    (`useTypeahead`), Tab закрывает, `a[href]`, `aria-disabled` в обходе, разделение `$attrs`
    (EN-04). Переписать спеку про запертый Tab. Зависимости: шаг 1. Файлы:
    `composables/menu/useMenuControl.ts` (+ `.spec.ts` на анонимной разметке), `menu/index.vue`.
+   Сделано (2026-10-30); все пункты вне Tab-порядка (`tabindex="-1"`), без roving.
 4. **M — роль поверхности.** Долг 1, по вопросу 2. Перевести dropdown, autocomplete и color-input,
    axe-тесты dropdown и autocomplete должны пройти без исключений. Зависимости: шаги 1–3. Файлы: по
    вопросу 2, `dropdown/index.vue`, `autocomplete/index.vue`, `color-input/index.vue`.
+   Сделано (Q16-Б, `fragments/popover`); `search` остаётся на `MMenu` (WIP владельца).
 5. **L — анатомия Expressive.** `MMenuItem`, `MMenuGroup`, рецепт разделителя. Токены групп и
    пунктов, форма по позиции, статичная форма selected (S9; без морфа — S3 отклонён), disabled, vibrant (вопрос 4). Перевести
    split-кнопку и `number-input/unit.vue` (выбор единицы — `menuitemradio` с check). Зависимости:
    вопросы 3–5; S1, S9. Файлы: `components/ui/menu/{item,group}/`, `menu/_index.scss`,
    `button/split/index.vue`, `number-input/unit.vue`.
+   Сделано (вопросы 4 → 1, 5 → 1), кроме рецепта разделителя — **отложено** (заказчика в ките нет).
 6. **S — режим без якоря и `placement`.** По вопросу 1: удалить ветку `!absolute` (`index.vue:33-38`,
    `useMenu.ts:78`), алиасы `absolute` и `origin`. Файлы: `menu/props.ts`, `menu/types.ts`,
    `menu/index.vue`, `useMenu.ts`.
+   Сделано (Q13-А, Q26-А, без алиасов).
 7. **M — документация (DC-01…05).** Когда меню, а когда dropdown (меню — действия, выбор значения —
    `MDropdown` / `MAutocomplete`). Анатомия и токены, пропы, клавиатура, переворот и кламп, top
    layer внутри модалки.
+   **Отложено**: документация в docs_v2/v3 вне репо кита.
 
 ## Тесты
 

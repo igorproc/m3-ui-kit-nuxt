@@ -7,18 +7,91 @@
 // `<MNumberInput>` (`&` is the block). One copy of the parts the three draw the
 // same way; each reads its own `$tokens`, which carry the same paths here.
 
-// The shape axis: a modifier only picks the radius. A filled box has a flat
-// bottom, so a full radius would dome it on a short field — `full` is capped at
-// the large tier for filled only.
-@mixin shape-axis($t, $block) {
-  @each $shape in none, extra-small, medium, large, full {
-    &--shape-#{$shape} {
-      --ui-#{$block}-radius: #{g($t, 'shape.#{$shape}')};
-    }
+$shapes: none, extra-small, medium, large, full;
+$densities: compact, default, comfortable;
+
+// ── axes · resolved at build time, never through a custom property ──
+// A declaration that depends on an axis is followed, inside the rule that holds
+// it, by one rule per step. The step is the root's modifier in `:where(… *)`,
+// which weighs nothing: every copy keeps the weight and the place of the rule
+// it extends, so the cascade is the one the old custom property gave.
+
+// `true` is every step of the axis, `false` none — the axis is not iterated.
+@function -steps($steps, $all) {
+  @if $steps == true {
+    @return $all;
   }
 
-  &--filled#{&}--shape-full {
-    --ui-#{$block}-radius: #{g($t, 'shape.large')};
+  @if not $steps {
+    @return (null,);
+  }
+
+  @return $steps;
+}
+
+// `@content($key)` once per combination of the given steps on the field root
+// above `&` — `$key` is the steps joined by dots (`medium.compact`), their path
+// in a token branch keyed by the same axes. `$shape` and `$density` take `true`
+// (every step), one step or a list of them.
+@mixin steps($block, $variant: null, $shape: false, $density: false) {
+  @each $shape-step in -steps($shape, $shapes) {
+    @each $density-step in -steps($density, $densities) {
+      $modifiers: '';
+      $key: '';
+
+      @if $variant {
+        $modifiers: '#{$modifiers}.ui-#{$block}--#{$variant}';
+      }
+
+      @if $shape-step {
+        $modifiers: '#{$modifiers}.ui-#{$block}--shape-#{$shape-step}';
+        $key: $shape-step;
+      }
+
+      @if $density-step {
+        $modifiers: '#{$modifiers}.ui-#{$block}--density-#{$density-step}';
+        $key: if(sass($key == ''): $density-step; else: '#{$key}.#{$density-step}');
+      }
+
+      &:where(#{$modifiers} *) {
+        @content($key);
+      }
+    }
+  }
+}
+
+// Where content starts on an outlined box depends on its corner and its height.
+// `@content($box)`: the token branch of each corner × height.
+@mixin outlined-boxes($block, $density: true) {
+  @include steps($block, outlined, true, $density) using ($key) {
+    @content('box.outlined.#{$key}');
+  }
+}
+
+// Every box whose content start is not the filled default: each outlined corner
+// × height, then `underline`, which has no container to clear.
+@mixin inset-boxes($block, $density: true, $underline: true) {
+  @include outlined-boxes($block, $density) using ($box) {
+    @content($box);
+  }
+
+  @if $underline {
+    @include steps($block, underline) using ($key) {
+      @content('box.underline');
+    }
+  }
+}
+
+// The corner of the part that draws the box. A filled box has a flat bottom,
+// so a full radius would dome it on a short field — `full` is capped at the
+// large tier for filled only.
+@mixin shape-axis($t, $block) {
+  @include steps($block, $shape: true) using ($shape) {
+    border-radius: g($t, 'shape.#{$shape}');
+  }
+
+  @include steps($block, filled, full) using ($shape) {
+    border-radius: g($t, 'shape.large');
   }
 }
 

@@ -1,5 +1,6 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use '../text-field/family';
 
 // ==========================================
 // TEXTAREA COMPONENT TOKENS
@@ -44,6 +45,45 @@ $disabled-content: color-mix(in srgb, #{$on-surface} state-opacity(disabled-cont
 // A multi-line box has no height CSS can read at the root, so a `full` corner is
 // capped by the default box: `$rows` lines plus the block padding, halved.
 $radius-cap: calc((#{$rows} * #{$line-height} + #{2 * $padding-block}) / 2);
+
+// A box is where content starts and what is measured from it: where an
+// overlaid label starts and how far it may run, the outline's start padding,
+// the open notch.
+@function box($inset) {
+  @return (
+    inset: $inset,
+    label: (
+      start: (prepend: calc(#{$inset} + #{$label-adornment-clearance})),
+      room: (
+        base: calc((100% - 2 * #{$inset}) / #{$label-raised-scale}),
+        // An adornment on one side: start or end, the same sum.
+        one: calc((100% - 2 * #{$inset} - #{$label-adornment-clearance}) / #{$label-raised-scale}),
+        both: calc((100% - 2 * #{$inset} - #{2 * $label-adornment-clearance}) / #{$label-raised-scale}),
+      ),
+    ),
+    // The `<fieldset>`'s start padding puts the legend where the raised
+    // label's padding box begins.
+    outline: (start: calc(#{$inset} - #{$notch-padding-inline} - #{$hairline})),
+    // Open, the notch stops where the label's own room ends.
+    notch: (open: calc(100% - #{$inset} + #{$notch-padding-inline} + #{$hairline})),
+  );
+}
+
+// An outlined box per corner. A large or pill corner curves past the default
+// start, and a notch cut into that curve reads as a broken corner — so the
+// content (and with it the notch) starts past the effective radius.
+@function outlined-boxes() {
+  $boxes: ();
+
+  @each $shape in family.$shapes {
+    $radius: map.get($theme-shape-link, $shape);
+    $inset: max(#{$padding-inline}, min(#{$radius}, #{$radius-cap}) + #{$notch-padding-inline});
+    $boxes: map.set($boxes, $shape, box($inset));
+  }
+
+  @return $boxes;
+}
+
 $tokens: (
   container: (
     gap: spacing(4),
@@ -65,13 +105,6 @@ $tokens: (
     overlay: (
       top: calc(#{$value-top} - #{$label-overlay-line} * #{$label-raised-scale * 0.5}),
       body-padding: calc(#{$value-top} - #{$hairline}),
-    ),
-    start: (prepend: calc(var(--ui-textarea-inset) + #{$label-adornment-clearance})),
-    room: (
-      base: calc((100% - 2 * var(--ui-textarea-inset)) / #{$label-raised-scale}),
-      // An adornment on one side: start or end, the same sum.
-      one: calc((100% - 2 * var(--ui-textarea-inset) - #{$label-adornment-clearance}) / #{$label-raised-scale}),
-      both: calc((100% - 2 * var(--ui-textarea-inset) - #{2 * $label-adornment-clearance}) / #{$label-raised-scale}),
     ),
   ),
   input: (
@@ -171,28 +204,25 @@ $tokens: (
     max-height: calc(var(--m-textarea-max-rows) * 1lh),
   ),
   outlined: (
-    // Where content starts. A large or pill corner curves past the default
-    // start, and a notch cut into that curve reads as a broken corner — so the
-    // content (and with it the notch) starts past the effective radius.
-    inset: max(#{$padding-inline}, min(var(--ui-textarea-radius), #{$radius-cap}) + #{$notch-padding-inline}),
     // The control trades its own border for padding of the same width, so its
     // `overflow: hidden` clips at the outer edge and the outline drawn inside
     // that ring is never cut.
     frame: $hairline,
-    // The `<fieldset>` that draws the border. Its start padding puts the legend
-    // where the raised label's padding box begins.
-    outline: (padding: (start: calc(var(--ui-textarea-inset) - #{$notch-padding-inline} - #{$hairline}))),
     // The gap cut into the top border behind the raised label: the label text
-    // at its raised size, plus breathing room on either side; open, it stops
-    // where the label's own room ends.
+    // at its raised size, plus breathing room on either side; open, its width
+    // is the box's.
     notch: (
       padding: (inline: $notch-padding-inline),
       font-size: calc(var(--md-sys-typescale-#{$label-overlay-typescale}-size) * #{$label-raised-scale}),
       collapsed: 0.01rem,
-      open: calc(100% - var(--ui-textarea-inset) + #{$notch-padding-inline} + #{$hairline}),
     ),
     // `HoverLabelColor`: outlined lifts its label with its edge on hover.
     hover: (border: (color: $on-surface), label: (color: $on-surface)),
+  ),
+  // Where content starts, per variant — and on outlined per corner.
+  box: (
+    filled: box($padding-inline),
+    outlined: outlined-boxes(),
   ),
   shape: (
     none: map.get($theme-shape-link, 'none'),

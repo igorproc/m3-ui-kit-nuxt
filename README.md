@@ -27,17 +27,18 @@ makes instant theme switching possible.
 - **Auto-layout** — a CSS-grid app shell that carves zones from DOM order, with zero measurement and zero CLS
 - **SSR-first** — one shared viewport state, one global listener registry, no per-component resize subscriptions
 
-Requires **Nuxt >= 4.0.0**.
+Requires **Nuxt ^4.4.8** (Vue ^3.5.35) and **Sass** — the components ship `<style lang="scss">`, compiled by your app.
 
 ---
 
 ## Install
 
 ```bash
-npm i @pr0s1k/primetime-kit
+npm i @pr0s1k/primetime-kit sass
 ```
 
-The package is published built (`dist/`), so there is no build step on your side.
+The package is published built (`dist/`), so there is no build step on your side. `sass` is a
+peer dependency (`^1.80.0`): the kit's SCSS is compiled by your app's Vite, which needs it.
 
 ```ts
 // nuxt.config.ts
@@ -76,7 +77,8 @@ export default defineNuxtConfig({
 ```
 
 Each theme's `color` is an MD3 **seed**: the full tonal palette for both definitions and all
-three contrast levels is derived from it. Every option is documented in
+three contrast levels is derived from it. A `color` that is not a 3-, 6- or 8-digit HEX seed
+stops the build. Every option is documented in
 [docs/configuration.md](docs/configuration.md).
 
 ## Use
@@ -146,6 +148,10 @@ theme.availableThemes             // configured palettes, for a theme picker
 await theme.setColorFromImage(img)  // async: the image quantizer is loaded on demand
 ```
 
+`system` follows the reader's OS setting in CSS (`prefers-color-scheme`), so the server's
+first paint is already right. `setColorFromImage` reads the image's pixels: a cross-origin
+image needs CORS (`crossorigin` plus `Access-Control-Allow-Origin`), otherwise it resolves `null`.
+
 Custom palettes can be locked off application-wide with `restrict: { customPalette: true }`,
 which also sanitizes a hand-set cookie rather than trusting it. See
 [docs/configuration.md](docs/configuration.md).
@@ -161,8 +167,9 @@ import { provideValidationAdapter, veeValidateAdapter } from '@pr0s1k/primetime-
 provideValidationAdapter(veeValidateAdapter())
 ```
 
-`vee-validate` and `yup` are the kit's dev dependencies only — an app that never calls
-`provideValidationAdapter` ships neither.
+The `/validation` entry needs `vee-validate` and `yup`, which the kit declares as optional peer
+dependencies: install both yourself (`npm i vee-validate yup`). An app that never imports
+`/validation` ships neither.
 
 ## Responsive
 

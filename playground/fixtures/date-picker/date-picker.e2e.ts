@@ -43,15 +43,38 @@ test.describe('MDatePicker', () => {
     expect((await picker.boundingBox())!.height).toBeCloseTo(before, 0)
   })
 
-  test('the day is a 40 circle inside a 48 target', async ({ page }) => {
+  test('the day is a 40 circle in a 48 cell', async ({ page }) => {
     await openFixture(page, 'date-picker/matrix')
     const day = page.getByTestId('selected').getByRole('gridcell', { name: 'Wednesday, October 14, 2026' })
+    const next = page.getByTestId('selected').getByRole('gridcell', { name: 'Thursday, October 15, 2026' })
 
     const unit = await remInPx(page)
     const box = (await day.boundingBox())!
     expect(box.width / unit).toBeCloseTo(40, 0)
     expect(box.height / unit).toBeCloseTo(40, 0)
+    expect(((await next.boundingBox())!.x - box.x) / unit).toBeCloseTo(48, 0)
     expect(await day.evaluate(el => getComputedStyle(el).borderRadius)).not.toBe('0px')
+  })
+
+  // Audit: an unavailable day recedes by its colour role (on-surface at 38%), not by
+  // opacity, which would also fade a focus ring or a "today" mark it carries.
+  test('an unavailable day recedes by its colour role, not by opacity', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const early = page.getByTestId('bounded').getByRole('gridcell', { name: 'Friday, October 9, 2026' })
+    const style = await early.evaluate(el => ({ opacity: getComputedStyle(el).opacity, color: getComputedStyle(el).color }))
+
+    expect(style.opacity).toBe('1')
+    expect(style.color).toMatch(/\/ 0\.38\)$/)
+  })
+
+  test('a disabled picker recedes its days and years by role, not by opacity', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const picker = page.getByTestId('disabled')
+    const grid = picker.getByRole('grid')
+    const day = picker.getByRole('gridcell', { name: 'Thursday, October 15, 2026' })
+
+    expect(await grid.evaluate(el => getComputedStyle(el).opacity)).toBe('1')
+    expect(await day.evaluate(el => getComputedStyle(el).color)).toMatch(/\/ 0\.38\)$/)
   })
 
   test('arrows move the focus between days, Enter chooses', async ({ page }) => {
@@ -154,7 +177,8 @@ test.describe('MDatePicker', () => {
     await dialog.getByRole('button', { name: 'OK' }).click()
 
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByRole('alert')).not.toBeEmpty()
+    // The field's own alert: the dialog also hosts the app's live region.
+    await expect(dialog.locator('.ui-date-picker__input').getByRole('alert')).not.toBeEmpty()
   })
 
   test('the dialog has no axe violations while open', async ({ page }) => {
@@ -259,5 +283,45 @@ test.describe('MDatePicker', () => {
     await page.getByTestId('open-typed').click()
     await waitForMotion(page)
     await expect(page.getByRole('dialog').getByRole('textbox')).toBeFocused()
+  })
+})
+
+/**
+ * Whether a point `dx`/`dy` rem from the centre of `target` lands on it: the
+ * target is an invisible pseudo-element, so `elementFromPoint` returns the cell.
+ */
+const reaches = (target: Locator, dx: number, dy: number) => target.evaluate((el, [x, y]) => {
+  el.scrollIntoView({ block: 'center', inline: 'center' })
+  const box = el.getBoundingClientRect()
+  const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+  const hit = document.elementFromPoint(box.left + box.width / 2 + x! * rem, box.top + box.height / 2 + y! * rem)
+  return hit === el || el.contains(hit)
+}, [dx, dy])
+
+// Audit + S8: drawn under 48, a day and a year take a 48 target on a coarse pointer.
+test.describe('MDatePicker · 48 pointer target on touch', () => {
+  // At 1920 one rem is one CSS pixel, so the margins below are not lost to hit-test rounding.
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 1920, height: 1080 } })
+
+  test('a day answers across its 48 cell on both axes, not past it', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const day = page.getByTestId('selected').getByRole('gridcell', { name: 'Wednesday, October 14, 2026' })
+
+    expect(await reaches(day, 0, -23)).toBe(true)
+    expect(await reaches(day, -23, 0)).toBe(true)
+    expect(await reaches(day, 0, -26)).toBe(false)
+  })
+
+  test('a year answers across 48 in the block axis', async ({ page }) => {
+    await openFixture(page, 'date-picker/matrix')
+    const picker = page.getByTestId('selected')
+    await picker.locator('.ui-date-picker__view-toggle').click()
+    await picker.locator('.ui-date-picker__years').waitFor()
+    await waitForMotion(page)
+    const year = picker.getByRole('gridcell', { name: '2026', exact: true })
+
+    expect(await reaches(year, 0, -23)).toBe(true)
+    expect(await reaches(year, 0, 23)).toBe(true)
+    expect(await reaches(year, 0, -27)).toBe(false)
   })
 })

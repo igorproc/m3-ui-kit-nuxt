@@ -126,4 +126,38 @@ describe('useConfirmEditTransaction', () => {
     expect(edit.draft.value).toEqual({ name: 'Barbara' })
     expect(edit.draft.value).not.toBe(model.value)
   })
+
+  // B9.7e: `v-model="tx.draft.value.name"` writes a nested field, not the draft.
+  it('sees a field of the draft edited in place', async () => {
+    const model = ref({ name: 'Ada', tags: ['math'] })
+    const save = vi.fn(async (draft: { name: string, tags: string[] }) => draft)
+    const edit = useConfirmEditTransaction({ model, save })
+
+    edit.begin()
+    // A template reads `dirty` on render, so it is cached before the edit.
+    expect(edit.dirty.value).toBe(false)
+
+    edit.draft.value.name = 'Grace'
+    expect(edit.dirty.value).toBe(true)
+
+    edit.draft.value.name = 'Ada'
+    edit.draft.value.tags.push('navy')
+    expect(edit.dirty.value).toBe(true)
+
+    const result = await edit.commit()
+
+    expect(result.outcome).toBe('saved')
+    expect(model.value).toEqual({ name: 'Ada', tags: ['math', 'navy'] })
+  })
+
+  it('never lets an edit in place reach the committed value or the model', () => {
+    const model = ref({ name: 'Ada' })
+    const edit = useConfirmEditTransaction({ model })
+
+    edit.begin()
+    edit.draft.value.name = 'Grace'
+
+    expect(edit.committed.value).toEqual({ name: 'Ada' })
+    expect(model.value).toEqual({ name: 'Ada' })
+  })
 })

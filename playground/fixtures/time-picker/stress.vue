@@ -10,6 +10,7 @@
     >
       <h2>{{ width }}</h2>
       <MTimePicker
+        v-bind="TIME_LABELS"
         v-model="byWidth[width]"
         layout="horizontal"
         hour-cycle="h12"
@@ -28,6 +29,7 @@
         {{ cycle }}
       </MButton>
       <MTimePicker
+        v-bind="TIME_LABELS"
         v-model="flying"
         :hour-cycle="cycle"
         data-test="cycle"
@@ -36,11 +38,13 @@
     </div>
 
     <MTimePicker
+      v-bind="TIME_LABELS"
       v-model="unreadable"
       data-test="unreadable"
     />
 
     <MTimePicker
+      v-bind="TIME_LABELS"
       v-model="arabic"
       locale="ar-EG"
       hour-cycle="auto"
@@ -49,6 +53,7 @@
     />
 
     <MTimePicker
+      v-bind="TIME_LABELS"
       v-model="korean"
       locale="ko-KR"
       hour-cycle="h12"
@@ -65,6 +70,7 @@
 import { reactive, ref } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MTimePicker from '#kit/components/ui/time-picker/index.vue'
+import { TIME_LABELS } from './labels'
 
 const byWidth = reactive<Record<number, string>>({ 280: '07:30', 360: '13:15', 600: '23:55' })
 const cycle = ref<'h12' | 'h23'>('h23')

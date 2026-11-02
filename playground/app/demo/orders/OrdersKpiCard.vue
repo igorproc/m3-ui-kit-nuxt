@@ -42,6 +42,7 @@ import { computed } from 'vue'
 import SparklineChart from '~/demo/charts/SparklineChart.vue'
 import { signedPercent } from './data/format'
 import type { Kpi, KpiTrend } from './useOrdersMetrics'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 const props = defineProps<{
   kpi: Kpi
@@ -49,7 +50,7 @@ const props = defineProps<{
   lastValue: string
 }>()
 
-const TREND_ICONS: Record<KpiTrend, string> = {
+const TREND_ICONS: Record<KpiTrend, MIconName> = {
   up: 'ic:outline-trending-up',
   down: 'ic:outline-trending-down',
   flat: 'ic:outline-trending-flat',

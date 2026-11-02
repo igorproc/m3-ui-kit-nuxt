@@ -48,7 +48,6 @@ useButtonNameWarning('m-button-fab', () => props.ariaLabel)
   justify-content: center;
   border: none;
   cursor: pointer;
-  overflow: hidden;
   outline: none;
   transition: box-shadow $move, background-color $move, color $move;
 
@@ -77,6 +76,12 @@ useButtonNameWarning('m-button-fab', () => props.ariaLabel)
         font-size: g($t, '#{$d}.icon.size');
       }
     }
+  }
+
+  // Drawn at 40, the compact FAB still takes a 48 pointer target on touch. The
+  // root is not clipped for it: the ripple and the state layer round themselves.
+  &--compact {
+    @include touch-target;
   }
 }
 </style>

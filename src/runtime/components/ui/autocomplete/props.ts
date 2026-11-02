@@ -8,7 +8,7 @@
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { mDropdownProps } from '#kit/components/ui/dropdown/props'
-import type { DropdownPanelSlotProps, MDropdownProps, MDropdownSlots } from '#kit/components/ui/dropdown/props'
+import type { DropdownPanelSlotProps, MDropdownProps, MDropdownSlots, TypedPropsOptions } from '#kit/components/ui/dropdown/props'
 import type { DropdownItemBase } from '#kit/composables/dropdown/types'
 import type { AutocompleteOpenOnFocus } from '#kit/composables/autocomplete/useAutocomplete'
 
@@ -67,6 +67,10 @@ export interface MAutocompleteProps<TItem extends DropdownItemBase, TValue = TIt
   autoSelectFirst?: boolean
   openOnFocus?: AutocompleteOpenOnFocus
 }
+
+/** {@link mAutocompleteProps} typed by {@link MAutocompleteProps}: an instance infers `TItem` from `items`. */
+export type MAutocompletePropsOptions<TItem extends DropdownItemBase, TValue = TItem>
+  = TypedPropsOptions<typeof mAutocompleteProps, MAutocompleteProps<TItem, TValue>>
 
 /** Scope of `#hint`: the query is still shorter than `minSearchLength`. */
 export interface AutocompleteHintSlotProps {

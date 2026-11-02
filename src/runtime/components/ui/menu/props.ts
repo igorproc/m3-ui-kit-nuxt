@@ -2,12 +2,18 @@
  * Public prop surface for `<MMenu>`.
  */
 import type { ExtractPublicPropTypes, PropType } from 'vue'
-import type { UiMenuOrigin } from './types'
+import type { MMenuPlacement, MMenuVariant } from './types'
 
 export const mMenuProps = {
+  /** Colour of the menu: `elevated` is the standard `surface-container-low`, `tonal` the vibrant `tertiary-container`. */
+  variant: { type: String as PropType<MMenuVariant>, default: 'elevated' },
+  /** Close on a press outside the menu and its trigger. `click-outside` is emitted either way. */
   closeOnBackdrop: { type: Boolean, default: true },
-  absolute: { type: Boolean, default: false },
-  origin: { type: String as PropType<UiMenuOrigin>, default: 'top left' },
+  /**
+   * Side of the anchor the menu opens on, and the edge it aligns to. `start`
+   * and `end` follow the writing direction; the menu flips when it does not fit.
+   */
+  placement: { type: String as PropType<MMenuPlacement>, default: 'bottom-start' },
   matchWidth: { type: Boolean, default: false },
   /** Lock page scroll while the menu is open. */
   lockScroll: { type: Boolean, default: true },

@@ -33,8 +33,8 @@
       </MLayoutMain>
     </MLayout>
 
-    <!-- Outside MLayout on purpose: MLayoutMain is a size container, which
-         makes it the containing block of `position: fixed` descendants. -->
+    <!-- Outside MLayout on purpose: a fixed FAB belongs to the window, not to a
+         layout zone (MLayoutMain with `container` would also become its containing block). -->
     <MButtonExtendedFab
       class="crm__fab"
       @click="store.newDealOpen.value = true"

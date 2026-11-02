@@ -83,18 +83,32 @@ test.describe('MApp', () => {
     expect(await page.evaluate(() => performance.timeOrigin)).toBe(marker)
   })
 
+  // Q1-Б: `system` stays `system` on <html>; the dark palette sits under
+  // `prefers-color-scheme: dark`, so the scheme follows the OS without script.
   test('the system definition follows the OS color scheme live', async ({ page }) => {
-    await page.emulateMedia({ colorScheme: 'dark' })
-    await openFixture(page, 'app/matrix', { theme: 'light' })
-
-    await page.getByTestId('definition-system').click()
-    await expect(html(page)).toHaveAttribute('data-definition', 'dark')
+    const surface = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-surface').trim())
 
     await page.emulateMedia({ colorScheme: 'light' })
-    await expect(html(page)).toHaveAttribute('data-definition', 'light')
+    await openFixture(page, 'app/matrix', { theme: 'light' })
+    const light = await surface()
+
+    await page.getByTestId('definition-dark').click()
+    await expect(html(page)).toHaveAttribute('data-definition', 'dark')
+    const dark = await surface()
+    expect(dark).not.toBe(light)
+
+    await page.getByTestId('definition-system').click()
+    await expect(html(page)).toHaveAttribute('data-definition', 'system')
+    await expect(page.getByTestId('attr-data-definition')).toHaveText('system')
+    await expect.poll(surface).toBe(light)
 
     await page.emulateMedia({ colorScheme: 'dark' })
-    await expect(html(page)).toHaveAttribute('data-definition', 'dark')
+    await expect.poll(surface).toBe(dark)
+    expect(await computed(html(page), 'color-scheme')).toBe('dark')
+
+    await page.emulateMedia({ colorScheme: 'light' })
+    await expect.poll(surface).toBe(light)
+    await expect(html(page)).toHaveAttribute('data-definition', 'system')
   })
 
   for (const theme of THEMES) {
@@ -140,27 +154,33 @@ test.describe('MApp', () => {
     await expect(host(page)).toHaveCount(1)
   })
 
+  // A closed panel stays on screen for its exit motion: the next owner's panel
+  // may open beside it, so each panel is found by its owner's name and the test
+  // waits for the closed one to leave before the next owner opens.
   test('many overlay owners still share one host', async ({ page }) => {
     await openFixture(page, 'app/stress')
     await expect(host(page)).toHaveCount(1)
 
-    for (const id of ['owner-1', 'owner-12']) {
+    for (const index of [1, 12]) {
+      const id = `owner-${index}`
       await openOwnerPanel(page, id)
-      await expect(host(page).getByRole('listbox')).toBeVisible()
+      await expect(host(page).getByRole('listbox', { name: `Overlay owner ${index}`, exact: true })).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(page.getByTestId(id)).toHaveAttribute('aria-expanded', 'false')
+      await expect(host(page).getByRole('listbox')).toHaveCount(0)
     }
 
     await expect(host(page)).toHaveCount(1)
   })
 
   test.describe('skip link', () => {
+    // playground/app/app.vue gives the MApp a skip link on this fixture only, so
+    // the extra Tab stop stays out of every other fixture's keyboard tests.
     test.beforeEach(async ({ page }) => {
       await openFixture(page, 'app/matrix')
-      const href = await skipLink(page).count() ? await skipLink(page).getAttribute('href') : null
-      const hasTarget = href ? await page.evaluate(id => Boolean(document.getElementById(id)), href.slice(1)) : false
 
-      test.skip(!hasTarget, 'playground/app/app.vue sets no skip-link-label, or the fixture page has no element with the target id')
+      await expect(skipLink(page)).toHaveAttribute('href', '#main')
+      await expect(page.locator('#main')).toHaveCount(1)
     })
 
     test('is the first Tab stop and shows itself only while focused', async ({ page }) => {

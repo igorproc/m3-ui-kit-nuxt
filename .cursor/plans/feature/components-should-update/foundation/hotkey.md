@@ -1,8 +1,8 @@
 # MHotkey — показ сочетания клавиш
 
-<identity>M3: компонента нет; авторский компонент кита (клавиши в духе подписи сочетаний в меню M3) · Токены Compose: нет · Код: `src/runtime/components/ui/hotkey/`, форматирование `src/runtime/composables/hotkey/format.ts` · Аудит: `data/hotkey.json` · Тип: public</identity>
+<identity>M3: компонента нет; авторский компонент кита (клавиши в духе подписи сочетаний в меню M3) · Токены Compose: нет · Код: `src/runtime/components/ui/hotkey/`, форматирование `src/runtime/utils/hotkey/format.ts` · Аудит: `data/hotkey.json` · Тип: public</identity>
 
-<implementation-status state="done" updated="2026-10-07">Шаги 1–5 сделаны: одна нормализация имён в `format.ts`, `aria-disabled` и переводимый суффикс, имена клавиш из `MESSAGES.hotkeyKeys` + `provideHotkeyLabels`, платформа с сервера (`Sec-CH-UA-Platform` / UA) и резерв широкой формы, реактивный `platform`, нажатие слоем `::before`, forced colors, токены через `spacing()`; шаг 6 перенесён.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Шаги 1–5 сделаны (нормализация, «недоступно» в имени, карта озвучки, платформа с сервера, нажатие без движения, forced colors); 2026-10-30 шрифт клавиши — `label-medium`, нажатие — `secondary-container` / `on-secondary-container` по концепту. Шаг 6 (документация) отменён: docs_v2 вне репо.</implementation-status>
 
 ## Вердикт
 
@@ -66,7 +66,7 @@
 | Прозрачности disabled | `state-opacity(disabled-content)` | литералы в `.vue:152` (ST-05, TK-04) | токен |
 | Граница | hairline | `1rem` (TK-02) | общий вопрос hairline |
 | Отступы | `spacing()` | литералы (LY-04) | `spacing()` |
-| Шрифт | label-medium с трекингом | typescale без `letter-spacing` (TK-03, системно) | системный миксин |
+| Шрифт | label-medium с трекингом | `label-medium`, трекинг даёт `typescale` (2026-10-30) | совпадает |
 
 ## Поведение и доступность
 
@@ -88,7 +88,7 @@
 3. **S — карта озвучиваемых имён** (CT-13).
 4. **S — платформа на сервере и реактивный проп** (MO-04, EN-05).
 5. **S — нажатие без движения, forced colors, токены** (TH-04, TK-02, TK-04, TK-06, ST-05, LY-04).
-6. **S — документация** (DC-*). **перенесено**: docs_v2 вне репозитория.
+6. **S — документация** (DC-*). **Отменено**: docs_v2 вне репозитория.
 
 ## Тесты
 

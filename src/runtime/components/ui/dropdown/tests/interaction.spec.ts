@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
-import MMenu from '#kit/components/ui/menu/index.vue'
-import { base, chips, createHost, destroyHost, input, mount, open, optionByText, options, press } from './helpers'
+import Popover from '#kit/components/fragments/popover/index.vue'
+import { base, chips, cities, createHost, destroyHost, input, mount, open, optionByText, options, press } from './helpers'
 
 beforeEach(createHost)
 afterEach(destroyHost)
@@ -340,7 +340,7 @@ describe('m-dropdown · interaction', () => {
   it('anchors the panel to the drawn box, not to the box plus its support line', async () => {
     const wrapper = await mount({ ...base, helperText: 'Reviewers are notified' })
 
-    const menu = wrapper.findComponent(MMenu)
+    const menu = wrapper.findComponent(Popover)
     const control = wrapper.find('.ui-text-field__control').element
 
     // The root's box also holds the support line; anchoring to it is what put

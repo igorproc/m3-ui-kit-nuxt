@@ -5,6 +5,9 @@
 // binds a semantic surface color role and elevation together. `outlined` adds
 // an outline-variant hairline. Corner shape is resolved from the canonical
 // `$theme-shape-link` scale in the SFC, so it is not duplicated here.
+
+// At least one device pixel: `1rem` fades below it on a narrow screen (decisions.md).
+$hairline: max(1px, 1rem);
 $tokens: (
   content: (
     color: map.get($theme-color-link, 'on-surface'),
@@ -27,7 +30,7 @@ $tokens: (
       container: (color: map.get($theme-color-link, 'surface')),
       outline: (
         color: map.get($theme-color-link, 'outline-variant'),
-        width: 1rem,
+        width: $hairline,
       ),
     ),
   ),

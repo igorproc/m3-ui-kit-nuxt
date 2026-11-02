@@ -1,0 +1,69 @@
+@use 'sass:map';
+@use '../../abstracts/forward.scss' as *;
+
+// ==========================================
+// MENU COLOURS (included inside `.ui-menu`)
+// ==========================================
+
+@mixin variants($t) {
+  $b: '.ui-menu';
+
+  @each $variant in map.keys(map.get($t, 'variant')) {
+    $v: 'variant.#{$variant}';
+
+    &__surface--#{$variant} {
+      &,
+      .ui-menu__group {
+        background-color: g($t, '#{$v}.container.color');
+        color: g($t, '#{$v}.content.color');
+      }
+
+      #{$b}__group-label,
+      #{$b}__item-leading,
+      #{$b}__item-trailing,
+      #{$b}__item-shortcut,
+      #{$b}__item-supporting {
+        color: g($t, '#{$v}.muted.color');
+      }
+
+      .ui-menu__item--selected {
+        background-color: g($t, '#{$v}.selected.container.color');
+        color: g($t, '#{$v}.selected.content.color');
+      }
+
+      .ui-menu__item--disabled {
+        color: g($t, '#{$v}.disabled.content.color');
+      }
+
+      .ui-menu__item--selected.ui-menu__item--disabled {
+        background-color: g($t, '#{$v}.disabled.selected.container.color');
+        color: g($t, '#{$v}.disabled.selected.content.color');
+      }
+    }
+  }
+
+  &__item--selected,
+  &__item--disabled {
+    #{$b}__item-leading,
+    #{$b}__item-trailing,
+    #{$b}__item-shortcut,
+    #{$b}__item-supporting {
+      color: inherit;
+    }
+  }
+
+  @include forced-colors {
+    &__surface &__item--selected {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    &__surface &__item--disabled {
+      &,
+      &.ui-menu__item--selected {
+        background-color: Canvas;
+        color: GrayText;
+      }
+    }
+  }
+}

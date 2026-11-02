@@ -82,11 +82,20 @@ describe('m-number-input · a11y', () => {
   })
 
   describe('stepper controls', () => {
-    it('names both controls', async () => {
+    // Q32-А: the kit ships no English copy; the names come from the app.
+    it('ships no name of its own for the steppers', async () => {
       const wrapper = await mount()
 
-      expect(wrapper.find('.ui-number-input__stepper--increment').attributes('aria-label')).toBe('Increase value')
-      expect(wrapper.find('.ui-number-input__stepper--decrement').attributes('aria-label')).toBe('Decrease value')
+      expect(wrapper.find('.ui-number-input__stepper--increment').attributes('aria-label')).toBeUndefined()
+      expect(wrapper.find('.ui-number-input__stepper--decrement').attributes('aria-label')).toBeUndefined()
+    })
+
+    it('ships no name of its own for the unit trigger', async () => {
+      const wrapper = await mount({ units: ['MiB', 'GiB'], unit: 'MiB' })
+      const trigger = wrapper.find('.ui-number-input__unit-trigger')
+      const name = trigger.attributes('aria-labelledby')!.split(' ').map((id: string) => wrapper.find(`[id="${id}"]`).text()).join(' ').trim()
+
+      expect(name).toBe('MiB')
     })
 
     it('takes those names from props, so they can be translated', async () => {

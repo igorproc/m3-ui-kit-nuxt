@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { computed, watchEffect } from 'vue'
-import { useHotkeyPresentation } from '#kit/composables/hotkey/useHotkeyPresentation'
+import { useHotkeyPresentation } from '#kit/utils/hotkey/presentation'
 import { mHotkeyProps } from './props'
 import type { HotkeyDisplayKey, ResolvedHotkeyPlatform } from '#kit/shared/types/hotkey'
 
@@ -124,7 +124,6 @@ $prefix: 'md-hotkey';
   }
 
   &__key {
-    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -135,23 +134,15 @@ $prefix: 'md-hotkey';
     border-radius: g($t, 'key.radius');
     background-color: g($t, 'key.enabled.bg');
     color: g($t, 'key.enabled.color');
-    isolation: isolate;
+    transition-duration: var(--sys-motion-duration-short-3);
+    transition-property: background-color, color;
+    transition-timing-function: var(--sys-motion-easing-standard);
 
     @include typescale(g($t, 'key.typography'));
 
-    &::before {
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      border-radius: inherit;
-      background-color: g($t, 'key.pressed.layer');
-      content: '';
-      opacity: 0;
-      transition: opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-    }
-
-    &--pressed::before {
-      opacity: g($t, 'key.pressed.opacity');
+    &--pressed {
+      background-color: g($t, 'key.pressed.bg');
+      color: g($t, 'key.pressed.color');
     }
   }
 
@@ -174,10 +165,6 @@ $prefix: 'md-hotkey';
   @include forced-colors {
     &__key {
       border-color: ButtonText;
-
-      &::before {
-        display: none;
-      }
 
       &--pressed {
         border-color: Highlight;

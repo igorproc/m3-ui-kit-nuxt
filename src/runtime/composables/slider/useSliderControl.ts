@@ -15,7 +15,8 @@
  * Because `<MSlider>` consumes exactly these bags, dropping the component keeps
  * every behavior it had — focus, swipe, arrow keys, `aria-value*`.
  *
- * Geometry reaches the markup as inline `left`/`bottom` percentages plus the
+ * Geometry reaches the markup as inline `inset-inline-start`/`bottom` percentages
+ * (so a horizontal track mirrors itself in RTL) plus the
  * `--m-slider-percent`, `--m-slider-progress` (unitless) and `--m-slider-value`
  * custom properties, so a consumer whose thumb is not absolutely positioned —
  * a bar meter, a gauge — can drive itself from CSS instead.
@@ -36,94 +37,22 @@
 import { useDrag } from '#kit/composables/useDrag'
 import { useGlobalListener } from '#kit/composables/useGlobalListener'
 import { useSlider } from '#kit/composables/slider/createSlider'
+import { isRtl, percentAlong } from '#kit/utils/slider/geometry'
 
 // Utilities
 import { computed, onScopeDispose, readonly, shallowReadonly, shallowRef, toValue } from 'vue'
 
 // Types
-import type { ComputedRef, MaybeRefOrGetter, Ref, ShallowRef } from 'vue'
+import type { Ref } from 'vue'
 import type { DragState } from '#kit/composables/useDrag'
 import type { UseSliderProps } from '#kit/composables/slider/createSlider'
-
-export type SliderOrientation = 'horizontal' | 'vertical'
-
-export type SliderInteractionState = 'idle' | 'dragging'
-
-/** Value math shared with {@link useSlider} and re-exported unchanged. */
-type SliderMath = ReturnType<typeof useSlider>
-
-export interface SliderRootAttrs {
-  'data-orientation': SliderOrientation
-  'data-state': SliderInteractionState
-  'data-disabled': string | undefined
-  'data-readonly': string | undefined
-}
-
-export interface SliderTrackAttrs {
-  'ref': (value: unknown) => void
-  'data-orientation': SliderOrientation
-  'style': Record<string, string>
-  'onPointerdown': (event: PointerEvent) => void
-}
-
-export interface SliderRangeAttrs {
-  style: Record<string, string>
-}
-
-export interface SliderThumbAttrs {
-  'role': 'slider'
-  'tabindex': number
-  'aria-valuenow': number
-  'aria-valuemin': number
-  'aria-valuemax': number
-  'aria-orientation': SliderOrientation
-  'aria-disabled': string | undefined
-  'aria-readonly': string | undefined
-  'aria-label': string | undefined
-  'aria-labelledby': string | undefined
-  'aria-valuetext': string
-  'data-state': SliderInteractionState
-  'style': Record<string, string | number>
-  'onKeydown': (event: KeyboardEvent) => void
-  'onPointerdown': (event: PointerEvent) => void
-}
-
-export interface UseSliderControlReturn extends Pick<
-  SliderMath,
-  'values' | 'percentages' | 'activeRange' | 'tickCount' | 'snap' | 'fromValue' | 'fromPercent' | 'updateValue' | 'getNearestThumbIndex'
-> {
-  draggingIndex: Readonly<ShallowRef<number | null>>
-  isDragging: ComputedRef<boolean>
-  trackElement: Readonly<ShallowRef<HTMLElement | null>>
-  rootAttrs: ComputedRef<SliderRootAttrs>
-  trackAttrs: ComputedRef<SliderTrackAttrs>
-  rangeAttrs: ComputedRef<SliderRangeAttrs>
-  getThumbAttrs: (index: number) => SliderThumbAttrs
-}
-
-export interface UseSliderControlOptions {
-  min?: MaybeRefOrGetter<number>
-  max?: MaybeRefOrGetter<number>
-  step?: MaybeRefOrGetter<number>
-  disabled?: MaybeRefOrGetter<boolean>
-  readonly?: MaybeRefOrGetter<boolean>
-  orientation?: MaybeRefOrGetter<SliderOrientation>
-  /** `aria-label` for the thumb at `index`. */
-  ariaLabel?: (index: number) => string | undefined
-  /** `aria-labelledby` for the thumb at `index`. */
-  ariaLabelledby?: (index: number) => string | undefined
-  /** Human-readable value announcement; defaults to the raw number. */
-  ariaValuetext?: (value: number, index: number) => string | undefined
-  /** Bridge to a component `emit` — fired after every committed change. */
-  onUpdate?: (value: number | number[]) => void
-}
-
-/**
- * Single-thumb consumers hold a `Ref<number>` and range consumers a
- * `Ref<number[]>`; both are accepted so `defineModel<number>()` needs no cast at
- * the call site.
- */
-export type SliderModel = Ref<number> | Ref<number[]> | Ref<number | number[]>
+import type {
+  SliderModel,
+  SliderRootAttrs,
+  SliderThumbAttrs,
+  UseSliderControlOptions,
+  UseSliderControlReturn,
+} from './types'
 
 /** A thumb press bubbles to the track; both are matched by role, not by class. */
 const THUMB_SELECTOR = '[role="slider"]'
@@ -156,18 +85,27 @@ export function useSliderControl(
     get disabled() { return toValue(options.disabled) ?? false },
     get readonly() { return toValue(options.readonly) ?? false },
     get orientation() { return toValue(options.orientation) ?? 'horizontal' },
+    get origin() { return toValue(options.origin) ?? 'start' },
   }
 
   const slider = useSlider(model, state, (_event, value) => options.onUpdate?.(value))
 
   const trackElement = shallowRef<HTMLElement | null>(null)
   const draggingIndex = shallowRef<number | null>(null)
+  const valueIndex = shallowRef<number | null>(null)
 
   const isVertical = computed(() => state.orientation === 'vertical')
   const isInteractive = () => !state.disabled && !state.readonly
 
   let dragOffset = 0
   let rafId: number | null = null
+  // Read once per press: the direction does not change mid-gesture.
+  let rtl = false
+  // A touch on the track jumps on release, not on contact: until then the
+  // gesture may still turn out to be a page scroll (`pointercancel`).
+  let pendingTouchJump = false
+  let stopRelease: (() => void) | null = null
+  let stopCancel: (() => void) | null = null
 
   // Track rect cached at drag start to avoid a forced reflow
   // (`getBoundingClientRect`) on every pointermove frame. Refreshed only on
@@ -199,13 +137,7 @@ export function useSliderControl(
     cachedRect = null
   }
 
-  const percentFromRect = (rect: DOMRect, clientX: number, clientY: number): number => {
-    const rawPercent = isVertical.value
-      ? ((rect.bottom - clientY + dragOffset) / rect.height) * 100
-      : ((clientX - rect.left - dragOffset) / rect.width) * 100
-
-    return Math.max(0, Math.min(100, rawPercent))
-  }
+  const axis = () => ({ vertical: isVertical.value, rtl })
 
   /**
    * Arm a drag for `index`. `thumbElement` is the pressed thumb when the press
@@ -224,12 +156,28 @@ export function useSliderControl(
     }
 
     draggingIndex.value = index
+    valueIndex.value = index
     startRectTracking()
+
+    // `useDrag` reports an end only after a move; a press that never moved —
+    // a tap, a click on the thumb, a scroll the browser took — ends here.
+    stopRelease ||= useGlobalListener('window', 'pointerup', onRelease)
+    stopCancel ||= useGlobalListener('window', 'pointercancel', onDragEnd)
+  }
+
+  function onRelease(event: Event) {
+    if (pendingTouchJump && cachedRect && draggingIndex.value !== null) {
+      slider.updateValue(draggingIndex.value, slider.fromPercent(percentAlong(cachedRect, event as PointerEvent, axis())))
+    }
+
+    onDragEnd()
   }
 
   const onDragMove = (dragState: DragState) => {
     if (draggingIndex.value === null || !cachedRect || rafId) return
 
+    // Moving along the track is a drag: the thumb follows from here on.
+    pendingTouchJump = false
     const { clientX, clientY } = dragState.event
 
     rafId = requestAnimationFrame(() => {
@@ -237,14 +185,21 @@ export function useSliderControl(
 
       if (draggingIndex.value === null || !cachedRect) return
 
-      const percent = percentFromRect(cachedRect, clientX, clientY)
+      const percent = percentAlong(cachedRect, { clientX, clientY }, axis(), dragOffset)
       slider.updateValue(draggingIndex.value, slider.fromPercent(percent))
     })
   }
 
-  const onDragEnd = () => {
+  function onDragEnd() {
+    // A release hides the value; a keyboard step brings it back.
+    if (draggingIndex.value !== null) valueIndex.value = null
     draggingIndex.value = null
     dragOffset = 0
+    pendingTouchJump = false
+    stopRelease?.()
+    stopCancel?.()
+    stopRelease = null
+    stopCancel = null
 
     if (rafId) {
       cancelAnimationFrame(rafId)
@@ -254,15 +209,9 @@ export function useSliderControl(
     stopRectTracking()
   }
 
-  // Safety net: drop a pending rAF if the consumer unmounts mid-drag.
-  onScopeDispose(() => {
-    if (rafId) {
-      cancelAnimationFrame(rafId)
-      rafId = null
-    }
-
-    stopRectTracking()
-  })
+  // Safety net: drop a pending rAF and the press listeners if the consumer
+  // unmounts mid-drag.
+  onScopeDispose(onDragEnd)
 
   // `useDrag` owns the window-level move/up/cancel subscriptions (only alive
   // while dragging) and their cleanup; the pointerdown handlers below own the
@@ -281,6 +230,7 @@ export function useSliderControl(
 
     const target = event.currentTarget
 
+    rtl = isRtl(trackElement.value)
     beginDrag(index, event, target instanceof HTMLElement ? target : null)
   }
 
@@ -296,16 +246,13 @@ export function useSliderControl(
 
     // Single rect read for the click-jump; `beginDrag` re-caches it for the drag
     // that follows (the offset is 0 here — no thumb was pressed).
-    const rect = el.getBoundingClientRect()
-    const percent = isVertical.value
-      ? ((rect.bottom - event.clientY) / rect.height) * 100
-      : ((event.clientX - rect.left) / rect.width) * 100
-
-    const value = slider.fromPercent(percent)
+    rtl = isRtl(el)
+    const value = slider.fromPercent(percentAlong(el.getBoundingClientRect(), event, axis()))
     const index = slider.getNearestThumbIndex(value)
 
     event.preventDefault()
-    slider.updateValue(index, value)
+    if (event.pointerType === 'touch') pendingTouchJump = true
+    else slider.updateValue(index, value)
     beginDrag(index, event, null)
   }
 
@@ -315,11 +262,13 @@ export function useSliderControl(
     const current = slider.values.value[index] ?? state.min
     const step = state.step || 1
     const change = step * (event.shiftKey ? 10 : 1)
+    // In RTL the value grows to the left, so the horizontal arrows swap.
+    const inline = !isVertical.value && isRtl(event.currentTarget as Element | null) ? -change : change
 
     const actions: Record<string, () => void> = {
-      ArrowRight: () => slider.updateValue(index, current + change),
+      ArrowRight: () => slider.updateValue(index, current + inline),
       ArrowUp: () => slider.updateValue(index, current + change),
-      ArrowLeft: () => slider.updateValue(index, current - change),
+      ArrowLeft: () => slider.updateValue(index, current - inline),
       ArrowDown: () => slider.updateValue(index, current - change),
       PageUp: () => slider.updateValue(index, current + step * 10),
       PageDown: () => slider.updateValue(index, current - step * 10),
@@ -327,27 +276,31 @@ export function useSliderControl(
       End: () => slider.updateValue(index, state.max),
     }
 
+    if (event.key === 'Escape') {
+      valueIndex.value = null
+      return
+    }
+
     const action = actions[event.key]
     if (!action) return
 
     event.preventDefault()
     action()
+    valueIndex.value = index
   }
 
   const isDragging = computed(() => draggingIndex.value !== null)
 
+  // State reaches markup through BEM modifiers and `aria-*`, not `data-*` (W5-А).
   const rootAttrs = computed<SliderRootAttrs>(() => ({
-    'data-orientation': state.orientation,
-    'data-state': isDragging.value ? 'dragging' : 'idle',
-    'data-disabled': state.disabled ? '' : undefined,
-    'data-readonly': state.readonly ? '' : undefined,
+    role: slider.values.value.length > 1 ? 'group' : undefined,
   }))
 
   const trackAttrs = computed(() => ({
-    'ref': setTrackElement,
-    'data-orientation': state.orientation,
-    'style': { touchAction: 'none' },
-    'onPointerdown': onTrackPointerdown,
+    ref: setTrackElement,
+    // The track only drags along its own axis; a swipe across it scrolls the page.
+    style: { touchAction: isVertical.value ? 'pan-x' : 'pan-y' },
+    onPointerdown: onTrackPointerdown,
   }))
 
   const rangeAttrs = computed(() => {
@@ -360,7 +313,7 @@ export function useSliderControl(
         '--m-slider-range-span': `${span}%`,
         ...(isVertical.value
           ? { bottom: `${start}%`, height: `${span}%` }
-          : { left: `${start}%`, width: `${span}%` }),
+          : { insetInlineStart: `${start}%`, width: `${span}%` }),
       },
     }
   })
@@ -388,18 +341,20 @@ export function useSliderControl(
       'aria-label': options.ariaLabel?.(index),
       'aria-labelledby': options.ariaLabelledby?.(index),
       'aria-valuetext': options.ariaValuetext?.(value, index) ?? String(value),
-      'data-state': draggingIndex.value === index ? 'dragging' : 'idle',
       'style': {
         '--m-slider-percent': `${percent}%`,
         // Unitless twin of the percentage: a gauge needle or a bar meter needs
         // it inside `calc()`, where a `%` value cannot be multiplied.
         '--m-slider-progress': percent,
         '--m-slider-value': value,
-        [isVertical.value ? 'bottom' : 'left']: `${percent}%`,
+        [isVertical.value ? 'bottom' : 'insetInlineStart']: `${percent}%`,
         'touchAction': 'none',
       },
       'onKeydown': (event: KeyboardEvent) => onThumbKeydown(index, event),
       'onPointerdown': (event: PointerEvent) => onThumbPointerdown(index, event),
+      'onBlur': () => {
+        if (valueIndex.value === index) valueIndex.value = null
+      },
     }
   }
 
@@ -417,6 +372,7 @@ export function useSliderControl(
 
     // Behavior
     draggingIndex: readonly(draggingIndex),
+    valueIndex: readonly(valueIndex),
     isDragging,
     trackElement: shallowReadonly(trackElement),
 

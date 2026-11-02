@@ -16,7 +16,8 @@ import type { MShape } from '#kit/shared/types/props'
 /**
  * Native input type. There is no `number`: the model is a string, and the
  * browser's wheel and arrows would change it behind the field's back — a
- * number belongs to `<MNumberInput>`.
+ * number belongs to `<MNumberInput>`. `search` draws no native clear button:
+ * clearing a query belongs to `<MSearch>` or to an `#append` button.
  */
 export type MTextFieldType = 'text' | 'email' | 'password' | 'tel' | 'url' | 'search'
 export type MTextFieldVariant = 'filled' | 'outlined' | 'underline'

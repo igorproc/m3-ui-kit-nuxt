@@ -49,8 +49,21 @@
 
     <template #append>
       <span class="ui-color-input__trigger-wrap">
+        <!-- Without a picker the swatch is a picture of the value, not a button
+             that does nothing. -->
+        <span
+          v-if="!picker"
+          class="ui-color-input__swatch"
+          aria-hidden="true"
+        >
+          <span
+            class="ui-color-input__swatch-color"
+            :style="{ backgroundColor: swatchCss }"
+          />
+        </span>
+
         <MButtonIcon
-          ref="trigger"
+          v-else
           type="button"
           class="ui-color-input__trigger"
           :disabled="disabled || readonly"
@@ -59,25 +72,27 @@
           :aria-label="pickerLabel"
           @click="togglePicker"
         >
-          <span
-            class="ui-color-input__swatch"
-            :style="{ '--m-color-input-swatch': swatchCss }"
-          />
+          <span class="ui-color-input__swatch">
+            <span
+              class="ui-color-input__swatch-color"
+              :style="{ backgroundColor: swatchCss }"
+            />
+          </span>
         </MButtonIcon>
 
-        <MMenu
+        <!-- A dialog of controls, not a menu: the panel keeps Tab among the
+             picker's parts and gives no key a meaning of its own. -->
+        <Popover
           v-if="picker"
           v-model="open"
-          absolute
-          :origin="origin"
+          placement="bottom-end"
+          trap-focus
+          role="dialog"
+          :aria-label="pickerLabel"
         >
-          <!-- The picker is a set of controls, not a menu: its arrows, Home and
-               End belong to its sliders and fields, so they stop here instead
-               of reaching the menu's item navigation. -->
           <div
             ref="pickerRoot"
             class="ui-color-input__picker"
-            @keydown="isolateKeys"
           >
             <MColorPicker
               v-model="pickerModel"
@@ -90,7 +105,7 @@
               @change="onPickerChange"
             />
           </div>
-        </MMenu>
+        </Popover>
       </span>
     </template>
   </MTextField>
@@ -98,14 +113,12 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import MMenu from '#kit/components/ui/menu/index.vue'
-import type { UiMenuOrigin } from '#kit/components/ui/menu/types'
+import Popover from '#kit/components/fragments/popover/index.vue'
 import MColorPicker from '#kit/components/ui/color-picker/index.vue'
 import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
-import { formatColor, parseColor, toCssColor } from '#kit/shared/utils/color'
+import { formatColor, formatSupportsAlpha, parseColor, toCssColor } from '#kit/shared/utils/color'
 import type { ColorFormat, ColorParseError } from '#kit/shared/utils/color'
 import { provideColorPickerHosted } from '#kit/components/ui/color-picker/context'
-import { useRaf } from '#kit/composables/useRaf'
 import { mColorInputProps } from './props'
 import { useBoundProp } from '#kit/utils/text-field/supportLine'
 
@@ -133,7 +146,7 @@ const emit = defineEmits<{
 
 const draft = ref('')
 const invalid = ref(false)
-const detectedFormat = ref<ColorFormat>('hex')
+const detectedFormat = ref<ColorFormat>(detectFamily(model.value ?? '') ?? 'hex')
 
 const resolvedFormat = computed<ColorFormat>(() =>
   props.format === 'auto' ? detectedFormat.value : props.format,
@@ -144,9 +157,11 @@ const displayValue = computed(() => {
   return parsed.ok ? formatColor(parsed.rgba, resolvedFormat.value) : (model.value ?? '')
 })
 
+// A format without alpha draws the colour opaque, as its text says it.
 const swatchCss = computed(() => {
   const parsed = parseColor(model.value)
-  return parsed.ok ? toCssColor(parsed.rgba) : 'transparent'
+  if (!parsed.ok) return 'transparent'
+  return toCssColor(formatSupportsAlpha(resolvedFormat.value) ? parsed.rgba : { ...parsed.rgba, a: 1 })
 })
 
 const displayError = computed(() => props.errorMessage ?? (invalid.value ? props.formatHint : undefined))
@@ -169,13 +184,16 @@ if (import.meta.dev && props.picker && !props.pickerLabel) {
 }
 
 // Keep the draft aligned with the committed value while the field is idle.
-watch([() => model.value, resolvedFormat, focused], () => {
+watch([() => model.value, resolvedFormat], () => {
   if (!focused.value) draft.value = displayValue.value
 }, { immediate: true })
 
-// Blur commits (focused true → false).
+// Leaving the field commits an edit; leaving it untouched commits nothing, so
+// a model spelled its own way ("#abc") is not rewritten by a mere focus.
 watch(focused, (isFocused, wasFocused) => {
-  if (wasFocused && !isFocused) commitDraft()
+  if (!wasFocused || isFocused) return
+  if (draft.value !== displayValue.value) commitDraft()
+  if (!invalid.value) draft.value = displayValue.value
 })
 
 // `commit: 'input'` — update the model on every fully valid draft.
@@ -251,12 +269,6 @@ function onEscape(event: KeyboardEvent) {
   revertDraft()
 }
 
-const NAVIGATION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'])
-
-function isolateKeys(event: KeyboardEvent) {
-  if (NAVIGATION_KEYS.has(event.key)) event.stopPropagation()
-}
-
 // Picker <-> field bridge.
 const pickerModel = computed<string | null>({
   get: () => model.value,
@@ -274,59 +286,22 @@ function onPickerChange(value: string | null) {
   emit('change', value)
 }
 
-const trigger = ref<{ $el: HTMLElement } | null>(null)
-const origin = ref<UiMenuOrigin>('bottom right')
-
+// The trigger stands at the inline end, so the panel hangs from that edge
+// (`bottom-end`, mirrored by the menu itself in a right-to-left page).
 function togglePicker() {
   if (props.disabled || props.readonly || !props.picker) return
-  // The trigger stands at the inline end, so the panel hangs from that edge;
-  // placement is physical, so the side is read from the direction at open time.
-  const el = trigger.value?.$el
-  if (!open.value && el) origin.value = getComputedStyle(el).direction === 'rtl' ? 'bottom left' : 'bottom right'
   open.value = !open.value
 }
 
 const pickerRoot = ref<HTMLElement | null>(null)
 const FOCUSABLE = 'input:not([type="hidden"]):not(:disabled), [tabindex="0"], button:not(:disabled)'
 
-// Closing returns focus to the swatch button that opened the picker. The
-// popover's focus trap hands the focus back into the leaving picker a few
-// milliseconds after it closes, and the page gets it once the picker is gone,
-// so the check runs on the next frames rather than at once. A focus the user
-// has already put elsewhere is left alone.
-const RETURN_FOCUS_FRAMES = 2
-let returnFramesLeft = 0
-// The picker element as it was while open: Vue clears the template ref as soon
-// as the closing starts, while the element still holds the focus until its
-// exit transition ends.
-let openedPicker: HTMLElement | null = null
-const returnFocus = useRaf(() => {
-  const el = trigger.value?.$el as HTMLElement | undefined
-  if (!el || open.value) return
-  const active = document.activeElement
-  const stranded = !active || active === document.body || !active.isConnected || Boolean(openedPicker?.contains(active))
-  if (stranded) {
-    el.focus()
-    return
-  }
-  returnFramesLeft -= 1
-  if (returnFramesLeft > 0) returnFocus()
-})
-
+// Opening moves the focus onto the picker's first control, as a dialog of
+// controls should (the panel's trap alone would land on its surface). Escape
+// and the swatch button give it back to the button; the panel does that.
 watch(open, (isOpen) => {
   emit(isOpen ? 'open' : 'close')
-  // Opening moves the focus into the picker, onto its first control, as a
-  // popup of controls should (the panel's own fallback lands on its surface).
-  if (isOpen) {
-    nextTick(() => {
-      openedPicker = pickerRoot.value
-      openedPicker?.querySelector<HTMLElement>(FOCUSABLE)?.focus()
-    })
-    return
-  }
-
-  returnFramesLeft = RETURN_FOCUS_FRAMES
-  returnFocus()
+  if (isOpen) nextTick(() => pickerRoot.value?.querySelector<HTMLElement>(FOCUSABLE)?.focus())
 })
 </script>
 
@@ -351,7 +326,7 @@ watch(open, (isOpen) => {
     border: g($t, 'swatch.outline-width') solid g($t, 'swatch.outline');
     border-radius: g($t, 'swatch.shape');
 
-    @include checker($picker, linear-gradient(var(--m-color-input-swatch), var(--m-color-input-swatch)));
+    @include checker($picker, none);
 
     // The swatch is the value itself: forcing would paint every colour Canvas.
     // Its edge takes the system text colour, so it stays visible.
@@ -359,6 +334,13 @@ watch(open, (isOpen) => {
       border-color: CanvasText;
       forced-color-adjust: none;
     }
+  }
+
+  &__swatch-color {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
   }
 
   &__picker {

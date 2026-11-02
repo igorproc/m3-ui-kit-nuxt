@@ -86,6 +86,7 @@ import { provideDatePickerHosted } from '#kit/components/ui/date-picker/context'
 import type { MDatePickerMode, MDatePickerValue } from '#kit/components/ui/date-picker/props'
 import type { DateGridCell } from '#kit/composables/date/useDateGridControl'
 import { toDate, toModelValue } from '#kit/utils/date/value'
+import { useMissingPhrasesWarning } from '#kit/utils/phrases/missing'
 import { DIALOG_PICKER_KEYS, mDialogDateProps } from './props'
 
 const props = defineProps(mDialogDateProps)
@@ -109,6 +110,11 @@ defineSlots<{
 
 // The dialog is the surface; the picker inside draws none of its own.
 provideDatePickerHosted(true)
+
+useMissingPhrasesWarning('m-dialog-date', () => ({
+  'cancel-label': props.cancelLabel,
+  'confirm-label': props.confirmLabel,
+}))
 
 const pickerProps = computed(() => Object.fromEntries(DIALOG_PICKER_KEYS.map(key => [key, props[key]])))
 const layerProps = computed(() => pickModalLayerProps(props))
@@ -161,7 +167,7 @@ function confirm() {
   // Emitted from the value just made: with `v-model:date` the model reads the
   // old value back until the parent re-renders.
   const chosen = draft.value
-  date.value = toModelValue(chosen, date.value)
+  date.value = toModelValue(chosen, date.value, props.valueType)
   emit('confirm', chosen)
   modelValue.value = false
 }

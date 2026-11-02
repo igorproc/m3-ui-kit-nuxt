@@ -2,7 +2,7 @@
 
 <identity>M3: Checkbox · Токены Compose: `CheckboxTokens`, `StateTokens`; поведение — `Checkbox.kt` (`Checkbox`, `TriStateCheckbox`); цвета слоя состояний — material-web `tokens/versions/v0_192/_md-comp-checkbox.scss`, геометрия фокуса и цели — `m3-reference/checkbox/internal/_checkbox.scss` · Код: `src/runtime/components/ui/checkbox/` · Аудит: `data/checkbox.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Фаза C уже дала кольцо фокуса, `can-hover`, forced colors и раздачу `$attrs` на нативный инпут. Не хватает состояния indeterminate, ролей цвета M3, ошибки с текстом и цели 48. Ждут ЧВ-1…ЧВ-5.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: галочка — свой SVG-путь, прорисовка `stroke-dashoffset` на enter/exit-токенах, прозрачность глифа `short-1`/`linear`, reduced motion укорачивает системно (F2-01); `stress.vue` (длинная подпись, URL, частичный выбор), e2e: forced colors для checked/mixed/error, движение, стресс. Ранее (G1): indeterminate, строка поддержки, `required`, роли, цель 48, кольцо вокруг слоя 40. Осталось: документация в репозитории `docs`.</implementation-status>
 
 ## Вердикт
 

@@ -7,7 +7,7 @@
         v-model="long"
         aria-label="Search, long query"
         placeholder="Search every document, message and attachment in the shared workspace"
-        clear-label="Clear the query"
+        :messages="{ clear: 'Clear the query' }"
         data-test="long"
       />
     </div>
@@ -16,7 +16,7 @@
       <MSearch
         v-model="word"
         aria-label="Search, unbroken query"
-        clear-label="Clear the query"
+        :messages="{ clear: 'Clear the query' }"
         data-test="word"
       />
     </div>
@@ -24,7 +24,7 @@
     <MSearch
       v-model="mixed"
       aria-label="Поиск 検索 بحث"
-      clear-label="Очистить"
+      :messages="{ clear: 'Очистить' }"
       data-test="mixed-script"
     />
   </section>

@@ -2,7 +2,7 @@
 
 <identity>M3: Tabs (primary и secondary, fixed и scrollable) · Токены Compose: `PrimaryNavigationTabTokens`, `SecondaryNavigationTabTokens`, `DividerTokens`, `BadgeTokens`; поведение — `Tab.kt`, `TabRow.kt` · Код: `src/runtime/components/ui/tabs/` (+ `tab/`, `panel/`) · Аудит: `data/tabs.json` · Тип: public (+ sub `MTab`, `MTabPanel`)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">План новый. Фаза C закрыла невидимый фокус (кольцо `focus-ring(inset)`), голый `:hover` и forced colors; оси M3, переполнение и ARIA-хвосты не тронуты.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Ш1–Ш9 по W53–W55: токены (`spacing()`, hairline ряда `max(1px, 1rem)`), 48/64, состояния, скользящий anchor-индикатор с минимумом 24 (`min-inline-size` содержимого primary), scrollable, ARIA и клавиатура, вкладки-маршруты, secondary, бейдж по формуле BadgedBox (`badge-anchor`, верх −2), `activeIcon`/залитый глиф выбранной вкладки (`MTabItem`, `MTab`), e2e forced colors / reduced motion / угол бейджа LTR и RTL. Остались документация (Ш10) и демо доков `MixNavigation.vue` (Ш9) — вне репо кита.</implementation-status>
 
 ## Вердикт
 
@@ -148,7 +148,7 @@
 8. **Secondary** (S). По вопросу 1.
 9. **Бейдж и слот вкладки** (S). `badge`, `badgeLabel`, `#tab`; починить демо доков
    (`MixNavigation.vue:11` передаёт несуществующий `#item`).
-10. **Документация** (S). `docs/server/data/en/tabs.json`: убрать несуществующий `variant`, описать
+10. **отложено**: документация вне репо кита (docs_v2/v3, `plans-audit-2/report.md` §6). **Документация** (S). `docs/server/data/en/tabs.json`: убрать несуществующий `variant`, описать
     `MTab` / `MTabPanel`, клавиатуру, переполнение, «когда брать навигацию, а не вкладки» (DC-01…05).
 
 ## Тесты

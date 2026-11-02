@@ -5,8 +5,14 @@ $tokens: (
   root: (
     gap: 4rem,
     shape: var(--sys-shape-corner-medium),
-    disabled-opacity: state-opacity(disabled-content),
   ),
+  label: (
+    gap: spacing(4),
+    typography: 'body-medium',
+    color: map.get($theme-color-link, on-surface-variant),
+    required: map.get($theme-color-link, error),
+  ),
+  disabled: (color: color-mix(in srgb, #{map.get($theme-color-link, on-surface)} state-opacity(disabled-content), transparent)),
   item: (
     size: 48rem,
     icon-size: 32rem,
@@ -15,6 +21,7 @@ $tokens: (
     secondary-color: map.get($theme-color-link, secondary),
     tertiary-color: map.get($theme-color-link, tertiary),
     error-color: map.get($theme-color-link, error),
+    invalid-color: map.get($theme-color-link, error),
     preview-opacity: 72%,
   ),
   motion: (

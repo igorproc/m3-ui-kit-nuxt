@@ -12,7 +12,7 @@
 
     <MAlert
       v-if="store.overdueTasks.value.length"
-      type="warning"
+      color="warning"
       icon="outline-warning-amber"
       :title="`Просрочено: ${countLabel(store.overdueTasks.value.length, ['задача', 'задачи', 'задач'])}`"
       text="Перенесите срок или закройте задачу, чтобы она не тормозила сделку."

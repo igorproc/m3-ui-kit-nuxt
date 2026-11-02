@@ -85,6 +85,8 @@
         :controls="item.controls"
         :label-placement="item.placement"
         :label="`Number ${item.key}`"
+        increment-label="Increase value"
+        decrement-label="Decrease value"
         :data-test="`ni-${item.key}`"
       >
         <template

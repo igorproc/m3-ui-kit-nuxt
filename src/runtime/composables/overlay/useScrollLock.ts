@@ -21,9 +21,10 @@
 import { onScopeDispose } from 'vue'
 import { IN_BROWSER } from '#kit/shared/constants/globals'
 import { supportsScrollbarGutter } from '#kit/shared/utils/support'
+import { clearOverflowHold, holdOverflow, releaseOverflow } from '#kit/utils/scroll/overflowLock'
 
 let lockCount = 0
-let previous = { overflow: '', scrollbarGutter: '', bodyPaddingRight: '' }
+let previous = { scrollbarGutter: '', bodyPaddingRight: '' }
 
 function applyLock(reserveScrollBarGap: boolean) {
   const root = document.documentElement
@@ -31,7 +32,6 @@ function applyLock(reserveScrollBarGap: boolean) {
   const scrollbarWidth = window.innerWidth - root.clientWidth
 
   previous = {
-    overflow: root.style.overflow,
     scrollbarGutter: root.style.scrollbarGutter,
     bodyPaddingRight: body.style.paddingRight,
   }
@@ -40,14 +40,17 @@ function applyLock(reserveScrollBarGap: boolean) {
     if (supportsScrollbarGutter()) root.style.scrollbarGutter = 'stable'
     else body.style.paddingRight = `${scrollbarWidth}px`
   }
-  root.style.overflow = 'hidden'
+  holdOverflow(root)
+}
+
+function restoreGap() {
+  document.documentElement.style.scrollbarGutter = previous.scrollbarGutter
+  document.body.style.paddingRight = previous.bodyPaddingRight
 }
 
 function releaseLock() {
-  const root = document.documentElement
-  root.style.overflow = previous.overflow
-  root.style.scrollbarGutter = previous.scrollbarGutter
-  document.body.style.paddingRight = previous.bodyPaddingRight
+  restoreGap()
+  releaseOverflow(document.documentElement)
 }
 
 export interface UseScrollLockReturn {
@@ -84,5 +87,7 @@ export function useScrollLock(): UseScrollLockReturn {
 /** Test-only: force the shared counter back to zero. */
 export function __resetScrollLock(): void {
   lockCount = 0
-  if (IN_BROWSER) releaseLock()
+  if (!IN_BROWSER) return
+  restoreGap()
+  clearOverflowHold(document.documentElement)
 }

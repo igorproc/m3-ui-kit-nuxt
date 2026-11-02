@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
+import type { Ref } from 'vue'
+import type { DOMWrapper } from '@vue/test-utils'
 import MAutocomplete from '../index.vue'
 
 interface City { id: number, name: string, off?: boolean }

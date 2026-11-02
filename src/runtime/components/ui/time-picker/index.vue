@@ -1,6 +1,6 @@
 <template>
   <div
-    v-bind="control.rootAttrs.value"
+    v-bind="rootAttrs()"
     class="ui-time-picker"
     :class="[
       `ui-time-picker--${layout}`,
@@ -20,7 +20,10 @@
       :disabled="disabled || undefined"
     >
 
-    <div class="ui-time-picker__body">
+    <div
+      v-bind="controlAttrs(control.rootAttrs.value)"
+      class="ui-time-picker__body"
+    >
       <p
         v-if="label || $slots.label"
         :id="headlineId"
@@ -40,7 +43,7 @@
         :fields="fields"
         :hour-label="hourLabel"
         :minute-label="minuteLabel"
-        :error="error"
+        :error="error || Boolean(errorMessage)"
       />
 
       <TimePickerPeriod
@@ -101,10 +104,15 @@ import TimePickerSelectors from '#kit/components/fragments/time-picker/selectors
 import { useTimeDialControl } from '#kit/composables/time/useTimeDialControl'
 import { useTimeFieldsControl } from '#kit/composables/time/useTimeFieldsControl'
 import { useTimePickerControl } from '#kit/composables/time/useTimePickerControl'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
 import { ICONS } from '#kit/shared/constants/icons'
 import { createClock } from '#kit/utils/time/createClock'
+import { useMissingPhrasesWarning } from '#kit/utils/phrases/missing'
 import { mTimePickerProps } from './props'
 import type { MTimePickerMode } from './props'
+
+defineOptions({ inheritAttrs: false })
+const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mTimePickerProps)
 
@@ -119,15 +127,18 @@ const slots = defineSlots<{
   helper?: () => unknown
 }>()
 
-if (import.meta.dev) {
-  watchEffect(() => {
-    if (props.modeToggle && !(props.switchToInputLabel && props.switchToPickerLabel)) {
-      console.warn('[m-time-picker] `mode-toggle` needs `switch-to-input-label` and `switch-to-picker-label`: the kit ships no words for the switch.')
-    }
-  })
-}
-
 const clock = computed(() => createClock(props.locale, props.hourCycle))
+
+useMissingPhrasesWarning('m-time-picker', () => ({
+  'aria-label': props.label || slots.label || props.ariaLabel,
+  'hour-label': props.hourLabel,
+  'minute-label': props.minuteLabel,
+  'period-label': clock.value.cycle !== 'h12' || props.periodLabel,
+  'hour-error': mode.value !== 'input' || props.hourError,
+  'minute-error': mode.value !== 'input' || props.minuteError,
+  'switch-to-input-label': !props.modeToggle || props.switchToInputLabel,
+  'switch-to-picker-label': !props.modeToggle || props.switchToPickerLabel,
+}))
 const periodLabels = computed(() => ({
   am: props.amLabel ?? clock.value.periods.am,
   pm: props.pmLabel ?? clock.value.periods.pm,
@@ -156,12 +167,13 @@ const fields = useTimeFieldsControl({
   ...state,
   required: () => props.required,
   labels: () => ({ hourError: props.hourError, minuteError: props.minuteError }),
-  externalError: () => props.error ? props.errorMessage : undefined,
+  externalError: () => props.errorMessage || undefined,
+  invalid: () => props.error || Boolean(props.errorMessage),
   // The error takes the helper's place, so the helper describes only while it shows.
   describedBy: () => hasHelper() && !hasError.value ? helperId : undefined,
 })
 
-const hasError = computed(() => props.error || Boolean(fields.errorText.value))
+const hasError = computed(() => props.error || Boolean(props.errorMessage) || fields.refused.value)
 
 // Typed fields can be refused at any moment, and a form control can be told
 // it is wrong: either way the support line is kept, so an error never moves
@@ -287,6 +299,7 @@ defineExpose({ validate })
 
     &--horizontal#{&}--picker &__period {
       flex-direction: row;
+      gap: g($t, 'period.gap');
       width: g($t, 'period.horizontal.width');
       height: g($t, 'period.horizontal.height');
       margin-block-start: g($t, 'period.offset.horizontal');
@@ -302,9 +315,7 @@ defineExpose({ validate })
     }
   }
 
-  &--disabled &__body {
-    opacity: g($t, 'disabled.opacity');
-  }
+  @include parts.disabled($t);
 
   &--disabled &__selector,
   &--disabled &__dial,

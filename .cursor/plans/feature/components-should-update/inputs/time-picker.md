@@ -2,7 +2,7 @@
 
 <identity>M3: Time pickers — dial (vertical / horizontal), input, 12h / 24h, AM/PM selector; Expressive: rich colours (`TimePickerShapes`), `ScrollField` (experimental) · Токены Compose: `TimePickerTokens.kt`, `TimeInputTokens.kt`; поведение — `TimePicker.kt`, `TimePickerDialog.kt`, `ScrollField.kt` · Код: `src/runtime/components/ui/time-picker/`, фрагменты `src/runtime/components/fragments/time-picker/{dial,keyboard}/`, `src/runtime/composables/time/useTimePicker.ts`, токены `src/runtime/assets/stylesheet/components/time-picker/{dial,keyboard}/_index.scss` · Аудит: `data/time-picker.json` · Тип: public (`MTimePicker`), sub (фрагменты `dial`, `keyboard`)</identity>
 
-<implementation-status state="done" updated="2026-10-18">Реализовано: шаги 1–5 и 7 (без уменьшения циферблата до 200 по высоте; документация — шаг 8, в docs). Одна карта токенов, `createClock` + `useTimePickerControl` / `useTimeDialControl` / `useTimeFieldsControl`, селекторы 96 × 80 (`radio`), период — пара toggle-кнопок, циферблат — один `role="slider"`, поля `type="text"` с ошибкой вместо клампа, `hourCycle`, `locale`, disabled / readonly / required / error, horizontal складывается по container query. `MDialogTime` (шаг 6) не делается по ответу на вопрос 2. M3-polish (2026-10-18, w5): циферблат — одновременный crossfade, цвет выбранной цифры в такт ручке, ручка под пальцем при драге (снап на отпускании), без кольца фокуса после клика мышью, одна строка поддержки с резервом (ошибка с глифом на месте помощи), фокус старше ошибки на поле ввода, readonly-период не уводит фокус, `modeToggle` (по умолчанию `false`, подписи — пропы без дефолтов), сняты `mode: dial|keyboard` и `is24h`, явные типы возврата композаблов. `createClock` → `utils/time`.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–5 и 7 (без уменьшения циферблата до 200 по высоте; документация — шаг 8, в docs). Одна карта токенов, `createClock` + `useTimePickerControl` / `useTimeDialControl` / `useTimeFieldsControl`, селекторы 96 × 80 (`radio`), период — пара toggle-кнопок, циферблат — один `role="slider"`, поля `type="text"` с ошибкой вместо клампа, `hourCycle`, `locale`, disabled / readonly / required / error, horizontal складывается по container query. `MDialogTime` (шаг 6) не делается по ответу на вопрос 2. M3-polish (2026-10-18, w5): циферблат — одновременный crossfade, цвет выбранной цифры в такт ручке, ручка под пальцем при драге (снап на отпускании), без кольца фокуса после клика мышью, одна строка поддержки с резервом (ошибка с глифом на месте помощи), фокус старше ошибки на поле ввода, readonly-период не уводит фокус, `modeToggle` (по умолчанию `false`, подписи — пропы без дефолтов), сняты `mode: dial|keyboard` и `is24h`, явные типы возврата композаблов. `createClock` → `utils/time`. Фаза 2 (2026-10-30): `inheritAttrs: false` + `useControlAttrs` (корень — обёртка, `role="group"` и атрибуты потребителя — на `__body`, EN-04); период — две `MButton` с классами toggle-состояний и ARIA радио, цвета и форма из веток `period.unselected` / `period.selected` (S9), форма статична; мишень 48 периода на `pointer: coarse` по блочной оси (N1), в вертикальной колонке зазор 8 на тач; disabled — цветовыми ролями (38 % каждой роли, как date-picker), без `opacity` тела. Документация (шаг 8) — в docs, вне кита.</implementation-status>
 
 ## Вердикт
 
@@ -175,14 +175,14 @@
    - Строки и AM/PM — из `locale`.
    - Новая ось формата часов с алиасом `is24h`.
    - Закрывает IN-09, FM-01, FM-02, FM-10, CT-13, EN-06.
-6. **`MDialogTime`** — M, только если вопрос 2 = да. Зависимости: шаги 3–5, вопрос 1. Файлы: `ui/dialog/time/index.vue` (по образцу `MDialogDate` после его переделки):
+6. **Отменено** (вопрос 2 → 2, `decisions.md` «`MDialogTime`»). **`MDialogTime`** — M, только если вопрос 2 = да. Зависимости: шаги 3–5, вопрос 1. Файлы: `ui/dialog/time/index.vue` (по образцу `MDialogDate` после его переделки):
    - `MOverlay` + `MTimePicker` (`v-model:mode`);
    - headline «Select time» / «Enter time»;
    - переключатель режима в начале строки actions, Cancel / OK;
    - черновик значения; Esc → `cancel`.
 7. **Адаптивность horizontal** — S. Зависимости: вопрос 6. Файлы: стили `dial`.
    - `container-type: inline-size` на корне; horizontal сам складывается в vertical, если ширины меньше 556 (RS-01, RS-03).
-   - Циферблат уменьшается до 200, если не хватает высоты (как `ClockDialMinContainerSize`).
+   - Циферблат уменьшается до 200, если не хватает высоты (как `ClockDialMinContainerSize`) — **отменено** (S2 → В: px в media-запросе и `container-type: size` нарушают правила rem и первого кадра SSR).
 8. **Документация** — S. Зависимости: шаги 3–6. Файлы: `../docs/server/data/en/time-picker.json`, `docs/app/components/docs/component/time-picker/Playground.vue`: анатомия, оси, клавиатура, когда брать dial и когда input (DC-01 … DC-05).
 
 ## Тесты

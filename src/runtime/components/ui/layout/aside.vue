@@ -2,7 +2,7 @@
   <aside
     class="m-layout-aside"
     :class="[
-      `m-layout-aside--${side}`,
+      `m-layout-aside--${position}`,
       { 'm-layout-aside--sticky': sticky },
     ]"
     v-bind="layoutItemAttrs"
@@ -17,8 +17,8 @@
 // кто раньше — тот владеет углом. По умолчанию тянется с контентом,
 // sticky прижимает к viewport с высотой 100dvh − insets
 interface Props {
-  /** Логические start/end предпочтительны; left/right — legacy-алиасы */
-  position?: 'left' | 'right' | 'start' | 'end'
+  /** Логическая сторона: start/end зеркалятся в RTL */
+  position?: 'start' | 'end'
   sizeToken?: string
   /** Прижать к viewport (высота между прибитыми краями, скролл внутри) */
   sticky?: boolean
@@ -32,14 +32,8 @@ const props = withDefaults(defineProps<Props>(), {
   order: undefined,
 })
 
-const side = computed<'start' | 'end'>(() => {
-  if (props.position === 'left') return 'start'
-  if (props.position === 'right') return 'end'
-  return props.position
-})
-
 const { layoutItemStyles, layoutItemAttrs } = useLayoutItem({
-  kind: side,
+  kind: computed(() => props.position),
   sizeToken: computed(() => props.sizeToken),
   sticky: computed(() => props.sticky),
   order: computed(() => props.order),

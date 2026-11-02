@@ -16,10 +16,11 @@
  * model.select(model.values()[0]!.id)
  * ```
  */
-import { computed, isRef, shallowReactive, toRaw, toRef, toValue, useId } from 'vue'
+import { computed, isRef, shallowReactive, toRaw, toRef, toValue } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter, Reactive, Ref } from 'vue'
+import { createTicketIds } from '#kit/utils/registry/internals'
 import { createRegistry } from './createRegistry'
-import type { RegistryContext, RegistryOptions, RegistryTicket, RegistryTicketInput } from './createRegistry'
+import type { RegistryContext, RegistryOptions, RegistryTicket, RegistryTicketInput } from './types'
 import { isUndefined } from '#kit/shared/utils/guards/guards'
 import { resolveIds } from '#kit/shared/utils/helpers'
 import type { ID } from '#kit/shared/types/registry'
@@ -90,6 +91,7 @@ export function createModel<
   } = _options
 
   const registry = createRegistry<Z, E>(options)
+  const nextId = createTicketIds()
   const selectedIds = shallowReactive(new Set<ID>())
 
   const selectedItems = computed(() => new Set(resolveIds(selectedIds, registry.get)))
@@ -148,7 +150,7 @@ export function createModel<
   }
 
   function register(registration: Partial<Z> = {}): E {
-    const id = registration.id ?? useId()
+    const id = nextId(registration.id)
     const item: Partial<E> = {
       disabled: false,
       ...registration,

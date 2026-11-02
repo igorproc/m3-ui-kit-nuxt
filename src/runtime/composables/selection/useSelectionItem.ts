@@ -12,6 +12,7 @@ import { computed, onScopeDispose, toValue } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter } from 'vue'
 import { useSelectionContext } from './context'
 import type { SelectionItemState } from './context'
+import { itemPatternAttrs } from '#kit/utils/selection/patternAttrs'
 
 export interface UseSelectionItemOptions<TValue> {
   value: MaybeRefOrGetter<TValue>
@@ -36,6 +37,11 @@ export function useSelectionItem<TValue>(
   onScopeDispose(() => ticket.stop())
 
   const state = computed<SelectionItemState<TValue>>(() => ({
+    attrs: itemPatternAttrs(context.pattern?.value, {
+      isSelected: ticket.isSelected.value,
+      isDisabled: ticket.isDisabled.value,
+      isSelectionBlocked: ticket.isSelectionBlocked.value,
+    }),
     value: toValue(ticket.value),
     isSelected: ticket.isSelected.value,
     isDisabled: ticket.isDisabled.value,

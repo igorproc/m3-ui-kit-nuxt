@@ -61,6 +61,31 @@ describe('m-autocomplete · variants', () => {
     }
   })
 
+  it.each([
+    ['shape', ['none', 'extra-small', 'medium', 'large', 'full'], (value: string) => `ui-text-field--shape-${value}`],
+    ['labelPlacement', ['top', 'float', 'inset', 'hidden'], (value: string) => `ui-text-field--label-${value}`],
+    ['density', ['compact', 'default', 'comfortable'], (value: string) => `ui-text-field--density-${value}`],
+  ] as const)('forwards every %s step to the box', async (axis, values, modifier) => {
+    for (const value of values) {
+      const wrapper = await mount({ ...base, label: 'City', [axis]: value })
+
+      expect(wrapper.find('.ui-text-field').classes()).toContain(modifier(value))
+    }
+  })
+
+  it('defaults to a filled box at the default density', async () => {
+    const wrapper = await mount({ ...base })
+
+    expect(wrapper.find('.ui-text-field').classes()).toEqual(expect.arrayContaining(['ui-text-field--filled', 'ui-text-field--density-default']))
+  })
+
+  it.each(['compact', 'default', 'comfortable'] as const)('carries the %s density into the rows of the panel', async (density) => {
+    const wrapper = await mount({ ...base, density })
+    await openMenu(wrapper)
+
+    expect(options()[0]!.className).toContain(`ui-list-item--density-${density}`)
+  })
+
   it('forwards label and placeholder to the native input', async () => {
     const wrapper = await mount({ ...base, label: 'City', placeholder: 'Search' })
     expect(wrapper.find('label.ui-text-field__label').text()).toBe('City')

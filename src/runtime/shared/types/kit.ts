@@ -7,8 +7,11 @@ export type TThemeVariant
 /** `'standard' | 'medium' | 'high'` → `0 | 0.5 | 1`; a raw number is passed through (clamped -1..1). */
 export type TThemeContrast = 'standard' | 'medium' | 'high' | number
 
-/** Semantic seed map: `name → HEX`, or `{ color, blend }` to override blend per color. */
-export type TSemanticColors = Record<string, string | { color: string, blend?: boolean }>
+/**
+ * Semantic seed map: `name → HEX`, or `{ color, blend }` to override blend per color.
+ * `false` removes a seed inherited from the built-in or the global map.
+ */
+export type TSemanticColors = Record<string, string | { color: string, blend?: boolean } | false>
 
 export interface ITheme {
   key: string // Identifier (data-palette="key")
@@ -20,8 +23,6 @@ export interface ITheme {
 export interface IDynamicThemeOptions {
   /** Named MCU variant (sugar over DynamicScheme). Default `tonalSpot`. */
   variant?: TThemeVariant
-  /** @deprecated alias of `variant`. */
-  preset?: 'tonalSpot' | 'monochrome' | 'neutral' | 'vibrant' | 'fidelity'
   /** Build-time default contrast for this theme. Runtime may override. */
   contrast?: TThemeContrast
   /** Chroma of the neutral + neutralVariant palettes. Overrides the variant's neutrals. */
@@ -71,16 +72,14 @@ export interface IMaterialKitRestrict {
 export interface IThemeDefaults {
   definition?: TDefinition // Default definition (built-in: 'dark')
   palette?: string // Default palette key
-  contrast?: TThemeContrast // Default contrast
-  variant?: TThemeVariant // Default variant for themes without one
-  neutralChroma?: number // Default neutral chroma for themes without one
+  contrast?: TThemeContrast // Default contrast, when neither the cookie nor the palette sets one
 }
 
 /** Theme configuration group: palettes, defaults and semantic seeds. */
 export interface IMaterialKitTheme {
   themes?: TTheme[] // List of available themes
   default?: IThemeDefaults
-  /** Global semantic seeds (harmonized to each palette). Defaults to success/warning/info. */
+  /** Extra semantic seeds (harmonized to each palette), merged over success/warning/info; `false` removes one. */
   semanticColors?: TSemanticColors
   /** Global default for semantic `blend`. Default `true`. */
   semanticBlend?: boolean

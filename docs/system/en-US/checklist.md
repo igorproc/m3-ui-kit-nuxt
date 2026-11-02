@@ -24,6 +24,10 @@
 - Tokens via `g($t, 'dot.path')` — dot form, whole file, no exceptions.
 - No hardcoded values, no local `$colour` variables, no runtime custom properties for
   colour or state. Live geometry is the only exception.
+- No custom property of the component's own for an axis either (`density`, `shape`,
+  `variant`…): one rule per step under `:where(.ui-x--step *)`, in place
+  ([decisions.md](decisions.md)). Beyond live geometry, only the layout system owns custom
+  properties.
 - Components that host content expose `<slot />`s.
 - Inside the library, import other UI components **explicitly**; auto-import is for
   composables, utils and reactivity APIs only.

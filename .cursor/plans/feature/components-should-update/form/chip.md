@@ -2,7 +2,7 @@
 
 <identity>M3: Chips (assist, filter, input, suggestion) · Токены Compose: `AssistChipTokens`, `FilterChipTokens`, `InputChipTokens`, `SuggestionChipTokens`, `StateTokens`; поведение и раскладка — `Chip.kt`; цвета слоя состояний — material-web `tokens/versions/v0_192/_md-comp-*-chip.scss` · Код: `src/runtime/components/ui/chip/` + `src/runtime/composables/chip-group/context.ts` · Аудит: `data/chip.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Интеграция с `MChipGroup` (опциональный `value`, тикет, roving) сделана раньше и сохраняется; не сделаны галочка выбора, вариант elevated, аватар, отдельное действие удаления и слой состояний. Ждут В-1…В-6.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: generic `TValue` у `value` (F2-05); мишень 48 у `removal="button"` — на обеих кнопках, не на обёртке (F2-06); в `matrix.vue` elevated и input-чипы с аватаром/удалением, `stress.vue`, e2e. Ранее (G1): токены, слой `::before`, `variant`, галочка, ось `removal`, тултип. Статичная форма выбранного — отменено (В-3 = 1).</implementation-status>
 
 ## Вердикт
 
@@ -191,7 +191,7 @@ filter-чипа).
    `MAutocomplete` в том же шаге. Зависит от В-4, `dropdown.md`. Файлы: `chip/*`,
    `dropdown/index.vue`, `autocomplete/index.vue`, `dropdown/_panel.scss`,
    `shared/constants/messages.ts`.
-8. **S** — Статичная форма выбранного (`full`), только если В-3 = 2: без перехода
+8. **S** — **Отменено** (В-3 = 1, `decisions.md:132`). Статичная форма выбранного (`full`), только если В-3 = 2: без перехода
    `border-radius`. Файлы: `chip/_index.scss`, `chip/index.vue`.
 9. **M** — Тесты (раздел ниже).
 

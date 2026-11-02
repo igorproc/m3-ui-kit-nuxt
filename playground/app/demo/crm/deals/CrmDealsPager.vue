@@ -12,15 +12,13 @@
     next-label="Следующая страница"
     last-label="Последняя страница"
   >
-    <!-- Page buttons are named by the kit in English with no prop to change
-         it, so they are drawn here; the slot's `ariaLabel` key is not spread
-         either, because a camelCase key renders as `arialabel` in SSR HTML. -->
-    <template #item="{ page: number, current, props: control }">
+    <!-- Page buttons are drawn here so the current page gets the tonal look. -->
+    <template #item="{ page: number, current, disabled: inert, props: control }">
       <MButton
         class="crm-pager__page"
         :variant="current ? 'tonal' : 'text'"
-        :disabled="control.disabled"
-        :aria-current="control.ariaCurrent"
+        :soft-disabled="inert"
+        :aria-current="control['aria-current']"
         :aria-label="current ? `Страница ${number}, текущая` : `Перейти на страницу ${number}`"
         @click="control.onClick"
       >

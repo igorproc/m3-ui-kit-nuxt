@@ -16,7 +16,7 @@
  * ```
  */
 import { onScopeDispose, reactive, shallowReactive } from 'vue'
-import type { RegistryContext, RegistryTicket, RegistryTicketInput } from './createRegistry'
+import type { RegistryContext, RegistryTicket, RegistryTicketInput } from './types'
 import type { ID } from '#kit/shared/types/registry'
 
 export interface ProxyRegistryOptions {

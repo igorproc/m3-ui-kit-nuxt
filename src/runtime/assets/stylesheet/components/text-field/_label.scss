@@ -33,10 +33,9 @@ $overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
   &--label-inset {
     .ui-text-field__label {
       position: absolute;
-      top: var(--ui-text-field-label-top);
-      inset-inline-start: var(--ui-text-field-inset);
+      inset-inline-start: g($t, 'box.filled.inset');
       z-index: 1;
-      max-width: g($t, 'label.room.base');
+      max-width: g($t, 'box.filled.label.room.base');
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -49,6 +48,15 @@ $overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
       // The scale origin is physical, so the writing direction picks its side.
       &:dir(rtl) {
         transform-origin: right center;
+      }
+
+      @include family.steps('text-field', $density: true) using ($density) {
+        top: g($t, 'density.#{$density}.label.top');
+      }
+
+      @include family.inset-boxes('text-field') using ($box) {
+        inset-inline-start: g($t, '#{$box}.inset');
+        max-width: g($t, '#{$box}.label.room.base');
       }
     }
   }
@@ -66,7 +74,11 @@ $overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
   }
 
   &:where(.ui-text-field--prepend, .ui-text-field--append)#{$overlay} .ui-text-field__label {
-    max-width: g($t, 'label.room.one');
+    max-width: g($t, 'box.filled.label.room.one');
+
+    @include family.inset-boxes('text-field') using ($box) {
+      max-width: g($t, '#{$box}.label.room.one');
+    }
   }
 
   &--prepend.ui-text-field--append#{$overlay} .ui-text-field__label {
@@ -91,12 +103,17 @@ $overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
   &--label-float.ui-text-field--outlined {
     .ui-text-field__label {
       top: 0;
-      inset-inline-start: var(--ui-text-field-inset);
-      max-width: g($t, 'label.room.base');
+
+      @include family.outlined-boxes('text-field') using ($box) {
+        inset-inline-start: g($t, '#{$box}.inset');
+        max-width: g($t, '#{$box}.label.room.base');
+      }
     }
 
     .ui-text-field__notch {
-      max-width: g($t, 'outlined.notch.open');
+      @include family.outlined-boxes('text-field') using ($box) {
+        max-width: g($t, '#{$box}.notch.open');
+      }
     }
   }
 
@@ -109,8 +126,10 @@ $overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
   &--label-float.ui-text-field--underline,
   &--label-inset {
     .ui-text-field__row {
-      padding-top: var(--ui-text-field-input-padding-top);
-      padding-bottom: var(--ui-text-field-input-padding-bottom);
+      @include family.steps('text-field', $density: true) using ($density) {
+        padding-top: g($t, 'density.#{$density}.input.padding.top');
+        padding-bottom: g($t, 'density.#{$density}.input.padding.bottom');
+      }
     }
   }
 
@@ -125,12 +144,15 @@ $overlay: ':where(.ui-text-field--label-float, .ui-text-field--label-inset)';
     inset: g($t, 'outlined.outline.inset');
     min-width: 0;
     padding-block: 0;
-    padding-inline: g($t, 'outlined.outline.padding.start') 0;
     margin: 0;
     border: g($t, 'container.border.width') solid g($t, 'outlined.outline.color');
     border-radius: inherit;
     pointer-events: none;
     transition: border-color g($t, 'state.duration') g($t, 'state.easing');
+
+    @include family.outlined-boxes('text-field') using ($box) {
+      padding-inline: g($t, '#{$box}.outline.start') 0;
+    }
   }
 
   @include family.notch($t);

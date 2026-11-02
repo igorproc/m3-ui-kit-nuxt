@@ -1,4 +1,5 @@
 @use 'sass:map';
+@use 'sass:math';
 @use '../../abstracts/forward.scss' as *;
 
 // ==========================================
@@ -8,21 +9,47 @@
 // tokens only adapt typography/spacing and own the noninteractive
 // current/disabled branches.
 $on-surface: map.get($theme-color-link, 'on-surface');
+$item-height: spacing(32);
+
+// What a crumb draws past its box: the focus ring, and on a coarse pointer the
+// 48 target (S8) above and below a 32 crumb.
+$ring: map.get($theme-focus-link, 'width') + map.get($theme-focus-link, 'offset');
+$target-overhang: math.div(spacing(48) - $item-height, 2);
+$fade: spacing(24);
 $tokens: (
-  list: (gap: 4rem),
+  list: (
+    gap: spacing(4),
+    // A scrolling list clips: it keeps room inside for the ring and the target,
+    // and fades the edge it can still scroll towards.
+    scroll: (
+      inset: (
+        inline: $ring,
+        block: $ring,
+        coarse: math.max($ring, $target-overhang),
+      ),
+      margin: (block: $ring * -1),
+      fade: (
+        size: $fade,
+        offset: $fade * -1,
+        mask: (size: calc(100% + #{$fade})),
+      ),
+    ),
+    // Wrapped rows on a coarse pointer sit as far apart as their targets reach.
+    wrap: (coarse: (row-gap: $target-overhang * 2)),
+  ),
   item: (
-    height: 32rem,
+    height: $item-height,
     shape: map.get($theme-shape-link, 'small'),
     typography: map.get($theme-typography-link, 'label', 'large'),
     color: map.get($theme-color-link, 'on-surface-variant'),
-    padding: (inline: 8rem),
-    current: (color: $on-surface),
+    padding: (inline: spacing(8)),
+    // Heavier than the label-large 500 of the links: the current page reads
+    // by weight too, not by a shade alone (and in forced colors).
+    current: (color: $on-surface, weight: 700),
     disabled: (color: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent)),
   ),
   divider: (
     color: map.get($theme-color-link, 'outline'),
     size: 18rem,
-    // The chevron points along the reading direction, so RTL mirrors it.
-    rtl: (transform: scaleX(-1)),
   ),
 );

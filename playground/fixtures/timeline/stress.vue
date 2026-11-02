@@ -52,6 +52,23 @@
       />
     </MTimeline>
 
+    <h2>Words in a row of equal columns at 160</h2>
+    <div class="fixture-timeline-stress__tight">
+      <MTimeline data-test="word-row">
+        <MTimelineItem title="Pace">
+          <div
+            class="fixture-timeline-stress__words"
+            role="group"
+            aria-label="Words"
+            tabindex="0"
+          >
+            <span data-test="word-row-item">Heartbeat</span>
+            <span data-test="word-row-item">Breathing</span>
+          </div>
+        </MTimelineItem>
+      </MTimeline>
+    </div>
+
     <h2>Some items with a time</h2>
     <MTimeline data-test="mixed-time">
       <MTimelineItem
@@ -151,6 +168,18 @@ const insertSecond = () => inserted.splice(1, 0, Math.max(...inserted) + 1)
     width: 360rem;
     max-width: 100%;
     outline: 1px dashed var(--md-sys-color-outline);
+  }
+
+  &__tight {
+    width: 160rem;
+  }
+
+  // Equal columns, as a segmented button lays out its labels: each column may
+  // shrink to its content's minimum, which an item must not cut to one glyph.
+  &__words {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: auto;
   }
 
   // Wider than the collapse threshold at a desktop width, so alternate holds.

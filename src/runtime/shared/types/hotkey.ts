@@ -78,8 +78,6 @@ export interface HotkeyLabels extends Partial<HotkeyKeyLabels> {
 export interface UseHotkeyOptions {
   /** Reactive enable flag. @default true */
   enabled?: MaybeRefOrGetter<boolean>
-  /** Reactive scope; an active overlay scope suppresses lower scopes. */
-  scope?: MaybeRefOrGetter<string | undefined>
   /** Trigger event. @default 'keydown' */
   event?: 'keydown' | 'keyup'
   /** Allow firing while typing in inputs/textarea/contenteditable. @default false */

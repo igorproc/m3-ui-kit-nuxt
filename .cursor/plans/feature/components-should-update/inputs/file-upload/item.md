@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MFileUpload](index.md)) · Код: `src/runtime/components/fragments/file-upload/Item.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-19">M3-polish (2026-10-19): полоса прогресса поверх нижнего отступа строки — высота строки не меняется при загрузке.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">M3-polish (2026-10-19): полоса прогресса поверх нижнего отступа строки — высота строки не меняется при загрузке. Фаза 2 (2026-10-30): кнопки действий получили класс элемента `ui-file-upload__action` рядом с модификатором (`--start` / `--cancel` / `--retry` / `--remove`).</implementation-status>
 
 ## Вердикт
 

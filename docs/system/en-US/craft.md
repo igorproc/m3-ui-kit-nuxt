@@ -191,8 +191,7 @@ The expensive bugs in this kit have all been silent. None of them threw.
 
 | failure | what it looks like | what catches it |
 |---|---|---|
-| `g()` misses a token path | the declaration vanishes; the rule never renders | `g()` now `@error`s on a dot path |
-| a dash path splits a key that contains a dash | same, and it has been happening for years | the same check, as a warning |
+| `g()` misses a token path | the declaration vanishes; the rule never renders | `g()` `@error`s on every miss |
 | a Sass error in an SFC | reaches the consumer's dev server | `npm run lint:scss` |
 | a Sass deprecation | drowns in other warnings | the same check, reported separately |
 | a dev-only `console.warn` | invisible under Vitest | nothing — accepted, documented |
@@ -202,8 +201,8 @@ preprocessor: **nothing in the kit's own pipeline compiles component SCSS.** Tha
 `shell/scss-smoke.mjs` exists.
 
 Turning the token check on found **102 dead paths across 19 components** — rules that have never
-rendered. `grid-name`, `min-height`, `hover-color`: the legacy dash separator splits a key that
-itself contains a dash. Fixing one of those does not "clean up code", it **turns CSS on**, and
+rendered. `grid-name`, `min-height`, `hover-color`: the old dash separator split a key that
+itself contains a dash (the form was removed on 2026-10-23). Fixing one of those does not "clean up code", it **turns CSS on**, and
 the component's current appearance is the appearance *without* that rule. Treat each as a visual
 change, not a refactor.
 
@@ -264,6 +263,11 @@ density would cross that silently.
 **The kit ships no user-facing copy it cannot translate.** `<MOtpInput>` has no default label —
 it warns in dev when neither the prop nor the `#label` slot is given, because the alternative is
 an English name reaching a screen reader in a Russian app, or silence reaching it in any app.
+The same holds for the number input's steppers and unit menu, the textarea's grip, the date and
+time pickers and `<MDialogDate>`: every phrase is a prop with no default, and dev warns for a
+part on screen left without words. A refusal without words still shows the error state and its
+glyph. The date picker's typed-field pattern is built from `patternLetters` in the locale's
+order; `locale` itself stays `en-US` by default — it is a format, not copy.
 
 ---
 
@@ -348,23 +352,24 @@ A rounded scroll container drew its scrollbar edge to edge — into the curve an
 Two causes, and neither of them threw.
 
 **`border-radius` does not clip a scrollbar.** The track runs the full height of the box whatever
-its corners do, so the kit shortens it instead: the global scrollbar rule gives the vertical
-track `margin-block: var(--ui-scrollbar-inset-block)` and the horizontal one
-`margin-inline: var(--ui-scrollbar-inset-inline)`, and every rounded scroll container in the
-kit sets them to its own corner radius. One of yours needs one line per scroll axis:
+its corners do, so the kit shortens it instead: every rounded scroll container in the kit
+includes the `scrollbar-inset` mixin with its own corner radius — `$block` gives the vertical
+track `margin-block`, `$inline` the horizontal one `margin-inline`. One of yours needs one line:
 
 ```scss
 .my-panel {
-  --ui-scrollbar-inset-block: var(--sys-shape-corner-extra-large);
-
   overflow-y: auto;
   border-radius: var(--sys-shape-corner-extra-large);
+
+  @include scrollbar-inset($block: var(--sys-shape-corner-extra-large));
 }
 ```
 
 Pass the token the radius comes from, not a number — a measured inset does not survive the next
-shape change. The property is reset on every element, so it never reaches a scroll container
-nested inside yours; the reset has no specificity, so your class wins on its own element.
+shape change. The mixin styles the container's own track and nothing else, so it never reaches a
+scroll container nested inside yours. It replaced the `--ui-scrollbar-inset-block` /
+`--ui-scrollbar-inset-inline` properties (2026-10-23): a value known at build time is not a
+custom property (section 10), and their reset on every element is gone with them.
 
 **The standard properties switch the styled scrollbar off.** Since Chrome 121 an element that
 sets `scrollbar-width` or `scrollbar-color` loses every `::-webkit-scrollbar` rule: the inset
@@ -373,10 +378,6 @@ pair only under `@supports not selector(::-webkit-scrollbar)` — Firefox, today
 either property to a component "for Firefox"; in Chrome it quietly replaces the kit's scrollbar
 with the plain one. `scrollbar-width: none` to hide a scrollbar is the exception — hiding is all
 it is asked to do.
-
-These are the only custom properties the kit asks a consumer to set, and they do not contradict
-section 10: they are not component states but the inputs of a rule every scroll container
-shares.
 
 > **Trap.** Firefox has no track margin at all — there the thin scrollbar still reaches the
 > corners.

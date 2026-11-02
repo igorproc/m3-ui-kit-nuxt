@@ -1,76 +1,116 @@
 <template>
   <span
     class="ui-tooltip"
-    @mouseenter="show"
-    @mouseleave="scheduleHide"
-    @focusin="show"
-    @focusout="hide"
+    @pointerenter="control.onPointerEnter"
+    @mouseenter="control.onMouseEnter"
+    @mouseleave="control.scheduleHide"
+    @focusin="control.onFocusIn"
+    @focusout="control.hide"
+    @pointerdown="control.onPointerDown"
+    @pointerup="control.onPointerEnd"
+    @pointercancel="control.onPointerEnd"
+    @click.capture="control.onAfterLongPress"
+    @contextmenu.capture="control.onAfterLongPress"
   >
     <span
       ref="trigger"
       class="ui-tooltip__trigger"
       :style="popover.anchorStyle.value"
-      :aria-describedby="visible ? tooltipId : undefined"
     >
-      <slot />
+      <slot :props="control.triggerProps.value" />
     </span>
 
-    <client-only>
-      <teleport :to="teleportTarget">
-        <transition
-          name="ui-tooltip-fade"
-          @enter="showInTopLayer"
-          @after-enter="popover.onAfterEnter"
-          @after-leave="popover.onAfterLeave"
+    <!-- A `v-if` leaves a comment in place, where <client-only> renders a <span>. -->
+    <teleport
+      v-if="isMounted"
+      :to="teleportTarget"
+    >
+      <transition
+        name="ui-tooltip-fade"
+        @enter="showInTopLayer"
+        @after-enter="popover.onAfterEnter"
+        @after-leave="onAfterLeave"
+      >
+        <span
+          v-show="open"
+          :id="tooltipId"
+          ref="surface"
+          class="ui-tooltip__content"
+          :class="`ui-tooltip__content--${variant}`"
+          role="tooltip"
+          :dir="popover.surfaceDir.value"
+          :popover.attr="usesPopoverLayer ? 'manual' : undefined"
+          :style="[popover.popoverStyle.value, { zIndex: ticket.zIndex.value }]"
+          @mouseenter="control.cancelHide"
+          @mouseleave="control.scheduleHide"
         >
           <span
-            v-if="visible"
-            :id="tooltipId"
-            ref="surface"
-            class="ui-tooltip__content"
-            role="tooltip"
-            :popover.attr="usesPopoverLayer ? 'manual' : undefined"
-            :style="[popover.popoverStyle.value, { zIndex: ticket.zIndex.value }]"
-            @mouseenter="hideTimer.stop"
-            @mouseleave="scheduleHide"
+            v-if="isRich && hasSubhead"
+            class="ui-tooltip__subhead"
           >
+            <slot name="subhead">
+              {{ subhead }}
+            </slot>
+          </span>
+          <span class="ui-tooltip__text">
             <slot name="content">
               {{ text }}
             </slot>
           </span>
-        </transition>
-      </teleport>
-    </client-only>
+        </span>
+      </transition>
+    </teleport>
   </span>
 </template>
 
 <script setup lang="ts">
-import { shallowRef, useId, watch } from 'vue'
+import { computed, onMounted, shallowRef, useId, useSlots, watch } from 'vue'
 import { useStack } from '#kit/composables/useStack'
-import { useGlobalListener } from '#kit/composables/useGlobalListener'
 import { usePopover } from '#kit/composables/popover/usePopover'
-import { useTimer } from '#kit/composables/useTimer'
+import { useTooltipControl } from '#kit/composables/tooltip/useTooltipControl'
 import { supportsPopover } from '#kit/shared/utils/support'
 import { useOverlayTeleportTarget } from '#kit/composables/overlay/useOverlayTarget'
 import { mTooltipProps } from './props'
 
-defineProps(mTooltipProps)
+const props = defineProps(mTooltipProps)
 
-/** Gap between trigger and tooltip — mirrors the `content.offset` token. */
-const TOOLTIP_OFFSET = 8
+const open = defineModel<boolean>('open', { default: false })
+const slots = useSlots()
+
+/** Gap between trigger and tooltip, M3 `SpacingBetweenTooltipAndAnchor`; one home for it. */
+const TOOLTIP_OFFSET = '4rem'
 /** Grace period for moving the pointer from the trigger onto the tooltip (WCAG 1.4.13, hoverable). */
 const HIDE_DELAY_MS = 100
 
 const tooltipId = useId()
-const visible = shallowRef(false)
 const trigger = shallowRef<HTMLElement | null>(null)
 const surface = shallowRef<HTMLElement | null>(null)
 
-const popover = usePopover(visible, {
-  placement: 'top',
+const isRich = computed(() => props.variant === 'rich')
+const hasSubhead = computed(() => Boolean(props.subhead || slots.subhead))
+
+const control = useTooltipControl({
+  id: tooltipId,
+  open,
+  trigger,
+  hideDelay: HIDE_DELAY_MS,
+  disabled: () => props.disabled,
+  hasContent: () => Boolean(props.text || slots.content || (isRich.value && hasSubhead.value)),
+})
+
+const popover = usePopover(open, {
+  placement: () => props.placement,
   offset: TOOLTIP_OFFSET,
   trigger,
   surface,
+})
+
+// The surface lives in the document from mount on, so the trigger's
+// description points at it before the first showing. Client-only: a teleport
+// in the SSR output breaks the hydration of the other overlays in the host.
+const isMounted = shallowRef(false)
+onMounted(() => {
+  isMounted.value = true
 })
 
 // Top layer keeps the tooltip above a modal <dialog> and outside any overflow;
@@ -82,35 +122,21 @@ const showInTopLayer = (el: Element) => {
   if (usesPopoverLayer) (el as HTMLElement).showPopover()
 }
 
+function onAfterLeave(el: Element) {
+  if (usesPopoverLayer && (el as HTMLElement).matches(':popover-open')) (el as HTMLElement).hidePopover()
+  popover.onAfterLeave()
+}
+
 // Overlay stacking: keep the tooltip above whatever overlay it annotates.
 const ticket = useStack().register()
 
-watch(visible, value => (value ? ticket.select() : ticket.unselect()))
-
-function show() {
-  hideTimer.stop()
-  visible.value = true
-}
-
-function hide() {
-  hideTimer.stop()
-  visible.value = false
-}
-
-const hideTimer = useTimer(hide, { duration: HIDE_DELAY_MS })
-
-function scheduleHide() {
-  hideTimer.start()
-}
-
-// Esc dismisses the tooltip (APG tooltip pattern) without moving focus.
-useGlobalListener('window', 'keydown', (event) => {
-  if ((event as KeyboardEvent).key === 'Escape' && visible.value) hide()
-})
+watch(open, value => (value ? ticket.select() : ticket.unselect()))
 </script>
 
 <style lang="scss">
 @use '#kit/assets/stylesheet/components/tooltip/index' as t;
+
+$t: material-map(t.$tokens, 'md-tooltip');
 
 .ui-tooltip {
   position: relative;
@@ -123,38 +149,74 @@ useGlobalListener('window', 'keydown', (event) => {
 
 // Teleported content
 .ui-tooltip__content {
-  $t: material-map(t.$tokens, 'md-tooltip');
-
   // Neutralise the UA [popover] box; hoverable even inside a popover overlay.
   pointer-events: auto;
   margin: 0;
   border: 0;
   overflow: visible;
-  max-width: g($t, 'content.max-width');
-  padding: g($t, 'content.padding');
-  border-radius: g($t, 'content.border.radius');
-  background-color: g($t, 'content.bg.color');
-  color: g($t, 'content.color');
   white-space: normal;
   overflow-wrap: break-word;
-  box-shadow: g($t, 'content.shadow');
-
-  @include typescale(g($t, 'content.text.type'));
 
   @include forced-colors {
     border: 1px solid CanvasText;
   }
+
+  &--plain {
+    min-width: g($t, 'plain.min.width');
+    min-height: g($t, 'plain.min.height');
+    max-width: g($t, 'plain.max.width');
+    padding: g($t, 'plain.padding');
+    border-radius: g($t, 'plain.border.radius');
+    background-color: g($t, 'plain.bg.color');
+    color: g($t, 'plain.color');
+    box-shadow: g($t, 'plain.shadow');
+
+    @include typescale(g($t, 'plain.text.type'));
+  }
+
+  &--rich {
+    display: flex;
+    flex-direction: column;
+    gap: g($t, 'rich.gap');
+    max-width: g($t, 'rich.max.width');
+    padding: g($t, 'rich.padding');
+    border-radius: g($t, 'rich.border.radius');
+    background-color: g($t, 'rich.bg.color');
+    color: g($t, 'rich.color');
+    box-shadow: g($t, 'rich.shadow');
+
+    @include typescale(g($t, 'rich.text.type'));
+  }
 }
 
-// Vue Transition
-.ui-tooltip-fade-enter-active,
-.ui-tooltip-fade-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+.ui-tooltip__subhead {
+  color: g($t, 'rich.subhead.color');
+
+  @include typescale(g($t, 'rich.subhead.type'));
 }
 
-.ui-tooltip-fade-enter-from,
-.ui-tooltip-fade-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
+// Reduced motion shortens the system durations; the fade stays, the scale goes.
+.ui-tooltip-fade {
+  &-enter-active {
+    transition:
+      opacity g($t, 'motion.enter.duration') g($t, 'motion.enter.easing'),
+      transform g($t, 'motion.enter.duration') g($t, 'motion.enter.easing');
+  }
+
+  &-leave-active {
+    transition:
+      opacity g($t, 'motion.exit.duration') g($t, 'motion.exit.easing'),
+      transform g($t, 'motion.exit.duration') g($t, 'motion.exit.easing');
+  }
+
+  &-enter-from,
+  &-leave-to {
+    opacity: 0;
+    transform: scale(g($t, 'motion.scale.from'));
+
+    @media (prefers-reduced-motion: reduce) {
+      transform: none;
+    }
+  }
 }
 </style>

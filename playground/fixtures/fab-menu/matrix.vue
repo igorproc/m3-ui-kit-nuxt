@@ -67,9 +67,9 @@ import MFabMenu from '#kit/components/ui/fab-menu/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
 import type { MButtonDensity } from '#kit/components/ui/button/props'
 import type { MFabMenuAlign, MFabMenuItem } from '#kit/components/ui/fab-menu/props'
-import type { MColor } from '#kit/shared/types/props'
+import type { MAccentColor } from '#kit/shared/types/props'
 
-const colors: MColor[] = ['primary', 'secondary', 'tertiary']
+const colors: MAccentColor[] = ['primary', 'secondary', 'tertiary']
 const aligns: MFabMenuAlign[] = ['start', 'end']
 const densities: MButtonDensity[] = ['compact', 'default', 'comfortable']
 

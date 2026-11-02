@@ -101,12 +101,12 @@ let checked = 0
 const failures = []
 
 /**
- * Two buckets on one channel. Deprecations fail the check; the legacy-token
- * warnings from `g()` only get counted, because there are ~99 of them and a
- * deprecation printed in that stream is a deprecation nobody reads.
+ * Two buckets on one channel. Deprecations fail the check; a plain `@warn`
+ * from the kit's own functions is only listed, kept apart so a deprecation
+ * never drowns among them.
  */
 const deprecations = new Map()
-const tokenWarnings = new Map()
+const warnings = new Map()
 
 // A `@warn` raised inside a function carries no span, so the only reliable
 // attribution is the entry being compiled when it fired.
@@ -114,7 +114,7 @@ let currentFile = 'unknown'
 
 const logger = {
   warn(message, options) {
-    const bucket = options?.deprecation ? deprecations : tokenWarnings
+    const bucket = options?.deprecation ? deprecations : warnings
     const label = options?.deprecation
       ? `${options.deprecationType?.id ?? 'deprecation'}: ${message.split('\n')[0]}`
       : message.split('\n')[0]
@@ -234,9 +234,9 @@ if (deprecations.size) {
   process.exit(1)
 }
 
-if (tokenWarnings.size) {
-  console.log(`\n${tokenWarnings.size} unresolved legacy token path(s) — these rules render nothing:`)
-  for (const [message, files] of tokenWarnings) {
+if (warnings.size) {
+  console.log(`\n${warnings.size} Sass warning(s):`)
+  for (const [message, files] of warnings) {
     console.log(`\n  ${message}\n    ${[...files].join('\n    ')}`)
   }
   console.log('')

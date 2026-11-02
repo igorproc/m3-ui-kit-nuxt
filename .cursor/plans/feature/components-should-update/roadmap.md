@@ -23,14 +23,18 @@
 
 ## Волна 1 — система (S2, S6–S9, density)
 
-1. Шкала форм Expressive в `--sys-shape-corner-*` (S2).
-2. Emphasized-типографика (S6), `letter-spacing` в миксине `typescale`.
-3. Цель нажатия 48 (S8) — общий миксин расширителя.
-4. Ветка `selected` в картах компонентов (S9).
-5. `density` вместо `size`:
+1. ~~Шкала форм Expressive в `--sys-shape-corner-*` (S2).~~ **Отменено** владельцем 2026-10-07: новых
+   ступеней нет, вне шкалы — `calc()` в карте (`decisions.md`, «Удалено / отвергнуто»).
+2. Emphasized-типографика (S6), `letter-spacing` в миксине `typescale`. **Открыто**: конфликт с правилом
+   «без новых системных токенов» — вопрос владельцу P2 (`.cursor/handoff/plans-audit-2/owner-questions.md`).
+3. Цель нажатия 48 (S8) — общий миксин расширителя. **Сделано** (`touch-target`, только `pointer: coarse`);
+   `MButton default` и segmented — вопрос владельцу P1.
+4. Ветка `selected` в картах компонентов (S9). **Сделано** 2026-10-30 (полный контракт `selected` / `unselected` →
+   `container` / `content` / `shape`).
+5. `density` вместо `size` — **сделано** (Q11-А, размеры прежние):
    - avatar 24 / 40 / 56;
-   - loading 24 / 48 / 64;
-   - progress — убрать ось;
+   - loading 16 / 24 / 32;
+   - progress — `density` (толщина 2 / 4 / 8), ось не убрана;
    - кнопки 32 / 40 / 56.
 6. Запись решений в `docs/system/*/decisions.md` (обе локали):
    - S3 и S4 отклонены;

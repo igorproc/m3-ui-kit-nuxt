@@ -2,7 +2,7 @@
 
 <identity>M3: Switch · Токены Compose: `SwitchTokens`, `StateTokens`; поведение — `Switch.kt` (`Switch`, `ThumbNode`, `SwitchDefaults.IconSize`); цвета слоя состояний — material-web `tokens/versions/v0_192/_md-comp-switch.scss`, иконки и цель — `m3-reference/switch/internal/{_switch,_icon,_handle}.scss` · Код: `src/runtime/components/ui/switch/` · Аудит: `data/switch.json` · Тип: public</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Фаза C уже дала кольцо фокуса на треке, `can-hover`, forced colors и раздачу `$attrs` на нативный инпут (`useControlAttrs`). Геометрия и цвета покоя совпадают с M3. Не хватает иконок в ручке, цветов ручки на фокусе, видимой ошибки, цели 48, RTL и подписи из слота. Ждут ПВ-1…ПВ-4.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: нажатая ручка — круг 28 (`flex-shrink: 0`, F2-04), ось `icons` в `matrix.vue`, `stress.vue`, e2e нажатия и иконок. Ранее (G1): ошибка, строка поддержки, RTL, роли ручки, ось `icons`, цель 48. Сдвиг ручки — `transform` (отменено решением, `decisions.md:124`).</implementation-status>
 
 ## Вердикт
 
@@ -142,7 +142,7 @@ EN-01). Миграция: удалить атрибут у вызова; в ки
    disabled-трек `surface-container-highest`, подпись disabled цветом; убрать масштаб слоя и литерал
    `on-surface` из `.vue`; перевести файл на точечные пути. Зависит от СВ-1. Файлы:
    `assets/stylesheet/components/switch/_index.scss`, `switch/index.vue`.
-3. **S** — Геометрия: ручка через `inset-inline-start` от центров 16 / 36 (числа выводятся из
+3. **S** — Геометрия (сдвиг ручки через `inset-inline-start` — **отменено**: `transform` + `:dir(rtl)`, `decisions.md:124`): ручка через `inset-inline-start` от центров 16 / 36 (числа выводятся из
    трека, ручки и рамки), трек `flex-shrink: 0`, подпись с переносом, цель 48 (инпут по центру трека).
    Видимое изменение: RTL. Файлы: `switch/index.vue`, `_index.scss`.
 4. **M** — Ось иконок по ПВ-1: `MIcon` 16 в ручке, ручка 24 при иконке, цвета и disabled-прозрачности

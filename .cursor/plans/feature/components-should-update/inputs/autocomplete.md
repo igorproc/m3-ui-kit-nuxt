@@ -2,7 +2,7 @@
 
 <identity>M3: Menus → exposed dropdown menu, редактируемый якорь (`ExposedDropdownMenuAnchorType.PrimaryEditable` — поле, `SecondaryEditable` — trailing-иконка с ролью кнопки и состоянием раскрытия) · Токены Compose: `FilledAutocompleteTokens.kt`, `OutlinedAutocompleteTokens.kt`, `MenuTokens.kt`, `ListTokens.kt`; поведение — `ExposedDropdownMenu.kt` · Код: `src/runtime/components/ui/autocomplete/` (`index.vue`, `props.ts`), `src/runtime/composables/autocomplete/useAutocomplete.ts` поверх `composables/dropdown/useDropdownControl.ts`, токены `src/runtime/assets/stylesheet/components/autocomplete/_index.scss` (= токены дропдауна + `toggle`) и общий `dropdown/_panel.scss` · Аудит: `data/autocomplete.json` · Тип: public; член семейства выбора — [MDropdown](dropdown.md) плюс запрос</identity>
 
-<implementation-status state="partial" updated="2026-10-19">M3-polish (2026-10-19): общий движок и панель с MDropdown; запрос = только напечатанное (выбор и blur не пишут заголовок в `search`), повторное открытие — весь список с посадкой на значение; ниже `minSearchLength` без `#hint` не открывается; нажатие на сфокусированное поле открывает; индикатор — тот же поворот стрелки; `messages` вместо английских дефолтов. Не сделаны: шаг 6 (чипы — план чипа), ошибка загрузки — рецептом через `#no-results` (решение Q-11).</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–6, 8 и данные шага 7. Общий движок и панель с MDropdown (приватный popover, Q16-Б), начальное значение с первого рендера (SSR), запрос = только напечатанное, `#hint` ниже `minSearchLength`, `clear` в `#no-results`, `openOnFocus: 'pointer'`, удалённый поиск по намерению (B6.3), чипы — W17-Б, Enter композиции принадлежит IME. Фаза 2 (2026-10-30): после композиции IME панель открывается сама; generic `TItem` выводится из `items` (S1 → Б). Отложено: кламп высоты панели — Q56-А, B4.2; рендер не переснят — инфраструктура съёмки вне git (`common.md` §4).</implementation-status>
 
 ## Вердикт
 
@@ -157,7 +157,7 @@ End и стрелки влево-вправо — каретка, ↑/↓ отк
 5. **S — открытие по фокусу** (после вопроса 4): различать фокус указателем и клавиатурой
    (`:focus-visible` на инпуте в момент фокуса). Файлы: `useAutocomplete.ts`, `props.ts`.
 6. **L — чипы** — шаг 4 дропдауна ([план чипа](../form/chip.md), В-4).
-7. **M — данные по ответам фазы D** — шаг 5 дропдауна.
+7. **M — данные по ответам фазы D** — шаг 5 дропдауна (ошибка загрузки — **отменено**, Q-11; задержка индикатора — **отменено**, S6 → Б).
 8. **M — тесты** (раздел ниже). Документация DC-01…05 — в репозитории `docs` (когда autocomplete,
    когда dropdown, рецепт удалённого поиска).
 

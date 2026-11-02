@@ -19,8 +19,9 @@
  * group.select(['a', 'b'])
  * ```
  */
-import { computed, shallowReactive, toRef, toValue, useId } from 'vue'
+import { computed, shallowReactive, toRef, toValue } from 'vue'
 import type { ComputedRef, MaybeRefOrGetter, Reactive, Ref } from 'vue'
+import { createTicketIds } from '#kit/utils/registry/internals'
 import { useContext } from '#kit/shared/utils/context/createContext'
 import { createTrinity } from '#kit/shared/utils/context/createTrinity'
 import type { ContextTrinity } from '#kit/shared/utils/context/createTrinity'
@@ -79,6 +80,7 @@ export function createGroup<
 >(_options: GroupOptions = {}): R {
   const { mandatory = false, multiple = true, ...options } = _options
   const selection = createSelection<Z, E>({ ...options, mandatory, multiple, events: true })
+  const nextId = createTicketIds()
   const proxy = useProxyRegistry<Z, E>(selection)
   const mixedIds = shallowReactive(new Set<ID>())
 
@@ -128,7 +130,7 @@ export function createGroup<
   }
 
   function register(registration: Partial<Z> = {}): E {
-    const id = registration.id ?? useId()
+    const id = nextId(registration.id)
 
     const item = {
       ...registration,

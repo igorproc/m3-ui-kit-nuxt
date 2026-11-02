@@ -31,12 +31,13 @@
 import type { PropType } from 'vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import type { MColor } from '#kit/shared/types/props'
+import type { MIconName } from '#kit/components/ui/icon/props'
 
 defineProps({
   /** Marker color role. */
   color: { type: String as PropType<MColor>, required: true },
   /** Decorative marker icon. */
-  icon: { type: String, default: undefined },
+  icon: { type: String as PropType<MIconName>, default: undefined },
   /** Renders no dot; the item's line runs on through its place. */
   hideDot: { type: Boolean, default: false },
 })
@@ -61,10 +62,10 @@ defineProps({
     margin-block-start: g($t, 'first-line.titled.dot');
     border-radius: g($t, 'dot.shape');
 
-    @each $role in ('primary', 'secondary', 'tertiary', 'error') {
+    @each $role, $tone in g($t, 'dot.color') {
       &--#{$role} {
-        background-color: g($t, 'dot.color.#{$role}.container');
-        color: g($t, 'dot.color.#{$role}.content');
+        background-color: g($tone, 'container');
+        color: g($tone, 'content');
       }
     }
   }

@@ -31,7 +31,7 @@ import type {
 } from '#kit/composables/validation/types'
 import { isUndefined } from '#kit/shared/utils/guards/guards'
 
-export type FormFieldType = 'text' | 'textarea' | 'number' | 'checkbox' | 'switch' | 'radio' | 'search'
+export type FormFieldType = 'text' | 'textarea' | 'number' | 'checkbox' | 'switch' | 'radio' | 'search' | 'select'
 
 export interface FormFieldConfig {
   type: FormFieldType
@@ -40,10 +40,13 @@ export interface FormFieldConfig {
   label?: string
   placeholder?: string
   rules?: FieldRules
-  /** Options for `radio` (and other choice-based) fields. */
+  /** Options for `radio` and `select` fields. */
   options?: { label: string, value: string | number }[]
   default?: unknown
-  /** Passthrough props forwarded to the rendered input. */
+  /**
+   * Passthrough props forwarded to the rendered input. A `number` field with
+   * steppers needs `incrementLabel` and `decrementLabel` here, or it warns in dev.
+   */
   props?: Record<string, unknown>
 }
 
@@ -52,6 +55,8 @@ export type FormSchemaConfig = FormFieldConfig[]
 export interface UseFormSchemaOptions<TValues extends Record<string, unknown>> {
   /** Submit handler forwarded to the adapter. */
   onSubmit?: (values: TValues) => Promise<void> | void
+  /** Called when validation fails before submit, with the messages by field. */
+  onValidationError?: (errors: Record<string, string | undefined>) => void
 }
 
 export interface UseFormSchemaReturn<TValues extends Record<string, unknown>> {
@@ -74,7 +79,7 @@ function kindFor(type: FormFieldType): FieldKind {
     return 'boolean'
   }
 
-  if (type === 'radio') {
+  if (type === 'radio' || type === 'select') {
     return 'enum'
   }
 
@@ -91,7 +96,7 @@ function emptyValueFor(type: FormFieldType): unknown {
     return false
   }
 
-  if (type === 'radio') {
+  if (type === 'radio' || type === 'select') {
     return undefined
   }
 
@@ -106,7 +111,7 @@ function toDescriptor(field: FormFieldConfig): FieldDescriptor {
     rules: field.rules,
   }
 
-  if (field.type === 'radio' && field.options) {
+  if ((field.type === 'radio' || field.type === 'select') && field.options) {
     descriptor.options = field.options.map(option => option.value)
   }
 
@@ -144,6 +149,7 @@ export function useFormSchema<TValues extends Record<string, unknown> = Record<s
     fields: descriptors,
     initialValues: initialValues as Partial<TValues>,
     onSubmit: options.onSubmit,
+    onValidationError: options.onValidationError,
   })
 
   return {

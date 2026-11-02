@@ -39,7 +39,7 @@
       <MButtonIcon
         v-if="entry.status === 'queued'"
         type="button"
-        class="ui-file-upload__action--start"
+        class="ui-file-upload__action ui-file-upload__action--start"
         :aria-label="names.start"
         :disabled="inactive || !canUpload"
         @click="act(() => ctx.start(entry.id), 'cancel')"
@@ -50,7 +50,7 @@
       <MButtonIcon
         v-if="entry.status === 'uploading'"
         type="button"
-        class="ui-file-upload__action--cancel"
+        class="ui-file-upload__action ui-file-upload__action--cancel"
         :aria-label="names.cancel"
         :disabled="inactive"
         @click="act(() => ctx.cancel(entry.id), 'retry')"
@@ -61,7 +61,7 @@
       <MButtonIcon
         v-if="entry.status === 'error' || entry.status === 'cancelled'"
         type="button"
-        class="ui-file-upload__action--retry"
+        class="ui-file-upload__action ui-file-upload__action--retry"
         :aria-label="names.retry"
         :disabled="inactive || !canUpload"
         @click="act(() => ctx.retry(entry.id), 'cancel')"
@@ -71,7 +71,7 @@
 
       <MButtonIcon
         type="button"
-        class="ui-file-upload__action--remove"
+        class="ui-file-upload__action ui-file-upload__action--remove"
         :aria-label="names.remove"
         :disabled="inactive || entry.status === 'uploading'"
         @click="emit('remove')"
@@ -96,6 +96,7 @@ import MButtonIcon from '#kit/components/ui/button/icon/index.vue'
 import MIcon from '#kit/components/ui/icon/index.vue'
 import MProgressLinear from '#kit/components/ui/progress/linear/index.vue'
 import { ICONS } from '#kit/shared/constants/icons'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import { useFileUploadContext } from '#kit/utils/file-upload/context'
 import { formatFileSize } from '#kit/shared/utils/file'
 import { actionName, splitFileName } from './upload'
@@ -107,7 +108,7 @@ const ctx = useFileUploadContext()
 const root = ref<HTMLElement | null>(null)
 
 // Status is told by a glyph and in words as well as in colour.
-const STATUS_ICON: Record<FileUploadStatus, string> = {
+const STATUS_ICON: Record<FileUploadStatus, MIconName> = {
   queued: ICONS.schedule,
   uploading: ICONS.upload,
   success: ICONS.checkCircle,

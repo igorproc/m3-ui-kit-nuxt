@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import type { Ref } from 'vue'
 
 import {
+  THEME_CONTRASTS,
   THEME_DEFINITIONS,
   THEME_VARIANTS,
   HEX_SEED_PATTERN,
@@ -16,8 +17,11 @@ import type {
   TResolvedDefinition,
   TThemeContrast,
   TThemeVariant,
+  TSemanticColors,
   IPaletteCookie,
 } from '#kit/shared/types/kit'
+
+const isHexSeed = (value: unknown): value is string => typeof value === 'string' && HEX_SEED_PATTERN.test(value)
 
 /** Neutral chroma shown on the slider while the theme is in `auto` mode. */
 const NEUTRAL_CHROMA_DEFAULT = 8
@@ -29,7 +33,8 @@ const NEUTRAL_CHROMA_DEFAULT = 8
 export interface ThemeControllerDeps {
   config: MaterialKitOptions
   definitionCookie: Ref<TDefinition>
-  contrastCookie: Ref<string>
+  /** The user's contrast choice; empty (`null`) until one is made. */
+  contrastCookie: Ref<string | null | undefined>
   paletteCookie: Ref<IPaletteCookie>
   preferredColorScheme: Ref<'light' | 'dark' | 'no-preference'>
   /**
@@ -59,8 +64,9 @@ export function createThemeController(deps: ThemeControllerDeps) {
 
   const availableThemes = computed(() => (config.theme?.themes ?? []) as TTheme[])
 
-  // Global semantic seeds (harmonized per-palette). App override or built-in defaults.
-  const semanticColors = config.theme?.semanticColors ?? DEFAULT_SEMANTIC_COLORS
+  // Global semantic seeds (harmonized per-palette): the app's seeds over the
+  // built-in ones; `false` removes a built-in seed.
+  const semanticColors: TSemanticColors = { ...DEFAULT_SEMANTIC_COLORS, ...config.theme?.semanticColors }
   const semanticBlend = config.theme?.semanticBlend
 
   const systemDefinition = computed<TResolvedDefinition>(() => preferredColorScheme.value === 'dark' ? THEME_DEFINITIONS.DARK : THEME_DEFINITIONS.LIGHT)
@@ -78,45 +84,30 @@ export function createThemeController(deps: ThemeControllerDeps) {
 
   const definitionState = computed(() => ({ type: definition.value, forSystem: systemDefinition.value }))
 
-  const contrast = computed<string>({
-    get: () => contrastCookie.value,
-    set(next) {
-      contrastCookie.value = next
-    },
-  })
-  const setContrast = (next: string) => {
-    contrastCookie.value = next
-  }
-
   // Raw cookie state; legacy string cookies are normalized to the object shape.
   const rawPaletteState = computed<IPaletteCookie>(() => {
     const value = paletteCookie.value as IPaletteCookie | string
     return typeof value === 'string' ? { isCustom: false, key: value } : value
   })
 
-  // When custom palettes are locked, only palettes declared in `theme.themes` may
-  // be used: a hand-set custom seed — or a key that is not declared — falls back to
-  // the default palette, dropping the custom-only overrides with it.
+  // Only a palette that can be rendered is used: a declared key, or — unless
+  // `restrict.customPalette` locks them — a custom seed the generator can parse.
+  // Anything else (an undeclared key, a corrupt seed: cookies are attacker-
+  // controlled, and the generator throws on what `argbFromHex` rejects) falls back
+  // to the default palette, dropping the custom-only overrides with it, instead of
+  // leaving the page with no colour tokens at all.
   const paletteState = computed<IPaletteCookie>(() => {
     const state = rawPaletteState.value
-    if (allowCustomPalette) return state
+    const isRenderable = state.isCustom
+      ? allowCustomPalette && isHexSeed(state.key)
+      : availableThemes.value.some(theme => theme?.key === state.key)
 
-    const isDeclared = !state.isCustom && availableThemes.value.some(theme => theme?.key === state.key)
-    return isDeclared ? state : { isCustom: false, key: defaultPalette }
+    return isRenderable ? state : { isCustom: false, key: defaultPalette }
   })
 
   const isCustomPalette = computed(() => paletteState.value.isCustom)
 
-  // Cookies are attacker-controlled, and the generator throws on a seed it cannot
-  // parse — `argbFromHex` rejects anything but 3/6/8 hex digits, and a non-string
-  // fails even earlier. Rejecting here degrades a corrupt cookie to "no palette
-  // applied" instead of letting it take the whole SSR render down.
-  const customColor = computed(() => {
-    if (!isCustomPalette.value) return null
-
-    const key = paletteState.value.key
-    return typeof key === 'string' && HEX_SEED_PATTERN.test(key) ? key : null
-  })
+  const customColor = computed(() => (isCustomPalette.value ? paletteState.value.key : null))
 
   const variant = computed<TThemeVariant | null>(() => {
     const value = paletteState.value.variant
@@ -139,7 +130,7 @@ export function createThemeController(deps: ThemeControllerDeps) {
   })
 
   const setCustomColor = (hex: string) => {
-    if (!allowCustomPalette) return
+    if (!allowCustomPalette || !isHexSeed(hex)) return
     paletteCookie.value = { ...rawPaletteState.value, isCustom: true, key: hex }
   }
   /**
@@ -172,6 +163,18 @@ export function createThemeController(deps: ThemeControllerDeps) {
     ? undefined
     : availableThemes.value.find(t => t && t.key === palette.value))
 
+  // The user's choice (cookie), then the palette's own contrast, then the app default.
+  // A cookie can carry any string; the generator maps unknown levels to standard.
+  const contrast = computed<TThemeContrast>({
+    get: () => (contrastCookie.value as TThemeContrast | null | undefined) || (currentTheme.value?.contrast ?? config.theme?.default?.contrast ?? THEME_CONTRASTS.STANDARD),
+    set(next: TThemeContrast) {
+      contrastCookie.value = String(next)
+    },
+  })
+  const setContrast = (next: TThemeContrast) => {
+    contrast.value = next
+  }
+
   // The theme whose CSS is generated for the active palette (custom HEX or a predefined config).
   const activeTheme = computed<TTheme | undefined>(() => {
     const base = isCustomPalette.value
@@ -198,8 +201,7 @@ export function createThemeController(deps: ThemeControllerDeps) {
   const schemeInput = computed(() => ({
     theme: activeTheme.value ?? { key: '', name: '' },
     paletteKey: resolvedPalette.value,
-    // A cookie can carry any string; the generator maps unknown levels to standard.
-    contrast: contrast.value as TThemeContrast,
+    contrast: contrast.value,
     semanticColors,
     semanticBlend,
   }))
@@ -217,12 +219,14 @@ export function createThemeController(deps: ThemeControllerDeps) {
    *
    * Only `data-palette` waits for the rendered CSS: light and dark blocks ship
    * together, so `data-definition` can switch freely, and `data-contrast` is not part
-   * of any selector — contrast is baked into the generated values.
+   * of any selector — contrast is baked into the generated values. `system` stays
+   * `system`: the stylesheet resolves it with `prefers-color-scheme`, which the
+   * server cannot know, so the first paint is already the reader's scheme.
    */
   const htmlAttrs = computed(() => ({
-    'data-definition': resolvedDefinition.value,
+    'data-definition': definition.value === THEME_DEFINITIONS.SYSTEM ? THEME_DEFINITIONS.SYSTEM : resolvedDefinition.value,
     'data-palette': committedPalette?.value || resolvedPalette.value,
-    'data-contrast': contrast.value,
+    'data-contrast': String(contrast.value),
   }))
 
   return {

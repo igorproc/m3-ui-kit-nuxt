@@ -4,27 +4,60 @@
 // ==========================================
 // NAVIGATION DRAWER M3 COMPONENT TOKENS
 // ==========================================
+// The destinations are the shared navigation item (`navigation-item/_index.scss`).
 
+$padding: spacing(12);
+
+// The outer edges never run under a display cutout.
+$safe: (
+  top: max(#{$padding}, env(safe-area-inset-top, 0rem)),
+  bottom: max(#{$padding}, env(safe-area-inset-bottom, 0rem)),
+  left: max(#{$padding}, env(safe-area-inset-left, 0rem)),
+  right: max(#{$padding}, env(safe-area-inset-right, 0rem)),
+);
 $tokens: (
   surface: (
-    gap: 8rem,
+    gap: spacing(8),
+    // 360 by M3, never under 240, and a strip of scrim always left beside it.
+    width: 360rem,
     min: (
-      width: 360rem,
+      width: 240rem,
     ),
-    padding: 16rem,
-    color: map.get($theme-color-link, 'surface'),
+    max: (
+      width: calc(100% - 56rem),
+    ),
+    padding: $padding,
+    safe-area: $safe,
+    color: map.get($theme-color-link, 'surface-container-low'),
     text: (
       color: map.get($theme-color-link, 'on-surface'),
     ),
     shadow: elevation(1),
-    shape: (
-      left: 0 var(--sys-shape-corner-large) var(--sys-shape-corner-large) 0,
-      right: var(--sys-shape-corner-large) 0 0 var(--sys-shape-corner-large),
-    ),
+    // Only the two corners on the edge facing the page are rounded.
+    shape: map.get($theme-shape-link, 'large'),
   ),
   header: (
-    padding: 4rem 8rem 12rem,
+    padding: (
+      block: (
+        start: spacing(4),
+        end: spacing(12),
+      ),
+      inline: spacing(8),
+    ),
     typography: 'title-medium',
+  ),
+  section: (
+    padding: spacing(16),
+    min: (
+      height: 56rem,
+    ),
+    color: map.get($theme-color-link, 'on-surface-variant'),
+    typography: 'title-small',
+  ),
+  divider: (
+    margin: (
+      inline: spacing(16),
+    ),
   ),
   motion: (
     enter: (

@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 (авторский компонент кита; поведение выводится из паттерна slider — APG, `role="slider"`) · Токены Compose: нет; системные — `StateTokens` (непрозрачности), роли цвета, `corner-medium` · Код: `src/runtime/components/ui/rating/`, карта `src/runtime/assets/stylesheet/components/rating/_index.scss`, клавиатура `src/runtime/composables/slider/createRangeKeyboardController.ts` · Аудит: `data/rating.json` · Тип: public (числовой контрол)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент работает с 2026-07-14: один `role="slider"` с одной Tab-остановкой, общий клавиатурный контроллер с RTL, дробная заливка, превью указателем, `clearable`, слот `#item`, forced colors и reduced motion. План 2026-10-07 доводит его по системе: найден видимый дефект (заливка смещена с контура), disabled по ролям, hover только у живого контрола, без непереводимых строк, тач без блокировки прокрутки. Код не менялся. Ждут РТ-1…РТ-3.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: `stress.vue` (`length` 10 и 20 в колонке 320, ячейка 48 не сжимается — F2-16) + e2e. Ранее (G1 и родитель 2026-10-30): один бокс глифов, read-only в Tab, поле формы, указатель по ячейке под ним, превью отдельным слоем, только основная кнопка.</implementation-status>
 
 ## Вердикт
 

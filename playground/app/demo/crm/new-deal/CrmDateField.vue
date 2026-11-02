@@ -27,6 +27,10 @@
       input-title="Введите дату"
       locale="ru-RU"
       :min-date="min"
+      prev-month-label="Предыдущий месяц"
+      next-month-label="Следующий месяц"
+      switch-to-year-label="Выбрать год"
+      switch-to-day-label="Выбрать день"
       cancel-label="Отмена"
       confirm-label="Готово"
     />

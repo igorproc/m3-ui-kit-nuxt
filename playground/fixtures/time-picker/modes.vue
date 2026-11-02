@@ -16,6 +16,7 @@
         {{ modes[item.name] }}
       </MButton>
       <MTimePicker
+        v-bind="TIME_LABELS"
         v-model="values[item.name]"
         v-model:mode="modes[item.name]"
         :hour-cycle="item.cycle"
@@ -37,6 +38,7 @@ import { reactive } from 'vue'
 import MButton from '#kit/components/ui/button/index.vue'
 import MTimePicker from '#kit/components/ui/time-picker/index.vue'
 import type { MTimePickerMode } from '#kit/components/ui/time-picker/props'
+import { TIME_LABELS } from './labels'
 
 type CaseName = 'h23' | 'h12'
 

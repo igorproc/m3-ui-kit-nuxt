@@ -1,46 +1,46 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use '../choice/control' as control;
 
 // ==========================================
 // RADIO M3 COMPONENT TOKENS
 // ==========================================
+// Compose `RadioButtonTokens`; the field row, the 40 layer and its roles are
+// the selection family's (`choice/_control.scss`).
 
-$tokens: (
-  container: (
-    size: 40rem,
-    gap: 12rem,
-  ),
-  control: (
-    size: 20rem,
-  ),
-  outer: (
-    border: (
-      width: 2rem,
-      color: map.get($theme-color-link, outline),
+$container-size: 40rem;
+$target: spacing(48);
+$on-surface: map.get($theme-color-link, 'on-surface');
+$disabled: color-mix(in srgb, #{$on-surface} state-opacity(disabled-content), transparent);
+$tokens: map.deep-merge(control.control-tokens($container-size, 12rem), (
+  control: (size: 20rem),
+  outer: (border: (width: 2rem)),
+  inner: (size: 10rem),
+  // The ring and the dot are the content (M3's radio is one icon); no container.
+  unselected: (
+    content: (
+      color: map.get($theme-color-link, 'on-surface-variant'),
+      active: (color: $on-surface),
     ),
   ),
-  inner: (
-    size: 10rem,
-    bg: map.get($theme-color-link, primary),
-  ),
-  checked: (
-    color: map.get($theme-color-link, primary),
-  ),
-  state: (
-    layer: (
-      opacity: (
-        hover: state-opacity(hover),
-        active: state-opacity(pressed),
-      ),
-    ),
-  ),
-  error: (
-    color: map.get($theme-color-link, error),
-  ),
+  selected: (content: (color: map.get($theme-color-link, 'primary'))),
+  error: (content: (color: map.get($theme-color-link, 'error'))),
   disabled: (
-    opacity: state-opacity(disabled-content),
+    unselected: (content: (color: $disabled)),
+    selected: (content: (color: $disabled)),
   ),
-  typography: (
-    label: 'body-medium',
+  group: (
+    label: (
+      gap: spacing(4),
+      typography: 'body-medium',
+      color: map.get($theme-color-link, 'on-surface-variant'),
+    ),
+    // Rows 48 tall with no gap: the control's 40 layer plus the air to the target.
+    row: (padding: calc((#{$target} - #{$container-size}) / 2)),
+    support: (inset: calc(#{$container-size} + 12rem)),
   ),
-);
+  motion: (
+    dot: (duration: var(--sys-motion-duration-medium-2), easing: var(--sys-motion-easing-emphasized-decelerate)),
+    color: (duration: var(--sys-motion-duration-short-1), easing: var(--sys-motion-easing-linear)),
+  ),
+));

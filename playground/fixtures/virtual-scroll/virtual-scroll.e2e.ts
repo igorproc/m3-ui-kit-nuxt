@@ -122,4 +122,23 @@ test.describe('useVirtualScroll', () => {
       }
     })
   }
+
+  for (const dir of DIRECTIONS) {
+    test(`End and Home on a focused horizontal pane reach its ends (${dir})`, async ({ page }) => {
+      await openFixture(page, 'virtual-scroll/matrix', { dir })
+      const pane = 'horizontal-constant'
+      const viewport = page.getByTestId(pane)
+
+      await viewport.focus()
+      await page.keyboard.press('End')
+
+      await expect(page.getByTestId(`${pane}-at-end`)).toHaveText('true')
+      await expect(viewport.getByText('Card 1000', { exact: true })).toBeInViewport()
+
+      await page.keyboard.press('Home')
+
+      await expect(page.getByTestId(`${pane}-at-start`)).toHaveText('true')
+      await expect(viewport.getByText('Card 1', { exact: true })).toBeInViewport()
+    })
+  }
 })

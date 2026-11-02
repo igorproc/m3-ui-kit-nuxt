@@ -22,7 +22,7 @@
  */
 import { computed, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
-import { OTP_ALPHABET, OTP_DIGIT_BLOCKS } from '#kit/shared/constants/otp'
+import { OTP_ALPHABET, OTP_DIGIT_BLOCKS, OTP_PASTE_SEPARATOR } from '#kit/shared/constants/otp'
 
 /** Half-open `[start, end)` slice of the code that renders as one group. */
 export interface OtpRange {
@@ -58,6 +58,11 @@ export interface OtpValueHooks {
   onInvalid?: (raw: string, rejected: string[]) => void
 }
 
+export interface OtpCommitOptions {
+  /** A paste: its separators ("123-456") are dropped without an `invalid`. */
+  pasted?: boolean
+}
+
 export interface OtpSanitizeResult {
   value: string
   rejected: string[]
@@ -71,7 +76,7 @@ export interface UseOtpValueReturn {
   /** Filter raw text down to acceptable characters without touching the model. */
   sanitize: (raw: string) => OtpSanitizeResult
   /** Sanitize, write the model, fire the hooks. Returns what was written. */
-  commit: (raw: string) => string
+  commit: (raw: string, options?: OtpCommitOptions) => string
 }
 
 /**
@@ -125,9 +130,13 @@ export function useOtpValue(
     }
   }
 
-  function commit(raw: string) {
+  function commit(raw: string, options: OtpCommitOptions = {}) {
     const previous = model.value.length
-    const { value, rejected } = sanitize(raw)
+    const sanitized = sanitize(raw)
+    const { value } = sanitized
+    const rejected = options.pasted
+      ? sanitized.rejected.filter(char => !OTP_PASTE_SEPARATOR.test(char))
+      : sanitized.rejected
 
     model.value = value
 

@@ -34,7 +34,7 @@
               :variant="column.variant"
               :controls="column.controls"
               :label="`${state.name} ${column.key}`"
-              v-bind="state.props"
+              v-bind="{ ...NUMBER_LABELS, ...state.props }"
               :data-test="`${state.name}-${column.key}`"
             />
           </td>
@@ -47,6 +47,7 @@
       <MNumberInput
         v-for="density in densities"
         :key="density"
+        v-bind="NUMBER_LABELS"
         :model-value="4"
         :density="density"
         :label="`Density ${density}`"
@@ -66,12 +67,14 @@
         :data-test="`family-text-${density}`"
       />
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="4"
         :density="density"
         :label="`Number ${density}`"
         :data-test="`family-number-${density}`"
       />
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="4"
         :density="density"
         controls="stacked"
@@ -83,6 +86,7 @@
     <h2>Units</h2>
     <div class="fixture-row">
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         v-model:unit="unit"
         :model-value="512"
         :units="['KiB', 'MiB', 'GiB']"
@@ -90,6 +94,7 @@
         data-test="unit-menu"
       />
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         unit="px"
         :model-value="16"
         label="Gap"
@@ -105,6 +110,7 @@
       @keydown.esc="onEscape"
     >
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         v-model="quantity"
         :min="0"
         :max="100"
@@ -112,6 +118,7 @@
         data-test="keyboard"
       />
       <MNumberInput
+        v-bind="NUMBER_LABELS"
         :model-value="5"
         :step="0.25"
         label="Ratio"
@@ -134,6 +141,7 @@ import MNumberInput from '#kit/components/ui/number-input/index.vue'
 import MTextField from '#kit/components/ui/text-field/index.vue'
 import type { MNumberInputControls, MNumberInputVariant } from '#kit/components/ui/number-input/props'
 import type { MFieldDensity } from '#kit/components/ui/text-field/props'
+import { NUMBER_LABELS } from './labels'
 
 const variants: MNumberInputVariant[] = ['filled', 'outlined']
 const controls: MNumberInputControls[] = ['split', 'stacked', 'scrub', false]

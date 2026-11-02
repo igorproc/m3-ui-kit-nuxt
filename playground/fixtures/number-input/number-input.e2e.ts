@@ -137,8 +137,8 @@ test.describe('MNumberInput', () => {
 
       const chosen = page.getByRole('menuitemradio', { name: 'MiB' })
       await expect(chosen).toHaveAttribute('aria-checked', 'true')
-      await expect(chosen.locator('.ui-number-input__unit-check')).toBeVisible()
-      await expect(page.getByRole('menuitemradio', { name: 'KiB' }).locator('.ui-number-input__unit-check')).toHaveCount(0)
+      await expect(chosen.locator('.ui-menu__item-leading .ui-icon')).toBeVisible()
+      await expect(page.getByRole('menuitemradio', { name: 'KiB' }).locator('.ui-menu__item-leading')).toHaveCount(0)
     })
 
     test('closes on Escape and returns focus to the trigger', async ({ page }) => {
@@ -372,6 +372,15 @@ test.describe('MNumberInput', () => {
       expect(Number(await valueOf(page, 'populated-filled-scrub'))).toBeGreaterThan(42)
     })
   }
+
+  // A horizontal gesture takes horizontal travel only: a vertical swipe over the
+  // label still scrolls the page (modern-web, accessibility §Touch targets).
+  test('the scrub handle leaves vertical panning to the page', async ({ page }) => {
+    await openFixture(page, 'number-input/matrix')
+    const handle = page.getByTestId('populated-filled-scrub').locator('xpath=ancestor::div[contains(@class, "ui-number-input ")][1]').locator('.ui-number-input__scrub')
+
+    expect(await handle.evaluate(el => getComputedStyle(el).touchAction)).toBe('pan-y')
+  })
 
   test.describe('forced colors', () => {
     test.beforeEach(async ({ page }) => {

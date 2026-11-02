@@ -3,6 +3,9 @@ import { useRuntimeConfig } from '#app'
 
 import { resolveBreakpoints } from '#kit/utils/viewport/resolveBreakpoints'
 import { sortBreakpoints, resolveBandsFromSorted } from '#kit/utils/viewport/bands'
+import { resolveWindowClass } from '#kit/utils/viewport/windowClass'
+import type { WindowClassFlags } from '#kit/utils/viewport/windowClass'
+import type { BreakpointFlags } from '#kit/shared/types/props'
 import { useSSRWindowSize } from '#kit/composables/useSSRWindowSize'
 
 /**
@@ -22,11 +25,13 @@ export function createBreakpoints() {
   const sorted = sortBreakpoints(breakpoints)
 
   const bands = computed(() => resolveBandsFromSorted(width.value, sorted))
+  const windowClass = computed(() => resolveWindowClass(width.value, breakpoints))
 
   return {
     /** Resolved kebab-case map (`tablet-xs` → px), shared with the layout engine. */
     breakpoints,
-    is: computed(() => bands.value.is),
+    /** The active bucket per kit key, plus the M3 window classes over the layout's ranges. */
+    is: computed<BreakpointFlags & WindowClassFlags>(() => ({ ...bands.value.is, ...windowClass.value })),
     more: computed(() => bands.value.more),
     less: computed(() => bands.value.less),
   }

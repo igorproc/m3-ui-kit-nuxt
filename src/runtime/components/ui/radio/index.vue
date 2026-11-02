@@ -1,49 +1,82 @@
 <template>
-  <label
+  <div
     v-bind="rootAttrs()"
     class="ui-radio"
     :class="radioClasses"
   >
-    <input
-      v-bind="controlAttrs()"
-      :id="fieldId"
-      class="ui-radio__input"
-      type="radio"
-      :name="resolvedName"
-      :value="value"
-      :checked="isChecked"
-      :disabled="isDisabled"
-      :aria-checked="isChecked"
-      :aria-invalid="errorMessage ? 'true' : undefined"
-      @change="onChange"
-    >
+    <label class="ui-radio__field">
+      <input
+        v-bind="controlAttrs(radioInputAttrs())"
+        class="ui-radio__input"
+        type="radio"
+        :value="value"
+        :checked="isChecked"
+        :disabled="isDisabled"
+        :required="(!group && required) || undefined"
+        @change="onChange"
+      >
 
-    <div class="ui-radio__container">
-      <span class="ui-radio__control">
-        <span class="ui-radio__outer" />
-        <span class="ui-radio__inner" />
+      <span class="ui-radio__container">
+        <span class="ui-radio__control">
+          <span class="ui-radio__outer" />
+          <span class="ui-radio__inner" />
+        </span>
+        <span class="ui-radio__state-layer" />
       </span>
-      <span class="ui-radio__state-layer" />
-    </div>
 
-    <span
-      v-if="label"
-      class="ui-radio__label"
+      <span
+        v-if="label || $slots.default"
+        class="ui-radio__label"
+      >
+        <slot>
+          {{ label }}
+        </slot>
+        <span
+          v-if="!group && required"
+          class="ui-radio__required"
+          aria-hidden="true"
+        > *</span>
+      </span>
+    </label>
+
+    <!-- A grouped radio has no line of its own: the group's line speaks for all. -->
+    <ChoiceSupport
+      v-if="!group && hasSupport()"
+      :id="supportId()"
+      class="ui-radio__support"
+      :is-error="isError"
+      :message="message"
     >
-      <slot>
-        {{ label }}
-      </slot>
-    </span>
-  </label>
+      <template
+        v-if="$slots.helper"
+        #helper="scope"
+      >
+        <slot
+          name="helper"
+          v-bind="scope"
+        />
+      </template>
+      <template
+        v-if="$slots.error"
+        #error="scope"
+      >
+        <slot
+          name="error"
+          v-bind="scope"
+        />
+      </template>
+    </ChoiceSupport>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onScopeDispose } from 'vue'
-import { useField } from '#kit/composables/useField'
+import { onScopeDispose, shallowRef } from 'vue'
+import ChoiceSupport from '#kit/components/fragments/choice-support/index.vue'
 import { useRadioGroupContext } from '#kit/composables/radio/useRadioGroup'
 import type { SingleTicket } from '#kit/composables/registry/createSingle'
+import { useChoiceField } from '#kit/utils/choice/useChoiceField'
 import { mRadioProps } from './props'
-import type { MRadioValue } from './props'
+import type { MRadioSlots, MRadioValue } from './props'
 import { useControlAttrs } from '#kit/composables/useControlAttrs'
 
 // The root is a wrapper; aria-*, name, inputmode and listeners belong on the native control.
@@ -51,29 +84,38 @@ defineOptions({ inheritAttrs: false })
 const { rootAttrs, controlAttrs } = useControlAttrs()
 
 const props = defineProps(mRadioProps)
+const slots = defineSlots<MRadioSlots>()
 
 const modelValue = defineModel<MRadioValue | undefined>({ default: undefined })
-
-const fieldId = useId()
-
-const errorMessage = ref<string | undefined>()
 
 const group = useRadioGroupContext()
 
 // Grouped mode registers a ticket; standalone mode leaves this `null`.
-let ticket: SingleTicket | null = null
+const ticket = shallowRef<SingleTicket | null>(null)
 
-if (group) {
-  ticket = group.register({
-    value: props.value,
-    disabled: () => props.disabled,
-  })
+function registerIn(radioGroup: NonNullable<typeof group>) {
+  const previous = ticket.value
+  const wasSelected = previous?.isSelected.value ?? false
+  if (previous) radioGroup.unregister(previous.id)
 
-  onScopeDispose(() => group?.unregister(ticket!.id))
+  ticket.value = radioGroup.register({ value: props.value, disabled: () => props.disabled })
+  if (wasSelected) radioGroup.select(ticket.value.id)
 }
 
+if (group) {
+  registerIn(group)
+  watch(() => props.value, () => registerIn(group))
+  onScopeDispose(() => group.unregister(ticket.value!.id))
+}
+
+// Grouped radios delegate their value (and its field) to the group; only a
+// standalone radio binds its own `path` — the form-renderer relies on that.
+const { isError: ownError, message, hasSupport, supportId, inputAttrs } = useChoiceField(modelValue, props, slots, !group)
+
+const isError = computed(() => ownError.value || Boolean(group?.invalid.value))
+
 const isChecked = computed(() => {
-  if (group && ticket) return ticket.isSelected.value
+  if (group && ticket.value) return ticket.value.isSelected.value
 
   return modelValue.value === props.value
 })
@@ -84,177 +126,130 @@ const isDisabled = computed(() => {
   return props.disabled
 })
 
-const resolvedName = computed(() => {
-  if (group) return group.name.value
+const radioInputAttrs = () => {
+  const own = inputAttrs()
 
-  return props.name
-})
+  if (!group) return own
+
+  // The group's radiogroup carries validity and the description for the set.
+  const consumerIds = own['aria-describedby']?.split(' ').filter(id => id !== supportId()).join(' ')
+
+  return { ...own, 'name': group.name.value, 'aria-invalid': undefined, 'aria-describedby': consumerIds || undefined }
+}
 
 const radioClasses = computed(() => [
   {
     'ui-radio--checked': isChecked.value,
     'ui-radio--disabled': isDisabled.value,
-    'ui-radio--error': Boolean(errorMessage.value),
+    'ui-radio--error': isError.value,
+    'ui-radio--grouped': Boolean(group),
   },
 ])
 
 function onChange() {
   if (isDisabled.value) return
 
-  if (group && ticket) {
-    ticket.select()
+  if (group && ticket.value) {
+    ticket.value.select()
 
     return
   }
 
   modelValue.value = props.value
 }
-
-// --- Standalone validation path (form-renderer relies on this) --------------
-// Grouped radios delegate their value to the group; only a standalone radio
-// binds its own field. `useField` handles the model<->value sync internally.
-if (!group && props.path) {
-  const field = useField<MRadioValue | undefined>({ path: props.path, model: modelValue })
-
-  watch(
-    field.errorMessage,
-    (next) => {
-      errorMessage.value = next
-    },
-    { immediate: true },
-  )
-}
 </script>
 
 <style lang="scss">
-@use 'sass:map';
 @use '#kit/assets/stylesheet/components/radio/index' as t;
+@use '#kit/assets/stylesheet/components/choice/control' as control;
 
 .ui-radio {
-  $prefix: 'md-radio';
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'md-radio');
 
-  display: inline-flex;
-  align-items: center;
-  gap: g($t, 'container-gap');
   isolation: isolate;
-  cursor: pointer;
-  color: map.get($theme-color-link, 'on-surface');
 
-  &__input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
+  @include control.field($t);
+  @include control.layer($t, (checked));
 
-  // The native input is transparent, so the ring goes on the visible control.
-  &__input:focus-visible + &__container &__control {
-    @include focus-ring;
-  }
-
-  &__container {
-    position: relative;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    width: g($t, 'container-size');
-    height: g($t, 'container-size');
-    flex-shrink: 0;
+  // In a group each row is the 48 target tall, so the targets of neighbouring
+  // rows meet instead of overlapping (W11-Б).
+  &--grouped &__field {
+    padding-block: g($t, 'group.row.padding');
   }
 
   &__control {
     position: relative;
-    width: g($t, 'control-size');
-    height: g($t, 'control-size');
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    z-index: 1;
-  }
-
-  &__state-layer {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: g($t, 'container-size');
-    height: g($t, 'container-size');
-    transform: translate(-50%, -50%) scale(0.6);
-    border-radius: var(--sys-shape-corner-full);
-    background-color: map.get($theme-color-link, 'on-surface');
-    opacity: 0;
-    pointer-events: none;
-    transition:
-      opacity var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
-  }
-
-  &--checked &__state-layer {
-    background-color: g($t, 'checked-color');
-  }
-
-  &--error &__state-layer {
-    background-color: g($t, 'error-color');
-  }
-
-  @include can-hover {
-    &:hover &__state-layer {
-      opacity: g($t, 'state-layer-opacity-hover');
-      transform: translate(-50%, -50%) scale(1);
-    }
-  }
-
-  &:active &__state-layer {
-    opacity: g($t, 'state-layer-opacity-active');
+    inline-size: g($t, 'control.size');
+    block-size: g($t, 'control.size');
   }
 
   &__outer {
     position: absolute;
     inset: 0;
-    border-radius: var(--sys-shape-corner-full);
-    border: g($t, 'outer-border-width') solid g($t, 'outer-border-color');
     box-sizing: border-box;
-    transition:
-      border-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+    border: g($t, 'outer.border.width') solid g($t, 'unselected.content.color');
+    border-radius: var(--sys-shape-corner-full);
+    transition: border-color g($t, 'motion.color.duration') g($t, 'motion.color.easing');
   }
 
   &__inner {
-    width: g($t, 'inner-size');
-    height: g($t, 'inner-size');
+    inline-size: g($t, 'inner.size');
+    block-size: g($t, 'inner.size');
     border-radius: var(--sys-shape-corner-full);
-    background-color: g($t, 'inner-bg');
-    transform: scale(0);
+    background-color: g($t, 'selected.content.color');
+    scale: 0;
     transition:
-      transform var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard),
-      background-color var(--sys-motion-duration-short-3) var(--sys-motion-easing-standard);
+      scale g($t, 'motion.dot.duration') g($t, 'motion.dot.easing'),
+      background-color g($t, 'motion.color.duration') g($t, 'motion.color.easing');
   }
 
-  &__label {
-    padding-top: 1rem;
+  // An unselected ring darkens under the pointer, in focus and pressed; in
+  // `:where()` so the selection, the error and disabled (later) win over it.
+  $unselected: ':where(:not(.ui-radio--disabled, .ui-radio--checked))';
 
-    @include typescale(g($t, 'typography-label'));
-  }
-
-  &--checked &__outer {
-    border-color: g($t, 'checked-color');
-  }
-
-  &--checked &__inner {
-    transform: scale(1);
-  }
-
-  &--disabled {
-    cursor: default;
-    opacity: g($t, 'disabled-opacity');
-
-    & &__state-layer {
-      display: none;
+  @include can-hover {
+    &#{$unselected} &__field:where(:hover) &__outer {
+      border-color: g($t, 'unselected.content.active.color');
     }
   }
 
-  &--error &__outer {
-    border-color: g($t, 'error-color');
+  &#{$unselected} &__input:where(:focus-visible) + &__container &__outer,
+  &#{$unselected} &__field:where(:active) &__outer {
+    border-color: g($t, 'unselected.content.active.color');
+  }
+
+  &--checked &__outer {
+    border-color: g($t, 'selected.content.color');
+  }
+
+  &--checked &__inner {
+    scale: 1;
+  }
+
+  &--error &__field &__outer {
+    border-color: g($t, 'error.content.color');
+  }
+
+  &--error &__inner {
+    background-color: g($t, 'error.content.color');
+  }
+
+  // Disabled by roles; nothing animates.
+  &--disabled &__field &__outer {
+    border-color: g($t, 'disabled.unselected.content.color');
+  }
+
+  &--disabled &__inner {
+    background-color: g($t, 'disabled.selected.content.color');
+    transition: none;
+  }
+
+  &--disabled &__state-layer {
+    display: none;
   }
 
   // The inner dot is only a fill; forced colors would erase the checked state.
@@ -267,9 +262,8 @@ if (!group && props.path) {
       border-color: Highlight;
     }
 
-    &--disabled {
-      opacity: 1;
-      color: GrayText;
+    &--error &__outer {
+      border-style: dashed;
     }
 
     &--disabled &__outer {

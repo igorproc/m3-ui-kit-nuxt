@@ -2,41 +2,10 @@
 @use '../text-field/family';
 
 // ==========================================
-// NUMBER INPUT · AXES, SUPPORT LINE
+// NUMBER INPUT · SUPPORT LINE
 // ==========================================
 // Included inside `.ui-number-input`; split out so the component file stays
 // readable. Values come from the number input's own `$tokens`.
-
-@mixin axes($t) {
-  // ── axes · a modifier only picks values; every rule below reads them once ──
-  @each $d in compact, default, comfortable {
-    &--density-#{$d} {
-      --ui-number-input-height: #{g($t, 'density.#{$d}.height')};
-      --ui-number-input-label-top: #{g($t, 'density.#{$d}.label.top')};
-      --ui-number-input-input-padding-top: #{g($t, 'density.#{$d}.input.padding.top')};
-      --ui-number-input-input-padding-bottom: #{g($t, 'density.#{$d}.input.padding.bottom')};
-      --ui-number-input-stepper-size: #{g($t, 'density.#{$d}.stepper.split')};
-      --ui-number-input-stacked-height: #{g($t, 'density.#{$d}.stepper.stacked')};
-      --ui-number-input-zone-offset: #{g($t, 'density.#{$d}.stepper.offset.split')};
-      --ui-number-input-stacked-offset: #{g($t, 'density.#{$d}.stepper.offset.stacked')};
-    }
-  }
-
-  // The zones ride the same axis, one tier rounder — so `shape="full"` turns
-  // them into pills without a second visual language to maintain.
-  @each $shape in none, extra-small, medium, large, full {
-    &--shape-#{$shape} {
-      --ui-number-input-radius: #{g($t, 'shape.#{$shape}')};
-      --ui-number-input-zone-radius: #{g($t, 'stepper.radius.#{$shape}')};
-    }
-  }
-
-  // A filled box has a flat bottom, so a full radius would dome it — cap `full`
-  // at the large tier for filled only.
-  &--filled#{&}--shape-full {
-    --ui-number-input-radius: #{g($t, 'shape.large')};
-  }
-}
 
 @mixin support($t) {
   // ── support line ──

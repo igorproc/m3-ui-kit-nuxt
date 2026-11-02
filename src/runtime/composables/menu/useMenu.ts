@@ -1,9 +1,9 @@
 import { computed } from 'vue'
 import type { Ref } from 'vue'
-import type { UiMenuOrigin } from '#kit/components/ui/menu/types'
 import { usePopover } from '#kit/composables/popover/usePopover'
 import type { PopoverStatus } from '#kit/composables/popover/usePopover'
-import type { PopoverPlacement, PopoverRect } from '#kit/composables/popover/placement'
+import { parsePlacement } from '#kit/composables/popover/placement'
+import type { PopoverDirection, PopoverPlacement, PopoverRect } from '#kit/composables/popover/placement'
 
 /**
  * @module useMenu
@@ -11,19 +11,19 @@ import type { PopoverPlacement, PopoverRect } from '#kit/composables/popover/pla
  * @remarks
  * Thin adapter over the shared {@link usePopover} primitive. The FSM, anchor
  * detection and all placement math (native `position-try-fallbacks` flip, JS
- * flip + shift fallback) live in `usePopover`; this wrapper only translates the
- * menu's `origin` into a popover placement and adds the `--ui-menu-origin`
- * custom property the surface animation reads.
+ * flip + shift fallback) live in `usePopover`; this wrapper adds the
+ * `--ui-menu-origin` custom property the surface animation reads: the menu
+ * grows out of the corner that touches its anchor, on the side it actually
+ * took after a flip.
  *
  * Pass `trigger` and `surface` to let `usePopover` measure them and re-measure
- * on scroll/resize for the JS path; without them the composable stays DOM-free.
+ * on scroll/resize for the JS path.
  *
  * @example
  * ```ts
  * const model = defineModel<boolean>()
  * const menu = useMenu(model, {
- *   absolute: () => props.absolute,
- *   origin: () => props.origin,
+ *   placement: () => props.placement,
  *   matchWidth: () => props.matchWidth,
  *   trigger: () => anchorEl.value,
  *   surface: () => surfaceEl.value,
@@ -38,8 +38,7 @@ export type MenuStatus = PopoverStatus
 export type MenuRect = PopoverRect
 
 export interface UseMenuOptions {
-  absolute: () => boolean
-  origin: () => UiMenuOrigin
+  placement: () => PopoverPlacement
   matchWidth: () => boolean
   /** Element the surface is positioned against (JS path measuring). */
   trigger?: () => HTMLElement | null | undefined
@@ -47,40 +46,37 @@ export interface UseMenuOptions {
   surface?: () => HTMLElement | null | undefined
 }
 
-const Z_INDEX = '999'
-
 /**
- * Map a logical origin to a popover placement.
- *
- * @remarks
- * The menu always opens below its trigger (flipping above when it has to).
- * Default (left) origins align to the trigger's left edge, right origins to its
- * right edge, the rest center on it.
+ * The corner of the surface that faces the anchor, as a `transform-origin`.
+ * `transform-origin` has no logical keywords, so the inline edge is resolved
+ * against the trigger's direction.
  */
-function originToPlacement(origin: UiMenuOrigin): PopoverPlacement {
-  if (origin.includes('right')) return 'bottom-end'
-  if (origin === 'top' || origin === 'bottom' || origin === 'center') return 'bottom'
-  return 'bottom-start'
+export function placementOrigin(placement: PopoverPlacement, direction: PopoverDirection): string {
+  const [side, align] = parsePlacement(placement)
+  const inlineStart = direction === 'rtl' ? 'right' : 'left'
+  const inlineEnd = direction === 'rtl' ? 'left' : 'right'
+
+  if (side === 'top' || side === 'bottom') {
+    const inline = align === 'center' ? 'center' : align === 'start' ? inlineStart : inlineEnd
+    return `${side === 'bottom' ? 'top' : 'bottom'} ${inline}`
+  }
+
+  const block = align === 'center' ? 'center' : align === 'start' ? 'top' : 'bottom'
+  return `${block} ${side === 'end' ? inlineStart : inlineEnd}`
 }
 
 export function useMenu(model: Ref<boolean>, options: UseMenuOptions) {
   const popover = usePopover(model, {
-    placement: () => originToPlacement(options.origin()),
+    placement: options.placement,
     matchWidth: options.matchWidth,
-    trigger: options.trigger && (() => (options.absolute() ? options.trigger?.() : null)),
+    trigger: options.trigger,
     surface: options.surface,
-    zIndex: Z_INDEX,
   })
 
-  const menuStyle = computed<Record<string, string>>(() => {
-    const origin = options.origin()
-
-    if (!options.absolute()) {
-      return { '--ui-menu-origin': origin }
-    }
-
-    return { ...popover.popoverStyle.value, '--ui-menu-origin': origin }
-  })
+  const menuStyle = computed<Record<string, string>>(() => ({
+    ...popover.popoverStyle.value,
+    '--ui-menu-origin': placementOrigin(popover.placement.value, popover.direction.value),
+  }))
 
   return {
     anchorName: popover.anchorName,
@@ -88,6 +84,7 @@ export function useMenu(model: Ref<boolean>, options: UseMenuOptions) {
     isOpen: popover.isOpen,
     isAnchorSupported: popover.isAnchorSupported,
     menuStyle,
+    surfaceDir: popover.surfaceDir,
     open: popover.open,
     close: popover.close,
     toggle: popover.toggle,

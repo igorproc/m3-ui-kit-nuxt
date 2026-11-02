@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MColorPicker](index.md)) · Код: `src/runtime/components/fragments/color-picker/Preview.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="done" updated="2026-10-08">Реализовано: образец `aria-hidden` с кромкой, виден на любом фоне и в forced colors.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: образец `aria-hidden` с кромкой, виден на любом фоне и в forced colors. Фаза 2 (2026-10-30): `--m-color-picker-preview` остаётся — исключение «динамический цвет значения» (N6), шахматка — миксин `checker`.</implementation-status>
 
 ## Вердикт
 

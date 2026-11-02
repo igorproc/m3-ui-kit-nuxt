@@ -9,14 +9,15 @@ import type {
  *
  * @remarks
  * Single source of truth for the kit's cross-cutting public prop *types*
- * (color role, surface variant, size). The runtime prop *definitions* (with
+ * (color role, surface variant, shape). The runtime prop *definitions* (with
  * defaults) live in `shared/utils/props` and are composed per component via
  * `propsFactory`. Kept type-only so consumers can import the unions without
  * pulling any runtime code, and so docs can reference one canonical taxonomy.
  *
  * These follow Material Design 3 naming: color roles are `primary | secondary
- * | tertiary | error` (NOT the legacy `accent`/`warn`), and surface variants
- * are the five MD3 button/surface styles.
+ * | tertiary | error` (NOT the legacy `accent`/`warn`) plus the theme's
+ * `info | success | warning`, and surface variants
+ * are the five MD3 button/surface styles plus the kit's `plain`.
  */
 
 /** Flattens Vue's mapped prop types into a conventional object shape. */
@@ -29,14 +30,23 @@ export type InferResolvedType<T extends ComponentObjectPropsOptions> = {
   [K in keyof ExtractPropTypes<T>]: ExtractPropTypes<T>[K]
 }
 
-/** MD3 color role. Replaces the legacy `primary | accent | warn` naming. */
-export type MColor = 'primary' | 'secondary' | 'tertiary' | 'error'
+/**
+ * Colour role: the four MD3 accent roles plus the theme's semantic roles
+ * (`info | success | warning`, harmonized from `theme.semanticColors`). Each
+ * component narrows it with `Extract<MColor, …>`. Replaces the legacy
+ * `primary | accent | warn` naming.
+ */
+export type MColor = 'primary' | 'secondary' | 'tertiary' | 'error' | 'info' | 'success' | 'warning'
 
-/** MD3 surface-style variant (button family, card, fields, …). */
-export type MVariant = 'elevated' | 'filled' | 'tonal' | 'outlined' | 'text'
+/** The MD3 accent roles, the colour axis of every component but the status ones (alert). */
+export type MAccentColor = Extract<MColor, 'primary' | 'secondary' | 'tertiary' | 'error'>
 
-/** Component size scale. */
-export type MSize = 'sm' | 'md' | 'lg'
+/**
+ * Surface treatment (button family, card, surface, timeline, …). Each component
+ * narrows it with `Extract<MVariant, …>`; `plain` is the kit's fifth treatment —
+ * no container, no outline — for passive surfaces.
+ */
+export type MVariant = 'elevated' | 'filled' | 'tonal' | 'outlined' | 'text' | 'plain'
 
 /**
  * Level of a component's own heading (card title, expansion panel header).
@@ -59,19 +69,14 @@ export type MShape
     | 'extra-large-top'
     | 'full'
 
-/** `color` prop contract. */
+/** `color` prop contract (the accent roles). */
 export interface ColorProps {
-  color?: MColor
+  color?: MAccentColor
 }
 
 /** `variant` prop contract. */
 export interface VariantProps {
   variant?: MVariant
-}
-
-/** `size` prop contract. */
-export interface SizeProps {
-  size?: MSize
 }
 
 /** Shared action-state contract (`disabled` everywhere, `loading` for async actions). */

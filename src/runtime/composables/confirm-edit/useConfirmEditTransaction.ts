@@ -45,7 +45,10 @@ export function useConfirmEditTransaction<T>(options: ConfirmEditTransactionOpti
   const compare = options.compare ?? equalPlainData
 
   const editing = ref(false)
-  const draft = shallowRef(clone(options.model.value)) as Ref<T>
+  // Deep, unlike `committed`: a form binds the draft's fields in place
+  // (`v-model="draft.value.name"`), and `dirty` has to see those writes. The
+  // draft is always a private clone, so tracking into it is safe.
+  const draft = ref(clone(options.model.value)) as Ref<T>
   const committed = shallowRef(options.model.value) as Ref<T>
   const pending = ref(false)
   const conflicted = ref(false)

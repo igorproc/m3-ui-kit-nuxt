@@ -48,6 +48,9 @@ test.describe('MList', () => {
     await expect(page.getByTestId('emulated-selected')).toHaveAttribute('aria-pressed', 'true')
     await expect(page.getByTestId('link-selected')).toHaveAttribute('aria-current', 'page')
     await expect(page.getByTestId('link-rest')).not.toHaveAttribute('aria-current', /.*/)
+    // B9.1 (Q46-А): a static row cannot be aria-selected; it is the current one.
+    await expect(page.getByTestId('static-selected')).toHaveAttribute('aria-current', 'true')
+    await expect(page.getByTestId('static-rest')).not.toHaveAttribute('aria-current', /.*/)
   })
 
   test('Tab reaches every enabled interactive row and skips disabled ones', async ({ page }) => {
@@ -95,6 +98,21 @@ test.describe('MList', () => {
     const leading = await box(first.locator('.ui-list-item__leading'))
     const body = await box(first.locator('.ui-list-item__body'))
     expect((body.x - (leading.x + leading.width)) / unit).toBeCloseTo(12, 0)
+  })
+
+  // N3 (plans-audit-2): compact rows of two and three lines stood at 68 / 88,
+  // because the padding and the supporting gap ignored the density.
+  test('every density draws each line count at its own height', async ({ page }) => {
+    await openFixture(page, 'list/matrix')
+    const unit = await rem(page)
+    const heights = { compact: [44, 60, 76], default: [56, 72, 88], comfortable: [64, 80, 96] }
+
+    for (const [density, steps] of Object.entries(heights)) {
+      for (const [index, step] of steps.entries()) {
+        const row = page.getByTestId(`density-${density}-${index + 1}`)
+        expect((await box(row)).height / unit, `${density}, ${index + 1} lines`).toBeCloseTo(step, 0)
+      }
+    }
   })
 
   test('the selected corner is static: hover and press keep the shape', async ({ page }) => {
@@ -160,6 +178,27 @@ test.describe('MList', () => {
     await expect(headline('clamped-1')).toHaveAttribute('title', /^Clamped to 1/)
   })
 
+  // N.3/N.4: `overflow-wrap: anywhere` on the row inherited into its slots and
+  // cut every word's min-content to one glyph, so equal columns broke words.
+  test('equal columns in a narrow row scroll instead of breaking words', async ({ page }) => {
+    await openFixture(page, 'list/stress')
+
+    const lines = await page.getByTestId('list-word-row').getByTestId('word-row-item').evaluateAll(items => items.map((item) => {
+      const range = document.createRange()
+      range.selectNodeContents(item)
+      return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size
+    }))
+
+    expect(lines).toEqual([1, 1])
+  })
+
+  test('a long unbroken headline wraps inside a narrow row', async ({ page }) => {
+    await openFixture(page, 'list/stress')
+    const row = page.getByTestId('long-auto')
+
+    expect(await row.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+  })
+
   test('an empty items array renders the #empty slot as the only item', async ({ page }) => {
     await openFixture(page, 'list/stress')
     const list = page.getByTestId('list-empty')
@@ -210,6 +249,26 @@ test.describe('MList', () => {
     // Bare media keeps the row's 56 image anatomy.
     const bare = page.getByTestId('content-1-image').locator('img')
     expect((await box(bare)).width / unit).toBeCloseTo(56, 0)
+  })
+
+  // CT-09 (plans audit): bare media rests on a tone until its pixels arrive, so
+  // a slow or broken image keeps a visible box instead of a hole in the row.
+  test('bare leading media sits on the surface-container-highest placeholder', async ({ page }) => {
+    await openFixture(page, 'list/matrix')
+    const placeholder = await page.evaluate(() => {
+      const probe = document.createElement('i')
+      probe.style.backgroundColor = 'var(--md-sys-color-surface-container-highest)'
+      document.body.append(probe)
+      const color = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return color
+    })
+
+    for (const media of [page.getByTestId('content-1-image').locator('img'), page.getByTestId('content-1-video').locator('video')]) {
+      expect(await style(media, 'background-color')).toBe(placeholder)
+    }
+    // An avatar brings its own container.
+    expect(await style(page.getByTestId('avatar-media-default').locator('.ui-avatar__image'), 'background-color')).not.toBe(placeholder)
   })
 
   // L-1 (M3-polish): selection changes the tone and, statically, the corner — never the geometry.

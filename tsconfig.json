@@ -2,5 +2,5 @@
   "extends": "./playground/.nuxt/tsconfig.json",
   "files": ["playground/.nuxt/nuxt.d.ts", "playground/.nuxt/nuxt.node.d.ts"],
   "include": ["src/**/*", "playground/**/*", "shell/**/*", "*.ts"],
-  "exclude": ["node_modules", "dist", "playground/.nuxt", "playground/.output", ".claude"]
+  "exclude": ["node_modules", "dist", "playground/.nuxt", "playground/.output", "playground/render", "playground/probes", "coverage", ".claude"]
 }

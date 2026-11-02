@@ -9,13 +9,14 @@
 import { computed, onMounted, onScopeDispose, shallowRef } from 'vue'
 import type { ComputedRef, ShallowRef } from 'vue'
 import { ICONS } from '#kit/shared/constants/icons'
+import type { MIconName } from '#kit/components/ui/icon/props'
 import { getAvatarInitials } from '#kit/shared/utils/avatar'
 
 export interface UseAvatarProps {
   src?: string
   alt?: string
   name?: string
-  icon?: string
+  icon?: MIconName
 }
 
 export interface UseAvatarOptions {
@@ -31,7 +32,7 @@ export interface UseAvatarReturn {
   /** Trimmed `name`, `undefined` when blank. */
   normalizedName: ComputedRef<string | undefined>
   initials: ComputedRef<string>
-  fallbackIcon: ComputedRef<string>
+  fallbackIcon: ComputedRef<MIconName>
   /** The current source failed; a new source is tried afresh. */
   failed: ComputedRef<boolean>
   showImage: ComputedRef<boolean>

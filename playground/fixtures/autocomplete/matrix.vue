@@ -61,7 +61,7 @@ import MTextField from '#kit/components/ui/text-field/index.vue'
 import type { MDropdownVariant } from '#kit/components/ui/dropdown/props'
 
 // The kit ships no copy of its own: the app names the controls and states.
-const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results', remove: 'Remove {title}' }
 
 const cities = [
   { id: 1, name: 'Amsterdam' },

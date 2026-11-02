@@ -94,6 +94,14 @@ test.describe('MSurface', () => {
     }
   })
 
+  // B9.4: `1rem` falls below a device pixel on a narrow screen; the hairline keeps one.
+  test('the outlined edge keeps at least one pixel on a narrow screen', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 })
+    await openFixture(page, 'surface/matrix')
+
+    expect(await pixels(page.getByTestId('medium-outlined'), 'border-top-width')).toBeGreaterThanOrEqual(1)
+  })
+
   test('filled and elevated take their own tone; plain and outlined share the base one', async ({ page }) => {
     await openFixture(page, 'surface/matrix')
     const background = (variant: string) => computed(page.getByTestId(`medium-${variant}`), 'background-color')

@@ -10,6 +10,7 @@ $tokens: (
     gap: spacing(12),
     message: (
       color: map.get($theme-color-link, 'error'),
+      typography: 'body-medium',
     ),
   ),
 );

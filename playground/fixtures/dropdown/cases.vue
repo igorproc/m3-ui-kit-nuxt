@@ -165,7 +165,7 @@ import MDropdown from '#kit/components/ui/dropdown/index.vue'
 import type { MDropdownVariant } from '#kit/components/ui/dropdown/props'
 
 // The kit ships no copy of its own: the app names the controls and states.
-const messages = { clear: 'Clear selection', loading: 'Loading options', empty: 'No options' }
+const messages = { clear: 'Clear selection', loading: 'Loading options', empty: 'No options', remove: 'Remove {title}' }
 
 const fruit = [
   { id: 1, name: 'Apple' },

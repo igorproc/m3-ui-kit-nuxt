@@ -12,6 +12,8 @@
 // колонок брейкпоинта (cols="2" на мобилке из 4 колонок = половина) и
 // клампятся, чтобы не создавать implicit-треки. Offset — через
 // grid-column-start. Без указания span колонка занимает всю строку
+import { useGridContext } from '#kit/utils/grid/useGridContext'
+
 type GridSize = number | string
 
 interface Props {
@@ -33,8 +35,13 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// Inside `m-container container` the breakpoints measure the container, and
+// the classes are a set of their own: an ancestor cannot switch a media rule off.
+const grid = useGridContext()
+
 const classes = computed(() => {
   const list: string[] = []
+  const prefix = grid?.queries === 'container' ? 'cq-' : ''
 
   if (props.cols != null) list.push(`m-col--span-${props.cols}`)
   if (props.offset != null) list.push(`m-col--offset-${props.offset}`)
@@ -48,8 +55,8 @@ const classes = computed(() => {
   ]
 
   for (const [span, offset, key] of byBreakpoint) {
-    if (span != null) list.push(`m-col--${key}-span-${span}`)
-    if (offset != null) list.push(`m-col--${key}-offset-${offset}`)
+    if (span != null) list.push(`m-col--${prefix}${key}-span-${span}`)
+    if (offset != null) list.push(`m-col--${prefix}${key}-offset-${offset}`)
   }
 
   return list
@@ -97,6 +104,12 @@ const classes = computed(() => {
 @each $key in grid.$bp-order {
   @include grid.bp-up($key) {
     @include col-classes('#{$key}-');
+  }
+}
+
+@each $key in grid.$bp-order {
+  @include grid.cq-up($key) {
+    @include col-classes('cq-#{$key}-');
   }
 }
 </style>

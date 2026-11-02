@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
-import type { Locator } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { DIRECTIONS, THEMES, WIDTHS, expectNoAxeViolations, expectNoHorizontalOverflow, openFixture, remInPx, waitForMotion } from '../../e2e/support'
 
 /** `data-test` falls through to the input; the bar is its parent. */
-const bar = (input: Locator) => input.locator('xpath=ancestor::div[contains(@class, "ui-search")][1]')
+const bar = (input: Locator) => input.locator('xpath=ancestor::div[contains(concat(" ", @class, " "), " ui-search__bar ")][1]')
 
 test.describe('MSearch', () => {
   for (const theme of THEMES) {
@@ -28,18 +28,22 @@ test.describe('MSearch', () => {
     })
   }
 
-  test('the bar is a full-shape container with no edge, 56 tall', async ({ page }) => {
-    await openFixture(page, 'search/matrix')
-    const box = bar(page.getByTestId('empty'))
+  for (const [step, height] of [['compact', 44], ['empty', 56], ['comfortable', 64]] as const) {
+    test(`the bar has no edge, stands ${height} tall and rounds to half of it (${step})`, async ({ page }) => {
+      await openFixture(page, 'search/matrix')
+      const box = bar(page.getByTestId(step))
 
-    const style = await box.evaluate((el) => {
-      const computed = getComputedStyle(el)
-      return { border: computed.borderTopStyle, shadow: computed.boxShadow, height: el.getBoundingClientRect().height }
+      const style = await box.evaluate((el) => {
+        const computed = getComputedStyle(el)
+        return { border: computed.borderTopStyle, shadow: computed.boxShadow, radius: Number.parseFloat(computed.borderTopLeftRadius), height: el.getBoundingClientRect().height }
+      })
+      const rem = await remInPx(page)
+      expect(style.border).toBe('none')
+      expect(style.shadow).toBe('none')
+      expect(style.height / rem).toBeCloseTo(height, 0)
+      expect(style.radius / rem).toBeCloseTo(height / 2, 0)
     })
-    expect(style.border).toBe('none')
-    expect(style.shadow).toBe('none')
-    expect(style.height / await remInPx(page)).toBeCloseTo(56, 0)
-  })
+  }
 
   test('hover raises a state layer over the container', async ({ page }) => {
     await openFixture(page, 'search/matrix')
@@ -65,13 +69,13 @@ test.describe('MSearch', () => {
     expect(ring.width).toBeGreaterThanOrEqual(2)
   })
 
-  test('typing and clearing never reflows the query', async ({ page }) => {
+  test('typing and clearing keep the query where it starts', async ({ page }) => {
     await openFixture(page, 'search/matrix')
     const input = page.getByTestId('empty')
-    const before = (await input.boundingBox())!.width
+    const before = (await input.boundingBox())!.x
 
     await input.fill('nuxt')
-    expect((await input.boundingBox())!.width).toBeCloseTo(before, 0)
+    expect((await input.boundingBox())!.x).toBeCloseTo(before, 0)
 
     await bar(input).getByRole('button', { name: 'Clear the query' }).click()
     await expect(input).toHaveValue('')
@@ -142,5 +146,128 @@ test.describe('MSearch · keys, names and forced colours (M3-polish)', () => {
     await input.evaluate(el => el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true, cancelable: true })))
 
     await expect(page.getByTestId('submitted')).toHaveText('')
+  })
+})
+
+test.describe('MSearch · view (search v2)', () => {
+  /** The listbox this bar controls: the page also holds an inline one. */
+  const listbox = async (page: Page, input: Locator) => page.locator(`[id="${await input.getAttribute('aria-controls')}"]`)
+
+  test('typing opens a docked view of matching rows, as wide as the bar and attached under it', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('docked')
+
+    await input.fill('zu')
+    await waitForMotion(page)
+
+    await expect(input).toHaveAttribute('aria-expanded', 'true')
+    await expect((await listbox(page, input)).getByRole('option')).toHaveText(['Zürich'])
+
+    const [barBox, viewBox] = await Promise.all([bar(input).boundingBox(), page.locator('.ui-search__menu .ui-menu__surface').boundingBox()])
+    expect(viewBox!.width).toBeCloseTo(barBox!.width, 0)
+    expect(viewBox!.y).toBeCloseTo(barBox!.y + barBox!.height, 0)
+  })
+
+  test('open, the bar squares its lower corners and keeps its upper ones', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('docked')
+
+    await input.fill('b')
+    await waitForMotion(page)
+
+    const corners = await bar(input).evaluate((el) => {
+      const style = getComputedStyle(el)
+      return [style.borderTopLeftRadius, style.borderBottomLeftRadius].map(Number.parseFloat)
+    })
+    expect(corners[0]! / await remInPx(page)).toBeCloseTo(28, 0)
+    expect(corners[1]).toBe(0)
+  })
+
+  test('the arrows walk the rows and Enter chooses one into the query', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('docked')
+
+    await input.fill('z')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Enter')
+
+    await expect(input).toHaveValue('Zagreb')
+    await expect(page.getByTestId('chosen')).toHaveText('2')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toBeFocused()
+  })
+
+  test('Enter with no row active runs the query', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('docked')
+
+    await input.fill('ber')
+    await page.keyboard.press('Enter')
+
+    await expect(page.getByTestId('submitted')).toHaveText('ber')
+  })
+
+  test('Escape closes the view first and keeps the query', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('docked')
+
+    await input.fill('ber')
+    await page.keyboard.press('Escape')
+    await expect(input).toHaveAttribute('aria-expanded', 'false')
+    await expect(input).toHaveValue('ber')
+
+    await page.keyboard.press('Escape')
+    await expect(input).toHaveValue('')
+  })
+
+  test('a query that finds nothing says so', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('docked')
+
+    await input.fill('xyz')
+
+    await expect(page.locator('.ui-search-view__message')).toHaveText('Nothing found')
+  })
+
+  test('a pointer press on an empty bar opens its recent queries; Delete removes one', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('grouped')
+
+    await input.click()
+    await expect(page.getByRole('group', { name: 'Recent' })).toBeVisible()
+
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Delete')
+
+    await expect(page.getByTestId('recent')).toHaveText('invoices march')
+  })
+
+  test('the pointer focus opens the view without the ring; the keyboard focus wears it', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('grouped')
+
+    await input.click()
+    expect(await bar(input).evaluate(el => getComputedStyle(el).outlineStyle)).toBe('none')
+  })
+
+  test('an inline view lies in the flow under the bar', async ({ page }) => {
+    await openFixture(page, 'search/cases')
+    const input = page.getByTestId('inline')
+    const view = bar(input).locator('xpath=following-sibling::div[contains(@class, "ui-search-view")][1]')
+
+    await expect(view.getByRole('option')).toHaveCount(7)
+    const [barBox, viewBox] = await Promise.all([bar(input).boundingBox(), view.boundingBox()])
+    expect(viewBox!.y).toBeCloseTo(barBox!.y + barBox!.height, 0)
+  })
+
+  test('the open docked view has no axe violations', async ({ page }) => {
+    // A11-06: MMenu wraps the listbox in role="menu" without menu items (aria-required-children),
+    // as it does for MDropdown — deferred to the MMenu task. Remove this line when it is fixed.
+    test.fail()
+    await openFixture(page, 'search/cases')
+    await page.getByTestId('docked').fill('b')
+    await waitForMotion(page)
+    await expectNoAxeViolations(page)
   })
 })

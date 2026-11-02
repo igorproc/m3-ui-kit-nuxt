@@ -1,5 +1,7 @@
 import type { ComputedRef, CSSProperties, MaybeRefOrGetter, Ref } from 'vue'
-import type { VirtualRange } from './geometry'
+import type { VirtualRange } from '#kit/utils/virtual-scroll/geometry'
+
+export type { VirtualRange }
 
 export type VirtualScrollState = 'idle' | 'scrolling' | 'programmatic' | 'settling'
 export type VirtualScrollDirection = 'forward' | 'backward' | null
@@ -8,7 +10,7 @@ export type VirtualScrollAlignment = 'start' | 'center' | 'end' | 'auto'
 export interface UseVirtualScrollOptions {
   container: MaybeRefOrGetter<HTMLElement | null>
   count: MaybeRefOrGetter<number>
-  /** Size known before render: a constant or a synchronous index function. */
+  /** Size in CSS px, known before render: a constant or a synchronous index function. Under the kit's vw root a row drawn in rem converts to px itself. */
   itemSize: number | ((index: number) => number)
   getKey?: (index: number) => PropertyKey
   overscan?: number
@@ -16,6 +18,7 @@ export interface UseVirtualScrollOptions {
   enabled?: MaybeRefOrGetter<boolean>
   paddingStart?: number
   paddingEnd?: number
+  /** Logical offset in CSS px to start from: the server renders its range, and the container is scrolled to it once attached. */
   initialOffset?: number
   threshold?: { start?: number, end?: number }
 }

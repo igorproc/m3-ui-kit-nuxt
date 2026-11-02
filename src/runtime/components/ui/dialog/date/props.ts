@@ -8,7 +8,6 @@ import type { ExtractPublicPropTypes, PropType } from 'vue'
 import { mModalLayerProps } from '#kit/components/ui/overlay/props'
 import { mDatePickerProps } from '#kit/components/ui/date-picker/props'
 import type { MDatePickerMode } from '#kit/components/ui/date-picker/props'
-import { MESSAGES } from '#kit/shared/constants/messages'
 
 const FORM_KEYS = ['helperText', 'error', 'errorMessage', 'required', 'name'] as const
 type FormKey = typeof FORM_KEYS[number]
@@ -25,8 +24,10 @@ export const mDialogDateProps = {
   initialMode: { type: String as PropType<MDatePickerMode>, default: 'picker' },
   /** The mode on screen; bind it to keep the mode between openings. */
   mode: { type: String as PropType<MDatePickerMode>, default: undefined },
-  cancelLabel: { type: String, default: MESSAGES.dateCancel },
-  confirmLabel: { type: String, default: MESSAGES.dateConfirm },
+  /** Text of the action that drops the draft. No default: the kit ships no copy. */
+  cancelLabel: { type: String, default: undefined },
+  /** Text of the action that commits the draft. No default: the kit ships no copy. */
+  confirmLabel: { type: String, default: undefined },
   ...mModalLayerProps,
 }
 

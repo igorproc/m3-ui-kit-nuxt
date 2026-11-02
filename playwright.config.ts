@@ -18,7 +18,10 @@ export default defineConfig({
     testIdAttribute: 'data-test',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // 1366 like the fixtures' WIDTHS, not Desktop Chrome's 1280: in the 1201–1280 band the 3rem
+    // focus ring renders 1px (an accepted edge of the vw root scale), so ring checks there test
+    // the edge instead of the design.
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
   ],
   webServer: {
     // CI serves a production build; locally the dev server keeps HMR.

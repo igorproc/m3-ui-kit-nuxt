@@ -2,73 +2,79 @@
   <div
     class="ui-progress ui-progress--circular"
     :class="[
-      `ui-progress--${size}`,
+      `ui-progress--density-${density}`,
+      `ui-progress--${shape}`,
       {
         'ui-progress--indeterminate': indeterminate,
-        'ui-progress--expressive': expressive,
+        'ui-progress--started': !indeterminate && percent > 0,
+        'ui-progress--labelled': !!$slots.default,
       },
     ]"
-    role="progressbar"
-    :aria-valuemin="0"
-    :aria-valuemax="100"
-    :aria-valuenow="indeterminate ? undefined : clampedValue"
-    :aria-label="ariaLabel"
+    v-bind="rootAttrs()"
   >
     <svg
+      ref="control"
       class="ui-progress__svg"
-      viewBox="0 0 48 48"
+      :viewBox="viewBox"
+      v-bind="controlAttrs(progressbarAttrs())"
     >
-      <!-- Track -->
       <path
-        v-if="showTrack"
+        v-if="showTrack && trackLength > 0"
         class="ui-progress__svg-track"
         :d="circularPath"
         :stroke-width="strokeWidth"
+        :stroke-dasharray="trackDashArray"
+        :stroke-dashoffset="trackDashOffset"
       />
-      <!-- Active Value -->
       <path
         class="ui-progress__svg-value"
         :d="circularPath"
         :stroke-width="strokeWidth"
         :stroke-dasharray="totalPathLength"
         :stroke-dashoffset="dashOffset"
-        :stroke-linecap="expressive || indeterminate ? 'round' : 'butt'"
       />
     </svg>
 
-    <slot />
+    <span
+      v-if="$slots.default"
+      :id="labelId"
+      class="ui-progress__label"
+    >
+      <slot />
+    </span>
   </div>
 </template>
 
 <script setup lang="ts">
+import { shallowRef } from 'vue'
 import { useProgress } from '#kit/composables/progress/useProgress'
+import { useControlAttrs } from '#kit/composables/useControlAttrs'
+import { useProgressbar } from '#kit/utils/progress/useProgressbar'
+import { useProgressNameWarning } from '#kit/utils/progress/useProgressNameWarning'
 import { mProgressLeafProps } from '../props'
 
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps(mProgressLeafProps)
+const { rootAttrs, controlAttrs } = useControlAttrs()
+
+const control = shallowRef<SVGSVGElement | null>(null)
+useProgressNameWarning(control, () => props.ariaLabel)
 
 const {
-  clampedValue,
+  valueNow,
+  percent,
+  viewBox,
   strokeWidth,
   circularPath,
   totalPathLength,
   dashOffset,
-} = useProgress({
-  get variant() {
-    return 'circular' as const
-  },
-  get value() {
-    return props.value
-  },
-  get indeterminate() {
-    return props.indeterminate
-  },
-  get size() {
-    return props.size
-  },
-  get expressive() {
-    return props.expressive
-  },
-})
+  trackLength,
+  trackDashArray,
+  trackDashOffset,
+} = useProgress(props)
+
+const { labelId, progressbarAttrs } = useProgressbar(props, valueNow)
 </script>
 
 <style lang="scss">
@@ -78,35 +84,24 @@ const {
   $prefix: 'md-progress';
   $t: material-map(t.$tokens, $prefix);
 
-  contain: content;
+  contain: layout style;
   display: inline-flex;
   vertical-align: middle;
 
   &--circular {
-    position: relative;
-    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: g($t, 'circular.label.gap');
+  }
 
-    &.ui-progress--small {
-      width: g($t, 'circular-size-small');
-      height: g($t, 'circular-size-small');
-    }
-
-    &.ui-progress--medium {
-      width: g($t, 'circular-size-medium');
-      height: g($t, 'circular-size-medium');
-    }
-
-    &.ui-progress--large {
-      width: g($t, 'circular-size-large');
-      height: g($t, 'circular-size-large');
+  @each $step in ('compact', 'default', 'comfortable') {
+    &--circular.ui-progress--density-#{$step} &__svg {
+      width: g($t, 'circular.density.#{$step}.size');
+      height: g($t, 'circular.density.#{$step}.size');
     }
   }
 
   &__svg {
-    width: 100%;
-    height: 100%;
+    flex-shrink: 0;
     transform: rotate(-90deg);
     overflow: visible; // Waves can exceed viewBox slightly
   }
@@ -119,21 +114,38 @@ const {
   }
 
   &__svg-track {
-    stroke: g($t, 'circular-track-color');
+    stroke: g($t, 'circular.track.color');
+    transition:
+      stroke-dasharray g($t, 'motion.value.duration') g($t, 'motion.value.easing'),
+      stroke-dashoffset g($t, 'motion.value.duration') g($t, 'motion.value.easing');
   }
 
   &__svg-value {
-    stroke: g($t, 'circular-spinner-color');
-    transition: stroke-dashoffset 400ms var(--sys-motion-easing-emphasized);
+    stroke: g($t, 'circular.spinner.color');
+    transition: stroke-dashoffset g($t, 'motion.value.duration') g($t, 'motion.value.easing');
+  }
+
+  &--circular:not(&--started, &--indeterminate) &__svg-value {
+    visibility: hidden;
   }
 
   // Circular Indeterminate
   &--circular.ui-progress--indeterminate &__svg {
-    animation: ui-progress-circular-rotate 2s linear infinite;
+    animation: ui-progress-circular-rotate g($t, 'motion.loop.rotate') linear infinite;
   }
 
   &--circular.ui-progress--indeterminate &__svg-value {
-    animation: ui-progress-circular-dash 1.5s ease-in-out infinite;
+    animation: ui-progress-circular-dash g($t, 'motion.loop.dash') ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &--circular.ui-progress--indeterminate &__svg {
+      animation-duration: g($t, 'motion.reduced.rotate');
+    }
+
+    &--circular.ui-progress--indeterminate &__svg-value {
+      animation-duration: g($t, 'motion.reduced.dash');
+    }
   }
 
   // Track and value differ only by theme colour; forced colors either keep

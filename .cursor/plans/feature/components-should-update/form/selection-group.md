@@ -2,7 +2,7 @@
 
 <identity>M3: нет в M3 (авторский поведенческий примитив кита; паттерны выбора M3 — connected button group, chip group, segmented button, списки — его потребители, а не аналоги) · Токены Compose: нет · Код: `src/runtime/components/ui/selection-group/index.vue`, фасад `src/runtime/composables/selection/{context,useSelectionGroup,useSelectionItem}.ts`, приватный рендерер `src/runtime/components/fragments/selection-group/data-item.vue`, реестр `src/runtime/composables/registry/createGroup` · Аудит: `data/selection-group.json` · Тип: public (renderless)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Компонент работает с 2026-07-13: публичный фасад над реестром `createGroup`, три способа композиции (данные, ручной `MSelectionItem`, свой ребёнок через `useSelectionContext`), политики `multiple` / `mandatory` / `max`, очистка через `onScopeDispose`, тесты. План 2026-10-07 добавляет то, чего просит аудит, не ломая «только выбор»: атрибуты потребителя без предупреждения Vue и (по ВГ-1) готовые бэги доступности. Код не менялся. Ждут ВГ-1…ВГ-3.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: в режиме данных строки отдаются в scope `#default` (`rows`), потребитель кладёт их в обёртку с `groupAttrs`; не взятые — рисуются после слота, как раньше (F2-10); `aria-disabled` у отключённой группы (F2-11); фикстуры `selection-group/{matrix,stress}` (эталонная разметка radio/toggle/option/checkbox, 1000 элементов) + e2e + axe. Ранее (G1): `pattern` → `groupAttrs`/`attrs`, `selectAll` под `max`. Осталось: документация в `docs`.</implementation-status>
 
 ## Вердикт
 
@@ -141,14 +141,14 @@ Generic-поток `items → itemValue → modelValue → #item` сохраня
 
 ## План работ
 
-1. **S** — `inheritAttrs: false` и `attrs` в scope слота по умолчанию; тип `SelectionGroupSlot`
+1. **S** — **Отменено** (Q45-А: группа остаётся безголовой, `decisions.md:138`). `inheritAttrs: false` и `attrs` в scope слота по умолчанию; тип `SelectionGroupSlot`
    расширяется. Без видимых изменений. Файлы: `selection-group/index.vue`,
    `composables/selection/context.ts`, `selection-group/index.spec.ts`.
 2. **M** — Бэги доступности по ВГ-1: `groupAttrs` и `attrs` элемента по названному паттерну,
    спека «без `class` и `data-*` в выхлопе» как у control-композаблов. Файлы:
    `composables/selection/*`, `selection-group/index.vue`, `selection-item/index.vue`,
    `fragments/selection-group/data-item.vue`.
-3. **S** — Документация (репозиторий `docs`): пример на своих карточках с `role="radiogroup"` /
+3. **S** — **Отложено** (вне репозитория кита). Документация (репозиторий `docs`): пример на своих карточках с `role="radiogroup"` /
    `aria-checked` или toggle-кнопках с `aria-pressed`; раздел «когда `MSelectionGroup`, а когда
    `MChipGroup` / `MRadioGroup` / segmented»; раздел доступности.
 4. **S** — Нагрузка: фикстура на 1000 элементов, замер `selected` и реконсиляции (CT-08).

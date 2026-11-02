@@ -77,7 +77,7 @@ import { ref } from 'vue'
 import MAutocomplete from '#kit/components/ui/autocomplete/index.vue'
 
 // The kit ships no copy of its own: the app names the controls and states.
-const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results' }
+const messages = { clear: 'Clear selection', toggle: 'Toggle options', loading: 'Loading options', empty: 'No options', noResults: 'No results', remove: 'Remove {title}' }
 
 const long = [
   { id: 1, name: 'averyveryverylongemailaddresswithoutanybreak@example-domain-that-is-long.com' },

@@ -2,7 +2,7 @@
 
 <identity>M3: Date pickers — docked, modal, modal input; range (DateRangePicker) · Токены Compose: `DatePickerModalTokens.kt`, `DateInputModalTokens.kt`; поведение — `DatePicker.kt`, `DateRangePicker.kt`, `DateInput.kt`, `DateRangeInput.kt`, `DatePickerDialog.kt` · Код: `src/runtime/components/ui/date-picker/`, `src/runtime/components/ui/dialog/date/`, фрагменты `src/runtime/components/fragments/date-picker/{header-nav,day-grid,year-grid}/`, `src/runtime/composables/date/index.ts`, токены `src/runtime/assets/stylesheet/components/date-picker/` · Аудит: `data/date-picker.json`, `data/dialog.json` (части про date) · Тип: public (`MDatePicker`, `MDialogDate`), sub (фрагменты)</identity>
 
-<implementation-status state="done" updated="2026-10-18">Реализовано: шаги 1–6 (документация — шаг 9, в docs). Одна карта токенов, `createCalendar` + `useDateGridControl` (APG grid), локаль через `Intl`, анатомия M3 (title, headline, переключатель режима, divider, `mode: picker | input`), `MDialogDate` на `MOverlay` + `MDatePicker` (≈150 строк). Range (шаг 7) и docked (шаг 8) не делаются по ответам на вопросы 5 и 4. M3-polish (2026-10-18, w5): год-вью центрируется до показа и держит год под фокусом в виду (`useYearGridControl`, без `offsetTop`), высота годов = 7 × 48, таб-стоп пустого пикера — сегодня, стрелки RTL — отражается только глиф, пропы формы (`helperText`, `error`, `errorMessage`, `required`, `name`) + строка поддержки `PickerSupport`, модель в типе входа (`YYYY-MM-DD` / число / `Date`), новый режим проявляется fade, `headline` снят. `MDialogDate`: payload `confirm` — только что выбранный день, ISO-строка без сдвига дня, первый фокус (сегодня / поле), `initialMode` при каждом открытии, проброс всех пропов пикера и слотов, `headline` снят. Фабрика `createCalendar` → `utils/date`.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Реализовано: шаги 1–6 (документация — шаг 9, в docs). Одна карта токенов, `createCalendar` + `useDateGridControl` (APG grid), локаль через `Intl`, анатомия M3 (title, headline, переключатель режима, divider, `mode: picker | input`), `MDialogDate` на `MOverlay` + `MDatePicker` (≈150 строк). Range (шаг 7) и docked (шаг 8) не делаются по ответам на вопросы 5 и 4. M3-polish (2026-10-18, w5): год-вью центрируется до показа и держит год под фокусом в виду (`useYearGridControl`, без `offsetTop`), высота годов = 7 × 48, таб-стоп пустого пикера — сегодня, стрелки RTL — отражается только глиф, пропы формы (`helperText`, `error`, `errorMessage`, `required`, `name`) + строка поддержки `PickerSupport`, модель в типе входа (`YYYY-MM-DD` / число / `Date`), новый режим проявляется fade, `headline` снят. `MDialogDate`: payload `confirm` — только что выбранный день, ISO-строка без сдвига дня, первый фокус (сегодня / поле), `initialMode` при каждом открытии, проброс всех пропов пикера и слотов, `headline` снят. Фабрика `createCalendar` → `utils/date`. Фаза 2 (2026-10-30): пунктов нет; шаги 7 и 8 помечены «отменено».</implementation-status>
 
 ## Вердикт
 
@@ -194,12 +194,12 @@
    - Начальный фокус — на день.
    - Контент прокручивается в landscape (RS-10).
    - Ввод проверяется на blur и OK (FM-03, FM-04, FM-08).
-7. **Range** — L, только если вопрос 5 = да. Зависимости: шаги 3–6. Новые `MDateRangePicker` / `MDialogDateRange`:
+7. **Отменено** (`decisions.md` «Range-пикер даты»). **Range** — L, только если вопрос 5 = да. Зависимости: шаги 3–6. Новые `MDateRangePicker` / `MDialogDateRange`:
    - вертикальный список месяцев, закреплённая строка дней недели;
    - полоса `secondary-container`;
    - заголовок `title-large` «Start date – End date»;
    - range input — два поля с ошибкой «Invalid date range».
-8. **Docked** — M, только если вопрос 4 = да. Зависимости: шаги 2–5. `MDateField`:
+8. **Отменено** (`decisions.md` «Docked-пикер даты»). **Docked** — M, только если вопрос 4 = да. Зависимости: шаги 2–5. `MDateField`:
    - `MTextField` с иконкой календаря, панель — `MMenu`;
    - внутри `MDatePicker` в docked-раскладке: стрелки и меню у месяца и у года, без шапки;
    - меню месяцев — `MList` с галочкой.

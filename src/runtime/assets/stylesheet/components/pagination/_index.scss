@@ -7,9 +7,19 @@
 // Page and directional interactive states are owned by the reused button
 // components; pagination only owns layout and the decorative ellipsis.
 
+$control-size: spacing(40);
 $tokens: (
-  list: (gap: 4rem),
-  control: (size: 40rem),
+  list: (
+    gap: spacing(4),
+    // On a coarse pointer the 48 targets (S8) of neighbouring 40 controls meet.
+    coarse: (gap: calc(#{spacing(48)} - #{$control-size})),
+  ),
+  control: (size: $control-size),
+  page: (
+    padding: (inline: spacing(8)),
+    // The current page is set heavier than the label-large 500 of the rest.
+    current: (weight: 700),
+  ),
   ellipsis: (
     color: map.get($theme-color-link, 'on-surface-variant'),
     typography: map.get($theme-typography-link, 'label', 'large'),

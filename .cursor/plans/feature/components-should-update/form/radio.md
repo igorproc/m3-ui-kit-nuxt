@@ -2,7 +2,7 @@
 
 <identity>M3: Radio button · Токены Compose: `RadioButtonTokens`, `StateTokens`; поведение — `RadioButton.kt`; цвета слоя состояний — material-web `tokens/versions/v0_192/_md-comp-radio-button.scss`, геометрия фокуса — `m3-reference/radio/internal/_radio.scss` · Код: `src/runtime/components/ui/radio/` (+ `group/`), `src/runtime/composables/radio/useRadioGroup.ts` · Аудит: `data/radio.json` · Тип: public (`MRadio`) + public родитель (`MRadioGroup`)</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Исследование и рендеры готовы, код не менялся. Фаза C дала кольцо фокуса, `can-hover`, forced colors и раздачу `$attrs` на инпут. Кольцо при этом получилось квадратным. У группы нет подписи и видимой ошибки, у одиночных радио в форме нет общего `name`. Ждут РВ-1…РВ-4.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Фаза 2 аудита: смена `value` у смонтированной радио доходит до группы (перерегистрация, F2-02), dev-предупреждение у безымянной группы (F2-03), `stress.vue` + e2e в RTL. Ранее (G1): кольцо на слое 40, роли, `name ?? path`, группа — поле, строки 48. Осталось: документация в `docs`.</implementation-status>
 
 ## Вердикт
 

@@ -142,6 +142,35 @@ test.describe('MTimeline', () => {
     }
   })
 
+  // B9.3: a contained surface pads its text and rounds its corners, and the
+  // dot, the time and the rail follow the first line down into the padding.
+  test('a contained content surface is padded and rounded, and its dot sits on its first line', async ({ page }) => {
+    await openFixture(page, 'timeline/matrix')
+    const unit = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).fontSize))
+
+    for (const id of ['variant-filled', 'variant-outlined', 'variant-elevated', 'variant-untitled']) {
+      const item = page.getByTestId(id)
+      const content = item.locator('.ui-timeline-item__content')
+      const line = item.locator('.ui-timeline-item__title').or(item.locator('.ui-timeline-item__body')).first()
+      const contentBox = await box(content)
+      const lineBox = await box(line)
+      const lineHeight = Number.parseFloat(await style(line, 'line-height'))
+      const dot = await box(item.locator('.ui-timeline-divider__dot'))
+
+      expect(Number.parseFloat(await style(content, 'border-top-left-radius')), id).toBeGreaterThan(0)
+      expect((lineBox.x - contentBox.x) / unit, `${id} inline padding`).toBeGreaterThanOrEqual(12)
+      expect(Math.abs((dot.y + dot.height / 2) - (lineBox.y + lineHeight / 2)) / unit, `${id} dot`).toBeLessThan(0.5)
+    }
+
+    const time = page.getByTestId('variant-untitled').locator('.ui-timeline-item__time')
+    const body = page.getByTestId('variant-untitled').locator('.ui-timeline-item__body')
+    const timeBox = await box(time)
+    const bodyBox = await box(body)
+    const timeLine = Number.parseFloat(await style(time, 'line-height'))
+    const bodyLine = Number.parseFloat(await style(body, 'line-height'))
+    expect(Math.abs((timeBox.y + timeLine / 2) - (bodyBox.y + bodyLine / 2)) / unit, 'time').toBeLessThan(0.5)
+  })
+
   test('long unbroken values wrap inside their column', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 900 })
     await openFixture(page, 'timeline/stress')
@@ -153,6 +182,20 @@ test.describe('MTimeline', () => {
     }
   })
 
+  // N.4 (G6): `overflow-wrap: anywhere` on the content inherited into its slot
+  // and cut every word's min-content to one glyph, so equal columns broke words.
+  test('equal columns in a narrow item scroll instead of breaking words', async ({ page }) => {
+    await openFixture(page, 'timeline/stress')
+
+    const lines = await page.getByTestId('word-row').getByTestId('word-row-item').evaluateAll(items => items.map((item) => {
+      const range = document.createRange()
+      range.selectNodeContents(item)
+      return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size
+    }))
+
+    expect(lines).toEqual([1, 1])
+  })
+
   test('a status is read as a word, hidden from the eye', async ({ page }) => {
     await openFixture(page, 'timeline/matrix')
     const status = page.getByTestId('side-end').locator('.ui-timeline-item__status').first()
@@ -160,6 +203,24 @@ test.describe('MTimeline', () => {
     await expect(status).toHaveText('Done')
     expect((await box(status)).width).toBeLessThanOrEqual(1)
     await expect(page.getByTestId('side-end').getByRole('listitem').nth(1)).toContainText('Done')
+  })
+
+  // S8 (plans-audit-2): the marker takes every role of `MColor`, the theme's semantic ones included.
+  test('the dot takes each colour role, semantic roles included', async ({ page }) => {
+    await openFixture(page, 'timeline/matrix')
+    const roleColor = (role: string) => page.evaluate((name) => {
+      const probe = document.createElement('span')
+      probe.style.backgroundColor = `var(--md-sys-color-${name})`
+      document.body.append(probe)
+      const color = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return color
+    }, role)
+
+    for (const role of ['primary', 'secondary', 'tertiary', 'error', 'info', 'success', 'warning']) {
+      const dot = page.getByTestId(`role-${role}`).locator('.ui-timeline-divider__dot')
+      expect(await style(dot, 'background-color'), role).toBe(await roleColor(role))
+    }
   })
 
   test('the marker stays out of the accessibility tree', async ({ page }) => {

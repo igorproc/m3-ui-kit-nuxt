@@ -21,7 +21,7 @@
         class="crm-app-bar__search"
         placeholder="Сделки, компании, номера"
         aria-label="Поиск по сделкам и компаниям"
-        clear-label="Очистить поиск"
+        :messages="{ clear: 'Очистить поиск' }"
         aria-keyshortcuts="/"
         data-crm-search
         @submit="emit('search')"

@@ -278,7 +278,8 @@ describe('reduceTransition', () => {
   })
 })
 
-describe('M3_SPRING against StandardMotionTokens (kit constants, not verified against Compose)', () => {
+// Compose material3 1.5.0-alpha22, tokens/StandardMotionTokens.kt and tokens/ExpressiveMotionTokens.kt.
+describe('M3_SPRING against StandardMotionTokens', () => {
   it.each([
     ['SpringFastSpatial', M3_SPRING.spatial.fast, 0.9, 1400],
     ['SpringDefaultSpatial', M3_SPRING.spatial.default, 0.9, 700],
@@ -295,6 +296,23 @@ describe('M3_SPRING against StandardMotionTokens (kit constants, not verified ag
     expect(calm.duration).toBe(springDuration(M3_SPRING.effects.default))
     expect(calm.overshoots).toBe(false)
   })
+})
 
-  it.todo('reconcile the expressive scheme with ExpressiveMotionTokens once the Compose sources are available')
+describe('the kit springs against ExpressiveMotionTokens', () => {
+  it.each([
+    ['SpringFastEffects', M3_SPRING.effects.fast, 1, 3800],
+    ['SpringDefaultEffects', M3_SPRING.effects.default, 1, 1600],
+    ['SpringSlowEffects', M3_SPRING.effects.slow, 1, 800],
+  ] as const)('%s is shared by both schemes', (_token, spring, damping, stiffness) => {
+    expect(spring).toEqual({ damping, stiffness })
+  })
+
+  it('keeps the SpringDefaultSpatial stiffness for the expressive morph and lowers its damping from 0.8 to 0.6', () => {
+    const composeDefaultSpatial = { damping: 0.8, stiffness: 380 }
+    const kitMorph = { damping: 0.6, stiffness: composeDefaultSpatial.stiffness }
+
+    expect(expressive.duration).toBe(springDuration(kitMorph))
+    expect(expressive.duration).not.toBe(springDuration(composeDefaultSpatial))
+    expect(springOvershoot(kitMorph)).toBeGreaterThan(springOvershoot(composeDefaultSpatial))
+  })
 })

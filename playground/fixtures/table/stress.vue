@@ -43,6 +43,30 @@
       </template>
     </MTable>
 
+    <h2>A footer that waits for the server</h2>
+    <MTable
+      :current-page="remotePage"
+      :page-size="remoteSize"
+      class="fixture-table-stress__narrow"
+      aria-label="Remote shipments"
+      :columns="longColumns"
+      :data="shipments"
+      :loading="remoteLoading"
+      pagination
+      :total-items="240"
+      :page-size-options="[10, 25, 50]"
+      page-size-label="Rows per page"
+      previous-page-label="Previous page"
+      next-page-label="Next page"
+      data-test="remote-footer"
+      @update:current-page="loadPage"
+      @update:page-size="loadSize"
+    >
+      <template #pagination-info="{ start, end, total }">
+        <span data-test="remote-range">{{ start }}–{{ end }} of {{ total }}</span>
+      </template>
+    </MTable>
+
     <h2>Many rows</h2>
     <MTable
       class="fixture-table-stress__panel"
@@ -54,6 +78,27 @@
       select-all-label="Select all rows"
       data-test="many"
     />
+
+    <h2>A table nested in a cell</h2>
+    <MTable
+      class="fixture-table-stress__panel"
+      aria-label="Regions with breakdowns"
+      :columns="nestedColumns"
+      :data="report.slice(0, 2)"
+      selectable
+      select-all-label="Select all regions"
+      data-test="nested"
+    >
+      <template #cell-breakdown="{ row }">
+        <MTable
+          class="fixture-table-stress__inner"
+          :aria-label="`Breakdown, ${row.region}`"
+          :columns="wideColumns"
+          :data="report.slice(0, 2)"
+          :data-test="`nested-inner-${row.id}`"
+        />
+      </template>
+    </MTable>
   </section>
 </template>
 
@@ -86,6 +131,11 @@ const longColumns: TableColumn<Line>[] = [
   { key: 'weight', label: 'kg', numeric: true },
 ]
 
+const nestedColumns: TableColumn<Line>[] = [
+  { key: 'region', label: 'Region' },
+  { key: 'breakdown', label: 'Breakdown' },
+]
+
 const shipments: Line[] = [
   { id: 1, code: 'CBL-USB-C-TO-USB-C-2M-BRAIDED-BLACK-2025-REV-B-WAREHOUSE-NORTH', weight: 0.25 },
   { id: 2, code: 'https://example.com/a/very/long/path/without/any/spaces/at/all', weight: 12 },
@@ -96,6 +146,26 @@ const many: Line[] = Array.from({ length: 100 }, (_, index) => ({ id: index, cod
 
 const page = ref(1)
 const pageSize = ref(10)
+
+// Stands in for a request: the table is busy for a moment after every change.
+const remotePage = ref(1)
+const remoteSize = ref(10)
+const remoteLoading = ref(false)
+
+function load(apply: () => void) {
+  remoteLoading.value = true
+  setTimeout(() => {
+    apply()
+    remoteLoading.value = false
+  }, 600)
+}
+
+const loadPage = (next: number) => load(() => {
+  remotePage.value = next
+})
+const loadSize = (next: number) => load(() => {
+  remoteSize.value = next
+})
 </script>
 
 <style lang="scss">
@@ -110,6 +180,10 @@ const pageSize = ref(10)
   &__narrow {
     width: 300rem;
     max-width: 100%;
+  }
+
+  &__inner {
+    width: 240rem;
   }
 }
 </style>

@@ -8,6 +8,9 @@ describe('panelState', () => {
     [{ rows: 0, loading: true, items: 0, queryReady: true }, 'loading'],
     [{ rows: 0, loading: false, items: 0, queryReady: true }, 'empty'],
     [{ rows: 0, loading: false, items: 4, queryReady: true }, 'no-results'],
+    // B6.3c: a server's empty answer to a typed query has no results.
+    [{ rows: 0, loading: false, items: 0, queryReady: true, queried: true }, 'no-results'],
+    [{ rows: 0, loading: false, items: 0, queryReady: true, queried: false }, 'empty'],
   ] as const)('%o → %s', (input, state) => {
     expect(panelState(input)).toBe(state)
   })

@@ -2,29 +2,27 @@
   <div
     class="ui-slider-thumb"
     :class="[
-      { 'ui-slider-thumb--vertical': orientation === 'vertical' },
-      { 'ui-slider-thumb--dragging': isDragging },
-      { 'ui-slider-thumb--disabled': disabled },
-      { 'ui-slider-thumb--readonly': readonly },
+      `ui-slider-thumb--${density}`,
+      {
+        'ui-slider-thumb--vertical': orientation === 'vertical',
+        'ui-slider-thumb--dragging': isDragging,
+        'ui-slider-thumb--disabled': disabled,
+        'ui-slider-thumb--readonly': readonly,
+        'ui-slider-thumb--value': showValue && valueShown,
+      },
     ]"
   >
-    <div class="ui-slider-thumb__state-layer" />
+    <span class="ui-slider-thumb__handle" />
 
-    <div class="ui-slider-thumb__knob" />
-
-    <div
+    <span
       v-if="showValue"
-      class="ui-slider-thumb__value-label"
+      class="ui-slider-thumb__value"
+      aria-hidden="true"
     >
-      <span class="ui-slider-thumb__value-text">
-        <slot
-          name="value"
-          :value="value"
-        >
-          {{ value }}
-        </slot>
-      </span>
-    </div>
+      <slot name="value">
+        {{ text ?? value }}
+      </slot>
+    </span>
   </div>
 </template>
 
@@ -33,11 +31,17 @@
  * Presentation only. Role, tabindex, `aria-value*`, axis position and the
  * pointer/keyboard handlers arrive as fallthrough attrs from
  * `useSliderControl().getThumbAttrs(index)` — the same bag any consumer can
- * spread onto their own markup.
+ * spread onto their own markup. The value indicator repeats `aria-valuetext`
+ * for the eye, so it is hidden from assistive tech.
  */
 interface Props {
   value: number
+  /** The value as words (`formatValue`); the number when absent. */
+  text?: string
   showValue?: boolean
+  /** The value indicator is up: pressed, dragged or stepped with the keyboard. */
+  valueShown?: boolean
+  density?: 'default' | 'comfortable'
   disabled?: boolean
   readonly?: boolean
   orientation?: 'horizontal' | 'vertical'
@@ -46,6 +50,8 @@ interface Props {
 
 withDefaults(defineProps<Props>(), {
   showValue: false,
+  valueShown: false,
+  density: 'default',
   disabled: false,
   readonly: false,
   orientation: 'horizontal',
@@ -54,33 +60,29 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style lang="scss">
-@use '#kit/assets/stylesheet/components/slider/thumb/index' as t;
-
-$prefix: 'ui-slider-thumb';
+@use '#kit/assets/stylesheet/components/slider' as t;
 
 .ui-slider-thumb {
-  $t: material-map(t.$tokens, $prefix);
+  $t: material-map(t.$tokens, 'md-slider');
 
+  // The 48 pointer target, centred on the handle. The control bag positions
+  // its edge (`inset-inline-start: <percent>`); the translate puts the centre
+  // on that percentage, from the right edge in RTL.
   position: absolute;
-  top: 50%;
-
-  // The control bag positions the box edge (`left`/`bottom: <percent>`); the
-  // translate is what puts the knob's centre on that percentage.
-  transform: translate(-50%, -50%);
-  width: 48rem;
-  height: 48rem;
+  inset-block-start: 50%;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  inline-size: g($t, 'target');
+  block-size: g($t, 'target');
+  translate: -50% -50%;
   cursor: pointer;
   outline: none;
-  z-index: 2;
-  box-sizing: border-box;
+  touch-action: none;
 
-  &--vertical {
-    top: auto;
-    left: 50%;
-    transform: translate(-50%, 50%);
+  &:dir(rtl) {
+    translate: 50% -50%;
   }
 
   &--disabled {
@@ -92,132 +94,127 @@ $prefix: 'ui-slider-thumb';
     cursor: default;
   }
 
-  // Thumb Knob
-  &__knob {
-    width: g($t, 'size');
-    height: g($t, 'size');
-    border-radius: var(--sys-shape-corner-full, 50%);
-    background-color: g($t, 'color');
-    box-shadow: g($t, 'elevation.shadow');
-    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-    z-index: 2;
+  &__handle {
+    inline-size: g($t, 'handle.width');
+    border-radius: var(--sys-shape-corner-full);
+    background-color: g($t, 'handle.color');
+    transition: inline-size g($t, 'motion.duration') g($t, 'motion.easing');
   }
 
-  @include forced-colors {
-    &__knob {
-      background-color: Highlight;
+  @each $density in (default, comfortable) {
+    &--#{$density} &__handle {
+      block-size: g($t, 'density.#{$density}.handle');
     }
 
-    &--disabled &__knob {
-      background-color: GrayText;
+    &--#{$density} &__value {
+      inset-block-end: calc(50% + #{g($t, 'density.#{$density}.handle')} / 2 + #{g($t, 'value.offset')});
     }
   }
 
-  // Ripple / Hover State Layer
-  &__state-layer {
-    position: absolute;
-    width: g($t, 'state.layer.size');
-    height: g($t, 'state.layer.size');
-    border-radius: 50%;
-    background-color: g($t, 'color');
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-    z-index: 1;
+  // Focused, pressed or dragged: the handle narrows (M3); hover changes only
+  // the cursor (W3-А).
+  &:focus-visible &__handle,
+  &--dragging &__handle {
+    inline-size: g($t, 'handle.narrow');
   }
 
-  @include can-hover {
-    &:hover &__state-layer {
-      opacity: g($t, 'state.layer.hover.opacity');
-    }
-  }
-
-  // The thumb is a 48rem hit area; the ring belongs on the visible knob.
-  &:focus-visible &__knob {
+  &:focus-visible &__handle {
     @include focus-ring;
   }
 
-  &:focus-visible &__state-layer,
-  &--dragging &__state-layer {
-    opacity: g($t, 'state.layer.pressed.opacity');
+  &--disabled &__handle {
+    background-color: g($t, 'disabled.handle');
   }
 
-  // Pin Value Label Tooltip
-  &__value-label {
+  // The value indicator: a capsule that grows with its text.
+  &__value {
     position: absolute;
-    bottom: 34rem; // Positioned above knob
-    left: 50%;
-    transform: translateX(-50%) scale(0);
-    transform-origin: bottom center;
+    inset-inline-start: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: g($t, 'tooltip.width');
-    height: g($t, 'tooltip.height');
-    z-index: 3;
+    box-sizing: border-box;
+    min-inline-size: g($t, 'value.min-width');
+    block-size: g($t, 'value.height');
+    padding-inline: g($t, 'value.padding');
+    border-radius: var(--sys-shape-corner-full);
+    background-color: g($t, 'value.color');
+    color: g($t, 'value.text');
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     pointer-events: none;
-    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+    opacity: 0;
+    scale: 0.8;
+    translate: -50% 0;
+    transform-origin: bottom center;
+    transition:
+      opacity g($t, 'motion.value.duration') g($t, 'motion.value.easing'),
+      scale g($t, 'motion.value.duration') g($t, 'motion.value.easing');
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      width: g($t, 'tooltip.width');
-      height: g($t, 'tooltip.width'); // matches width to make a circle
-      background-color: g($t, 'tooltip.background');
-      border-radius: 50% 50% 0; // sharp point at bottom-right
-      transform: rotate(45deg); // rotate to position point at bottom-center
-      z-index: -1;
+    @include typescale(g($t, 'value.typography'));
+  }
+
+  &:dir(rtl) &__value {
+    translate: 50% 0;
+  }
+
+  &--value &__value {
+    opacity: 1;
+    scale: 1;
+  }
+
+  &--dragging &__handle,
+  &--dragging &__value {
+    transition: none;
+  }
+
+  // Vertical: the box edge stands at the bottom percentage; the value sits
+  // at the inline start, beside the handle.
+  &--vertical {
+    inset-block-start: auto;
+    inset-inline-start: 50%;
+    translate: -50% 50%;
+  }
+
+  &--vertical:dir(rtl) {
+    translate: 50% 50%;
+  }
+
+  @each $density in (default, comfortable) {
+    &--vertical.ui-slider-thumb--#{$density} &__handle {
+      inline-size: g($t, 'density.#{$density}.handle');
+      block-size: g($t, 'handle.width');
+    }
+
+    &--vertical.ui-slider-thumb--#{$density} &__value {
+      inset-block-end: auto;
+      inset-inline: auto calc(50% + #{g($t, 'density.#{$density}.handle')} / 2 + #{g($t, 'value.offset')});
     }
   }
 
-  &__value-text {
-    position: relative;
-    top: -4rem; // raise text inside balloon
-    color: g($t, 'tooltip.color');
-
-    @include apply-typography(g($t, 'tooltip.typography'));
+  &--vertical:focus-visible &__handle,
+  &--vertical.ui-slider-thumb--dragging &__handle {
+    block-size: g($t, 'handle.narrow');
   }
 
-  // CSS active triggers for tooltip
-  @include can-hover {
-    &:hover &__value-label {
-      transform: translateX(-50%) scale(1);
-    }
-  }
-
-  &:focus-visible &__value-label,
-  &--dragging &__value-label {
-    transform: translateX(-50%) scale(1);
-  }
-
-  // Adjust Tooltip for vertical orientation
-  &--vertical &__value-label {
-    inset: 50% 34rem auto auto; // Left side visually
-    transform: translateY(-50%) scale(0);
+  &--vertical &__value,
+  &--vertical:dir(rtl) &__value {
+    translate: 0;
     transform-origin: center right;
+  }
 
-    &::before {
-      top: 50%; // vertically centre the balloon next to the knob
-      border-radius: 50% 50% 0; // sharp corner = bottom-right (same as horizontal)
-      transform: translateY(-50%) rotate(-45deg); // point toward the knob (right)
+  @include forced-colors {
+    &__handle {
+      background-color: Highlight;
     }
-  }
 
-  &--vertical &__value-text {
-    top: 0;
-    left: -4rem;
-  }
-
-  @include can-hover {
-    &--vertical:hover &__value-label {
-      transform: translateY(-50%) scale(1);
+    &--disabled &__handle {
+      background-color: GrayText;
     }
-  }
 
-  &--vertical:focus-visible &__value-label,
-  &--vertical.ui-slider-thumb--dragging &__value-label {
-    transform: translateY(-50%) scale(1);
+    &__value {
+      border: 1px solid CanvasText;
+    }
   }
 }
 </style>

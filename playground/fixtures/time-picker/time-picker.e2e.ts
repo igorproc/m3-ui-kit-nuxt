@@ -296,3 +296,52 @@ test.describe('MTimePicker', () => {
     await expect(page.getByTestId('h23-evening').locator('.ui-time-picker__actions')).toHaveCount(0)
   })
 })
+
+test.describe('MTimePicker · disabled by colour roles', () => {
+  test('a disabled picker recedes by its colours, not by the opacity of its body', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const picker = page.getByTestId('disabled')
+
+    expect(await picker.evaluate(el => getComputedStyle(el).opacity)).toBe('1')
+    const selector = await picker.locator('.ui-time-picker__selector').first().evaluate(el => getComputedStyle(el).color)
+    expect(selector).not.toBe(await page.getByTestId('h23-evening').locator('.ui-time-picker__selector').first().evaluate(el => getComputedStyle(el).color))
+    await expect(picker.locator('.ui-time-picker__period-option.ui-button--disabled')).toHaveCount(2)
+  })
+})
+
+/**
+ * Whether a point `dy` rem from the centre of `target` along the block axis lands
+ * on it: the target is an invisible pseudo-element, so `elementFromPoint` returns the button.
+ */
+const reachesBlock = (target: Locator, dy: number) => target.evaluate((el, y) => {
+  el.scrollIntoView({ block: 'center', inline: 'center' })
+  const box = el.getBoundingClientRect()
+  const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+  const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2 + y * rem)
+  return hit === el || el.contains(hit)
+}, dy)
+
+// N1 + S8: the period is drawn 38 tall; on a coarse pointer it answers across 48 in the block axis.
+test.describe('MTimePicker · 48 period target on touch', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 1920, height: 1080 } })
+
+  test('a period option of the horizontal picker answers 24 above and below its centre', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const option = page.getByTestId('horizontal').getByRole('radio', { name: 'PM' })
+
+    expect(await reachesBlock(option, -23)).toBe(true)
+    expect(await reachesBlock(option, 23)).toBe(true)
+    expect(await reachesBlock(option, -27)).toBe(false)
+  })
+
+  test('stacked options keep apart: neither target reaches into the other', async ({ page }) => {
+    await openFixture(page, 'time-picker/matrix')
+    const picker = page.getByTestId('h12-morning')
+    const am = (await picker.getByRole('radio', { name: 'AM' }).boundingBox())!
+    const pm = picker.getByRole('radio', { name: 'PM' })
+
+    expect(await reachesBlock(pm, -23)).toBe(true)
+    const hit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.textContent?.trim(), { x: am.x + am.width / 2, y: am.y + am.height - 1 })
+    expect(hit).toBe('AM')
+  })
+})

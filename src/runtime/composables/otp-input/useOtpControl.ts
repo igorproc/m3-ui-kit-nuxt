@@ -247,7 +247,7 @@ export function useOtpControl(
 
     const start = target.selectionStart ?? target.value.length
     const end = target.selectionEnd ?? start
-    const committed = value.commit(target.value.slice(0, start) + pasted + target.value.slice(end))
+    const committed = value.commit(target.value.slice(0, start) + pasted + target.value.slice(end), { pasted: true })
     const caret = Math.min(committed.length, start + value.sanitize(pasted).value.length)
 
     target.value = committed

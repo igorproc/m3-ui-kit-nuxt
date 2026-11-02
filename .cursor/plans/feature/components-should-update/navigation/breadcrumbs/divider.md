@@ -2,7 +2,7 @@
 
 <identity>M3: нет (часть авторского [MBreadcrumbs](index.md)) · Код: `src/runtime/components/fragments/breadcrumbs/divider/index.vue` · Тип: sub, приватный</identity>
 
-<implementation-status state="planned" updated="2026-10-07">Реализован 2026-07-16: декоративный лист без состояния, имя иконки → `MIcon`, иначе текст (`/`, `>`), скрыт от AT, зеркалится в RTL. Изменений по существу нет, только токены.</implementation-status>
+<implementation-status state="done" updated="2026-10-30">Литералы — в карте (иконка 18, цвет `outline`), `MIcon mirror` в RTL (Q27-А), лист скрыт от AT (`aria-hidden`).</implementation-status>
 
 ## Вердикт
 

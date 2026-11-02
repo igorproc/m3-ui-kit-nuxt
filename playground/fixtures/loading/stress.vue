@@ -9,7 +9,7 @@
       <MLoading
         v-for="index in 20"
         :key="index"
-        :type="index % 2 ? 'circular' : 'expressive'"
+        :type="index % 2 ? 'spinner' : 'shape'"
         :aria-label="`Loading ${index}`"
       />
     </div>
@@ -30,7 +30,7 @@
       Heading
       <MLoading
         inline
-        type="expressive"
+        type="shape"
         aria-label="Loading, heading"
         data-test="inline-heading"
       />

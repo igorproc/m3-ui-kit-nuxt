@@ -268,6 +268,10 @@ const cellClasses = (cell: OtpCell) => [
     color: g($t, 'separator.color');
   }
 
+  &--disabled &__separator {
+    color: g($t, 'separator.disabled.color');
+  }
+
   // The real field, laid over the whole grid: one input, so paste, SMS autofill
   // and the caret work without being re-implemented per cell.
   &__native {

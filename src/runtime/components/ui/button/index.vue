@@ -262,12 +262,10 @@ $icon-only: '.ui-button--icon-only';
   }
 
   // Drawn under 48 (compact, every icon button), a button still takes a 48
-  // pointer target, centred on it; at 48 and above the inset resolves to 0.
-  &--compact::after,
-  &.ui-icon-button::after {
-    content: '';
-    position: absolute;
-    inset: min(0rem, calc((100% - #{g($t, 'target.size')}) / 2));
+  // pointer target on touch, centred on it.
+  &--compact,
+  &.ui-icon-button {
+    @include touch-target($size: g($t, 'target.size'));
   }
 
   &--elevated {

@@ -1,33 +1,51 @@
 @use 'sass:map';
 @use '../../abstracts/forward.scss' as *;
+@use '../dropdown/index' as dropdown;
 
 // ==========================================
 // SEARCH M3 COMPONENT TOKENS
 // ==========================================
-// The search bar of `SearchBarTokens`: a full-shape container on
-// `surface-container-high` with no edge, 56 tall, 24 icons in 48 targets.
-// It is a control, not a form field — no label, no support line — so focus is
-// the kit's focus ring, as on a button, not the fields' colour change.
+// The bar of `SearchBarTokens` — a container on `surface-container-high` with
+// no edge, 24 icons — and the docked view of `SearchViewTokens`. The bar is a
+// control, not a form field: no label, no support line, so keyboard focus is
+// the kit's ring, as on a button. The view's rows, keyboard cursor, progress
+// and state message are the dropdown's, read from its map.
 
 $on-surface: map.get($theme-color-link, on-surface);
-$target: 48rem;
+
+// One step of the fields' density scale (decision 2026-10-19), so a bar stands
+// as tall as the field beside it. An edge part is a target the bar can hold,
+// centred by the padding around it. The corner is half the height, not `full`:
+// with the lower corners squared while the view is open, `999rem` would be
+// scaled down to the whole height and round the upper corners into a bowl.
+@function density-step($height, $target) {
+  @return (
+    height: $height,
+    target: $target,
+    padding: ($height - $target) * 0.5,
+    round: $height * 0.5,
+  );
+}
+
 $tokens: (
   container: (
     color: map.get($theme-color-link, surface-container-high),
-    shape: map.get($theme-shape-link, full),
-    height: 56rem,
     // A kit axis rather than M3's: a bar across a wide page stops growing here.
     max-width: 720rem,
-    // The edge parts are 48 targets; the bar leaves 4 between them and its end.
-    padding: (inline: spacing(4)),
     gap: spacing(4),
+    // Where the query ends when no target closes the bar.
+    text-end: spacing(16),
   ),
-  // An icon slot is a 48 target holding a 24 icon.
+  density: (
+    compact: density-step(44rem, 40rem),
+    default: density-step(56rem, 48rem),
+    comfortable: density-step(64rem, 48rem),
+  ),
+  // An icon slot holds a 24 icon in its target.
   icon: (
     color: map.get($theme-color-link, on-surface-variant),
     leading: (color: $on-surface),
     size: 24rem,
-    target: $target,
   ),
   input: (
     color: $on-surface,
@@ -44,4 +62,25 @@ $tokens: (
     duration: var(--sys-motion-duration-short-3),
     easing: var(--sys-motion-easing-standard),
   ),
+  // The docked view: the bar is its header, the panel under it the rest of
+  // one surface, so the panel takes the bar's colour and the shadow both share.
+  view: (
+    shape: map.get($theme-shape-link, extra-large),
+    shadow: elevation(3),
+    divider: (
+      color: map.get($theme-color-link, outline),
+      width: max(1px, 1rem),
+    ),
+    // The panel's shadow would fall on the bar above it; it is cut at the seam.
+    clip: inset(0 -24rem -24rem -24rem),
+    padding-block: g(dropdown.$tokens, 'panel.padding-block'),
+    max-height: g(dropdown.$tokens, 'panel.max-height'),
+  ),
+  row: (
+    layer: g(dropdown.$tokens, 'row.layer'),
+    // A recent query's removal mark: a pointer target, not a button (a listbox
+    // option holds no controls); Delete is its keyboard twin.
+    remove: (target: 40rem, size: 24rem, color: map.get($theme-color-link, on-surface-variant)),
+  ),
+  message: g(dropdown.$tokens, 'state'),
 );

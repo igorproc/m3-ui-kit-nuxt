@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 import { usePreferredColorScheme } from '@vueuse/core'
 import { useCookie, useRuntimeConfig, useState } from '#app'
 
-import { THEME_COOKIE_OPTIONS, THEME_DEFINITIONS, THEME_CONTRASTS, FALLBACK_PALETTE_KEY } from '#kit/shared/constants/theme'
+import { THEME_COOKIE_OPTIONS, THEME_DEFINITIONS, FALLBACK_PALETTE_KEY } from '#kit/shared/constants/theme'
 import { createThemeController } from '#kit/utils/theme/createThemeController'
 import type { TDefinition, IPaletteCookie, ICookie, MaterialKitOptions } from '#kit/shared/types/kit'
 
@@ -26,11 +26,11 @@ export function createMaterialTheme() {
   const defaults = config.theme?.default ?? {}
   const defaultDefinition = (defaults.definition ?? THEME_DEFINITIONS.DARK) as TDefinition
   const defaultPalette = defaults.palette ?? FALLBACK_PALETTE_KEY
-  const defaultContrast = (defaults.contrast ?? THEME_CONTRASTS.MEDIUM) as string
 
-  // Cookies — trusted as-is, no dictionary validation.
+  // Cookies — trusted as-is, no dictionary validation. Contrast has no default: an
+  // empty cookie means "not chosen", so the palette's own contrast can apply.
   const definitionCookie = useCookie<TDefinition>(cookieKeys.definition, { default: () => defaultDefinition, ...THEME_COOKIE_OPTIONS })
-  const contrastCookie = useCookie<string>(cookieKeys.contrast, { default: () => defaultContrast, ...THEME_COOKIE_OPTIONS })
+  const contrastCookie = useCookie<string | null>(cookieKeys.contrast, { default: () => null, ...THEME_COOKIE_OPTIONS })
   const paletteCookie = useCookie<IPaletteCookie>(cookieKeys.palette, { default: () => ({ isCustom: false, key: defaultPalette }), ...THEME_COOKIE_OPTIONS })
 
   const preferredColorScheme = usePreferredColorScheme()
